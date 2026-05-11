@@ -1,0 +1,163 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/config/theme/app_colors.dart';
+
+class ScannerScreen extends ConsumerStatefulWidget {
+  const ScannerScreen({super.key});
+  @override
+  ConsumerState<ScannerScreen> createState() => _ScannerScreenState();
+}
+
+class _ScannerScreenState extends ConsumerState<ScannerScreen> {
+  File? _image;
+  String _educationLevel = 'secondary';
+  String _subject = '';
+  String _examType = '';
+  String _year = '';
+  bool _solving = false;
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final x = await picker.pickImage(source: source, maxWidth: 2048, maxHeight: 2048);
+    if (x != null) setState(() => _image = File(x.path));
+  }
+
+  Future<void> _submit() async {
+    if (_image == null) return;
+    setState(() => _solving = true);
+    final client = await ref.read(graphqlClientProvider.future);
+    final bytes = await _image!.readAsBytes();
+    final b64 = base64Encode(bytes);
+    final result = await client.mutate(MutationOptions(
+      document: gql(kSubmitScanSession),
+      variables: {
+        'imageBase64': b64,
+        'fileName': _image!.path.split('/').last,
+        'subject': _subject,
+        'educationLevel': _educationLevel,
+        'examType': _examType,
+        'year': int.tryParse(_year),
+      },
+    ));
+    setState(() => _solving = false);
+    if (result.hasException || result.data?['submitScanSession'] == null) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to solve paper'), backgroundColor: AppColors.error),
+      );
+      return;
+    }
+    final data = result.data!['submitScanSession'];
+    if (data['success'] != true) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text((data['errors'] as List?)?.first ?? 'Failed'), backgroundColor: AppColors.error),
+      );
+      return;
+    }
+    if (mounted) context.push('/scanner/results', extra: data['session']);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Magic Scanner'), centerTitle: true),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            if (_image != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(_image!, height: 300, width: double.infinity, fit: BoxFit.contain),
+              )
+            else
+              GestureDetector(
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  builder: (_) => SafeArea(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      ListTile(leading: const Icon(Icons.camera_alt), title: const Text('Take a photo'), onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); }),
+                      ListTile(leading: const Icon(Icons.photo_library), title: const Text('Choose from gallery'), onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); }),
+                    ]),
+                  ),
+                ),
+                child: Container(
+                  height: 250,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.textSecondary.withOpacity(0.3), width: 2),
+                  ),
+                  child: Center(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Container(
+                        width: 80, height: 80,
+                        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+                        child: const Icon(Icons.document_scanner, size: 40, color: AppColors.primary),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Upload a past paper photo', style: TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      Text('PDF, JPG, or PNG', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                    ]),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 20),
+            TextField(
+              decoration: const InputDecoration(labelText: 'Subject', hintText: 'e.g. Mathematics'),
+              onChanged: (v) => _subject = v,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: const InputDecoration(labelText: 'Exam type (optional)', hintText: 'e.g. MSCE, Final'),
+              onChanged: (v) => _examType = v,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _educationLevel,
+                    decoration: const InputDecoration(labelText: 'Level'),
+                    items: const [
+                      DropdownMenuItem(value: 'primary', child: Text('Primary')),
+                      DropdownMenuItem(value: 'secondary', child: Text('Secondary')),
+                      DropdownMenuItem(value: 'tertiary', child: Text('Tertiary')),
+                    ],
+                    onChanged: (v) => setState(() => _educationLevel = v!),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    decoration: const InputDecoration(labelText: 'Year'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (v) => _year = v,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: (_image != null && !_solving) ? _submit : null,
+                icon: _solving
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.auto_awesome),
+                label: Text(_solving ? 'Solving...' : 'Solve Paper'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
