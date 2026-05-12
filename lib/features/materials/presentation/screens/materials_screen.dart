@@ -19,19 +19,15 @@ class MaterialsScreen extends StatelessWidget {
       body: Query(
         options: QueryOptions(document: gql(kMaterials), variables: {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
+          if (result.hasException) {
+          return ErrorState(message: 'Could not load. Check your connection.', onRetry: () => refetch?.call());
+          }
           if (result.isLoading) {
             return _buildShimmer();
           }
           final materials = (result.data?['materials'] as List?) ?? [];
           if (materials.isEmpty) {
-            return Center(child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.menu_book_outlined, size: 80, color: DesignTokens.textTertiary.withValues(alpha: 0.5)),
-                const SizedBox(height: DesignTokens.spMd),
-                Text('No materials yet', style: theme.textTheme.titleMedium),
-              ],
-            ));
+            return const EmptyState(icon: Icons.menu_book_outlined, title: 'No materials yet');
           }
           return RefreshIndicator(
             onRefresh: () async => refetch?.call(),

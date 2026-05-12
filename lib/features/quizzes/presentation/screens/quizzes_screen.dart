@@ -19,6 +19,9 @@ class QuizzesScreen extends StatelessWidget {
       body: Query(
         options: QueryOptions(document: gql(kQuizzes), variables: {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
+          if (result.hasException) {
+          return ErrorState(message: 'Could not load. Check your connection.', onRetry: () => refetch?.call());
+          }
           if (result.isLoading) {
             return ListView.builder(
               padding: const EdgeInsets.all(DesignTokens.spMd),
