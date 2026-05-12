@@ -556,3 +556,82 @@ mutation InitializePayment($packageCode: String!, $purchaseType: String!) {
   }
 }
 ''';
+
+// Kids Mode
+const String kPrimarySubjects = r'''
+query PrimarySubjects {
+  primarySubjects {
+    id
+    name
+    level
+    isPslceSubject
+    languageOfInstruction
+  }
+}
+''';
+
+const String kPrimaryTopics = r'''
+query PrimaryTopics($subjectId: ID!, $standard: Int) {
+  primaryTopics(subjectId: $subjectId, standard: $standard) {
+    id
+    name
+    description
+    standard
+  }
+}
+''';
+
+const String kKidLesson = r'''
+query KidLesson($subjectId: ID!, $standard: Int!, $topicId: ID, $language: String) {
+  kidLesson(subjectId: $subjectId, standard: $standard, topicId: $topicId, language: $language) {
+    id
+    title
+    bodyText
+    language
+    quiz
+    standard
+  }
+}
+''';
+
+const String kFetchKidLesson = r'''
+mutation FetchKidLesson($subjectId: ID!, $standard: Int!, $topicId: ID, $language: String) {
+  fetchKidLesson(subjectId: $subjectId, standard: $standard, topicId: $topicId, language: $language) {
+    success
+    errors
+    lesson {
+      id
+      title
+      bodyText
+      language
+      quiz
+      standard
+    }
+  }
+}
+''';
+
+const String kAnswerKidQuiz = r'''
+mutation AnswerKidQuiz($lessonId: ID!, $selectedIndex: Int!) {
+  answerKidQuiz(lessonId: $lessonId, selectedIndex: $selectedIndex) {
+    success
+    correct
+    starsEarned
+    streak
+    errors
+  }
+}
+''';
+
+const String kKidProgress = r'''
+query KidProgress($subjectId: ID, $standard: Int) {
+  kidProgress(subjectId: $subjectId, standard: $standard) {
+    id
+    lessonsCompleted
+    quizzesTaken
+    quizzesCorrect
+    starsEarned
+    streak
+  }
+}
+''';
