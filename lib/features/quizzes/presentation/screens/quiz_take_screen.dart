@@ -64,7 +64,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
           builder: (runMutation, mutResult) {
             if (_attemptId == null) {
               runMutation({'quizId': quiz['id']});
-              final resultData = mutResult?.result?.data;
+              final resultData = mutResult?.data;
               if (resultData != null) {
                 _attemptId = resultData['startQuizAttempt']['attempt']['id'];
               }
