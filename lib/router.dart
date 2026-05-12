@@ -2,12 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
-
-class _RouterRefresh extends ChangeNotifier {
-  _RouterRefresh(Ref ref) {
-    ref.listen(authProvider, (_, __) => notifyListeners());
-  }
-}
 import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
@@ -32,31 +26,38 @@ import '../features/kids_mode/presentation/screens/kid_login_screen.dart';
 import '../features/profile/presentation/screens/about_screen.dart';
 import 'shell.dart';
 
+class _RouterRefresh extends ChangeNotifier {
+  _RouterRefresh(Ref ref) {
+    ref.listen(authProvider, (_, __) => notifyListeners());
+  }
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     refreshListenable: _RouterRefresh(ref),
     initialLocation: '/splash',
     redirect: (context, state) {
-      final authAsync = ref.read(authProvider);
-      if (authAsync.isLoading) {
-        // Stay on splash while loading
-        return state.matchedLocation == '/splash' ? null : '/splash';
+      final auth = ref.read(authProvider);
+      final location = state.matchedLocation;
+
+      if (auth.isLoading) {
+        return location == '/splash' ? null : '/splash';
       }
 
-      final auth = authAsync.valueOrNull;
-      if (auth == null) return '/onboarding';
-
-      final isAuth = auth.isAuthenticated;
-      final location = state.matchedLocation;
-      final authRoutes = ['/login', '/register', '/onboarding', '/setup', '/splash'];
-      final isOnAuth = authRoutes.contains(location);
-
-      if (!isAuth && !isOnAuth) return '/login';
-      if (!isAuth) return '/onboarding';
+      if (!auth.isAuthenticated) {
+        if (['/login', '/register', '/onboarding', '/splash'].contains(location)) {
+          return null;
+        }
+        return '/onboarding';
+      }
 
       final profileComplete = auth.user?['profile']?['onboardingComplete'] == true;
       if (!profileComplete && location != '/setup') return '/setup';
-      if (profileComplete && isOnAuth) return '/home';
+
+      if (profileComplete && ['/login', '/register', '/onboarding', '/splash'].contains(location)) {
+        return '/home';
+      }
+
       return null;
     },
     routes: [

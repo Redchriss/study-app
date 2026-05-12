@@ -1,32 +1,23 @@
 import 'package:graphql_flutter/graphql_flutter.dart';
-import '../storage/secure_storage.dart';
 import '../config/app_config.dart';
+import '../storage/secure_storage.dart';
 
-Future<GraphQLClient> buildGraphQLClient() async {
-  // NOTE: main.dart already calls Hive.initFlutter().
-  // Do NOT call initHiveForFlutter() here — it hangs on Android
-  // when called twice.
-
+GraphQLClient buildGraphQLClient() {
   final authLink = AuthLink(
     getToken: () async {
-      try {
-        final token = await SecureStorage.getToken();
-        return token != null ? 'Bearer $token' : null;
-      } catch (_) {
-        return null;
-      }
+      final token = await SecureStorage.getToken();
+      return token != null ? 'Bearer $token' : null;
     },
   );
 
   final httpLink = HttpLink(AppConfig.graphqlUrl);
-
   final link = authLink.concat(httpLink);
 
   return GraphQLClient(
-    cache: GraphQLCache(store: HiveStore()),
     link: link,
+    cache: GraphQLCache(store: HiveStore()),
     defaultPolicies: DefaultPolicies(
-      query: Policies(fetch: FetchPolicy.cacheAndNetwork),
+      query: Policies(fetch: FetchPolicy.networkOnly),
       mutate: Policies(fetch: FetchPolicy.networkOnly),
     ),
   );
