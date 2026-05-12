@@ -96,7 +96,7 @@ class _ProfileRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: DesignTokens.textSecondary)),
+          Text(label, style: const TextStyle(color: DesignTokens.textSecondary)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),

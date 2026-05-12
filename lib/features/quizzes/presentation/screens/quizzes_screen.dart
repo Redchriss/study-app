@@ -17,7 +17,7 @@ class QuizzesScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: Query(
-        options: QueryOptions(document: gql(kQuizzes), variables: {'limit': 50}),
+        options: QueryOptions(document: gql(kQuizzes), variables: const {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
           if (result.hasException) {
           return ErrorState(message: 'Could not load. Check your connection.', onRetry: () => refetch?.call());
@@ -25,18 +25,20 @@ class QuizzesScreen extends StatelessWidget {
           if (result.isLoading) {
             return ListView.builder(
               padding: const EdgeInsets.all(DesignTokens.spMd),
-              itemCount: 8, itemBuilder: (_, __) => Padding(
-                padding: const EdgeInsets.only(bottom: DesignTokens.spSm),
+              itemCount: 8, itemBuilder: (_, __) => const Padding(
+                padding: EdgeInsets.only(bottom: DesignTokens.spSm),
                 child: ShimmerBox(height: 80, radius: DesignTokens.radiusLg),
               ),
             );
           }
           final quizzes = (result.data?['quizzes'] as List?) ?? [];
-          if (quizzes.isEmpty) return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          if (quizzes.isEmpty) {
+            return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Icon(Icons.quiz_outlined, size: 80, color: DesignTokens.textTertiary.withValues(alpha: 0.5)),
             const SizedBox(height: DesignTokens.spMd),
             Text('No quizzes yet', style: theme.textTheme.titleMedium),
           ]));
+          }
           return RefreshIndicator(
             onRefresh: () async => refetch?.call(),
             child: ListView.builder(

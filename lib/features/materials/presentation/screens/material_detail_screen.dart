@@ -40,7 +40,7 @@ class MaterialDetailScreen extends StatelessWidget {
                       color: DesignTokens.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(m['subject']?['name'] ?? '', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.primary)),
+                    child: Text(m['subject']?['name'] ?? '', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.primary)),
                   ),
                   const Spacer(),
                   Container(
@@ -49,7 +49,7 @@ class MaterialDetailScreen extends StatelessWidget {
                       color: DesignTokens.accent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(m['contentType'] ?? '', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: DesignTokens.accent)),
+                    child: Text(m['contentType'] ?? '', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: DesignTokens.accent)),
                   ),
                 ]),
                 if (m['description'] != null && m['description'].toString().isNotEmpty) ...[
@@ -83,7 +83,7 @@ class MaterialDetailScreen extends StatelessWidget {
                     const SizedBox(width: DesignTokens.spSm),
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text('Download', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-                      Text(('${m['contentType'] ?? ''} file').toUpperCase(), style: TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
+                      Text(('${m['contentType'] ?? ''} file').toUpperCase(), style: const TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
                     ]),
                   ])),
                 ),
@@ -94,11 +94,11 @@ class MaterialDetailScreen extends StatelessWidget {
               GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('AI Tools', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: DesignTokens.spSm),
-                Row(children: [
+                const Row(children: [
                   _AiBtn(label: 'Summary', icon: Icons.summarize, cost: 1),
-                  const SizedBox(width: DesignTokens.spXs),
+                  SizedBox(width: DesignTokens.spXs),
                   _AiBtn(label: 'Flashcards', icon: Icons.style, cost: 1),
-                  const SizedBox(width: DesignTokens.spXs),
+                  SizedBox(width: DesignTokens.spXs),
                   _AiBtn(label: 'Quiz', icon: Icons.quiz, cost: 1),
                 ]),
               ])),
@@ -107,7 +107,7 @@ class MaterialDetailScreen extends StatelessWidget {
                 const SizedBox(height: DesignTokens.spMd),
                 GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    Icon(Icons.auto_awesome, size: 16, color: DesignTokens.warning),
+                    const Icon(Icons.auto_awesome, size: 16, color: DesignTokens.warning),
                     const SizedBox(width: 6),
                     Text('AI Summary', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                   ]),
@@ -141,8 +141,8 @@ class _AiBtn extends StatelessWidget {
           child: Column(children: [
             Icon(icon, color: DesignTokens.primary, size: 20),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.primary)),
-            Text('−$cost 💎', style: TextStyle(fontSize: 10, color: DesignTokens.textTertiary)),
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.primary)),
+            Text('−$cost 💎', style: const TextStyle(fontSize: 10, color: DesignTokens.textTertiary)),
           ]),
         ),
       ),

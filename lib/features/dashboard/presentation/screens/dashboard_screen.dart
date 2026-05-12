@@ -235,7 +235,7 @@ class DashboardScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SectionHeader(title: 'Your Progress'),
+                          const SectionHeader(title: 'Your Progress'),
                           const SizedBox(height: DesignTokens.spSm),
                           GlassCard(
                             child: Column(
@@ -348,7 +348,7 @@ class DashboardScreen extends ConsumerWidget {
                   ),
 
                 // ── Bottom Padding ─────────────────────────────────────
-                SliverToBoxAdapter(
+                const SliverToBoxAdapter(
                   child: SizedBox(height: DesignTokens.spXxl * 2),
                 ),
               ],

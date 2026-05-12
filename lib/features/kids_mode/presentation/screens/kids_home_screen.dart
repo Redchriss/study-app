@@ -162,7 +162,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
               children: [
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text('Hi ${auth.childName}! ⭐', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-                  Text('Standard ${auth.standard}', style: TextStyle(color: DesignTokens.textSecondary)),
+                  Text('Standard ${auth.standard}', style: const TextStyle(color: DesignTokens.textSecondary)),
                 ]),
                 GestureDetector(
                   onTap: () => _speak('You have $_stars stars!'),
@@ -172,7 +172,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
                     child: Row(children: [
                       const Icon(Icons.star, color: DesignTokens.warning, size: 20),
                       const SizedBox(width: 4),
-                      Text('$_stars', style: TextStyle(fontWeight: FontWeight.w800, color: DesignTokens.warning)),
+                      Text('$_stars', style: const TextStyle(fontWeight: FontWeight.w800, color: DesignTokens.warning)),
                     ]),
                   ),
                 ),
@@ -180,7 +180,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
             ),
           ),
           const SizedBox(height: DesignTokens.spLg),
-          SectionHeader(title: 'Pick a subject'),
+          const SectionHeader(title: 'Pick a subject'),
           const SizedBox(height: DesignTokens.spSm),
           ...(_subjects.isEmpty ? [
             Container(
@@ -188,7 +188,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
               decoration: BoxDecoration(
                 color: DesignTokens.surfaceVariant, borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
               ),
-              child: Center(child: Text('No subjects loaded', style: TextStyle(color: DesignTokens.textSecondary))),
+              child: const Center(child: Text('No subjects loaded', style: TextStyle(color: DesignTokens.textSecondary))),
             )
           ] : _subjects.map((s) {
             final name = s['name'] as String? ?? '';
@@ -245,7 +245,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
             ),
           ),
           const Spacer(),
-          Text(ref.read(kidAuthStateProvider).childName, style: TextStyle(color: DesignTokens.textSecondary, fontSize: 14)),
+          Text(ref.read(kidAuthStateProvider).childName, style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 14)),
         ]),
         const SizedBox(height: DesignTokens.spMd),
         if (_inQuiz) ...[

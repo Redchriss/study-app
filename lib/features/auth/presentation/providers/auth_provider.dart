@@ -63,7 +63,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       ));
 
       if (result.hasException) {
-        state = AsyncValue.data(AuthState(isAuthenticated: false, isLoading: false, error: 'Invalid credentials.'));
+        state = const AsyncValue.data(AuthState(isAuthenticated: false, isLoading: false, error: 'Invalid credentials.'));
         return false;
       }
 
@@ -92,7 +92,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       ));
 
       if (result.hasException) {
-        state = AsyncValue.data(AuthState(isAuthenticated: false, isLoading: false, error: 'Registration failed.'));
+        state = const AsyncValue.data(AuthState(isAuthenticated: false, isLoading: false, error: 'Registration failed.'));
         return false;
       }
 
@@ -104,7 +104,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       }
 
       await SecureStorage.saveTokens(data['token'], data['refreshToken']);
-      state = AsyncValue.data(const AuthState(isAuthenticated: true, isLoading: false));
+      state = const AsyncValue.data(AuthState(isAuthenticated: true, isLoading: false));
       return true;
     } catch (e) {
       state = AsyncValue.data(AuthState(isAuthenticated: false, isLoading: false, error: e.toString()));

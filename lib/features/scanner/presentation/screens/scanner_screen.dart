@@ -49,16 +49,20 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     ));
     setState(() => _solving = false);
     if (result.hasException || result.data?['submitScanSession'] == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to solve paper'), backgroundColor: DesignTokens.error),
       );
+      }
       return;
     }
     final data = result.data!['submitScanSession'];
     if (data['success'] != true) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text((data['errors'] as List?)?.first ?? 'Failed'), backgroundColor: DesignTokens.error),
       );
+      }
       return;
     }
     if (mounted) context.push('/scanner/results', extra: {'solutions': data['session']?['solutions'] ?? []});
@@ -134,7 +138,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                             const SizedBox(height: DesignTokens.spMd),
                             const Text('Upload a past paper photo', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                             const SizedBox(height: 4),
-                            Text('PDF, JPG, or PNG', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                            const Text('PDF, JPG, or PNG', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
                           ]),
                         ),
                       ),

@@ -25,8 +25,8 @@ class CirclesScreen extends StatelessWidget {
           if (result.isLoading) {
             return ListView.builder(
               padding: const EdgeInsets.all(DesignTokens.spMd),
-              itemCount: 6, itemBuilder: (_, __) => Padding(
-                padding: const EdgeInsets.only(bottom: DesignTokens.spSm),
+              itemCount: 6, itemBuilder: (_, __) => const Padding(
+                padding: EdgeInsets.only(bottom: DesignTokens.spSm),
                 child: ShimmerBox(height: 72, radius: DesignTokens.radiusLg),
               ),
             );
@@ -38,7 +38,7 @@ class CirclesScreen extends StatelessWidget {
               const SizedBox(height: DesignTokens.spMd),
               Text('No circles yet', style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
-              Text('Complete your profile setup to join', style: TextStyle(color: DesignTokens.textSecondary)),
+              const Text('Complete your profile setup to join', style: TextStyle(color: DesignTokens.textSecondary)),
             ]));
           }
           return RefreshIndicator(

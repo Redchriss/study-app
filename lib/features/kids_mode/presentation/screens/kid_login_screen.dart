@@ -105,9 +105,11 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
               token: data['token'],
             );
           } else {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(data?['errors']?.first ?? 'Wrong PIN'), backgroundColor: DesignTokens.error),
             );
+            }
           if (mounted && data?['success'] == true) {
             context.go('/kids/learn');
           }
@@ -222,7 +224,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
               TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Child\'s name', isDense: true)),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
-                value: _newKidStandard,
+                initialValue: _newKidStandard,
                 decoration: const InputDecoration(labelText: 'Standard', isDense: true),
                 items: List.generate(8, (i) => DropdownMenuItem(value: i + 1, child: Text('Standard ${i + 1}'))),
                 onChanged: (v) => setDState(() => _newKidStandard = v),

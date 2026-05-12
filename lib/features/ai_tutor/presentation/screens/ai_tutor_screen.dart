@@ -83,9 +83,9 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spXs),
             color: DesignTokens.primary.withValues(alpha: 0.05),
-            child: Row(children: [
-              const Icon(Icons.auto_awesome, size: 14, color: DesignTokens.primary),
-              const SizedBox(width: 6),
+            child: const Row(children: [
+              Icon(Icons.auto_awesome, size: 14, color: DesignTokens.primary),
+              SizedBox(width: 6),
               Text('Powered by Gemini', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
             ]),
           ),
@@ -94,7 +94,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
               ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.smart_toy_outlined, size: 80, color: DesignTokens.primary.withValues(alpha: 0.3)),
                   const SizedBox(height: DesignTokens.spMd),
-                  Text('Ask me anything about your subjects', style: TextStyle(color: DesignTokens.textSecondary)),
+                  const Text('Ask me anything about your subjects', style: TextStyle(color: DesignTokens.textSecondary)),
                 ]))
               : ListView.builder(
                   controller: _scrollCtrl,
@@ -145,7 +145,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
                   onTap: _send,
                   child: Container(
                     width: 48, height: 48,
-                    decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
                     child: const Icon(Icons.send, color: Colors.white, size: 20),
                   ),
                 ),

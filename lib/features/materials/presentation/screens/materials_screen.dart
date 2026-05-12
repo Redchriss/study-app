@@ -17,7 +17,7 @@ class MaterialsScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: Query(
-        options: QueryOptions(document: gql(kMaterials), variables: {'limit': 50}),
+        options: QueryOptions(document: gql(kMaterials), variables: const {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
           if (result.hasException) {
           return ErrorState(message: 'Could not load. Check your connection.', onRetry: () => refetch?.call());
@@ -92,8 +92,8 @@ class MaterialsScreen extends StatelessWidget {
     return ListView.builder(
       padding: const EdgeInsets.all(DesignTokens.spMd),
       itemCount: 8,
-      itemBuilder: (_, __) => Padding(
-        padding: const EdgeInsets.only(bottom: DesignTokens.spSm),
+      itemBuilder: (_, __) => const Padding(
+        padding: EdgeInsets.only(bottom: DesignTokens.spSm),
         child: ShimmerBox(height: 80, radius: DesignTokens.radiusLg),
       ),
     );

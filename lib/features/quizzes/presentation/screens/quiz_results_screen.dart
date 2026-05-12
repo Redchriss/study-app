@@ -41,7 +41,7 @@ class QuizResultsScreen extends ConsumerWidget {
               GlassCard(child: Column(children: [
                 Container(
                   width: 96, height: 96,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(colors: [DesignTokens.primary, DesignTokens.accent]),
                     shape: BoxShape.circle,
                   ),
@@ -49,7 +49,7 @@ class QuizResultsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: DesignTokens.spMd),
                 Text('$correct/${answers.length} correct', style: theme.textTheme.titleMedium),
-                Text('Time: ${attempt['timeDisplay'] ?? 'N/A'}', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                Text('Time: ${attempt['timeDisplay'] ?? 'N/A'}', style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
               ])),
               const SizedBox(height: DesignTokens.spLg),
               ...answers.asMap().entries.map((e) {
@@ -78,7 +78,7 @@ class QuizResultsScreen extends ConsumerWidget {
                     Text('Your answer: ${a['selectedAnswer']?['answerText'] ?? 'N/A'}'),
                     if (!correct) ...[
                       const SizedBox(height: 4),
-                      Text('Correct: ${a['correctAnswer']?['answerText'] ?? ''}', style: TextStyle(color: DesignTokens.success, fontWeight: FontWeight.w600)),
+                      Text('Correct: ${a['correctAnswer']?['answerText'] ?? ''}', style: const TextStyle(color: DesignTokens.success, fontWeight: FontWeight.w600)),
                     ],
                     if (a['correctAnswer']?['explanation'] != null && a['correctAnswer']['explanation'] != '') ...[
                       const SizedBox(height: 8),

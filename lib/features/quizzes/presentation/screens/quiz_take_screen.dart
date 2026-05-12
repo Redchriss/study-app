@@ -84,7 +84,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
                     ),
                     child: Text(
                       '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
-                      style: TextStyle(fontWeight: FontWeight.w700, color: DesignTokens.primary),
+                      style: const TextStyle(fontWeight: FontWeight.w700, color: DesignTokens.primary),
                     ),
                   ),
                 ],
@@ -110,7 +110,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
                           Row(children: [
                             Container(
                               width: 28, height: 28,
-                              decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
+                              decoration: const BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
                               child: Center(child: Text('${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))),
                             ),
                             const SizedBox(width: DesignTokens.spSm),
@@ -143,7 +143,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
                                       ),
                                       child: selected ? Center(child: Container(
                                         width: 12, height: 12,
-                                        decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
+                                        decoration: const BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
                                       )) : null,
                                     ),
                                     const SizedBox(width: DesignTokens.spSm),

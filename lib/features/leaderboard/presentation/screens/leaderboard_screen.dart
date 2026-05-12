@@ -27,7 +27,7 @@ class LeaderboardScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: DesignTokens.spMd),
                   Text('$pts', style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w800, color: DesignTokens.warning)),
-                  Text('points earned', style: TextStyle(color: DesignTokens.textSecondary)),
+                  const Text('points earned', style: TextStyle(color: DesignTokens.textSecondary)),
                 ]),
               ),
             ]),

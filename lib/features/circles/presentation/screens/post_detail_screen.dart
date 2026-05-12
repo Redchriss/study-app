@@ -58,7 +58,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   const SizedBox(height: 8),
                   Text(post['body'] ?? ''),
                   const SizedBox(height: 8),
-                  Text('Posted by ${post['author']?['username'] ?? ''}', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
+                  Text('Posted by ${post['author']?['username'] ?? ''}', style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
                 ])),
                 const SizedBox(height: DesignTokens.spMd),
                 SectionHeader(title: 'Comments (${post['commentCount'] ?? 0})'),
@@ -68,7 +68,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   builder: (cResult, {fetchMore, refetch}) {
                     if (cResult.isLoading) return const Center(child: CircularProgressIndicator());
                     final comments = (cResult.data?['postComments'] as List?) ?? [];
-                    if (comments.isEmpty) return Text('No comments yet', style: TextStyle(color: DesignTokens.textSecondary));
+                    if (comments.isEmpty) return const Text('No comments yet', style: TextStyle(color: DesignTokens.textSecondary));
                     return Column(children: comments.map((c) => Container(
                       margin: const EdgeInsets.only(bottom: DesignTokens.spXs),
                       padding: const EdgeInsets.all(DesignTokens.spMd),
@@ -122,7 +122,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       },
                       child: Container(
                         width: 48, height: 48,
-                        decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
+                        decoration: const BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
                         child: const Icon(Icons.send, color: Colors.white, size: 20),
                       ),
                     ),

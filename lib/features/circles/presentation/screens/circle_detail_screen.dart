@@ -48,7 +48,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
             if (circle['description'] != null && circle['description'] != '')
               Container(width: double.infinity, padding: const EdgeInsets.all(DesignTokens.spMd),
                 color: DesignTokens.primary.withValues(alpha: 0.04),
-                child: Text(circle['description'], style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13))),
+                child: Text(circle['description'], style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 13))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spXs),
               child: Row(children: [
@@ -100,7 +100,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
               builder: (postResult, {fetchMore, refetch}) {
                 if (postResult.isLoading) return const Center(child: CircularProgressIndicator());
                 final posts = (postResult.data?['circlePosts'] as List?) ?? [];
-                if (posts.isEmpty) return Center(child: Text('No posts yet', style: TextStyle(color: DesignTokens.textSecondary)));
+                if (posts.isEmpty) return const Center(child: Text('No posts yet', style: TextStyle(color: DesignTokens.textSecondary)));
                 return RefreshIndicator(
                   onRefresh: () async { refetch?.call(); },
                   child: ListView.builder(
@@ -124,13 +124,13 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                 Text(p['title'] ?? '', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
                                 const SizedBox(height: 2),
-                                Text('${p['author']?['username'] ?? ''}  ·  ${p['upvoteCount'] ?? 0} 👍', style: TextStyle(color: DesignTokens.textTertiary, fontSize: 12)),
+                                Text('${p['author']?['username'] ?? ''}  ·  ${p['upvoteCount'] ?? 0} 👍', style: const TextStyle(color: DesignTokens.textTertiary, fontSize: 12)),
                               ])),
                               if ((p['commentCount'] ?? 0) > 0)
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
-                                  child: Text('${p['commentCount']}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.primary)),
+                                  child: Text('${p['commentCount']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.primary)),
                                 ),
                             ]),
                           ),
