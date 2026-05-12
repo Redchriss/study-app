@@ -49,7 +49,7 @@ class _ShimmerBoxState extends State<ShimmerBox> with SingleTickerProviderStateM
     final dark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: _animation,
-      builder: (_, _a) => Container(
+      builder: (_, __) => Container(
         width: widget.width,
         height: widget.height,
         decoration: BoxDecoration(
