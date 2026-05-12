@@ -2,132 +2,124 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 
-class MaterialsScreen extends StatefulWidget {
+class MaterialsScreen extends StatelessWidget {
   const MaterialsScreen({super.key});
   @override
-  State<MaterialsScreen> createState() => _MaterialsScreenState();
-}
-
-class _MaterialsScreenState extends State<MaterialsScreen> {
-  final _searchCtrl = TextEditingController();
-  String _search = '';
-  String? _contentType;
-
-  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(title: const Text('Study Materials')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchCtrl,
-              decoration: InputDecoration(
-                hintText: 'Search materials...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _search.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.clear), onPressed: () => setState(() { _searchCtrl.clear(); _search = ''; }))
-                    : null,
-              ),
-              onChanged: (v) => setState(() => _search = v),
-            ),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [null, 'pdf', 'video', 'text', 'image'].map((t) => Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  label: Text(t ?? 'All'),
-                  selected: _contentType == t,
-                  onSelected: (_) => setState(() => _contentType = t),
-                ),
-              )).toList(),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Query(
-              options: QueryOptions(
-                document: gql(kMaterials),
-                variables: {
-                  if (_search.isNotEmpty) 'search': _search,
-                  if (_contentType != null) 'contentType': _contentType,
-                  'limit': 30,
-                },
-              ),
-              builder: (result, {fetchMore, refetch}) {
-                if (result.isLoading) return const Center(child: CircularProgressIndicator());
-                final materials = (result.data?['materials'] as List?) ?? [];
-                if (materials.isEmpty) {
-                  return const Center(child: Text('No materials found.'));
-                }
-                return GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 0.85,
+      appBar: AppBar(
+        title: Text('Materials', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+        centerTitle: true,
+      ),
+      body: Query(
+        options: QueryOptions(document: gql(kMaterials), variables: {'limit': 50}),
+        builder: (result, {fetchMore, refetch}) {
+          if (result.isLoading) {
+            return _buildShimmer();
+          }
+          final materials = (result.data?['materials'] as List?) ?? [];
+          if (materials.isEmpty) {
+            return Center(child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.menu_book_outlined, size: 80, color: DesignTokens.textTertiary.withValues(alpha: 0.5)),
+                const SizedBox(height: DesignTokens.spMd),
+                Text('No materials yet', style: theme.textTheme.titleMedium),
+              ],
+            ));
+          }
+          return RefreshIndicator(
+            onRefresh: () async => refetch?.call(),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(DesignTokens.spMd),
+              itemCount: materials.length,
+              itemBuilder: (_, i) {
+                final m = materials[i];
+                final color = _subjectColor(m['subject']?['name'] ?? '');
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: DesignTokens.spSm),
+                  child: AnimatedPress(
+                    onTap: () => context.go('/materials/${m['slug']}'),
+                    child: Container(
+                      padding: const EdgeInsets.all(DesignTokens.spMd),
+                      decoration: BoxDecoration(
+                        color: theme.cardTheme.color,
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+                        border: Border.all(color: (dark ? DesignTokens.darkBorder : DesignTokens.border).withValues(alpha: 0.5)),
+                        boxShadow: DesignTokens.shadowSm(dark),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48, height: 48,
+                            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(DesignTokens.radiusMd)),
+                            child: Icon(_subjectIcon(m['contentType'] ?? ''), color: color, size: 22),
+                          ),
+                          const SizedBox(width: DesignTokens.spMd),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(m['title'] ?? '', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                const SizedBox(height: 2),
+                                Text(m['subject']?['name'] ?? '', style: theme.textTheme.labelSmall?.copyWith(color: DesignTokens.textTertiary)),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+                            ),
+                            child: Text(m['contentType'] ?? '', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  itemCount: materials.length,
-                  itemBuilder: (_, i) => _MaterialGridCard(material: materials[i]),
                 );
               },
             ),
-          ),
-        ],
+          );
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: const Icon(Icons.upload),
+    );
+  }
+
+  Widget _buildShimmer() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(DesignTokens.spMd),
+      itemCount: 8,
+      itemBuilder: (_, __) => Padding(
+        padding: const EdgeInsets.only(bottom: DesignTokens.spSm),
+        child: ShimmerBox(height: 80, radius: DesignTokens.radiusLg),
       ),
     );
   }
 }
 
-class _MaterialGridCard extends StatelessWidget {
-  final Map material;
-  const _MaterialGridCard({required this.material});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go('/materials/${material['slug']}'),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(_icon(material['contentType']), color: AppColors.primary, size: 20),
-                  const Spacer(),
-                  if (material['isBookmarked'] == true)
-                    const Icon(Icons.bookmark, color: AppColors.secondary, size: 18),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(material['title'], maxLines: 3, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const Spacer(),
-              Text(material['subject']?['name'] ?? '',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-            ],
-          ),
-        ),
-      ),
-    );
+Color _subjectColor(String name) {
+  switch (name.toLowerCase()) {
+    case 'english': case 'chichewa': return DesignTokens.primary;
+    case 'mathematics': return DesignTokens.warning;
+    case 'science': return DesignTokens.success;
+    case 'social studies': return DesignTokens.error;
+    default: return DesignTokens.accent;
   }
+}
 
-  IconData _icon(String? t) {
-    switch (t) {
-      case 'pdf': return Icons.picture_as_pdf;
-      case 'video': return Icons.play_circle_outline;
-      case 'image': return Icons.image_outlined;
-      default: return Icons.article_outlined;
-    }
+IconData _subjectIcon(String type) {
+  switch (type) {
+    case 'pdf': return Icons.picture_as_pdf;
+    case 'video': return Icons.play_circle;
+    case 'text': return Icons.article;
+    case 'image': return Icons.image;
+    default: return Icons.description;
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -58,7 +58,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 width: _page == i ? 24 : 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: _page == i ? AppColors.primary : AppColors.textSecondary.withOpacity(0.3),
+                  color: _page == i ? DesignTokens.primary : DesignTokens.textSecondary.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
               )),
@@ -112,15 +112,15 @@ class _OnboardingPage extends StatelessWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: DesignTokens.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 60, color: AppColors.primary),
+            child: Icon(icon, size: 60, color: DesignTokens.primary),
           ),
           const SizedBox(height: 32),
           Text(title, style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          Text(subtitle, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary), textAlign: TextAlign.center),
+          Text(subtitle, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: DesignTokens.textSecondary), textAlign: TextAlign.center),
         ],
       ),
     );

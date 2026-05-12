@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
@@ -77,7 +77,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       const SizedBox(height: 8),
                       Text(post['body'] ?? ''),
                       const SizedBox(height: 8),
-                      Text('Posted by ${post['author']['username'] ?? ''}', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                      Text('Posted by ${post['author']['username'] ?? ''}', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
                       const Divider(height: 32),
                       Text('Comments (${post['commentCount'] ?? 0})', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                       const SizedBox(height: 12),
@@ -100,7 +100,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                     children: [
                                       Row(children: [
                                         Text(c['author']['username'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                                        if (c['isAnswer'] == true) ...[const SizedBox(width: 8), Icon(Icons.check_circle, size: 14, color: AppColors.success)],
+                                        if (c['isAnswer'] == true) ...[const SizedBox(width: 8), Icon(Icons.check_circle, size: 14, color: DesignTokens.success)],
                                       ]),
                                       const SizedBox(height: 4),
                                       Text(c['body'] ?? ''),
@@ -149,7 +149,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                         ),
                         const SizedBox(width: 8),
                         IconButton(
-                          icon: const Icon(Icons.send, color: AppColors.primary),
+                          icon: const Icon(Icons.send, color: DesignTokens.primary),
                           onPressed: () {
                             if (_commentCtrl.text.trim().isEmpty) return;
                             run({'postId': post['id'], 'content': _commentCtrl.text.trim()});

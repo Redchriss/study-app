@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -62,13 +62,13 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   const SizedBox(height: 12),
                   LinearProgressIndicator(
                     value: _step / totalSteps,
-                    backgroundColor: AppColors.textSecondary.withOpacity(0.2),
-                    color: AppColors.primary,
+                    backgroundColor: DesignTokens.textSecondary.withOpacity(0.2),
+                    color: DesignTokens.primary,
                     borderRadius: BorderRadius.circular(4),
                     minHeight: 8,
                   ),
                   const SizedBox(height: 4),
-                  Text('Step $_step of $totalSteps', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
+                  Text('Step $_step of $totalSteps', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary)),
                 ],
               ),
             ),
@@ -259,7 +259,7 @@ class _LevelCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+          border: Border.all(color: DesignTokens.primary.withOpacity(0.2)),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -268,10 +268,10 @@ class _LevelCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: DesignTokens.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: AppColors.primary),
+              child: Icon(icon, color: DesignTokens.primary),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -280,11 +280,11 @@ class _LevelCard extends StatelessWidget {
                 children: [
                   Text(title, style: Theme.of(context).textTheme.titleMedium),
                   if (subtitle.isNotEmpty)
-                    Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
+                    Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary)),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            const Icon(Icons.chevron_right, color: DesignTokens.textSecondary),
           ],
         ),
       ),

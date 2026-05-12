@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class AiTutorScreen extends ConsumerStatefulWidget {
   const AiTutorScreen({super.key});
@@ -27,46 +28,34 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
 
   Future<void> _createSession() async {
     final client = await ref.read(graphqlClientProvider.future);
-    final result = await client.mutate(MutationOptions(
-      document: gql(kCreateChatSession),
-    ));
-    if (result.data != null && !mounted) return;
-    _sessionId = result.data?['createChatSession']?['session']?['id'] ?? result.data?['createChatSession']?['id'];
-    if (_sessionId != null) _loadMessages();
+    final result = await client.mutate(MutationOptions(document: gql(kCreateChatSession)));
+    if (result.data != null && mounted) {
+      _sessionId = result.data?['createChatSession']?['session']?['id'] ?? result.data?['createChatSession']?['id'];
+      if (_sessionId != null) _loadMessages();
+    }
   }
 
   Future<void> _loadMessages() async {
     if (_sessionId == null) return;
     final client = await ref.read(graphqlClientProvider.future);
-    final result = await client.query(QueryOptions(
-      document: gql(kChatMessages),
-      variables: {'sessionId': _sessionId},
-    ));
+    final result = await client.query(QueryOptions(document: gql(kChatMessages), variables: {'sessionId': _sessionId}));
     if (result.data != null && mounted) {
       setState(() => _messages = ((result.data!['chatMessages'] as List?) ?? []).cast<Map<String, dynamic>>());
       _scrollDown();
     }
   }
 
-  Future<void> _sendMessage() async {
+  Future<void> _send() async {
     if (_sessionId == null || _msgCtrl.text.trim().isEmpty) return;
     final text = _msgCtrl.text.trim();
     _msgCtrl.clear();
-    setState(() {
-      _messages.add({'messageText': text, 'isUser': true, 'timestamp': DateTime.now().toIso8601String()});
-      _sending = true;
-    });
+    setState(() { _messages.add({'messageText': text, 'isUser': true, 'timestamp': DateTime.now().toIso8601String()}); _sending = true; });
     _scrollDown();
     final client = await ref.read(graphqlClientProvider.future);
-    final result = await client.mutate(MutationOptions(
-      document: gql(kSendMessage),
-      variables: {'sessionId': _sessionId, 'content': text},
-    ));
+    final result = await client.mutate(MutationOptions(document: gql(kSendMessage), variables: {'sessionId': _sessionId, 'content': text}));
     if (result.data != null && mounted) {
       final msg = result.data!['sendMessage']['message'];
-      if (msg != null) {
-        setState(() => _messages.add(Map<String, dynamic>.from(msg)));
-      }
+      if (msg != null) setState(() => _messages.add(Map<String, dynamic>.from(msg)));
     }
     if (mounted) setState(() => _sending = false);
     _scrollDown();
@@ -80,49 +69,36 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_sessionId == null) {
-      _createSession();
-    }
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    if (_sessionId == null) _createSession();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Tutor'),
+        title: Text('AI Tutor', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
         centerTitle: true,
-        actions: [
-          if (_messages.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.refresh, size: 20),
-              onPressed: () => setState(() { _sessionId = null; _messages = []; }),
-            ),
-        ],
+        actions: [if (_messages.isNotEmpty) IconButton(icon: const Icon(Icons.refresh, size: 20), onPressed: () => setState(() { _sessionId = null; _messages = []; }))],
       ),
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: AppColors.primary.withOpacity(0.05),
-            child: Row(
-              children: [
-                Icon(Icons.auto_awesome, size: 16, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text('Powered by Gemini', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              ],
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spXs),
+            color: DesignTokens.primary.withValues(alpha: 0.05),
+            child: Row(children: [
+              const Icon(Icons.auto_awesome, size: 14, color: DesignTokens.primary),
+              const SizedBox(width: 6),
+              Text('Powered by Gemini', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
+            ]),
           ),
           Expanded(
             child: _messages.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.smart_toy_outlined, size: 80, color: AppColors.primary.withOpacity(0.3)),
-                      const SizedBox(height: 16),
-                      Text('Ask me anything about your subjects', style: TextStyle(color: AppColors.textSecondary)),
-                    ],
-                  ),
-                )
+              ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.smart_toy_outlined, size: 80, color: DesignTokens.primary.withValues(alpha: 0.3)),
+                  const SizedBox(height: DesignTokens.spMd),
+                  Text('Ask me anything about your subjects', style: TextStyle(color: DesignTokens.textSecondary)),
+                ]))
               : ListView.builder(
                   controller: _scrollCtrl,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(DesignTokens.spMd),
                   itemCount: _messages.length,
                   itemBuilder: (_, i) {
                     final msg = _messages[i];
@@ -131,55 +107,49 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
                       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
                         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(14),
+                        margin: const EdgeInsets.only(bottom: DesignTokens.spXs),
+                        padding: const EdgeInsets.all(DesignTokens.spMd),
                         decoration: BoxDecoration(
-                          color: isUser ? AppColors.primary : AppColors.surface,
-                          borderRadius: BorderRadius.circular(16).copyWith(
+                          color: isUser ? DesignTokens.primary : (dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant),
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusLg).copyWith(
                             bottomRight: isUser ? const Radius.circular(4) : null,
                             bottomLeft: !isUser ? const Radius.circular(4) : null,
                           ),
-                          border: isUser ? null : Border.all(color: AppColors.textSecondary.withOpacity(0.2)),
                         ),
-                        child: Text(
-                          msg['messageText'] ?? '',
-                          style: TextStyle(color: isUser ? Colors.white : null, fontSize: 14),
-                        ),
+                        child: Text(msg['messageText'] ?? '', style: TextStyle(color: isUser ? Colors.white : null, fontSize: 14)),
                       ),
                     );
                   },
                 ),
           ),
-          if (_sending)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-            ),
+          if (_sending) const Padding(padding: EdgeInsets.only(bottom: 4), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
           SafeArea(
             child: Container(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _msgCtrl,
-                      decoration: InputDecoration(
-                        hintText: 'Type your question...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        isDense: true,
-                      ),
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendMessage(),
+              padding: const EdgeInsets.all(DesignTokens.spSm),
+              child: Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _msgCtrl,
+                    decoration: InputDecoration(
+                      hintText: 'Type your question...',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusXl)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spSm - 2),
+                      isDense: true,
                     ),
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _send(),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.send, color: AppColors.primary),
-                    onPressed: _sendMessage,
+                ),
+                const SizedBox(width: DesignTokens.spXs),
+                AnimatedPress(
+                  onTap: _send,
+                  child: Container(
+                    width: 48, height: 48,
+                    decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
+                    child: const Icon(Icons.send, color: Colors.white, size: 20),
                   ),
-                ],
-              ),
+                ),
+              ]),
             ),
           ),
         ],

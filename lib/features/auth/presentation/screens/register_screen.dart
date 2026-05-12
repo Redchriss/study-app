@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -34,7 +34,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       context.go('/setup');
     } else {
       final error = ref.read(authProvider).valueOrNull?.error ?? 'Registration failed.';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: DesignTokens.error));
     }
   }
 
@@ -53,7 +53,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Text('Create account', style: Theme.of(context).textTheme.displaySmall),
                 const SizedBox(height: 8),
                 Text('Join thousands of Malawian students',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary)),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: DesignTokens.textSecondary)),
                 const SizedBox(height: 40),
                 TextFormField(
                   controller: _usernameCtrl,

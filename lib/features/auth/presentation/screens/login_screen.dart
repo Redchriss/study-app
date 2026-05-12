@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -32,7 +33,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context.go(profile?['onboardingComplete'] == true ? '/home' : '/setup');
     } else {
       final error = ref.read(authProvider).valueOrNull?.error ?? 'Login failed.';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: AppColors.error));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: DesignTokens.error));
     }
   }
 
@@ -50,7 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 48),
                 Text('Welcome back', style: Theme.of(context).textTheme.displaySmall),
                 const SizedBox(height: 8),
-                Text('Log in to continue studying', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary)),
+                Text('Log in to continue studying', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: DesignTokens.textSecondary)),
                 const SizedBox(height: 40),
                 TextFormField(
                   controller: _usernameCtrl,

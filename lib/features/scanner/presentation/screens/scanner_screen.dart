@@ -7,7 +7,8 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({super.key});
@@ -49,102 +50,136 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     setState(() => _solving = false);
     if (result.hasException || result.data?['submitScanSession'] == null) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to solve paper'), backgroundColor: AppColors.error),
+        const SnackBar(content: Text('Failed to solve paper'), backgroundColor: DesignTokens.error),
       );
       return;
     }
     final data = result.data!['submitScanSession'];
     if (data['success'] != true) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text((data['errors'] as List?)?.first ?? 'Failed'), backgroundColor: AppColors.error),
+        SnackBar(content: Text((data['errors'] as List?)?.first ?? 'Failed'), backgroundColor: DesignTokens.error),
       );
       return;
     }
-    if (mounted) context.push('/scanner/results', extra: data['session']);
+    if (mounted) context.push('/scanner/results', extra: {'solutions': data['session']?['solutions'] ?? []});
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(title: const Text('Magic Scanner'), centerTitle: true),
+      appBar: AppBar(
+        title: Text('Magic Scanner', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(DesignTokens.spMd),
         child: Column(
           children: [
-            if (_image != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.file(_image!, height: 300, width: double.infinity, fit: BoxFit.contain),
-              )
-            else
-              GestureDetector(
-                onTap: () => showModalBottomSheet(
-                  context: context,
-                  builder: (_) => SafeArea(
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      ListTile(leading: const Icon(Icons.camera_alt), title: const Text('Take a photo'), onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); }),
-                      ListTile(leading: const Icon(Icons.photo_library), title: const Text('Choose from gallery'), onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); }),
-                    ]),
-                  ),
-                ),
-                child: Container(
-                  height: 250,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.textSecondary.withOpacity(0.3), width: 2),
-                  ),
-                  child: Center(
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Container(
-                        width: 80, height: 80,
-                        decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
-                        child: const Icon(Icons.document_scanner, size: 40, color: AppColors.primary),
+            GlassCard(
+              child: Column(
+                children: [
+                  if (_image != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                      child: Image.file(_image!, height: 250, width: double.infinity, fit: BoxFit.contain),
+                    )
+                  else
+                    GestureDetector(
+                      onTap: () => showModalBottomSheet(
+                        context: context,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusXl)),
+                        ),
+                        builder: (_) => SafeArea(
+                          child: Padding(
+                            padding: const EdgeInsets.all(DesignTokens.spMd),
+                            child: Column(mainAxisSize: MainAxisSize.min, children: [
+                              ListTile(
+                                leading: Container(
+                                  width: 48, height: 48,
+                                  decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(DesignTokens.radiusMd)),
+                                  child: const Icon(Icons.camera_alt, color: DesignTokens.primary),
+                                ),
+                                title: const Text('Take a photo'),
+                                onTap: () { Navigator.pop(context); _pickImage(ImageSource.camera); },
+                              ),
+                              ListTile(
+                                leading: Container(
+                                  width: 48, height: 48,
+                                  decoration: BoxDecoration(color: DesignTokens.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(DesignTokens.radiusMd)),
+                                  child: const Icon(Icons.photo_library, color: DesignTokens.accent),
+                                ),
+                                title: const Text('Choose from gallery'),
+                                onTap: () { Navigator.pop(context); _pickImage(ImageSource.gallery); },
+                              ),
+                            ]),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      const Text('Upload a past paper photo', style: TextStyle(fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 4),
-                      Text('PDF, JPG, or PNG', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                    ]),
-                  ),
-                ),
+                      child: Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+                          border: Border.all(color: (dark ? DesignTokens.darkBorder : DesignTokens.border).withValues(alpha: 0.5), width: 2),
+                        ),
+                        child: Center(
+                          child: Column(mainAxisSize: MainAxisSize.min, children: [
+                            Container(
+                              width: 72, height: 72,
+                              decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                              child: const Icon(Icons.document_scanner, size: 36, color: DesignTokens.primary),
+                            ),
+                            const SizedBox(height: DesignTokens.spMd),
+                            const Text('Upload a past paper photo', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                            const SizedBox(height: 4),
+                            Text('PDF, JPG, or PNG', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                          ]),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            const SizedBox(height: 20),
-            TextField(
-              decoration: const InputDecoration(labelText: 'Subject', hintText: 'e.g. Mathematics'),
-              onChanged: (v) => _subject = v,
             ),
-            const SizedBox(height: 12),
-            TextField(
-              decoration: const InputDecoration(labelText: 'Exam type (optional)', hintText: 'e.g. MSCE, Final'),
-              onChanged: (v) => _examType = v,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _educationLevel,
-                    decoration: const InputDecoration(labelText: 'Level'),
-                    items: const [
-                      DropdownMenuItem(value: 'primary', child: Text('Primary')),
-                      DropdownMenuItem(value: 'secondary', child: Text('Secondary')),
-                      DropdownMenuItem(value: 'tertiary', child: Text('Tertiary')),
+            const SizedBox(height: DesignTokens.spMd),
+            GlassCard(
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: const InputDecoration(labelText: 'Subject', hintText: 'e.g. Mathematics'),
+                    onChanged: (v) => _subject = v,
+                  ),
+                  const SizedBox(height: DesignTokens.spSm),
+                  TextField(
+                    decoration: const InputDecoration(labelText: 'Exam type (optional)', hintText: 'e.g. MSCE, Final'),
+                    onChanged: (v) => _examType = v,
+                  ),
+                  const SizedBox(height: DesignTokens.spSm),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _educationLevel,
+                          decoration: const InputDecoration(labelText: 'Level'),
+                          items: 'primary|secondary|tertiary'.split('|').map((l) => DropdownMenuItem(value: l, child: Text(l[0].toUpperCase() + l.substring(1)))).toList(),
+                          onChanged: (v) => setState(() => _educationLevel = v!),
+                        ),
+                      ),
+                      const SizedBox(width: DesignTokens.spSm),
+                      Expanded(
+                        child: TextField(
+                          decoration: const InputDecoration(labelText: 'Year'),
+                          keyboardType: TextInputType.number,
+                          onChanged: (v) => _year = v,
+                        ),
+                      ),
                     ],
-                    onChanged: (v) => setState(() => _educationLevel = v!),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(labelText: 'Year'),
-                    keyboardType: TextInputType.number,
-                    onChanged: (v) => _year = v,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DesignTokens.spLg),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(

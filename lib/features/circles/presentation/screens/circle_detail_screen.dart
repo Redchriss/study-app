@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 class CircleDetailScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -60,8 +60,8 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  color: AppColors.primary.withOpacity(0.05),
-                  child: Text(circle['description'], style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  color: DesignTokens.primary.withOpacity(0.05),
+                  child: Text(circle['description'], style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -84,7 +84,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                   options: MutationOptions(document: gql(kCreatePost)),
                   builder: (run, mut) => Container(
                     padding: const EdgeInsets.all(16),
-                    color: AppColors.surface,
+                    color: DesignTokens.surface,
                     child: Column(
                       children: [
                         TextField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title', isDense: true), textInputAction: TextInputAction.next),
@@ -131,7 +131,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                   builder: (postResult, {fetchMore, refetch}) {
                     if (postResult.isLoading) return const Center(child: CircularProgressIndicator());
                     final posts = (postResult.data?['circlePosts'] as List?) ?? [];
-                    if (posts.isEmpty) return Center(child: Text('No posts yet', style: TextStyle(color: AppColors.textSecondary)));
+                    if (posts.isEmpty) return Center(child: Text('No posts yet', style: TextStyle(color: DesignTokens.textSecondary)));
                     return RefreshIndicator(
                       onRefresh: () async { refetch?.call(); },
                       child: ListView.builder(
