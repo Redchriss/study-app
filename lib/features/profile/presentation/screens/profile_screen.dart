@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
@@ -66,7 +67,16 @@ class ProfileScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: DesignTokens.spXl),
+                const SizedBox(height: DesignTokens.spMd),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.go('/about'),
+                    icon: const Icon(Icons.info_outline, size: 18),
+                    label: const Text('About Yaza'),
+                  ),
+                ),
+                const SizedBox(height: DesignTokens.spSm),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
