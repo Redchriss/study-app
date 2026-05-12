@@ -1,10 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
-import '../../../../core/graphql/queries/queries.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/config/app_config.dart';
 
 class AiTutorScreen extends ConsumerStatefulWidget {
   const AiTutorScreen({super.key});
@@ -12,58 +12,130 @@ class AiTutorScreen extends ConsumerStatefulWidget {
   ConsumerState<AiTutorScreen> createState() => _AiTutorScreenState();
 }
 
-class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
+class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
+    with SingleTickerProviderStateMixin {
   final _msgCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+  final _messages = <Map<String, dynamic>>[];
   String? _sessionId;
-  List<Map<String, dynamic>> _messages = [];
   bool _sending = false;
+  bool _streaming = false;
+  String _streamingText = '';
+  late AnimationController _cursorCtrl;
+  late Animation<double> _cursorAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _cursorCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..repeat(reverse: true);
+    _cursorAnim = Tween<double>(begin: 0, end: 1).animate(_cursorCtrl);
+  }
 
   @override
   void dispose() {
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
+    _cursorCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _createSession() async {
-    final client = await ref.read(graphqlClientProvider.future);
-    final result = await client.mutate(MutationOptions(document: gql(kCreateChatSession)));
-    if (result.data != null && mounted) {
-      _sessionId = result.data?['createChatSession']?['session']?['id'] ?? result.data?['createChatSession']?['id'];
-      if (_sessionId != null) _loadMessages();
-    }
-  }
-
-  Future<void> _loadMessages() async {
-    if (_sessionId == null) return;
-    final client = await ref.read(graphqlClientProvider.future);
-    final result = await client.query(QueryOptions(document: gql(kChatMessages), variables: {'sessionId': _sessionId}));
-    if (result.data != null && mounted) {
-      setState(() => _messages = ((result.data!['chatMessages'] as List?) ?? []).cast<Map<String, dynamic>>());
-      _scrollDown();
-    }
+  Future<String?> _getToken() async {
+    return const FlutterSecureStorage().read(key: 'jwt_token');
   }
 
   Future<void> _send() async {
-    if (_sessionId == null || _msgCtrl.text.trim().isEmpty) return;
     final text = _msgCtrl.text.trim();
+    if (text.isEmpty) return;
     _msgCtrl.clear();
-    setState(() { _messages.add({'messageText': text, 'isUser': true, 'timestamp': DateTime.now().toIso8601String()}); _sending = true; });
+
+    setState(() {
+      _messages.add({'messageText': text, 'isUser': true, 'timestamp': DateTime.now().toIso8601String()});
+      _sending = true;
+      _streaming = true;
+      _streamingText = '';
+    });
     _scrollDown();
-    final client = await ref.read(graphqlClientProvider.future);
-    final result = await client.mutate(MutationOptions(document: gql(kSendMessage), variables: {'sessionId': _sessionId, 'content': text}));
-    if (result.data != null && mounted) {
-      final msg = result.data!['sendMessage']['message'];
-      if (msg != null) setState(() => _messages.add(Map<String, dynamic>.from(msg)));
+
+    final token = await _getToken();
+    if (token == null) { setState(() { _sending = false; _streaming = false; }); return; }
+
+    try {
+      final response = await http.Client().send(http.StreamedRequest(
+        'POST',
+        Uri.parse('${AppConfig.apiUrl}/ai/stream/'),
+      )..headers['Authorization'] = 'Bearer $token'
+        ..headers['Content-Type'] = 'application/json'
+        ..headers['Accept'] = 'text/event-stream'
+        ..sink.add(utf8.encode(jsonEncode({
+          'message': text,
+          'session_id': _sessionId,
+        })))
+        ..sink.close();
+
+      final lines = response.stream.transform(utf8.decoder);
+      String eventType = '';
+      StringBuffer dataBuffer = StringBuffer();
+
+      await for (final chunk in lines) {
+        for (final line in chunk.split('\n')) {
+          if (line.startsWith('event: ')) {
+            eventType = line.substring(7).trim();
+            dataBuffer = StringBuffer();
+          } else if (line.startsWith('data: ')) {
+            dataBuffer.write(line.substring(6));
+          } else if (line.isEmpty && eventType.isNotEmpty) {
+            _handleEvent(eventType, dataBuffer.toString());
+            eventType = '';
+            dataBuffer = StringBuffer();
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) setState(() { _sending = false; _streaming = false; });
     }
-    if (mounted) setState(() => _sending = false);
-    _scrollDown();
+  }
+
+  void _handleEvent(String type, String data) {
+    try {
+      final payload = jsonDecode(data) as Map<String, dynamic>;
+      switch (type) {
+        case 'token':
+          setState(() => _streamingText += payload['text'] as String? ?? '');
+          _scrollDown();
+          break;
+        case 'done':
+          setState(() {
+            _messages.add({'messageText': _streamingText, 'isUser': false, 'timestamp': DateTime.now().toIso8601String()});
+            _streamingText = '';
+            _sending = false;
+            _streaming = false;
+          });
+          _scrollDown();
+          break;
+        case 'meta':
+          if (payload['session_id'] != null) _sessionId = payload['session_id'].toString();
+          break;
+        case 'error':
+          setState(() { _sending = false; _streaming = false; _streamingText = ''; });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(payload['message'] ?? 'Error'), backgroundColor: DesignTokens.error),
+            );
+          }
+          break;
+      }
+    } catch (_) {}
   }
 
   void _scrollDown() {
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollCtrl.hasClients) _scrollCtrl.animateTo(_scrollCtrl.position.maxScrollExtent, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(_scrollCtrl.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
+      }
     });
   }
 
@@ -71,12 +143,15 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-    if (_sessionId == null) _createSession();
     return Scaffold(
       appBar: AppBar(
         title: Text('AI Tutor', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
         centerTitle: true,
-        actions: [if (_messages.isNotEmpty) IconButton(icon: const Icon(Icons.refresh, size: 20), onPressed: () => setState(() { _sessionId = null; _messages = []; }))],
+        actions: [
+          if (_messages.isNotEmpty)
+            IconButton(icon: const Icon(Icons.refresh, size: 20),
+              onPressed: () => setState(() { _sessionId = null; _messages.clear(); })),
+        ],
       ),
       body: Column(
         children: [
@@ -90,7 +165,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
             ]),
           ),
           Expanded(
-            child: _messages.isEmpty
+            child: _messages.isEmpty && !_streaming
               ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.smart_toy_outlined, size: 80, color: DesignTokens.primary.withValues(alpha: 0.3)),
                   const SizedBox(height: DesignTokens.spMd),
@@ -99,8 +174,11 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
               : ListView.builder(
                   controller: _scrollCtrl,
                   padding: const EdgeInsets.all(DesignTokens.spMd),
-                  itemCount: _messages.length,
+                  itemCount: _messages.length + (_streaming ? 1 : 0),
                   itemBuilder: (_, i) {
+                    if (_streaming && i == _messages.length) {
+                      return _buildAiMessage(_streamingText, true, dark);
+                    }
                     final msg = _messages[i];
                     final isUser = msg['isUser'] == true;
                     return Align(
@@ -122,7 +200,8 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
                   },
                 ),
           ),
-          if (_sending) const Padding(padding: EdgeInsets.only(bottom: 4), child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
+          if (_sending && !_streaming)
+            _buildTypingIndicator(),
           SafeArea(
             child: Container(
               padding: const EdgeInsets.all(DesignTokens.spSm),
@@ -137,15 +216,15 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
                       isDense: true,
                     ),
                     textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _send(),
+                    onSubmitted: (_) => _sending ? null : _send(),
                   ),
                 ),
                 const SizedBox(width: DesignTokens.spXs),
                 AnimatedPress(
-                  onTap: _send,
+                  onTap: _sending ? null : _send,
                   child: Container(
                     width: 48, height: 48,
-                    decoration: const BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
                     child: const Icon(Icons.send, color: Colors.white, size: 20),
                   ),
                 ),
@@ -154,6 +233,128 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAiMessage(String text, bool streaming, bool dark) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+        margin: const EdgeInsets.only(bottom: DesignTokens.spXs),
+        padding: const EdgeInsets.all(DesignTokens.spMd),
+        decoration: BoxDecoration(
+          color: dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusLg).copyWith(
+            bottomLeft: const Radius.circular(4),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(text, style: const TextStyle(fontSize: 14)),
+            ),
+            if (streaming)
+              Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: FadeTransition(
+                  opacity: _cursorAnim,
+                  child: Container(
+                    width: 8, height: 16,
+                    color: DesignTokens.primary,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _dot(0),
+          const SizedBox(width: 4),
+          _dot(200),
+          const SizedBox(width: 4),
+          _dot(400),
+          const SizedBox(width: 6),
+          const Text('Thinking', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  Widget _dot(int delay) {
+    return delay == 0
+        ? const _Dot(0)
+        : _Dot(delay);
+  }
+}
+
+class _Dot extends StatefulWidget {
+  final int delay;
+  const _Dot(this.delay);
+  @override
+  State<_Dot> createState() => _DotState();
+}
+
+class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
+    _anim = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+    Future.delayed(Duration(milliseconds: widget.delay), () => _ctrl.repeat(reverse: true));
+  }
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _anim,
+      child: Container(
+        width: 8, height: 8,
+        decoration: const BoxDecoration(
+          color: DesignTokens.primary,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
+
+// Simple animated press for the send button
+class AnimatedPress extends StatefulWidget {
+  final Widget child; final VoidCallback? onTap;
+  const AnimatedPress({super.key, required this.child, this.onTap});
+  @override
+  State<AnimatedPress> createState() => _AnimatedPressState();
+}
+class _AnimatedPressState extends State<AnimatedPress> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+  @override
+  void initState() { super.initState(); _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 200)); _anim = Tween<double>(begin: 1.0, end: 0.95).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOutBack)); }
+  @override void dispose() { _ctrl.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _ctrl.forward(), onTapUp: (_) { _ctrl.reverse(); widget.onTap?.call(); }, onTapCancel: () => _ctrl.reverse(),
+      child: AnimatedBuilder(animation: _anim, builder: (_, __) => Transform.scale(scale: _anim.value, child: widget.child)),
     );
   }
 }
