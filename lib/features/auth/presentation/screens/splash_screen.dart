@@ -10,33 +10,36 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
-  bool _timedOut = false;
-
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 12), () {
-      if (mounted) {
+    // Force navigate to login after 15 seconds no matter what
+    // This catches any case where auth never resolves
+    Future.delayed(const Duration(seconds: 15), () {
+      if (!mounted) return;
+      // Check current auth state
+      try {
         final auth = ref.read(authProvider).valueOrNull;
         if (auth == null || auth.isLoading) {
-          setState(() => _timedOut = true);
+          // Auth never resolved — force navigate
+          context.go('/onboarding');
         }
+      } catch (_) {
+        // ref.read failed — force navigate
+        context.go('/onboarding');
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Listen for auth state changes
     ref.listen<AsyncValue>(authProvider, (_, next) {
       next.whenData((auth) {
-        if (!auth.isLoading) {
+        if (!auth.isLoading && mounted) {
           if (auth.isAuthenticated) {
             final profile = auth.user?['profile'];
-            if (profile?['onboardingComplete'] == true) {
-              context.go('/home');
-            } else {
-              context.go('/setup');
-            }
+            context.go(profile?['onboardingComplete'] == true ? '/home' : '/setup');
           } else {
             context.go('/onboarding');
           }
@@ -62,28 +65,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             const SizedBox(height: 8),
             const Text('Learn. Grow. Pass.', style: TextStyle(color: Colors.white70, fontSize: 16)),
             const SizedBox(height: 48),
-            if (_timedOut)
-              Column(
-                children: [
-                  const Text('Could not connect to server', style: TextStyle(color: Colors.white60)),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() => _timedOut = false);
-                      ref.invalidate(authProvider);
-                    },
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-                    child: const Text('Retry', style: TextStyle(color: Color(0xFF1B6CA8))),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () => context.go('/login'),
-                    child: const Text('Go to Login', style: TextStyle(color: Colors.white70)),
-                  ),
-                ],
-              )
-            else
-              const CircularProgressIndicator(color: Colors.white),
+            const CircularProgressIndicator(color: Colors.white),
           ],
         ),
       ),

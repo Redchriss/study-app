@@ -3,12 +3,21 @@ import '../storage/secure_storage.dart';
 import '../config/app_config.dart';
 
 Future<GraphQLClient> buildGraphQLClient() async {
-  await initHiveForFlutter();
+  try {
+    await initHiveForFlutter();
+  } catch (_) {
+    // initHiveForFlutter might be called twice (main.dart already calls it)
+    // Second call can hang on some Android versions — swallow silently
+  }
 
   final authLink = AuthLink(
     getToken: () async {
-      final token = await SecureStorage.getToken();
-      return token != null ? 'Bearer $token' : null;
+      try {
+        final token = await SecureStorage.getToken();
+        return token != null ? 'Bearer $token' : null;
+      } catch (_) {
+        return null;
+      }
     },
   );
 
