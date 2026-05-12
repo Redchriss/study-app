@@ -692,3 +692,24 @@ query MyChildren {
   }
 }
 ''';
+
+const String kLeaderboard = r'''
+query Leaderboard {
+  me { username profile { studyPoints studyStreak } }
+}
+''';
+
+const String kCircleDetail = r'''
+query CircleDetail($slug: String!) {
+  studyCircle(slug: $slug) { id name description memberCount isMember isFavorite educationLevel }
+}
+''';
+
+const String kPostDetail = r'''
+query PostDetail($circleSlug: String!, $postSlug: String!) {
+  circlePost(circleSlug: $circleSlug, postSlug: $postSlug) {
+    id title body upvoteCount downvoteCount commentCount postType isSolved score userVote imageUrl
+    author { username } createdAt
+  }
+}
+''';

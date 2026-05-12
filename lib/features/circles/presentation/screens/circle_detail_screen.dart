@@ -26,6 +26,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
   String _postType = 'discussion';
   String _searchQuery = '';
   dynamic _refetch;
+  bool _posting = false;
 
   @override
   void initState() {
@@ -40,11 +41,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     return Query(
-      options: QueryOptions(document: gql(r'''
-        query CD($slug: String!) {
-          studyCircle(slug: $slug) { id name description memberCount isMember isFavorite educationLevel }
-        }
-      '''), variables: {'slug': widget.slug}, pollInterval: const Duration(seconds: 30)),
+      options: QueryOptions(document: gql(kCircleDetail), variables: {'slug': widget.slug}, pollInterval: const Duration(seconds: 30)),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
         final circle = result.data?['studyCircle'];
@@ -142,10 +139,18 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
   }
 
   Future<void> _createPost(dynamic refetch) async {
-    if (_titleCtrl.text.trim().isEmpty) return;
+    if (_titleCtrl.text.trim().isEmpty || _posting) return;
+    setState(() => _posting = true);
     String? b64;
     if (_postImage != null) {
       final bytes = await _postImage!.readAsBytes();
+      if (bytes.length > 3 * 1024 * 1024) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image too large (max 3MB)'), backgroundColor: DesignTokens.error),
+        );
+        setState(() => _posting = false);
+        return;
+      }
       b64 = base64Encode(bytes);
     }
     final client = ref.read(graphqlClientProvider);
@@ -160,6 +165,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
       },
     ));
     if (mounted) {
+      setState(() => _posting = false);
       if (result.hasException) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to post: ${result.exception?.graphqlErrors.first.message ?? 'unknown error'}'), backgroundColor: DesignTokens.error),

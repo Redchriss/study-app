@@ -28,21 +28,16 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   List<dynamic>? _children;
   String? _parentToken;
   String? _error;
+  GraphQLClient? _client;
 
-  Future<void> _loginAsParent() async {
-    setState(() { _parentLoading = true; _error = null; });
-    final client = await _buildClient();
-    final result = await client.mutate(MutationOptions(
-      document: gql(kTokenAuth),
-      variables: {'username': _parentUserCtrl.text.trim(), 'password': _parentPassCtrl.text},
-    ));
-    if (result.data != null && result.data!['tokenAuth'] != null) {
-      final t = result.data!['tokenAuth']['token'] as String?;
-      if (t != null) {
-        _parentToken = t;
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('parent_token', _parentToken!);
-      }
+  GraphQLClient _buildClient({String? token}) {
+    if (_client != null) return _client!;
+    final t = token ?? _parentToken;
+    final authLink = AuthLink(getToken: () async => t);
+    final httpLink = HttpLink(AppConfig.graphqlUrl);
+    _client = GraphQLClient(cache: GraphQLCache(), link: authLink.concat(httpLink));
+    return _client!;
+  }
       await _fetchChildren();
     } else {
       setState(() { _error = 'Invalid credentials'; _parentLoading = false; });
@@ -56,7 +51,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   }
 
   Future<void> _fetchChildren() async {
-    final client = await _buildClient();
+    final client = _buildClient();
     final result = await client.query(QueryOptions(document: gql(kMyChildren)));
     setState(() {
       _children = (result.data?['myChildren'] as List?) ?? [];
@@ -67,7 +62,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   Future<void> _createKid() async {
     if (_nameCtrl.text.trim().isEmpty || _kidPinCtrl.text.length != 4 || _newKidStandard == null) return;
     setState(() => _creatingKid = true);
-    final client = await _buildClient();
+    final client = _buildClient();
     final result = await client.mutate(MutationOptions(
       document: gql(kCreateChildProfile),
       variables: {
@@ -91,7 +86,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
         kidName: kid['childName'] as String? ?? 'Kid',
         onSubmit: (pin) async {
           Navigator.pop(context);
-          final client = await _buildClient();
+          final client = _buildClient();
           final result = await client.mutate(MutationOptions(
             document: gql(kKidLogin),
             variables: {'username': kid['username'], 'pinCode': pin},

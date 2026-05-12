@@ -53,6 +53,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     final totalSteps = _level == 'tertiary' ? 3 : (_level != null ? 4 : 3);
 
     return Scaffold(
+      appBar: AppBar(
+        leading: _step > 1 ? IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => setState(() => _step--),
+        ) : null,
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -202,7 +208,13 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   Widget _buildProgramStep() {
     if (_universityId == null) {
-      return Center(child: ElevatedButton(onPressed: () => setState(() => _step = 2), child: const Text('Select a university first')));
+      return Center(
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Text('Select a university first'),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: () => setState(() => _step = 2), child: const Text('Back to universities')),
+        ]),
+      );
     }
     return Query(
       options: QueryOptions(document: gql(kPrograms), variables: {'universityId': _universityId}),

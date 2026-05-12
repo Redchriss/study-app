@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class QuizTakeScreen extends ConsumerStatefulWidget {
@@ -14,28 +13,40 @@ class QuizTakeScreen extends ConsumerStatefulWidget {
   ConsumerState<QuizTakeScreen> createState() => _QuizTakeScreenState();
 }
 
-class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
+class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBindingObserver {
   final Map<String, String?> _answers = {};
   int _time = 0;
   String? _attemptId;
   bool _submitting = false;
   bool _startedAttempt = false;
   Timer? _timer;
+  bool _paused = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _paused = true;
+    } else if (state == AppLifecycleState.resumed && _paused) {
+      _paused = false;
+    }
+  }
+
   void _tick() {
-    if (!mounted || _submitting || _timer == null) return;
+    if (!mounted || _submitting || _paused || _timer == null) return;
     setState(() => _time++);
   }
 
@@ -46,13 +57,30 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
       'questionId': e.key,
       if (e.value != null) 'selectedAnswerId': e.value,
     }).toList();
-    final result = await client.mutate(MutationOptions(
-      document: gql(kSubmitQuizAttempt),
-      variables: {'attemptId': _attemptId, 'answers': answers, 'timeTakenSeconds': _time},
-    ));
-    setState(() => _submitting = false);
-    if (result.data?['submitQuizAttempt']?['success'] == true && mounted) {
-      context.go('/quiz-results/${result.data!['submitQuizAttempt']['attempt']['id']}');
+    try {
+      final result = await client.mutate(MutationOptions(
+        document: gql(kSubmitQuizAttempt),
+        variables: {'attemptId': _attemptId, 'answers': answers, 'timeTakenSeconds': _time},
+      ));
+      if (mounted) {
+        setState(() => _submitting = false);
+        if (result.hasException) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result.exception?.graphqlErrors.first.message ?? 'Submit failed'), backgroundColor: DesignTokens.error),
+          );
+          return;
+        }
+        if (result.data?['submitQuizAttempt']?['success'] == true) {
+          context.go('/quiz-results/${result.data!['submitQuizAttempt']['attempt']['id']}');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _submitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: DesignTokens.error),
+        );
+      }
     }
   }
 
@@ -87,98 +115,91 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
                     margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: DesignTokens.primary.withValues(alpha: 0.1),
+                      color: dark ? DesignTokens.warning.withValues(alpha: 0.15) : DesignTokens.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}',
-                      style: const TextStyle(fontWeight: FontWeight.w700, color: DesignTokens.primary),
-                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.timer, size: 16, color: DesignTokens.warning),
+                      const SizedBox(width: 4),
+                      Text('${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}', style: TextStyle(fontWeight: FontWeight.w600, color: DesignTokens.warning)),
+                    ]),
                   ),
                 ],
               ),
               body: Column(children: [
+                // Progress bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(children: [
+                    Text('$answered/${questions.length} answered', style: theme.textTheme.bodySmall),
+                    const Spacer(),
+                    Text('${(answered / (questions.length == 0 ? 1 : questions.length) * 100).round()}%', style: theme.textTheme.bodySmall),
+                  ]),
+                ),
+                if (questions.isNotEmpty)
+                  LinearProgressIndicator(
+                    value: answered / questions.length,
+                    backgroundColor: dark ? DesignTokens.surfaceVariant : DesignTokens.border,
+                    color: answered == questions.length ? DesignTokens.success : DesignTokens.primary,
+                    minHeight: 4,
+                  ),
+                const SizedBox(height: 8),
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.all(DesignTokens.spMd),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: questions.length,
                     itemBuilder: (_, i) {
-                      final q = questions[i];
-                      final answers = (q['answers'] as List?) ?? [];
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: DesignTokens.spSm),
-                        padding: const EdgeInsets.all(DesignTokens.spMd),
-                        decoration: BoxDecoration(
-                          color: theme.cardTheme.color,
-                          borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-                          border: Border.all(color: (dark ? DesignTokens.darkBorder : DesignTokens.border).withValues(alpha: 0.5)),
-                          boxShadow: DesignTokens.shadowSm(dark),
-                        ),
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Row(children: [
-                            Container(
-                              width: 28, height: 28,
-                              decoration: const BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
-                              child: Center(child: Text('${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700))),
-                            ),
-                            const SizedBox(width: DesignTokens.spSm),
-                            Expanded(child: Text(q['questionText'] ?? '', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600))),
-                          ]),
-                          const SizedBox(height: DesignTokens.spSm),
-                          ...answers.map((a) {
-                            final id = a['id'] as String;
-                            final selected = _answers[q['id']] == id;
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: DesignTokens.spXs),
-                              child: AnimatedPress(
-                                onTap: () => setState(() => _answers[q['id']] = id),
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spSm),
-                                  decoration: BoxDecoration(
-                                    color: selected ? DesignTokens.primary.withValues(alpha: 0.08) : null,
-                                    borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                                    border: Border.all(
-                                      color: selected ? DesignTokens.primary.withValues(alpha: 0.3) : (dark ? DesignTokens.darkBorder : DesignTokens.border).withValues(alpha: 0.3),
+                      final q = questions[i] as Map<String, dynamic>;
+                      final qId = q['id'] as String? ?? '$i';
+                      final options = (q['options'] as List?) ?? [];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('Q${i + 1}. ${q['questionText'] ?? ''}', style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 12),
+                            ...options.map((opt) {
+                              final optId = opt['id'] as String? ?? '';
+                              final selected = _answers[qId] == optId;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: InkWell(
+                                  onTap: () => setState(() => _answers[qId] = optId),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: selected ? DesignTokens.primary : DesignTokens.border),
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: selected ? DesignTokens.primary.withValues(alpha: 0.08) : null,
                                     ),
+                                    child: Row(children: [
+                                      Icon(selected ? Icons.radio_button_checked : Icons.radio_button_unchecked, size: 20, color: selected ? DesignTokens.primary : DesignTokens.textTertiary),
+                                      const SizedBox(width: 12),
+                                      Expanded(child: Text(opt['text'] ?? '', style: theme.textTheme.bodyMedium)),
+                                    ]),
                                   ),
-                                  child: Row(children: [
-                                    Container(
-                                      width: 22, height: 22,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: selected ? DesignTokens.primary : DesignTokens.textTertiary, width: 2),
-                                      ),
-                                      child: selected ? Center(child: Container(
-                                        width: 12, height: 12,
-                                        decoration: const BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
-                                      )) : null,
-                                    ),
-                                    const SizedBox(width: DesignTokens.spSm),
-                                    Text(a['answerText'] ?? '', style: TextStyle(color: selected ? DesignTokens.primary : null)),
-                                  ]),
                                 ),
-                              ),
-                            );
-                          }),
-                        ]),
+                              );
+                            }),
+                          ]),
+                        ),
                       );
                     },
                   ),
                 ),
-                SafeArea(
-                  child: Container(
-                    padding: const EdgeInsets.all(DesignTokens.spSm),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: (_submitting || _attemptId == null) ? null : () {
-                          _submit(quiz['id'], ref.read(graphqlClientProvider));
-                        },
-                        child: _submitting
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : Text('Submit ($answered/${questions.length})'),
-                      ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (_submitting || _attemptId == null) ? null : () {
+                        _submit(quiz['id'], ref.read(graphqlClientProvider));
+                      },
+                      child: _submitting
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text('Submit ($answered/${questions.length})'),
                     ),
                   ),
                 ),

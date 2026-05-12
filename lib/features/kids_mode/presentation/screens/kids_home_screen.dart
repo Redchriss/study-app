@@ -48,10 +48,14 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
     super.dispose();
   }
 
+  GraphQLClient? _kidClient;
+
   GraphQLClient _buildKidClient() {
+    if (_kidClient != null) return _kidClient!;
     final auth = ref.read(kidAuthStateProvider);
     final link = AuthLink(getToken: () => auth.token).concat(HttpLink(AppConfig.graphqlUrl));
-    return GraphQLClient(cache: GraphQLCache(), link: link);
+    _kidClient = GraphQLClient(cache: GraphQLCache(), link: link);
+    return _kidClient!;
   }
 
   Future<void> _fetchSubjects() async {

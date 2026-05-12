@@ -23,14 +23,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     return Query(
-      options: QueryOptions(document: gql(r'''
-        query PD($circleSlug: String!, $postSlug: String!) {
-          circlePost(circleSlug: $circleSlug, postSlug: $postSlug) {
-              id title body upvoteCount downvoteCount commentCount postType isSolved score userVote imageUrl
-              author { username } createdAt
-            }
-        }
-      '''), variables: {'circleSlug': widget.circleSlug, 'postSlug': widget.postSlug}),
+      options: QueryOptions(document: gql(kPostDetail), variables: {'circleSlug': widget.circleSlug, 'postSlug': widget.postSlug}),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
         final post = result.data?['circlePost'];
