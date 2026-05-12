@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/widgets/widgets.dart';
 
 class AiTutorScreen extends ConsumerStatefulWidget {
   const AiTutorScreen({super.key});
@@ -96,7 +97,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       if (mounted) {
         setState(() { _sending = false; _streaming = false; });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Connection lost: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e.toString()}'), backgroundColor: DesignTokens.error),
+          SnackBar(content: Text('Connection lost: $e'), backgroundColor: DesignTokens.error),
         );
       }
     }
@@ -343,24 +344,3 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
   }
 }
 
-// Simple animated press for the send button
-class AnimatedPress extends StatefulWidget {
-  final Widget child; final VoidCallback? onTap;
-  const AnimatedPress({super.key, required this.child, this.onTap});
-  @override
-  State<AnimatedPress> createState() => _AnimatedPressState();
-}
-class _AnimatedPressState extends State<AnimatedPress> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-  @override
-  void initState() { super.initState(); _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 200)); _anim = Tween<double>(begin: 1.0, end: 0.95).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOutBack)); }
-  @override void dispose() { _ctrl.dispose(); super.dispose(); }
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _ctrl.forward(), onTapUp: (_) { _ctrl.reverse(); widget.onTap?.call(); }, onTapCancel: () => _ctrl.reverse(),
-      child: AnimatedBuilder(animation: _anim, builder: (_, __) => Transform.scale(scale: _anim.value, child: widget.child)),
-    );
-  }
-}

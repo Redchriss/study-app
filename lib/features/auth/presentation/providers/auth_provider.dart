@@ -51,8 +51,8 @@ class AuthNotifier extends Notifier<AuthState> {
       }
 
       state = AuthState(isAuthenticated: true, isLoading: false, user: result.data!['me']);
-    } catch (_) {
-      state = const AuthState(isAuthenticated: false, isLoading: false);
+    } catch (e) {
+      state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Connection error. Check your network.');
     }
   }
 

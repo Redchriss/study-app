@@ -28,8 +28,14 @@ import '../features/profile/presentation/screens/about_screen.dart';
 import 'shell.dart';
 
 class _RouterRefresh extends ChangeNotifier {
-  _RouterRefresh(Ref ref) {
-    ref.listen(authProvider, (_, __) => notifyListeners());
+  final ProviderSubscription _sub;
+  _RouterRefresh(Ref ref)
+      : _sub = ref.listen(authProvider, (_, __) => notifyListeners());
+
+  @override
+  void dispose() {
+    _sub.close();
+    super.dispose();
   }
 }
 

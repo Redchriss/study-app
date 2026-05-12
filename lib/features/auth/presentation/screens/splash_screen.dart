@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 /// Splash screen — pure UI only.
 /// Navigation is handled entirely by GoRouter.redirect in router.dart.
@@ -8,7 +9,7 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1B6CA8),
+      backgroundColor: DesignTokens.primary,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

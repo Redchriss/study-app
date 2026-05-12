@@ -686,7 +686,6 @@ query MyChildren {
     id
     childName
     standard
-    pinCode
     isChild
     username
     createdAt

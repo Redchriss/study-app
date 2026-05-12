@@ -45,7 +45,7 @@ class ScannerResultsScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.green.shade50,
+                              color: DesignTokens.success.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text('Answer: ${sol['answer']}', style: const TextStyle(fontWeight: FontWeight.w700)),

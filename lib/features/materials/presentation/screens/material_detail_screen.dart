@@ -42,9 +42,6 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
           SnackBar(content: Text(result.exception?.graphqlErrors.first.message ?? 'AI task failed'), backgroundColor: DesignTokens.error),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${taskType} generated!'), backgroundColor: DesignTokens.success),
-        );
         refetch?.call();
       }
       setState(() => _aiTaskLoading = null);

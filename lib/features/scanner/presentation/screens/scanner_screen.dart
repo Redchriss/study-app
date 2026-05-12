@@ -94,9 +94,27 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               child: Column(
                 children: [
                   if (_image != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                      child: Image.file(_image!, height: 250, width: double.infinity, fit: BoxFit.contain),
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                          child: Image.file(_image!, height: 250, width: double.infinity, fit: BoxFit.contain),
+                        ),
+                        Positioned(
+                          top: 8, right: 8,
+                          child: GestureDetector(
+                            onTap: () => _pickImage(ImageSource.camera),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+                              ),
+                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ),
+                      ],
                     )
                   else
                     GestureDetector(

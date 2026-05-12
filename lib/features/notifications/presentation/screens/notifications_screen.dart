@@ -32,14 +32,13 @@ class NotificationsScreen extends StatelessWidget {
           body: RefreshIndicator(
             onRefresh: () async => refetch?.call(),
             child: items.isEmpty
-              ? ListView(children: [
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-                  const Center(child: Column(children: [
-                    Icon(Icons.notifications_none, size: 64, color: DesignTokens.textTertiary),
-                    SizedBox(height: 16),
-                    Text('No notifications yet', style: TextStyle(fontSize: 16, color: DesignTokens.textTertiary)),
-                  ])),
-                ])
+            ? ListView(children: [
+                SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                EmptyState(
+                  icon: Icons.notifications_none,
+                  message: 'No notifications yet',
+                ),
+              ])
               : ListView.separated(
                   itemCount: items.length,
                   separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
