@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/config/theme/app_colors.dart';
 
@@ -48,7 +49,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   }
 
   Future<GraphQLClient> _buildClient({String? token}) async {
-    final HttpLink httpLink = HttpLink('http://10.0.2.2:8000/graphql/');
+    final HttpLink httpLink = HttpLink(AppConfig.graphqlUrl);
     final authLink = AuthLink(getToken: () async => token ?? _parentToken);
     return GraphQLClient(cache: GraphQLCache(), link: authLink.concat(httpLink));
   }
