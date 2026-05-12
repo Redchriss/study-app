@@ -20,7 +20,7 @@ class AppTheme {
           headlineMedium: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
           titleLarge: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
         ),
-        cardTheme: const CardTheme(
+        cardTheme: const CardThemeData(
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -79,7 +79,7 @@ class AppTheme {
           headlineLarge: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: Colors.white),
           titleLarge: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: Colors.white),
         ),
-        cardTheme: const CardTheme(
+        cardTheme: const CardThemeData(
           elevation: 0,
           color: AppColors.darkSurface,
           shape: RoundedRectangleBorder(

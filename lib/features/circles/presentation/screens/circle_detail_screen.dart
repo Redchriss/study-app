@@ -133,7 +133,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                     final posts = (postResult.data?['circlePosts'] as List?) ?? [];
                     if (posts.isEmpty) return Center(child: Text('No posts yet', style: TextStyle(color: AppColors.textSecondary)));
                     return RefreshIndicator(
-                      onRefresh: () async { refetch?.call(); refetchPosts?.call(); },
+                      onRefresh: () async { refetch?.call(); },
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: posts.length,

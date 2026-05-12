@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/config/theme/app_colors.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class QuizTakeScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -63,8 +64,9 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
           builder: (runMutation, mutResult) {
             if (_attemptId == null) {
               runMutation({'quizId': quiz['id']});
-              if (mutResult.result?.data != null) {
-                _attemptId = mutResult.result!.data!['startQuizAttempt']['attempt']['id'];
+              final resultData = mutResult.result?.data;
+              if (resultData != null) {
+                _attemptId = resultData['startQuizAttempt']['attempt']['id'];
               }
             }
             final mins = _time ~/ 60;
@@ -127,7 +129,10 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _submitting ? null : () => _submit(quiz['id'], ref.read(graphqlClientProvider).valueOrNull!),
+                          onPressed: _submitting ? null : () async {
+                            final client = ref.read(graphqlClientProvider).valueOrNull;
+                            if (client != null) _submit(quiz['id'], client);
+                          },
                           child: _submitting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text('Submit (${_answers.length}/${questions.length})'),
                         ),
                       ),
