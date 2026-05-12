@@ -26,9 +26,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       options: QueryOptions(document: gql(r'''
         query PD($circleSlug: String!, $postSlug: String!) {
           circlePost(circleSlug: $circleSlug, postSlug: $postSlug) {
-            id title body upvoteCount downvoteCount commentCount postType isSolved score userVote
-            author { username } createdAt
-          }
+              id title body upvoteCount downvoteCount commentCount postType isSolved score userVote imageUrl
+              author { username } createdAt
+            }
         }
       '''), variables: {'circleSlug': widget.circleSlug, 'postSlug': widget.postSlug}),
       builder: (result, {fetchMore, refetch}) {
@@ -57,6 +57,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   ]),
                   const SizedBox(height: 8),
                   Text(post['body'] ?? ''),
+                  if (post['imageUrl'] != null) ...[
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                      child: Image.network(post['imageUrl'], width: double.infinity, fit: BoxFit.contain, errorBuilder: (_, __, ___) => const SizedBox()),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   Text('Posted by ${post['author']?['username'] ?? ''}', style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
                 ])),

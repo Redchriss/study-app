@@ -427,6 +427,17 @@ query CirclePosts($circleSlug: String!, $sort: String) {
     isSolved
     score
     userVote
+    imageUrl
+    author { username }
+    createdAt
+  }
+}
+''';
+
+const String kSearchPosts = r'''
+query SearchPosts($query: String!, $circleSlug: String) {
+  searchPosts(query: $query, circleSlug: $circleSlug) {
+    id title slug body upvoteCount commentCount postType
     author { username }
     createdAt
   }
@@ -462,11 +473,11 @@ mutation JoinCircle($circleSlug: String!) {
 ''';
 
 const String kCreatePost = r'''
-mutation CreatePost($circleSlug: String!, $title: String!, $content: String!, $postType: String) {
-  createPost(circleSlug: $circleSlug, title: $title, content: $content, postType: $postType) {
+mutation CreatePost($circleSlug: String!, $title: String!, $content: String!, $postType: String, $imageBase64: String) {
+  createPost(circleSlug: $circleSlug, title: $title, content: $content, postType: $postType, imageBase64: $imageBase64) {
     success
     errors
-    post { id slug title }
+    post { id slug title imageUrl }
   }
 }
 ''';
