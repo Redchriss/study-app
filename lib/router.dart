@@ -26,28 +26,31 @@ import '../features/profile/presentation/screens/about_screen.dart';
 import 'shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authAsync = ref.watch(authProvider);
+  ref.watch(authProvider); // Rebuild router when auth changes
 
   return GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
+      final authAsync = ref.read(authProvider);
+      if (authAsync.isLoading) {
+        // Stay on splash while loading
+        return state.matchedLocation == '/splash' ? null : '/splash';
+      }
+
       final auth = authAsync.valueOrNull;
-      if (auth == null || auth.isLoading) return null;
+      if (auth == null) return '/onboarding';
 
       final isAuth = auth.isAuthenticated;
       final location = state.matchedLocation;
-      final isOnAuth = location.startsWith('/login') ||
-          location.startsWith('/register') ||
-          location.startsWith('/onboarding') ||
-          location.startsWith('/setup') ||
-          location == '/splash';
+      final authRoutes = ['/login', '/register', '/onboarding', '/setup', '/splash'];
+      final isOnAuth = authRoutes.contains(location);
 
       if (!isAuth && !isOnAuth) return '/login';
-      if (!isAuth) return null;
+      if (!isAuth) return '/onboarding';
 
       final profileComplete = auth.user?['profile']?['onboardingComplete'] == true;
-      if (isAuth && !profileComplete && location != '/setup') return '/setup';
-      if (isAuth && profileComplete && isOnAuth && location != '/splash') return '/home';
+      if (!profileComplete && location != '/setup') return '/setup';
+      if (profileComplete && isOnAuth) return '/home';
       return null;
     },
     routes: [
