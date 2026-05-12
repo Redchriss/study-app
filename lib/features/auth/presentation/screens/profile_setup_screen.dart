@@ -24,7 +24,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   Future<void> _saveAndFinish() async {
     final client = ref.read(graphqlClientProvider);
-    await client.mutate(MutationOptions(
+    final result = await client.mutate(MutationOptions(
       document: gql(kUpdateProfile),
       variables: {
         'input': {
@@ -38,6 +38,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       },
     ));
     if (mounted) {
+      if (result.hasException || result.data?['updateProfile']?['success'] != true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.hasException ? 'Save failed. Try again.' : (result.data?['updateProfile']?['errors'] as List?)?.first ?? 'Save failed.'), backgroundColor: DesignTokens.error),
+        );
+        return;
+      }
       context.go('/home');
     }
   }
@@ -195,6 +201,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   Widget _buildProgramStep() {
+    if (_universityId == null) {
+      return Center(child: ElevatedButton(onPressed: () => setState(() => _step = 2), child: const Text('Select a university first')));
+    }
     return Query(
       options: QueryOptions(document: gql(kPrograms), variables: {'universityId': _universityId}),
       builder: (result, {fetchMore, refetch}) {

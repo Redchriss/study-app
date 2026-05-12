@@ -19,6 +19,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
   int _time = 0;
   String? _attemptId;
   bool _submitting = false;
+  bool _startedAttempt = false;
 
   @override
   void initState() {
@@ -26,8 +27,14 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
     Future.delayed(const Duration(seconds: 1), _tick);
   }
 
+  @override
+  void dispose() {
+    _time = 0;
+    super.dispose();
+  }
+
   void _tick() {
-    if (!mounted) return;
+    if (!mounted || _submitting) return;
     setState(() => _time++);
     Future.delayed(const Duration(seconds: 1), _tick);
   }
@@ -63,7 +70,8 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
         return Mutation(
           options: MutationOptions(document: gql(kStartQuizAttempt)),
           builder: (runMutation, mutResult) {
-            if (_attemptId == null) {
+            if (!_startedAttempt) {
+              _startedAttempt = true;
               runMutation({'quizId': quiz['id']});
               final resultData = mutResult?.data;
               if (resultData != null) _attemptId = resultData['startQuizAttempt']['attempt']['id'];

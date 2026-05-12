@@ -35,6 +35,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     setState(() => _solving = true);
     final client = ref.read(graphqlClientProvider);
     final bytes = await _image!.readAsBytes();
+    if (bytes.length > 5 * 1024 * 1024) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image too large. Choose a smaller file.'), backgroundColor: DesignTokens.error),
+        );
+        setState(() => _solving = false);
+      }
+      return;
+    }
     final b64 = base64Encode(bytes);
     final result = await client.mutate(MutationOptions(
       document: gql(kSubmitScanSession),

@@ -23,6 +23,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
   final _bodyCtrl = TextEditingController();
   bool _showNewPost = false;
   File? _postImage;
+  String _postType = 'discussion';
   String _searchQuery = '';
   dynamic _refetch;
 
@@ -130,10 +131,10 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                       ),
                     const SizedBox(width: 12),
                     Expanded(child: DropdownButtonFormField<String>(
-                      value: 'discussion',
+                      value: _postType,
                       decoration: const InputDecoration(labelText: 'Type', isDense: true),
                       items: 'discussion|question|resource'.split('|').map((t) => DropdownMenuItem(value: t, child: Text(t[0].toUpperCase()+t.substring(1)))).toList(),
-                      onChanged: (_) {},
+                      onChanged: (v) => setState(() => _postType = v ?? 'discussion'),
                     )),
                     const SizedBox(width: 8),
                     ElevatedButton(onPressed: () => _createPost(refetch), child: const Text('Post')),
@@ -152,7 +153,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
     String? b64;
     if (_postImage != null) {
       final bytes = await _postImage!.readAsBytes();
-      b64 = 'image/${_postImage!.path.split('.').last};base64,${base64Encode(bytes)}';
+      b64 = base64Encode(bytes);
     }
     final client = ref.read(graphqlClientProvider);
     await client.mutate(MutationOptions(
@@ -161,6 +162,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
         'circleSlug': widget.slug,
         'title': _titleCtrl.text,
         'content': _bodyCtrl.text,
+        'postType': _postType,
         'imageBase64': b64,
       },
     ));

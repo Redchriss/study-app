@@ -103,6 +103,7 @@ query Dashboard {
     hasData
     masteryPercent
     avgQuizScore
+    questionsPracticed
     strongestTopics
     weakestTopics
   }
