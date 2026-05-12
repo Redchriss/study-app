@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 class QuizResultsScreen extends ConsumerWidget {
   final String attemptId;
@@ -40,7 +40,7 @@ class QuizResultsScreen extends ConsumerWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [AppColors.primary, AppColors.accent]),
+                    gradient: LinearGradient(colors: [DesignTokens.primary, DesignTokens.accent]),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Column(children: [
@@ -62,7 +62,7 @@ class QuizResultsScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(children: [
-                            Icon(correct ? Icons.check_circle : Icons.cancel, color: correct ? AppColors.success : AppColors.error, size: 20),
+                            Icon(correct ? Icons.check_circle : Icons.cancel, color: correct ? DesignTokens.success : DesignTokens.error, size: 20),
                             const SizedBox(width: 8),
                             Expanded(child: Text(a['question']['questionText'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600))),
                           ]),
@@ -74,21 +74,21 @@ class QuizResultsScreen extends ConsumerWidget {
                           Text('Your answer: ${a['selectedAnswer']?['answerText'] ?? 'N/A'}'),
                           if (!correct) ...[
                             const SizedBox(height: 4),
-                            Text('Correct: ${a['correctAnswer']?['answerText'] ?? ''}', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w600)),
+                            Text('Correct: ${a['correctAnswer']?['answerText'] ?? ''}', style: TextStyle(color: DesignTokens.success, fontWeight: FontWeight.w600)),
                           ],
                           if (a['correctAnswer']?['explanation'] != null && a['correctAnswer']['explanation'] != '') ...[
                             const SizedBox(height: 8),
                             Container(
                               padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: BorderRadius.circular(8)),
-                              child: Text(a['correctAnswer']['explanation'], style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                              decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
+                              child: Text(a['correctAnswer']['explanation'], style: const TextStyle(fontSize: 13, color: DesignTokens.textSecondary)),
                             ),
                           ],
                           if (a['question']['explanation'] != null && a['question']['explanation'] != '') ...[
                             const SizedBox(height: 8),
                             Container(
                               padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                              decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                               child: Text(a['question']['explanation'], style: const TextStyle(fontSize: 13)),
                             ),
                           ],

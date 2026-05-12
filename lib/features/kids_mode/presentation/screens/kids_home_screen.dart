@@ -6,7 +6,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/config/app_config.dart';
 import 'kid_login_screen.dart';
 
 final _standards = [1, 2, 3, 4, 5, 6, 7, 8];

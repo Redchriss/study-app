@@ -5,7 +5,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 final kidTokenProvider = StateProvider<String?>((ref) => null);
 final kidProfileProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
@@ -108,7 +108,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
             );
           } else {
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(data?['errors']?.first ?? 'Wrong PIN'), backgroundColor: AppColors.error),
+              SnackBar(content: Text(data?['errors']?.first ?? 'Wrong PIN'), backgroundColor: DesignTokens.error),
             );
           if (mounted && data?['success'] == true) {
             context.go('/kids/learn');
@@ -147,7 +147,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
           TextField(controller: _parentUserCtrl, decoration: const InputDecoration(labelText: 'Your username', prefixIcon: Icon(Icons.person)), textInputAction: TextInputAction.next),
           const SizedBox(height: 16),
           TextField(controller: _parentPassCtrl, decoration: const InputDecoration(labelText: 'Your password', prefixIcon: Icon(Icons.lock)), obscureText: true, textInputAction: TextInputAction.done),
-          if (_error != null) ...[const SizedBox(height: 8), Text(_error!, style: const TextStyle(color: AppColors.error))],
+          if (_error != null) ...[const SizedBox(height: 8), Text(_error!, style: const TextStyle(color: DesignTokens.error))],
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -157,7 +157,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          TextButton(onPressed: () {}, child: const Text('Don\'t have an account? Register', style: TextStyle(color: AppColors.textSecondary))),
+          TextButton(onPressed: () {}, child: const Text('Don\'t have an account? Register', style: TextStyle(color: DesignTokens.textSecondary))),
         ]),
       ),
     );
@@ -199,7 +199,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
                       margin: const EdgeInsets.only(bottom: 16),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: const Color(0xFF27AE60).withOpacity(0.15),
+                          backgroundColor: const Color(0xFF27AE60).withValues(alpha: 0.15),
                           child: Text((kid['childName'] as String? ?? '?')[0], style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF27AE60))),
                         ),
                         title: Text(kid['childName'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -288,7 +288,7 @@ class _KidPinDialogState extends State<KidPinDialog> {
             child: Center(child: Text(i < _pin.length ? '●' : '○', style: TextStyle(color: i < _pin.length ? Colors.white : Colors.grey[400], fontSize: 24))),
           )),
         ),
-        if (_error.isNotEmpty) ...[const SizedBox(height: 8), Text(_error, style: const TextStyle(color: AppColors.error, fontSize: 13))],
+        if (_error.isNotEmpty) ...[const SizedBox(height: 8), Text(_error, style: const TextStyle(color: DesignTokens.error, fontSize: 13))],
         const SizedBox(height: 20),
         ...['123', '456', '789'].map((row) => Padding(
           padding: const EdgeInsets.only(bottom: 8),

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class QuizTakeScreen extends ConsumerStatefulWidget {
@@ -78,7 +78,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
                   Container(
                     margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                    decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
                     child: Text('${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}', style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ],

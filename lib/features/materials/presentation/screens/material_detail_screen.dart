@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
 
 class MaterialDetailScreen extends StatelessWidget {
   final String slug;
@@ -32,7 +32,7 @@ class MaterialDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Subject chip
-                Chip(label: Text(m['subject']?['name'] ?? ''), backgroundColor: AppColors.primary.withOpacity(0.1)),
+                Chip(label: Text(m['subject']?['name'] ?? ''), backgroundColor: DesignTokens.primary.withValues(alpha: 0.1)),
                 const SizedBox(height: 12),
 
                 // Description
@@ -82,9 +82,9 @@ class MaterialDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.05),
+                      color: DesignTokens.primary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                      border: Border.all(color: DesignTokens.primary.withValues(alpha: 0.1)),
                     ),
                     child: Text(m['aiSummary']),
                   ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'core/config/theme/app_colors.dart';
+import 'core/theme/design_tokens.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
@@ -42,7 +42,7 @@ class MainShell extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: const BoxDecoration(
-                color: AppColors.secondary,
+                color: DesignTokens.secondary,
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.document_scanner_outlined, color: Colors.white),
