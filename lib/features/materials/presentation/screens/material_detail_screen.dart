@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -18,6 +18,13 @@ class MaterialDetailScreen extends ConsumerStatefulWidget {
 class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
   bool _bookmarking = false;
   String? _aiTaskLoading;
+  YoutubePlayerController? _ytCtrl;
+
+  @override
+  void dispose() {
+    _ytCtrl?.close();
+    super.dispose();
+  }
 
   Future<void> _toggleBookmark(String id, bool currentlyBookmarked) async {
     if (_bookmarking) return;
@@ -104,20 +111,12 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
               const SizedBox(height: DesignTokens.spMd),
 
               if (m['youtubeEmbedUrl'] != null)
-                GestureDetector(
-                  onTap: () {
-                    final url = (m['youtubeEmbedUrl'] as String?) ?? '';
-                    final videoId = Uri.tryParse(url)?.queryParameters['v'] ?? url.split('/').last;
-                    launchUrl(Uri.parse('https://youtu.be/$videoId'), mode: LaunchMode.externalApplication);
+                _YoutubeInlinePlayer(
+                  url: m['youtubeEmbedUrl'] as String? ?? '',
+                  onControllerReady: (ctrl) {
+                    _ytCtrl?.close();
+                    _ytCtrl = ctrl;
                   },
-                  child: GlassCard(child: Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                    ),
-                    child: const Center(child: Icon(Icons.play_circle_fill, color: Colors.white, size: 64)),
-                  )),
                 ),
 
               if (m['fileUrl'] != null) ...[
@@ -136,62 +135,55 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
                     } else if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Download failed. Try again.'), backgroundColor: DesignTokens.error),
-                      );
-                    }
-                  },
-                  child: GlassCard(child: Row(children: [
-                    Container(
-                      width: 48, height: 48,
-                      decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                      child: const Icon(Icons.download, color: DesignTokens.primary, size: 22),
-                    ),
-                    const SizedBox(width: DesignTokens.spSm),
-                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Download', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-                      Text(('${m['contentType'] ?? ''} file').toUpperCase(), style: const TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
-                    ]),
-                  ])),
-                ),
-              ],
-
-              const SizedBox(height: DesignTokens.spMd),
-
-              GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('AI Tools', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: DesignTokens.spSm),
-                Row(children: [
-                  _AiBtn(label: 'Summary', icon: Icons.summarize, cost: 1,
-                    loading: _aiTaskLoading == 'summary',
-                    onTap: materialId.isNotEmpty ? () => _requestAiTask(materialId, 'summary', refetch) : null),
-                  const SizedBox(width: DesignTokens.spXs),
-                  _AiBtn(label: 'Flashcards', icon: Icons.style, cost: 1,
-                    loading: _aiTaskLoading == 'flashcards',
-                    onTap: materialId.isNotEmpty ? () => _requestAiTask(materialId, 'flashcards', refetch) : null),
-                  const SizedBox(width: DesignTokens.spXs),
-                  _AiBtn(label: 'Quiz', icon: Icons.quiz, cost: 1,
-                    loading: _aiTaskLoading == 'quiz',
-                    onTap: materialId.isNotEmpty ? () => _requestAiTask(materialId, 'quiz', refetch) : null),
-                ]),
-              ])),
-
-              if (m['aiSummary'] != null && m['aiSummary'].toString().isNotEmpty) ...[
-                const SizedBox(height: DesignTokens.spMd),
-                GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    const Icon(Icons.auto_awesome, size: 16, color: DesignTokens.warning),
-                    const SizedBox(width: 6),
-                    Text('AI Summary', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                  ]),
-                  const SizedBox(height: DesignTokens.spSm),
-                  Text(m['aiSummary'], style: theme.textTheme.bodyMedium),
-                ])),
-              ],
-            ]),
-          ),
-        );
-      },
     );
   }
+}
+
+class _YoutubeInlinePlayer extends StatefulWidget {
+  final String url;
+  final ValueChanged<YoutubePlayerController> onControllerReady;
+  const _YoutubeInlinePlayer({required this.url, required this.onControllerReady});
+  @override
+  State<_YoutubeInlinePlayer> createState() => _YoutubeInlinePlayerState();
+}
+
+class _YoutubeInlinePlayerState extends State<_YoutubeInlinePlayer> {
+  late final YoutubePlayerController _ctrl;
+
+  String _extractVideoId(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri != null && uri.queryParameters.containsKey('v')) return uri.queryParameters['v']!;
+    final parts = url.split('/');
+    return parts.last.split('?').first;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = YoutubePlayerController.fromVideoId(
+      videoId: _extractVideoId(widget.url),
+      autoPlay: false,
+      params: const YoutubePlayerParams(showFullscreenButton: true),
+    );
+    widget.onControllerReady(_ctrl);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+        child: YoutubePlayer(controller: _ctrl, aspectRatio: 16 / 9),
+      ),
+    );
+  }
+}
 }
 
 class _AiBtn extends StatelessWidget {
