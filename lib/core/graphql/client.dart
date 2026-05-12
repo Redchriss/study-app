@@ -3,12 +3,9 @@ import '../storage/secure_storage.dart';
 import '../config/app_config.dart';
 
 Future<GraphQLClient> buildGraphQLClient() async {
-  try {
-    await initHiveForFlutter();
-  } catch (_) {
-    // initHiveForFlutter might be called twice (main.dart already calls it)
-    // Second call can hang on some Android versions — swallow silently
-  }
+  // NOTE: main.dart already calls Hive.initFlutter().
+  // Do NOT call initHiveForFlutter() here — it hangs on Android
+  // when called twice.
 
   final authLink = AuthLink(
     getToken: () async {
