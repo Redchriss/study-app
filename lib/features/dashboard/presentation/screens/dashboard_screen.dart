@@ -39,8 +39,8 @@ class DashboardScreen extends ConsumerWidget {
                   )),
                   actions: [
                     IconButton(
-                      icon: const Icon(Icons.notifications_outlined),
-                      onPressed: () {},
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () => context.go('/notifications'),
                     ),
                   ],
                 ),

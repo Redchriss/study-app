@@ -66,7 +66,8 @@ class AuthNotifier extends Notifier<AuthState> {
       ));
 
       if (result.hasException) {
-        state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Invalid credentials.');
+        final msg = result.exception?.graphqlErrors.firstOrNull?.message ?? 'Network error. Check your connection.';
+        state = AuthState(isAuthenticated: false, isLoading: false, error: msg);
         return false;
       }
 
@@ -90,7 +91,8 @@ class AuthNotifier extends Notifier<AuthState> {
       ));
 
       if (result.hasException) {
-        state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Registration failed.');
+        final msg = result.exception?.graphqlErrors.firstOrNull?.message ?? 'Network error. Check your connection.';
+        state = AuthState(isAuthenticated: false, isLoading: false, error: msg);
         return false;
       }
 

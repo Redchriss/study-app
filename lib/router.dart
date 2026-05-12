@@ -8,6 +8,7 @@ import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/onboarding_screen.dart';
 import '../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../features/notifications/presentation/screens/notifications_screen.dart';
 import '../features/materials/presentation/screens/materials_screen.dart';
 import '../features/materials/presentation/screens/material_detail_screen.dart';
 import '../features/quizzes/presentation/screens/quizzes_screen.dart';
@@ -77,6 +78,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) => MainShell(child: child),
         routes: [
           GoRoute(path: '/home', builder: (_, __) => const DashboardScreen()),
+          GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
           GoRoute(
             path: '/materials',
             builder: (_, __) => const MaterialsScreen(),

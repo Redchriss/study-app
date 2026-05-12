@@ -93,7 +93,12 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         }
       }
     } catch (e) {
-      if (mounted) setState(() { _sending = false; _streaming = false; });
+      if (mounted) {
+        setState(() { _sending = false; _streaming = false; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Connection lost: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e.toString()}'), backgroundColor: DesignTokens.error),
+        );
+      }
     }
   }
 
@@ -126,7 +131,9 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
           }
           break;
       }
-    } catch (_) {}
+    } catch (_) {
+      debugPrint('AI Tutor: failed to parse SSE event: $type $data');
+    }
   }
 
   void _scrollDown() {
