@@ -15,14 +15,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 15), () {
-      if (mounted) setState(() => _timedOut = true);
+    Future.delayed(const Duration(seconds: 12), () {
+      if (mounted) {
+        final auth = ref.read(authProvider).valueOrNull;
+        if (auth == null || auth.isLoading) {
+          setState(() => _timedOut = true);
+        }
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(authProvider, (_, next) {
+    ref.listen<AsyncValue>(authProvider, (_, next) {
       next.whenData((auth) {
         if (!auth.isLoading) {
           if (auth.isAuthenticated) {
@@ -36,9 +41,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             context.go('/onboarding');
           }
         }
-      });
-      next.whenError((error, _) {
-        if (mounted) setState(() => _timedOut = true);
       });
     });
 

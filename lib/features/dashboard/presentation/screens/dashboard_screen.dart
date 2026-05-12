@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+
     return Query(
       options: QueryOptions(document: gql(kDashboard)),
       builder: (result, {fetchMore, refetch}) {
@@ -20,91 +23,333 @@ class DashboardScreen extends ConsumerWidget {
         final recentAttempts = (result.data?['recentQuizAttempts'] as List?) ?? [];
         final snap = result.data?['progressSnapshot'];
         final circles = (result.data?['myCircles'] as List?) ?? [];
+        final name = me?['username'] as String? ?? 'Student';
 
         return Scaffold(
           body: RefreshIndicator(
             onRefresh: () async => refetch?.call(),
             child: CustomScrollView(
               slivers: [
+                // ── App Bar ──────────────────────────────────────────
                 SliverAppBar(
                   floating: true,
-                  title: Text('Yaza', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800)),
+                  title: Text('Yaza', style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.primary,
+                  )),
                   actions: [
-                    IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: () {},
+                    ),
                   ],
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.all(16),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      // Welcome card
-                      _WelcomeCard(me: me, profile: profile),
-                      const SizedBox(height: 20),
 
-                      // Quick actions
-                      Text('Quick Actions', style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 12),
-                      _QuickActions(),
-                      const SizedBox(height: 20),
-
-                      // Progress snapshot
-                      if (snap?['hasData'] == true) ...[
-                        Text('Progress Snapshot', style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 12),
-                        _ProgressCard(snap: snap),
-                        const SizedBox(height: 20),
-                      ],
-
-                      // Recent materials
-                      if (recentMaterials.isNotEmpty) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Recent Materials', style: Theme.of(context).textTheme.titleMedium),
-                            TextButton(onPressed: () => context.go('/materials'), child: const Text('See all')),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          height: 120,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: recentMaterials.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 12),
-                            itemBuilder: (_, i) => _MaterialCard(material: recentMaterials[i]),
+                // ── Hero Greeting ─────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DesignTokens.spMd, 0, DesignTokens.spMd, DesignTokens.spLg,
+                    ),
+                    child: GlassCard(
+                      opacity: 0.7,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hi, $name 👋',
+                            style: theme.textTheme.headlineLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
+                          const SizedBox(height: DesignTokens.spXs),
+                          Text(
+                            profile?['educationLevel'] != null
+                                ? 'Keep studying! You\'re doing great.'
+                                : 'Set up your profile to get started.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: DesignTokens.textSecondary,
+                            ),
+                          ),
+                          if (profile != null) ...[
+                            const SizedBox(height: DesignTokens.spMd),
+                            Row(
+                              children: [
+                                _StatChip(
+                                  icon: Icons.local_fire_department,
+                                  label: '${profile['studyStreak'] ?? 0} day streak',
+                                  color: DesignTokens.secondary,
+                                ),
+                                const SizedBox(width: DesignTokens.spSm),
+                                _StatChip(
+                                  icon: Icons.star,
+                                  label: '${profile['studyPoints'] ?? 0} pts',
+                                  color: DesignTokens.warning,
+                                ),
+                                const SizedBox(width: DesignTokens.spSm),
+                                _StatChip(
+                                  icon: Icons.bolt,
+                                  label: '${profile['aiCredits'] ?? 0} credits',
+                                  color: DesignTokens.accent,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── Bento Grid ────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionHeader(
+                          title: 'Quick Actions',
+                          actionLabel: 'See all',
+                          onAction: () {},
                         ),
-                        const SizedBox(height: 20),
-                      ],
-
-                      // Recent quiz attempts
-                      if (recentAttempts.isNotEmpty) ...[
-                        Text('Recent Quizzes', style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        ...recentAttempts.map((a) => _QuizAttemptTile(attempt: a)),
-                        const SizedBox(height: 20),
-                      ],
-
-                      // My circles
-                      if (circles.isNotEmpty) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        const SizedBox(height: DesignTokens.spSm),
+                        BentoGrid(
+                          spacing: DesignTokens.spSm,
                           children: [
-                            Text('My Circles', style: Theme.of(context).textTheme.titleMedium),
-                            TextButton(onPressed: () => context.go('/circles'), child: const Text('See all')),
+                            BentoCard(
+                              columnSpan: 3,
+                              onTap: () => context.go('/scanner'),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 48, height: 48,
+                                    decoration: BoxDecoration(
+                                      color: DesignTokens.accent.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                                    ),
+                                    child: const Icon(Icons.document_scanner, color: DesignTokens.accent, size: 24),
+                                  ),
+                                  const SizedBox(height: DesignTokens.spXs),
+                                  Text('Solve Paper', style: theme.textTheme.labelLarge),
+                                ],
+                              ),
+                            ),
+                            BentoCard(
+                              columnSpan: 3,
+                              onTap: () => context.go('/materials'),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 48, height: 48,
+                                    decoration: BoxDecoration(
+                                      color: DesignTokens.primaryLight.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                                    ),
+                                    child: const Icon(Icons.menu_book, color: DesignTokens.primaryLight, size: 24),
+                                  ),
+                                  const SizedBox(height: DesignTokens.spXs),
+                                  Text('Materials', style: theme.textTheme.labelLarge),
+                                ],
+                              ),
+                            ),
+                            BentoCard(
+                              columnSpan: 3,
+                              onTap: () => context.go('/quizzes'),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 48, height: 48,
+                                    decoration: BoxDecoration(
+                                      color: DesignTokens.secondary.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                                    ),
+                                    child: const Icon(Icons.quiz_outlined, color: DesignTokens.secondary, size: 24),
+                                  ),
+                                  const SizedBox(height: DesignTokens.spXs),
+                                  Text('Quizzes', style: theme.textTheme.labelLarge),
+                                ],
+                              ),
+                            ),
+                            BentoCard(
+                              columnSpan: 3,
+                              onTap: () => context.go('/ai-tutor'),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 48, height: 48,
+                                    decoration: BoxDecoration(
+                                      color: DesignTokens.info.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                                    ),
+                                    child: const Icon(Icons.auto_awesome, color: DesignTokens.info, size: 24),
+                                  ),
+                                  const SizedBox(height: DesignTokens.spXs),
+                                  Text('AI Tutor', style: theme.textTheme.labelLarge),
+                                ],
+                              ),
+                            ),
+                            BentoCard(
+                              columnSpan: 6,
+                              onTap: () => context.go('/circles'),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 48, height: 48,
+                                    decoration: BoxDecoration(
+                                      color: DesignTokens.primary.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                                    ),
+                                    child: const Icon(Icons.groups, color: DesignTokens.primary, size: 24),
+                                  ),
+                                  const SizedBox(width: DesignTokens.spMd),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Study Circles', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                                        Text('${circles.length} joined', style: theme.textTheme.bodyMedium?.copyWith(color: DesignTokens.textSecondary)),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.chevron_right, color: DesignTokens.textTertiary),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        ...circles.map((c) => ListTile(
-                          leading: const CircleAvatar(child: Icon(Icons.groups)),
-                          title: Text(c['name']),
-                          subtitle: Text('${c['memberCount']} members'),
-                          onTap: () => context.go('/circles/${c['slug']}'),
-                          contentPadding: EdgeInsets.zero,
-                        )),
                       ],
-                    ]),
+                    ),
                   ),
+                ),
+
+                // ── Progress Snapshot ─────────────────────────────────
+                if (snap?['hasData'] == true)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(DesignTokens.spMd),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SectionHeader(title: 'Your Progress'),
+                          const SizedBox(height: DesignTokens.spSm),
+                          GlassCard(
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _ProgressStat(
+                                      value: '${snap?['masteryPercent'] ?? 0}%',
+                                      label: 'Mastery',
+                                      color: DesignTokens.success,
+                                    ),
+                                    _ProgressStat(
+                                      value: '${snap?['avgQuizScore'] ?? 0}%',
+                                      label: 'Avg Score',
+                                      color: DesignTokens.primary,
+                                    ),
+                                    _ProgressStat(
+                                      value: '${snap?['questionsPracticed'] ?? 0}',
+                                      label: 'Questions',
+                                      color: DesignTokens.secondary,
+                                    ),
+                                  ],
+                                ),
+                                if ((snap?['weakestTopics'] as List?)?.isNotEmpty == true) ...[
+                                  const Divider(height: DesignTokens.spXl),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.trending_up, size: 16, color: DesignTokens.warning),
+                                      const SizedBox(width: DesignTokens.spXs),
+                                      Text('Focus on: ', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                                      Expanded(
+                                        child: Text(
+                                          (snap?['weakestTopics'] as List).take(2).join(', '),
+                                          style: theme.textTheme.bodyMedium?.copyWith(color: DesignTokens.textSecondary),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // ── Recent Materials ──────────────────────────────────
+                if (recentMaterials.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(DesignTokens.spMd),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SectionHeader(
+                            title: 'Recent Materials',
+                            actionLabel: 'See all',
+                            onAction: () => context.go('/materials'),
+                          ),
+                          const SizedBox(height: DesignTokens.spSm),
+                          SizedBox(
+                            height: 140,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: recentMaterials.length,
+                              separatorBuilder: (_, __) => const SizedBox(width: DesignTokens.spSm),
+                              itemBuilder: (_, i) {
+                                final m = recentMaterials[i];
+                                return AnimatedPress(
+                                  onTap: () => context.go('/materials/${m['slug']}'),
+                                  child: Container(
+                                    width: 180,
+                                    padding: const EdgeInsets.all(DesignTokens.spMd),
+                                    decoration: BoxDecoration(
+                                      color: theme.cardTheme.color,
+                                      borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+                                      border: Border.all(color: (dark ? DesignTokens.darkBorder : DesignTokens.border).withValues(alpha: 0.5)),
+                                      boxShadow: DesignTokens.shadowSm(dark),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(children: [
+                                          Container(
+                                            width: 32, height: 32,
+                                            decoration: BoxDecoration(
+                                              color: DesignTokens.primary.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+                                            ),
+                                            child: const Icon(Icons.description, size: 16, color: DesignTokens.primary),
+                                          ),
+                                        ]),
+                                        const Spacer(),
+                                        Text(m['title'] ?? '', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600), maxLines: 2, overflow: TextOverflow.ellipsis),
+                                        const SizedBox(height: DesignTokens.spXxs),
+                                        Text(m['subject']?['name'] ?? '', style: theme.textTheme.labelSmall?.copyWith(color: DesignTokens.textTertiary)),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // ── Bottom Padding ─────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: SizedBox(height: DesignTokens.spXxl * 2),
                 ),
               ],
             ),
@@ -115,240 +360,44 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-class _WelcomeCard extends StatelessWidget {
-  final Map? me;
-  final Map? profile;
-  const _WelcomeCard({this.me, this.profile});
-
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  const _StatChip({required this.icon, required this.label, required this.color});
   @override
   Widget build(BuildContext context) {
-    final streak = profile?['studyStreak'] ?? 0;
-    final points = profile?['studyPoints'] ?? 0;
-    final credits = profile?['aiCredits'] ?? 0;
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spSm, vertical: DesignTokens.spXs),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF2980B9)]),
-        borderRadius: BorderRadius.circular(16),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Welcome back, ${me?['username'] ?? ''}! 👋',
-              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          Text(profile?['activePlanName'] ?? 'Free Plan',
-              style: const TextStyle(color: Colors.white70, fontSize: 13)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _StatPill(icon: '🔥', value: '$streak days', label: 'Streak'),
-              const SizedBox(width: 8),
-              _StatPill(icon: '⭐', value: '$points pts', label: 'Points'),
-              const SizedBox(width: 8),
-              _StatPill(icon: '💎', value: '$credits', label: 'Credits'),
-            ],
-          ),
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: DesignTokens.spXxs),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
         ],
       ),
     );
   }
 }
 
-class _StatPill extends StatelessWidget {
-  final String icon;
+class _ProgressStat extends StatelessWidget {
   final String value;
   final String label;
-  const _StatPill({required this.icon, required this.value, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(50),
-      ),
-      child: Text('$icon $value', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-    );
-  }
-}
-
-class _QuickActions extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final actions = [
-      (icon: Icons.psychology, label: 'AI Tutor', color: AppColors.primary, route: '/ai-tutor'),
-      (icon: Icons.document_scanner, label: 'Solve Paper', color: AppColors.secondary, route: '/scanner'),
-      (icon: Icons.groups, label: 'Circles', color: AppColors.accent, route: '/circles'),
-      (icon: Icons.leaderboard, label: 'Leaderboard', color: AppColors.success, route: '/leaderboard'),
-    ];
-
-    return SizedBox(
-      height: 90,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: actions.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (_, i) {
-          final a = actions[i];
-          return GestureDetector(
-            onTap: () => context.go(a.route),
-            child: Container(
-              width: 80,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: a.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: a.color.withOpacity(0.2)),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(a.icon, color: a.color, size: 28),
-                  const SizedBox(height: 6),
-                  Text(a.label, style: TextStyle(fontSize: 11, color: a.color, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _ProgressCard extends StatelessWidget {
-  final Map snap;
-  const _ProgressCard({required this.snap});
-
-  @override
-  Widget build(BuildContext context) {
-    final mastery = (snap['masteryPercent'] as num?)?.toDouble() ?? 0;
-    final strongest = (snap['strongestTopics'] as List?)?.take(2).join(', ') ?? '';
-    final weakest = (snap['weakestTopics'] as List?)?.take(2).join(', ') ?? '';
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: 60,
-                  height: 60,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CircularProgressIndicator(value: mastery / 100, strokeWidth: 6, backgroundColor: Colors.grey.shade200),
-                      Text('${mastery.toInt()}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Overall Mastery', style: Theme.of(context).textTheme.titleSmall),
-                      Text('Avg score: ${(snap['avgQuizScore'] as num?)?.toStringAsFixed(0) ?? 0}%',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (strongest.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _TopicRow(label: '💪 Strong', topics: strongest, color: AppColors.success),
-            ],
-            if (weakest.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              _TopicRow(label: '📌 Focus', topics: weakest, color: AppColors.warning),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TopicRow extends StatelessWidget {
-  final String label;
-  final String topics;
   final Color color;
-  const _TopicRow({required this.label, required this.topics, required this.color});
-
+  const _ProgressStat({required this.value, required this.label, required this.color});
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
-        const SizedBox(width: 8),
-        Expanded(child: Text(topics, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
-      ],
-    );
-  }
-}
-
-class _MaterialCard extends StatelessWidget {
-  final Map material;
-  const _MaterialCard({required this.material});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go('/materials/${material['slug']}'),
-      child: Container(
-        width: 160,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(_contentTypeIcon(material['contentType']), color: AppColors.primary, size: 24),
-            const SizedBox(height: 8),
-            Text(material['title'], maxLines: 2, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            const Spacer(),
-            Text(material['subject']?['name'] ?? '', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _contentTypeIcon(String? type) {
-    switch (type) {
-      case 'pdf': return Icons.picture_as_pdf;
-      case 'video': return Icons.play_circle_outline;
-      case 'image': return Icons.image_outlined;
-      default: return Icons.article_outlined;
-    }
-  }
-}
-
-class _QuizAttemptTile extends StatelessWidget {
-  final Map attempt;
-  const _QuizAttemptTile({required this.attempt});
-
-  @override
-  Widget build(BuildContext context) {
-    final score = (attempt['score'] as num?)?.toDouble() ?? 0;
-    final color = score >= 70 ? AppColors.success : score >= 50 ? AppColors.warning : AppColors.error;
-
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(attempt['quiz']?['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
-      trailing: Text('${score.toInt()}%', style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 16)),
-      onTap: () => context.go('/quiz-results/${attempt['id']}'),
-    );
+    return Column(children: [
+      Text(value, style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+        fontWeight: FontWeight.w800,
+        color: color,
+      )),
+      Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: DesignTokens.textTertiary)),
+    ]);
   }
 }
