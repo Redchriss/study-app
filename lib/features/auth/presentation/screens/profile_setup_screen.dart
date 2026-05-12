@@ -5,6 +5,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -250,9 +251,8 @@ class _LevelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return AnimatedPress(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
