@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -17,7 +17,6 @@ class KidLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
-  final _storage = const FlutterSecureStorage();
   final _parentUserCtrl = TextEditingController();
   final _parentPassCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
@@ -38,8 +37,12 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
       variables: {'username': _parentUserCtrl.text.trim(), 'password': _parentPassCtrl.text},
     ));
     if (result.data != null && result.data!['tokenAuth'] != null) {
-      _parentToken = result.data!['tokenAuth']['token'];
-      await _storage.write(key: 'parent_token', value: _parentToken);
+      final t = result.data!['tokenAuth']['token'] as String?;
+      if (t != null) {
+        _parentToken = t;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('parent_token', _parentToken!);
+      }
       await _fetchChildren();
     } else {
       setState(() { _error = 'Invalid credentials'; _parentLoading = false; });
@@ -95,7 +98,8 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
           ));
           final data = result.data?['kidLogin'];
           if (data?['success'] == true) {
-            await _storage.write(key: 'kid_token', value: data['token']);
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('kid_token', data['token']);
             ref.read(kidTokenProvider.notifier).state = data['token'];
             ref.read(kidProfileProvider.notifier).state = Map<String, dynamic>.from(kid);
             ref.read(kidAuthStateProvider.notifier).state = KidAuthState(

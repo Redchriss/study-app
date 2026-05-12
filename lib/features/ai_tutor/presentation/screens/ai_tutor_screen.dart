@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/config/app_config.dart';
 
@@ -43,7 +43,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   }
 
   Future<String?> _getToken() async {
-    return const FlutterSecureStorage().read(key: 'jwt_token');
+    return SecureStorage.getToken();
   }
 
   Future<void> _send() async {
