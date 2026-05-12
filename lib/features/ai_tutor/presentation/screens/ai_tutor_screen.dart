@@ -63,17 +63,16 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     if (token == null) { setState(() { _sending = false; _streaming = false; }); return; }
 
     try {
-      final response = await http.Client().send(http.StreamedRequest(
-        'POST',
-        Uri.parse('${AppConfig.apiUrl}/ai/stream/'),
-      )..headers['Authorization'] = 'Bearer $token'
-        ..headers['Content-Type'] = 'application/json'
-        ..headers['Accept'] = 'text/event-stream'
-        ..sink.add(utf8.encode(jsonEncode({
-          'message': text,
-          'session_id': _sessionId,
-        })))
-        ..sink.close();
+      final request = http.StreamedRequest('POST', Uri.parse('${AppConfig.apiUrl}/ai/stream/'));
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Content-Type'] = 'application/json';
+      request.headers['Accept'] = 'text/event-stream';
+      request.sink.add(utf8.encode(jsonEncode({
+        'message': text,
+        'session_id': _sessionId,
+      })));
+      request.sink.close();
+      final response = await http.Client().send(request);
 
       final lines = response.stream.transform(utf8.decoder);
       String eventType = '';
