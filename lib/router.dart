@@ -22,15 +22,19 @@ import '../features/circles/presentation/screens/circle_detail_screen.dart';
 import '../features/circles/presentation/screens/post_detail_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/leaderboard/presentation/screens/leaderboard_screen.dart';
+import '../features/account/presentation/screens/upgrade_screen.dart';
+import '../features/account/presentation/screens/history_screen.dart';
+import '../features/account/presentation/screens/bookmarks_screen.dart';
 import '../features/kids_mode/presentation/screens/kids_home_screen.dart';
 import '../features/kids_mode/presentation/screens/kid_login_screen.dart';
 import '../features/profile/presentation/screens/about_screen.dart';
 import 'shell.dart';
 
 class _RouterRefresh extends ChangeNotifier {
-  final ProviderSubscription _sub;
-  _RouterRefresh(Ref ref)
-      : _sub = ref.listen(authProvider, (_, __) => notifyListeners());
+  late final ProviderSubscription _sub;
+  _RouterRefresh(Ref ref) {
+    _sub = ref.listen(authProvider, (_, __) => notifyListeners());
+  }
 
   @override
   void dispose() {
@@ -135,6 +139,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/ai-tutor', builder: (_, __) => const AiTutorScreen()),
       GoRoute(path: '/leaderboard', builder: (_, __) => const LeaderboardScreen()),
       GoRoute(path: '/about', builder: (_, __) => const AboutScreen()),
+      GoRoute(path: '/upgrade', builder: (_, __) => const UpgradeScreen()),
+      GoRoute(path: '/history', builder: (_, __) => const HistoryScreen()),
+      GoRoute(path: '/bookmarks', builder: (_, __) => const BookmarksScreen()),
       GoRoute(
         path: '/quizzes',
         builder: (_, __) => const QuizzesScreen(),

@@ -546,15 +546,19 @@ query CreditPackages {
     purchaseType
     badge
   }
-  creditLedger(limit: 10) {
-    id
-    entryType
-    actionCode
-    delta
-    balanceAfter
+  aiActionCatalog {
+    code
+    label
+    cost
     description
-    createdAt
   }
+  me { profile { aiCredits } }
+}
+''';
+
+const String kCreditLedger = r'''
+query CreditLedger($limit: Int) {
+  creditLedger(limit: $limit) { id entryType actionCode delta description createdAt }
 }
 ''';
 
@@ -711,5 +715,37 @@ query PostDetail($circleSlug: String!, $postSlug: String!) {
     id title body upvoteCount downvoteCount commentCount postType isSolved score userVote imageUrl
     author { username } createdAt
   }
+}
+''';
+
+const String kLeaderboardRankings = r'''
+query LeaderboardRankings($category: String, $limit: Int) {
+  leaderboard(category: $category, limit: $limit) {
+    username
+    score
+    quizCount
+    questionsCorrect
+  }
+}
+''';
+
+const String kPaperSolveSessions = r'''
+query PaperSolveSessions($limit: Int) {
+  pastPapers(limit: $limit) {
+    id title subject
+  }
+}
+''';
+
+
+const String kPaymentHistory = r'''
+query PaymentHistory($limit: Int) {
+  paymentHistory(limit: $limit) { id amount description status createdAt }
+}
+''';
+
+const String kBookmarkedMaterials = r'''
+query BookmarkedMaterials {
+  bookmarkedMaterials { id title slug subject { name } contentType }
 }
 ''';

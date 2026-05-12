@@ -68,14 +68,11 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: DesignTokens.spMd),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => context.go('/about'),
-                    icon: const Icon(Icons.info_outline, size: 18),
-                    label: const Text('About Yaza'),
-                  ),
-                ),
+                _MenuButton(icon: Icons.bookmark, label: 'Bookmarks', onTap: () => context.go('/bookmarks')),
+                _MenuButton(icon: Icons.emoji_events, label: 'Leaderboard', onTap: () => context.go('/leaderboard')),
+                _MenuButton(icon: Icons.auto_awesome, label: 'Plans & Credits', onTap: () => context.go('/upgrade')),
+                _MenuButton(icon: Icons.history, label: 'History', onTap: () => context.go('/history')),
+                _MenuButton(icon: Icons.info_outline, label: 'About Yaza', onTap: () => context.go('/about')),
                 const SizedBox(height: DesignTokens.spSm),
                 SizedBox(
                   width: double.infinity,
@@ -104,6 +101,28 @@ class ProfileScreen extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _MenuButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _MenuButton({required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: onTap,
+          icon: Icon(icon, size: 18),
+          label: Text(label),
+        ),
+      ),
     );
   }
 }

@@ -10,69 +10,73 @@ class LeaderboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text('Leaderboard', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)), centerTitle: true),
-      body: Query(
-        options: QueryOptions(document: gql(kLeaderboard)),
-        builder: (result, {fetchMore, refetch}) {
-          if (result.isLoading) return const Center(child: CircularProgressIndicator());
-          final me = result.data?['me'];
-          final pts = me?['profile']?['studyPoints'] ?? 0;
-          final streak = me?['profile']?['studyStreak'] ?? 0;
-          return ListView(
-            padding: const EdgeInsets.all(DesignTokens.spMd),
-            children: [
-              GlassCard(
-                child: Column(children: [
-                  Container(
-                    width: 80, height: 80,
-                    decoration: BoxDecoration(color: DesignTokens.warning.withValues(alpha: 0.15), shape: BoxShape.circle),
-                    child: const Icon(Icons.emoji_events, size: 40, color: DesignTokens.warning),
-                  ),
-                  const SizedBox(height: DesignTokens.spMd),
-                  Text('$pts', style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w800, color: DesignTokens.warning)),
-                  const Text('points earned', style: TextStyle(color: DesignTokens.textSecondary)),
-                  const SizedBox(height: 8),
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const Icon(Icons.local_fire_department, size: 18, color: DesignTokens.warning),
-                    const SizedBox(width: 4),
-                    Text('$streak day streak', style: const TextStyle(color: DesignTokens.textSecondary)),
-                  ]),
-                ]),
-              ),
-              const SizedBox(height: DesignTokens.spLg),
-              GlassCard(
-                child: Padding(
-                  padding: const EdgeInsets.all(DesignTokens.spMd),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('How to earn points', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: DesignTokens.spSm),
-                    _TipRow(icon: Icons.quiz, text: 'Complete quizzes'),
-                    _TipRow(icon: Icons.auto_awesome, text: 'Use AI study tools'),
-                    _TipRow(icon: Icons.local_fire_department, text: 'Maintain your study streak'),
-                  ]),
-                ),
-              ),
-            ],
-          );
-        },
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Leaderboard', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          centerTitle: true,
+          bottom: TabBar(
+            tabs: const [Tab(text: 'Top Learners'), Tab(text: 'Top Contributors')],
+            indicatorColor: DesignTokens.primary,
+            labelColor: DesignTokens.primary,
+          ),
+        ),
+        body: TabBarView(
+          children: [_LeaderboardTab(category: 'learners'), _LeaderboardTab(category: 'contributors')],
+        ),
       ),
     );
   }
 }
 
-class _TipRow extends StatelessWidget {
-  final IconData icon; final String text;
-  const _TipRow({required this.icon, required this.text});
+class _LeaderboardTab extends ConsumerWidget {
+  final String category;
+  const _LeaderboardTab({required this.category});
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(children: [
-        Icon(icon, size: 16, color: DesignTokens.primary),
-        const SizedBox(width: 8),
-        Text(text, style: const TextStyle(color: DesignTokens.textSecondary)),
-      ]),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return Query(
+      options: QueryOptions(
+        document: gql(kLeaderboardRankings),
+        variables: {'category': category, 'limit': 20},
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading) return const Center(child: CircularProgressIndicator());
+        final entries = (result.data?['leaderboard'] as List?) ?? [];
+        if (entries.isEmpty) return Center(
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(Icons.emoji_events, size: 64, color: DesignTokens.textTertiary.withValues(alpha: 0.5)),
+            const SizedBox(height: 16),
+            Text(category == 'learners' ? 'No learners yet. Take a quiz!' : 'No contributors yet. Answer questions!',
+              style: const TextStyle(color: DesignTokens.textTertiary)),
+          ]),
+        );
+        return ListView.builder(
+          padding: const EdgeInsets.all(DesignTokens.spMd),
+          itemCount: entries.length,
+          itemBuilder: (_, i) {
+            final e = entries[i];
+            final rank = i + 1;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: rank == 1 ? DesignTokens.warning : rank == 2 ? Colors.grey[300] : rank == 3 ? Colors.brown[100] : DesignTokens.surfaceVariant,
+                  ),
+                  child: Center(child: Text('$rank', style: TextStyle(fontWeight: FontWeight.w700, color: rank <= 3 ? Colors.white : DesignTokens.textSecondary))),
+                ),
+                title: Text(e['username'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text('${e['questionsCorrect'] ?? 0} correct · ${e['score']?.toStringAsFixed(0) ?? '0'} avg', style: const TextStyle(fontSize: 12)),
+                trailing: Text('${e['quizCount'] ?? 0} quizzes', style: const TextStyle(fontSize: 12, color: DesignTokens.primary, fontWeight: FontWeight.w600)),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

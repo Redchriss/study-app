@@ -5,6 +5,7 @@ import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/services/download_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class MaterialDetailScreen extends ConsumerStatefulWidget {
@@ -187,7 +188,6 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
               ],
             ]),
           ),
-        ),
       );
       },
     );
@@ -238,7 +238,6 @@ class _YoutubeInlinePlayerState extends State<_YoutubeInlinePlayer> {
       ),
     );
   }
-}
 }
 
 class _AiBtn extends StatelessWidget {

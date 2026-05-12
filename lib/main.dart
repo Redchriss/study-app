@@ -4,6 +4,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/graphql/client.dart';
+import 'features/auth/presentation/providers/auth_provider.dart';
 import 'router.dart';
 
 void main() async {
