@@ -34,6 +34,9 @@ dependencies:
   cached_network_image: ^3.3.1
   lottie: ^3.1.0
 
+  # TTS
+  flutter_tts: ^4.1.0
+
   # Media
   image_picker: ^1.1.3
   flutter_pdfview: ^1.3.2
