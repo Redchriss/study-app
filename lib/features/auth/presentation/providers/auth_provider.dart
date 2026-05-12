@@ -42,7 +42,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final client = ref.read(graphqlClientProvider);
       final result = await client.query(
         QueryOptions(document: gql(kMe), fetchPolicy: FetchPolicy.networkOnly),
-      ).timeout(const Duration(seconds: 15));
+      ).timeout(const Duration(seconds: 30));
 
       if (result.hasException || result.data?['me'] == null) {
         await SecureStorage.clearTokens();

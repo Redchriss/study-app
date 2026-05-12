@@ -30,13 +30,6 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _startAutoRefresh();
-  }
-
-  void _startAutoRefresh() {
-    Future.delayed(const Duration(seconds: 30), () {
-      if (mounted) { _refetch?.call(); _startAutoRefresh(); }
-    });
   }
 
   @override
@@ -156,7 +149,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
       b64 = base64Encode(bytes);
     }
     final client = ref.read(graphqlClientProvider);
-    await client.mutate(MutationOptions(
+    final result = await client.mutate(MutationOptions(
       document: gql(kCreatePost),
       variables: {
         'circleSlug': widget.slug,
@@ -166,9 +159,17 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
         'imageBase64': b64,
       },
     ));
-    _titleCtrl.clear(); _bodyCtrl.clear();
-    setState(() { _showNewPost = false; _postImage = null; });
-    refetch?.call();
+    if (mounted) {
+      if (result.hasException) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to post: ${result.exception?.graphqlErrors.first.message ?? 'unknown error'}'), backgroundColor: DesignTokens.error),
+        );
+        return;
+      }
+      _titleCtrl.clear(); _bodyCtrl.clear();
+      setState(() { _showNewPost = false; _postImage = null; });
+      refetch?.call();
+    }
   }
 
   void _showSearch(BuildContext context) {

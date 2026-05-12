@@ -70,7 +70,15 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   Future<void> _speak(String text) async {
     await _tts.stop();
     setState(() => _isSpeaking = true);
-    await _tts.speak(text.replaceAll('\n', ' ').replaceAll(RegExp(r'\{[^}]*\}'), ''));
+    try {
+      await _tts.speak(text.replaceAll('\n', ' ').replaceAll(RegExp(r'\{[^}]*\}'), ''));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('TTS unavailable on this device'), backgroundColor: DesignTokens.error),
+        );
+      }
+    }
   }
 
   Future<void> _fetchLesson(String subjectId, int standard, {String? topicId}) async {

@@ -111,7 +111,7 @@ class DashboardScreen extends ConsumerWidget {
                         SectionHeader(
                           title: 'Quick Actions',
                           actionLabel: 'See all',
-                          onAction: () {},
+                          onAction: () => context.go('/materials'),
                         ),
                         const SizedBox(height: DesignTokens.spSm),
                         BentoGrid(
