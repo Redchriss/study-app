@@ -165,8 +165,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: (_submitting || _attemptId == null) ? null : () {
-                          final client = ref.read(graphqlClientProvider).valueOrNull;
-                          if (client != null) _submit(quiz['id'], client);
+                          _submit(quiz['id'], ref.read(graphqlClientProvider));
                         },
                         child: _submitting
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))

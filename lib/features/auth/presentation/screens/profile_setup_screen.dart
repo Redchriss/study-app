@@ -23,7 +23,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   String? _term;
 
   Future<void> _saveAndFinish() async {
-    final client = await ref.read(graphqlClientProvider.future);
+    final client = ref.read(graphqlClientProvider);
     await client.mutate(MutationOptions(
       document: gql(kUpdateProfile),
       variables: {

@@ -27,11 +27,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (mounted) setState(() => _loading = false);
     if (!mounted) return;
     if (ok) {
-      final auth = ref.read(authProvider).valueOrNull;
-      final profile = auth?.user?['profile'];
+      final auth = ref.read(authProvider);
+      final profile = auth.user?['profile'];
       context.go(profile?['onboardingComplete'] == true ? '/home' : '/setup');
     } else {
-      final error = ref.read(authProvider).valueOrNull?.error ?? 'Login failed.';
+      final error = ref.read(authProvider).error ?? 'Login failed.';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: DesignTokens.error));
     }
   }

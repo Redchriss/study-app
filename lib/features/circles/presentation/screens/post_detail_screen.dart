@@ -144,8 +144,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   void _vote(String postId, String direction, dynamic refetch) {
-    ref.read(graphqlClientProvider.future).then((client) => client.mutate(MutationOptions(
+    ref.read(graphqlClientProvider).mutate(MutationOptions(
       document: gql(kVotePost), variables: {'postId': postId, 'direction': direction},
-    )).then((_) => refetch?.call()));
+    )).then((_) => refetch?.call());
   }
 }

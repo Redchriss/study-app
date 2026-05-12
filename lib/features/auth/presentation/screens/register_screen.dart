@@ -33,7 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (ok) {
       context.go('/setup');
     } else {
-      final error = ref.read(authProvider).valueOrNull?.error ?? 'Registration failed.';
+      final error = ref.read(authProvider).error ?? 'Registration failed.';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: DesignTokens.error));
     }
   }

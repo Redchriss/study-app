@@ -33,7 +33,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   Future<void> _submit() async {
     if (_image == null) return;
     setState(() => _solving = true);
-    final client = await ref.read(graphqlClientProvider.future);
+    final client = ref.read(graphqlClientProvider);
     final bytes = await _image!.readAsBytes();
     final b64 = base64Encode(bytes);
     final result = await client.mutate(MutationOptions(

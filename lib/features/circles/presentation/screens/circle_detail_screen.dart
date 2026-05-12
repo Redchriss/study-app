@@ -154,8 +154,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
       final bytes = await _postImage!.readAsBytes();
       b64 = 'image/${_postImage!.path.split('.').last};base64,${base64Encode(bytes)}';
     }
-    final client = ref.read(graphqlClientProvider).valueOrNull;
-    if (client == null) return;
+    final client = ref.read(graphqlClientProvider);
     await client.mutate(MutationOptions(
       document: gql(kCreatePost),
       variables: {
