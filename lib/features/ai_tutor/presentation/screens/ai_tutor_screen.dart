@@ -23,6 +23,8 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   bool _streaming = false;
   String _streamingText = '';
   late final http.Client _httpClient;
+  late final AnimationController _cursorCtrl;
+  late final Animation<double> _cursorAnim;
 
   @override
   void initState() {

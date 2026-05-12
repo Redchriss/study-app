@@ -135,6 +135,61 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
                     } else if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Download failed. Try again.'), backgroundColor: DesignTokens.error),
+                      );
+                    }
+                  },
+                  child: GlassCard(child: Row(children: [
+                    Container(
+                      width: 48, height: 48,
+                      decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Icons.download, color: DesignTokens.primary, size: 22),
+                    ),
+                    const SizedBox(width: DesignTokens.spSm),
+                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('Download', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(('${m['contentType'] ?? ''} file').toUpperCase(), style: const TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
+                    ]),
+                  ])),
+                ),
+              ],
+
+              const SizedBox(height: DesignTokens.spMd),
+
+              GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('AI Tools', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: DesignTokens.spSm),
+                Row(children: [
+                  _AiBtn(label: 'Flashcards', icon: Icons.style, cost: 1,
+                    loading: _aiTaskLoading == 'flashcards',
+                    onTap: materialId.isNotEmpty ? () => _requestAiTask(materialId, 'flashcards', refetch) : null),
+                  const SizedBox(width: DesignTokens.spXs),
+                  _AiBtn(label: 'Summary', icon: Icons.summarize, cost: 1,
+                    loading: _aiTaskLoading == 'summary',
+                    onTap: materialId.isNotEmpty ? () => _requestAiTask(materialId, 'summary', refetch) : null),
+                  const SizedBox(width: DesignTokens.spXs),
+                  _AiBtn(label: 'Quiz', icon: Icons.quiz, cost: 1,
+                    loading: _aiTaskLoading == 'quiz',
+                    onTap: materialId.isNotEmpty ? () => _requestAiTask(materialId, 'quiz', refetch) : null),
+                ]),
+              ])),
+
+              if (m['aiSummary'] != null && m['aiSummary'].toString().isNotEmpty) ...[
+                const SizedBox(height: DesignTokens.spMd),
+                GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    const Icon(Icons.auto_awesome, size: 16, color: DesignTokens.warning),
+                    const SizedBox(width: 6),
+                    Text('AI Summary', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                  ]),
+                  const SizedBox(height: DesignTokens.spSm),
+                  Text(m['aiSummary'], style: theme.textTheme.bodyMedium),
+                ])),
+              ],
+            ]),
+          ),
+        ),
+      );
+      },
     );
   }
 }

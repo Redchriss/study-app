@@ -38,7 +38,7 @@ class NotificationsScreen extends ConsumerWidget {
                 SizedBox(height: MediaQuery.of(context).size.height * 0.3),
                 EmptyState(
                   icon: Icons.notifications_none,
-                  message: 'No notifications yet',
+                  title: 'No notifications yet',
                 ),
               ])
               : ListView.separated(
