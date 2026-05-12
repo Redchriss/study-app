@@ -258,9 +258,37 @@ class DashboardScreen extends ConsumerWidget {
                                       label: 'Questions',
                                       color: DesignTokens.secondary,
                                     ),
+                                    _ProgressStat(
+                                      value: '${snap?['questionsCorrect'] ?? 0}',
+                                      label: 'Correct',
+                                      color: DesignTokens.success,
+                                    ),
+                                    _ProgressStat(
+                                      value: '${snap?['attemptCount'] ?? 0}',
+                                      label: 'Attempts',
+                                      color: DesignTokens.info,
+                                    ),
                                   ],
                                 ),
+                                if ((snap?['strongestTopics'] as List?)?.isNotEmpty == true) ...[
+                                  const Divider(height: DesignTokens.spXl),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.check_circle, size: 16, color: DesignTokens.success),
+                                      const SizedBox(width: DesignTokens.spXs),
+                                      Text('Strong: ', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                                      Expanded(
+                                        child: Text(
+                                          (snap?['strongestTopics'] as List).take(2).join(', '),
+                                          style: theme.textTheme.bodyMedium?.copyWith(color: DesignTokens.textSecondary),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                                 if ((snap?['weakestTopics'] as List?)?.isNotEmpty == true) ...[
+                                  const Divider(height: DesignTokens.spXs),
                                   const Divider(height: DesignTokens.spXl),
                                   Row(
                                     children: [

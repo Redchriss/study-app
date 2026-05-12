@@ -97,6 +97,9 @@ query Dashboard {
     id
     quiz { title }
     score
+    correctCount
+    totalPoints
+    timeTakenSeconds
     completedAt
   }
   progressSnapshot {
@@ -104,6 +107,8 @@ query Dashboard {
     masteryPercent
     avgQuizScore
     questionsPracticed
+    questionsCorrect
+    attemptCount
     strongestTopics
     weakestTopics
   }
@@ -282,6 +287,18 @@ mutation StartQuizAttempt($quizId: ID!) {
       quiz { id title durationMinutes }
     }
     errors
+  }
+}
+''';
+
+const String kQuizAttempt = r'''
+query QuizAttempt($id: ID!) {
+  quizAttempt(id: $id) {
+    id quiz { title slug }
+    score totalPoints timeTakenSeconds timeDisplay
+    completed completedAt
+    correctCount
+    userAnswers { id answer isCorrect pointsEarned }
   }
 }
 ''';
