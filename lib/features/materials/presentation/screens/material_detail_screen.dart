@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/services/download_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class MaterialDetailScreen extends ConsumerStatefulWidget {
@@ -121,8 +121,18 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
                 AnimatedPress(
                   onTap: () async {
                     final url = m['fileUrl'] as String?;
-                    if (url != null && await canLaunchUrl(Uri.parse(url))) {
-                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                    final name = m['title'] as String? ?? 'download';
+                    if (url == null) return;
+                    final fname = '${name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_')}.pdf';
+                    final path = await DownloadService.downloadFile(url, fname);
+                    if (path != null && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Saved to Downloads/Yaza/'), backgroundColor: DesignTokens.success),
+                      );
+                    } else if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Download failed. Try again.'), backgroundColor: DesignTokens.error),
+                      );
                     }
                   },
                   child: GlassCard(child: Row(children: [
