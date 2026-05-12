@@ -130,7 +130,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                       ),
                     const SizedBox(width: 12),
                     Expanded(child: DropdownButtonFormField<String>(
-                      initialValue: 'discussion',
+                      value: 'discussion',
                       decoration: const InputDecoration(labelText: 'Type', isDense: true),
                       items: 'discussion|question|resource'.split('|').map((t) => DropdownMenuItem(value: t, child: Text(t[0].toUpperCase()+t.substring(1)))).toList(),
                       onChanged: (_) {},

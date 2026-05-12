@@ -164,7 +164,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          initialValue: _educationLevel,
+                          value: _educationLevel,
                           decoration: const InputDecoration(labelText: 'Level'),
                           items: 'primary|secondary|tertiary'.split('|').map((l) => DropdownMenuItem(value: l, child: Text(l[0].toUpperCase() + l.substring(1)))).toList(),
                           onChanged: (v) => setState(() => _educationLevel = v!),
