@@ -25,6 +25,7 @@ import '../features/leaderboard/presentation/screens/leaderboard_screen.dart';
 import '../features/account/presentation/screens/upgrade_screen.dart';
 import '../features/account/presentation/screens/history_screen.dart';
 import '../features/account/presentation/screens/bookmarks_screen.dart';
+import '../features/account/presentation/screens/past_papers_screen.dart';
 import '../features/kids_mode/presentation/screens/kids_home_screen.dart';
 import '../features/kids_mode/presentation/screens/kid_login_screen.dart';
 import '../features/profile/presentation/screens/about_screen.dart';
@@ -142,6 +143,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/upgrade', builder: (_, __) => const UpgradeScreen()),
       GoRoute(path: '/history', builder: (_, __) => const HistoryScreen()),
       GoRoute(path: '/bookmarks', builder: (_, __) => const BookmarksScreen()),
+      GoRoute(path: '/past-papers', builder: (_, __) => const PastPapersScreen()),
       GoRoute(
         path: '/quizzes',
         builder: (_, __) => const QuizzesScreen(),

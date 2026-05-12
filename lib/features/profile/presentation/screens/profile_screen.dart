@@ -72,6 +72,7 @@ class ProfileScreen extends ConsumerWidget {
                 _MenuButton(icon: Icons.emoji_events, label: 'Leaderboard', onTap: () => context.go('/leaderboard')),
                 _MenuButton(icon: Icons.auto_awesome, label: 'Plans & Credits', onTap: () => context.go('/upgrade')),
                 _MenuButton(icon: Icons.history, label: 'History', onTap: () => context.go('/history')),
+                _MenuButton(icon: Icons.article, label: 'Past Papers', onTap: () => context.go('/past-papers')),
                 _MenuButton(icon: Icons.info_outline, label: 'About Yaza', onTap: () => context.go('/about')),
                 const SizedBox(height: DesignTokens.spSm),
                 SizedBox(

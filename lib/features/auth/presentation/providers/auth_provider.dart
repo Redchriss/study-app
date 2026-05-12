@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/client.dart';
@@ -25,10 +26,35 @@ final graphqlClientProvider = Provider<GraphQLClient>((ref) {
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
 
 class AuthNotifier extends Notifier<AuthState> {
+  Timer? _refreshTimer;
+
   @override
   AuthState build() {
+    ref.onDispose(() => _refreshTimer?.cancel());
     _bootstrap();
     return const AuthState(isAuthenticated: false, isLoading: true);
+  }
+
+  void _scheduleRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer(const Duration(minutes: 50), _doRefresh);
+  }
+
+  Future<void> _doRefresh() async {
+    final refreshToken = await SecureStorage.getRefreshToken();
+    if (refreshToken == null) return;
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.mutate(MutationOptions(
+        document: gql(kRefreshToken),
+        variables: {'refreshToken': refreshToken},
+      ));
+      final data = result.data?['refreshToken'];
+      if (data != null) {
+        await SecureStorage.saveTokens(data['token'], data['refreshToken']);
+        _scheduleRefresh();
+      }
+    } catch (_) {}
   }
 
   Future<void> _bootstrap() async {
@@ -51,6 +77,7 @@ class AuthNotifier extends Notifier<AuthState> {
       }
 
       state = AuthState(isAuthenticated: true, isLoading: false, user: result.data!['me']);
+      _scheduleRefresh();
     } catch (e) {
       state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Connection error. Check your network.');
     }
@@ -74,6 +101,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final data = result.data!['tokenAuth'];
       await SecureStorage.saveTokens(data['token'], data['refreshToken']);
       await _bootstrap();
+      _scheduleRefresh();
       return state.isAuthenticated;
     } catch (e) {
       state = AuthState(isAuthenticated: false, isLoading: false, error: e.toString());
@@ -105,6 +133,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
       await SecureStorage.saveTokens(data['token'], data['refreshToken']);
       await _bootstrap();
+      _scheduleRefresh();
       return state.isAuthenticated;
     } catch (e) {
       state = AuthState(isAuthenticated: false, isLoading: false, error: e.toString());
