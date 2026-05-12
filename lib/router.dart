@@ -45,16 +45,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (!auth.isAuthenticated) {
-        if (['/login', '/register', '/onboarding', '/splash'].contains(location)) {
+        if (['/login', '/register', '/onboarding'].contains(location)) {
           return null;
         }
+        if (location == '/splash') return '/onboarding';
         return '/onboarding';
       }
 
       final profileComplete = auth.user?['profile']?['onboardingComplete'] == true;
       if (!profileComplete && location != '/setup') return '/setup';
 
-      if (profileComplete && ['/login', '/register', '/onboarding', '/splash'].contains(location)) {
+      if (profileComplete && ['/login', '/register', '/onboarding'].contains(location)) {
         return '/home';
       }
 
