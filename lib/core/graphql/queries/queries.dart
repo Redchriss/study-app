@@ -635,3 +635,49 @@ query KidProgress($subjectId: ID, $standard: Int) {
   }
 }
 ''';
+
+// Parent-child account system
+const String kCreateChildProfile = r'''
+mutation CreateChildProfile($childName: String!, $standard: Int!, $pinCode: String!) {
+  createChildProfile(childName: $childName, standard: $standard, pinCode: $pinCode) {
+    success
+    errors
+    child {
+      id
+      childName
+      standard
+      pinCode
+    }
+  }
+}
+''';
+
+const String kKidLogin = r'''
+mutation KidLogin($username: String!, $pinCode: String!) {
+  kidLogin(username: $username, pinCode: $pinCode) {
+    success
+    token
+    errors
+    child {
+      id
+      childName
+      standard
+      pinCode
+    }
+  }
+}
+''';
+
+const String kMyChildren = r'''
+query MyChildren {
+  myChildren {
+    id
+    childName
+    standard
+    pinCode
+    isChild
+    username
+    createdAt
+  }
+}
+''';

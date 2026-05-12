@@ -22,6 +22,7 @@ import '../features/circles/presentation/screens/post_detail_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/leaderboard/presentation/screens/leaderboard_screen.dart';
 import '../features/kids_mode/presentation/screens/kids_home_screen.dart';
+import '../features/kids_mode/presentation/screens/kid_login_screen.dart';
 import 'shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -57,7 +58,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/setup', builder: (_, __) => const ProfileSetupScreen()),
 
       // Kids Mode (separate shell)
-      GoRoute(path: '/kids', builder: (_, __) => const KidsHomeScreen()),
+      GoRoute(path: '/kids', builder: (_, __) => const KidLoginScreen()),
+      GoRoute(path: '/kids/learn', builder: (_, __) => const KidsHomeScreen()),
 
       // Main shell with bottom nav
       ShellRoute(

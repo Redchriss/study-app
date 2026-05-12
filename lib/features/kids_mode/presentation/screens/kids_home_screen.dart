@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/config/theme/app_colors.dart';
+import 'kid_login_screen.dart';
 
-const _standards = [1, 2, 3, 4, 5, 6, 7, 8];
+final _standards = [1, 2, 3, 4, 5, 6, 7, 8];
 
 class KidsHomeScreen extends ConsumerStatefulWidget {
   const KidsHomeScreen({super.key});
@@ -29,6 +31,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   bool _loading = false;
   int _stars = 0;
   int _streak = 0;
+  GraphQLClient? _client;
 
   @override
   void initState() {
@@ -47,6 +50,30 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
     super.dispose();
   }
 
+  GraphQLClient _buildKidClient() {
+    final auth = ref.read(kidAuthStateProvider);
+    final link = AuthLink(getToken: () => auth.token).concat(HttpLink(AppConfig.graphqlUrl));
+    return GraphQLClient(cache: GraphQLCache(), link: link);
+  }
+
+  Future<void> _ensureClient() async {
+    if (_client != null) return;
+    _client = _buildKidClient();
+    await _fetchSubjects();
+  }
+
+  Future<void> _fetchSubjects() async {
+    final c = _buildKidClient();
+    final result = await c.query(QueryOptions(document: gql(kPrimarySubjects)));
+    if (result.data != null && mounted) {
+      final subs = (result.data!['primarySubjects'] as List?) ?? [];
+      if (subs.isNotEmpty) {
+        setState(() => _selectedSubject = Map<String, dynamic>.from(subs[0]));
+        await _fetchLesson(subs[0]['id'], ref.read(kidAuthStateProvider).standard);
+      }
+    }
+  }
+
   Future<void> _speak(String text) async {
     await _tts.stop();
     setState(() => _isSpeaking = true);
@@ -55,8 +82,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
 
   Future<void> _fetchLesson(String subjectId, int standard, {String? topicId}) async {
     setState(() => _loading = true);
-    final client = await ref.read(graphqlClientProvider.future);
-    final result = await client.mutate(MutationOptions(
+    final c = _buildKidClient();
+    final result = await c.mutate(MutationOptions(
       document: gql(kFetchKidLesson),
       variables: {'subjectId': subjectId, 'standard': standard, 'topicId': topicId, 'language': 'english'},
     ));
@@ -90,8 +117,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
 
   Future<void> _answerQuiz(int idx) async {
     if (_quizAnswered || _currentLesson == null) return;
-    final client = await ref.read(graphqlClientProvider.future);
-    final result = await client.mutate(MutationOptions(
+    final c = _buildKidClient();
+    final result = await c.mutate(MutationOptions(
       document: gql(kAnswerKidQuiz),
       variables: {'lessonId': _currentLesson!['id'], 'selectedIndex': idx},
     ));
@@ -107,6 +134,15 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = ref.watch(kidAuthStateProvider);
+    if (!auth.isAuthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/kids'));
+      return const Scaffold(body: Center(child: Text('Redirecting...')));
+    }
+    if (_selectedStandard == null) {
+      _ensureClient();
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return Scaffold(
       body: SafeArea(
         child: _selectedSubject == null ? _buildPicker() : _buildLesson(),
@@ -115,128 +151,95 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   }
 
   Widget _buildPicker() {
-    return Query(
-      options: QueryOptions(document: gql(kPrimarySubjects)),
-      builder: (result, {refetch}) {
-        final subjects = (result.data?['primarySubjects'] as List?) ?? [];
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const SizedBox(height: 20),
+              Text('⭐ ${ref.read(kidAuthStateProvider).childName}', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('⭐ Yaza Kids', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
                   GestureDetector(
                     onTap: () => _speak('You have $_stars stars!'),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.star, color: Color(0xFFF1C40F), size: 28),
-                        Text(' $_stars', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-                      ],
+                    child: Row(children: [
+                      const Icon(Icons.star, color: Color(0xFFF1C40F), size: 28),
+                      Text(' $_stars', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                    ]),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () { ref.read(kidAuthStateProvider.notifier).state = const KidAuthState(); context.go('/kids'); },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(20)),
+                      child: const Text('Switch', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              if (_selectedStandard == null) ...[
-                const Text('What class are you in?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                Text('Pick your Standard', style: TextStyle(fontSize: 15, color: Colors.grey[600])),
-                const SizedBox(height: 24),
-                Wrap(
-                  spacing: 14, runSpacing: 14, alignment: WrapAlignment.center,
-                  children: _standards.map((s) => GestureDetector(
-                    onTap: () => setState(() => _selectedStandard = s),
-                    child: Container(
-                      width: 80, height: 80,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4A90D9).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFF4A90D9).withOpacity(0.3), width: 2),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('$s', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Color(0xFF4A90D9))),
-                          Text('Std $s', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-                        ],
-                      ),
-                    ),
-                  )).toList(),
-                ),
-              ] else ...[
-                _buildStandardHeader(),
-                const SizedBox(height: 28),
-                const Text('Pick a subject', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 20),
-                ...subjects.map((s) {
-                  final name = s['name'] as String? ?? '';
-                  final color = _subjectColor(name);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _selectedSubject = Map<String, dynamic>.from(s));
-                        _fetchLesson(s['id'], _selectedStandard!);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                        decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: color.withOpacity(0.3), width: 2),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 56, height: 56,
-                              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(16)),
-                              child: Icon(_subjectIcon(name), color: Colors.white, size: 28),
-                            ),
-                            const SizedBox(width: 20),
-                            Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ],
             ],
           ),
-        );
-      },
+          const SizedBox(height: 24),
+          const Text('Pick a subject', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 20),
+          if (_loading)
+            const Center(child: CircularProgressIndicator())
+          else ...[
+            ...(_buildSubjectList()),
+          ],
+        ],
+      ),
     );
   }
 
-  Widget _buildStandardHeader() {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () => setState(() => _selectedStandard = null),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF4A90D9).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.arrow_back, size: 18, color: Color(0xFF4A90D9)),
-                SizedBox(width: 4),
-                Text('Change', style: TextStyle(color: Color(0xFF4A90D9), fontWeight: FontWeight.w600)),
-              ],
+  List<Widget> _buildSubjectList() {
+    final auth = ref.read(kidAuthStateProvider);
+    return [
+      Text('Standard ${auth.standard}', style: TextStyle(fontSize: 15, color: Colors.grey[600])),
+      const SizedBox(height: 20),
+      ...([
+        ('English', Icons.abc, const Color(0xFF4A90D9)),
+        ('Chichewa', Icons.translate, const Color(0xFF27AE60)),
+        ('Mathematics', Icons.calculate, const Color(0xFFE67E22)),
+        ('Science', Icons.biotech, const Color(0xFF8E44AD)),
+        ('Social Studies', Icons.public, const Color(0xFFE74C3C)),
+      ].map((s) {
+        final name = s.$1;
+        final icon = s.$2;
+        final color = s.$3;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: GestureDetector(
+            onTap: () {
+              setState(() => _selectedSubject = {'name': name, 'id': name.toLowerCase()});
+              _fetchLesson('1', auth.standard);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: color.withOpacity(0.3), width: 2),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 56, height: 56,
+                    decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(16)),
+                    child: Icon(icon, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 20),
+                  Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                ],
+              ),
             ),
           ),
-        ),
-        const Spacer(),
-        Text('Standard $_selectedStandard', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-        const Spacer(),
-      ],
-    );
+        );
+      })),
+    ];
   }
 
   Widget _buildLesson() {
@@ -270,18 +273,11 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
                     color: const Color(0xFF4A90D9).withOpacity(0.15),
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.arrow_back, size: 18, color: Color(0xFF4A90D9)),
-                      SizedBox(width: 4),
-                      Text('Back', style: TextStyle(color: Color(0xFF4A90D9), fontWeight: FontWeight.w600)),
-                    ],
-                  ),
+                  child: const Icon(Icons.arrow_back, size: 20, color: Color(0xFF4A90D9)),
                 ),
               ),
               const Spacer(),
-              Text('$_selectedSubject · Std $_selectedStandard', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey)),
+              Text(ref.read(kidAuthStateProvider).childName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey)),
             ],
           ),
           const SizedBox(height: 24),
@@ -324,8 +320,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
                 children: [
                   _ActionButton(
                     icon: _isSpeaking ? Icons.stop : Icons.volume_up,
-                    label: _isSpeaking ? 'Stop' : 'Listen',
-                    color: const Color(0xFF27AE60),
+                    label: _isSpeaking ? 'Stop' : 'Listen', color: const Color(0xFF27AE60),
                     onTap: () {
                       if (_isSpeaking) { _tts.stop(); setState(() => _isSpeaking = false); }
                       else { _speak(text); }
@@ -333,8 +328,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
                   ),
                   const SizedBox(width: 20),
                   _ActionButton(
-                    icon: Icons.quiz_outlined, label: 'Quiz',
-                    color: const Color(0xFFE67E22),
+                    icon: Icons.quiz_outlined, label: 'Quiz', color: const Color(0xFFE67E22),
                     onTap: _quiz.isNotEmpty ? _startQuiz : null,
                   ),
                 ],
@@ -347,9 +341,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _ActionButton(
-              icon: Icons.arrow_forward, label: 'Next',
-              color: const Color(0xFF4A90D9),
-              onTap: () => _fetchLesson(_selectedSubject!['id'], _selectedStandard!),
+              icon: Icons.arrow_forward, label: 'Next', color: const Color(0xFF4A90D9),
+              onTap: () => _fetchLesson(_selectedSubject!['id']!, ref.read(kidAuthStateProvider).standard),
             ),
             const SizedBox(width: 16),
             if (_streak >= 2)
@@ -428,8 +421,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                       decoration: BoxDecoration(
-                        color: bg,
-                        borderRadius: BorderRadius.circular(16),
+                        color: bg, borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: _quizAnswered && idx == _quizCorrectIndex ? const Color(0xFF27AE60) : Colors.transparent, width: 2),
                       ),
                       child: Row(
@@ -491,28 +483,6 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
         Text('⭐ $_stars stars', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
       ],
     );
-  }
-}
-
-Color _subjectColor(String name) {
-  switch (name.toLowerCase()) {
-    case 'english': return const Color(0xFF4A90D9);
-    case 'chichewa': return const Color(0xFF27AE60);
-    case 'mathematics': return const Color(0xFFE67E22);
-    case 'science': return const Color(0xFF8E44AD);
-    case 'social studies': return const Color(0xFFE74C3C);
-    default: return const Color(0xFF4A90D9);
-  }
-}
-
-IconData _subjectIcon(String name) {
-  switch (name.toLowerCase()) {
-    case 'english': return Icons.abc;
-    case 'chichewa': return Icons.translate;
-    case 'mathematics': return Icons.calculate;
-    case 'science': return Icons.biotech;
-    case 'social studies': return Icons.public;
-    default: return Icons.book;
   }
 }
 
