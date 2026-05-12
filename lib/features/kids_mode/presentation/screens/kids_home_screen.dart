@@ -22,6 +22,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   int? _selectedStandard;
   Map<String, dynamic>? _selectedSubject;
   Map<String, dynamic>? _currentLesson;
+  List<Map<String, dynamic>> _subjects = [];
   List<dynamic> _quiz = [];
   bool _inQuiz = false;
   int? _quizSelected;
@@ -31,7 +32,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   bool _loading = false;
   int _stars = 0;
   int _streak = 0;
-  GraphQLClient? _client;
+  bool _fetchedSubjects = false;
 
   @override
   void initState() {
@@ -57,8 +58,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   }
 
   Future<void> _ensureClient() async {
-    if (_client != null) return;
-    _client = _buildKidClient();
+    if (_fetchedSubjects) return;
     await _fetchSubjects();
   }
 
@@ -67,10 +67,12 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
     final result = await c.query(QueryOptions(document: gql(kPrimarySubjects)));
     if (result.data != null && mounted) {
       final subs = (result.data!['primarySubjects'] as List?) ?? [];
-      if (subs.isNotEmpty) {
-        setState(() => _selectedSubject = Map<String, dynamic>.from(subs[0]));
-        await _fetchLesson(subs[0]['id'], ref.read(kidAuthStateProvider).standard);
-      }
+      setState(() {
+        _subjects = subs.map((s) => Map<String, dynamic>.from(s as Map)).toList();
+        _fetchedSubjects = true;
+      });
+    } else {
+      setState(() => _fetchedSubjects = true);
     }
   }
 
@@ -197,25 +199,27 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
 
   List<Widget> _buildSubjectList() {
     final auth = ref.read(kidAuthStateProvider);
+    if (_subjects.isEmpty) {
+      return [
+        Text('Standard ${auth.standard}', style: TextStyle(fontSize: 15, color: Colors.grey[600])),
+        const SizedBox(height: 20),
+        const Center(child: Text('No subjects available')),
+      ];
+    }
     return [
       Text('Standard ${auth.standard}', style: TextStyle(fontSize: 15, color: Colors.grey[600])),
       const SizedBox(height: 20),
-      ...([
-        ('English', Icons.abc, const Color(0xFF4A90D9)),
-        ('Chichewa', Icons.translate, const Color(0xFF27AE60)),
-        ('Mathematics', Icons.calculate, const Color(0xFFE67E22)),
-        ('Science', Icons.biotech, const Color(0xFF8E44AD)),
-        ('Social Studies', Icons.public, const Color(0xFFE74C3C)),
-      ].map((s) {
-        final name = s.$1;
-        final icon = s.$2;
-        final color = s.$3;
+      ..._subjects.map((s) {
+        final name = s['name'] as String? ?? '';
+        final subjectId = s['id'] as String? ?? '';
+        final color = _subjectColor(name);
+        final icon = _subjectIcon(name);
         return Padding(
           padding: const EdgeInsets.only(bottom: 14),
           child: GestureDetector(
             onTap: () {
-              setState(() => _selectedSubject = {'name': name, 'id': name.toLowerCase()});
-              _fetchLesson('1', auth.standard);
+              setState(() => _selectedSubject = Map<String, dynamic>.from(s));
+              _fetchLesson(subjectId, auth.standard);
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -238,7 +242,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
             ),
           ),
         );
-      })),
+      }),
     ];
   }
 
