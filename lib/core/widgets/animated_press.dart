@@ -26,7 +26,6 @@ class _AnimatedPressState extends State<AnimatedPress>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _anim;
-  bool _pressed = false;
 
   @override
   void initState() {
@@ -47,18 +46,18 @@ class _AnimatedPressState extends State<AnimatedPress>
   }
 
   void _onTapDown(_) {
-    _pressed = true;
+    
     _ctrl.forward();
   }
 
   void _onTapUp(_) {
-    _pressed = false;
+    
     _ctrl.reverse();
     widget.onTap?.call();
   }
 
   void _onTapCancel() {
-    _pressed = false;
+    
     _ctrl.reverse();
   }
 

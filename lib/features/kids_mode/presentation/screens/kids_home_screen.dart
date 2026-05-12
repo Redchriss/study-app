@@ -18,7 +18,6 @@ class KidsHomeScreen extends ConsumerStatefulWidget {
 
 class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   final _tts = FlutterTts();
-  int? _selectedStandard;
   Map<String, dynamic>? _selectedSubject;
   Map<String, dynamic>? _currentLesson;
   List<Map<String, dynamic>> _subjects = [];

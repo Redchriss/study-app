@@ -20,10 +20,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   String? _universityId;
   String? _programId;
   String? _term;
-  bool _loading = false;
 
   Future<void> _saveAndFinish() async {
-    setState(() => _loading = true);
     final client = await ref.read(graphqlClientProvider.future);
     await client.mutate(MutationOptions(
       document: gql(kUpdateProfile),
@@ -39,7 +37,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       },
     ));
     if (mounted) {
-      setState(() => _loading = false);
       context.go('/home');
     }
   }
@@ -62,7 +59,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   const SizedBox(height: 12),
                   LinearProgressIndicator(
                     value: _step / totalSteps,
-                    backgroundColor: DesignTokens.textSecondary.withOpacity(0.2),
+                    backgroundColor: DesignTokens.textSecondary.withValues(alpha: 0.2),
                     color: DesignTokens.primary,
                     borderRadius: BorderRadius.circular(4),
                     minHeight: 8,
@@ -259,7 +256,7 @@ class _LevelCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: DesignTokens.primary.withOpacity(0.2)),
+          border: Border.all(color: DesignTokens.primary.withValues(alpha: 0.2)),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -268,7 +265,7 @@ class _LevelCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: DesignTokens.primary.withOpacity(0.1),
+                color: DesignTokens.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: DesignTokens.primary),

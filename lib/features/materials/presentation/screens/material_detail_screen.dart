@@ -11,7 +11,7 @@ class MaterialDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
+
     return Query(
       options: QueryOptions(document: gql(kMaterial), variables: {'slug': slug}),
       builder: (result, {fetchMore, refetch}) {

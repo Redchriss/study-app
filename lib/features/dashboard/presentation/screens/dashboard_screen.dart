@@ -20,7 +20,7 @@ class DashboardScreen extends ConsumerWidget {
         final me = result.data?['me'];
         final profile = me?['profile'];
         final recentMaterials = (result.data?['recentMaterials'] as List?) ?? [];
-        final recentAttempts = (result.data?['recentQuizAttempts'] as List?) ?? [];
+      
         final snap = result.data?['progressSnapshot'];
         final circles = (result.data?['myCircles'] as List?) ?? [];
         final name = me?['username'] as String? ?? 'Student';

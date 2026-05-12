@@ -23,12 +23,10 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   final _nameCtrl = TextEditingController();
   final _pinCtrl = TextEditingController();
   final _kidPinCtrl = TextEditingController();
-  bool _parentMode = false;
   bool _parentLoading = false;
   bool _creatingKid = false;
   int? _newKidStandard;
   List<dynamic>? _children;
-  Map<String, dynamic>? _selectedKid;
   String? _parentToken;
   String? _error;
 

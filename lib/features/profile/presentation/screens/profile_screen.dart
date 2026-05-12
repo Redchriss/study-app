@@ -11,7 +11,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
+
     return Query(
       options: QueryOptions(document: gql(kMe)),
       builder: (result, {fetchMore, refetch}) {
