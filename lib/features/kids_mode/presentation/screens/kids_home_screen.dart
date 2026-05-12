@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -86,7 +85,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
       if (data['success'] == true) {
         setState(() {
           _currentLesson = data['lesson'];
-          _quiz = jsonDecode(jsonEncode(_currentLesson?['quiz'] ?? []));
+          _quiz = (_currentLesson?['quiz'] as List?)?.cast<Map<String, dynamic>>() ?? [];
           _inQuiz = false; _quizAnswered = false; _quizSelected = null; _loading = false;
         });
       }

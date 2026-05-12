@@ -20,23 +20,23 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
   String? _attemptId;
   bool _submitting = false;
   bool _startedAttempt = false;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 1), _tick);
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
   @override
   void dispose() {
-    _time = 0;
+    _timer?.cancel();
     super.dispose();
   }
 
   void _tick() {
-    if (!mounted || _submitting) return;
+    if (!mounted || _submitting || _timer == null) return;
     setState(() => _time++);
-    Future.delayed(const Duration(seconds: 1), _tick);
   }
 
   Future<void> _submit(String quizId, GraphQLClient client) async {

@@ -121,7 +121,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/scanner/results',
         builder: (_, state) => ScannerResultsScreen(
-          sessionData: state.extra as Map<String, dynamic>? ?? {},
+          sessionData: (state.extra is Map) ? Map<String, dynamic>.from(state.extra as Map) : {},
         ),
       ),
       GoRoute(path: '/ai-tutor', builder: (_, __) => const AiTutorScreen()),
