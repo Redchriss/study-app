@@ -15,6 +15,7 @@ class PostDetailScreen extends ConsumerStatefulWidget {
 
 class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   final _commentCtrl = TextEditingController();
+  bool _sendingComment = false;
   @override
   void dispose() { _commentCtrl.dispose(); super.dispose(); }
 
@@ -101,8 +102,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               ]),
             )),
             SafeArea(
-              child: Mutation(options: MutationOptions(document: gql(kAddComment)),
-                builder: (run, _) => Container(
+              child: Mutation(
+                options: MutationOptions(
+                  document: gql(kAddComment),
+                  onCompleted: (_) {
+                    _commentCtrl.clear();
+                    setState(() => _sendingComment = false);
+                  },
+                ),
+                builder: (run, mutResult) => Container(
                   padding: const EdgeInsets.all(DesignTokens.spSm),
                   child: Row(children: [
                     Expanded(child: TextField(
@@ -116,14 +124,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     const SizedBox(width: 8),
                     AnimatedPress(
                       onTap: () {
-                        if (_commentCtrl.text.trim().isEmpty) return;
+                        if (_commentCtrl.text.trim().isEmpty || _sendingComment) return;
+                        _sendingComment = true;
                         run({'postId': post['id'], 'content': _commentCtrl.text.trim()});
-                        _commentCtrl.clear();
                       },
                       child: Container(
                         width: 48, height: 48,
                         decoration: const BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
-                        child: const Icon(Icons.send, color: Colors.white, size: 20),
+                        child: _sendingComment
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.send, color: Colors.white, size: 20),
                       ),
                     ),
                   ]),

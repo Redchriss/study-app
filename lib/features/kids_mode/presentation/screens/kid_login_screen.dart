@@ -38,16 +38,25 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
     _client = GraphQLClient(cache: GraphQLCache(), link: authLink.concat(httpLink));
     return _client!;
   }
+
+  Future<void> _loginAsParent() async {
+    setState(() { _parentLoading = true; _error = null; });
+    final client = _buildClient();
+    final result = await client.mutate(MutationOptions(
+      document: gql(kTokenAuth),
+      variables: {'username': _parentUserCtrl.text.trim(), 'password': _parentPassCtrl.text},
+    ));
+    if (result.data != null && result.data!['tokenAuth'] != null) {
+      final t = result.data!['tokenAuth']['token'] as String?;
+      if (t != null) {
+        _parentToken = t;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('parent_token', _parentToken!);
+      }
       await _fetchChildren();
     } else {
       setState(() { _error = 'Invalid credentials'; _parentLoading = false; });
     }
-  }
-
-  Future<GraphQLClient> _buildClient({String? token}) async {
-    final HttpLink httpLink = HttpLink(AppConfig.graphqlUrl);
-    final authLink = AuthLink(getToken: () async => token ?? _parentToken);
-    return GraphQLClient(cache: GraphQLCache(), link: authLink.concat(httpLink));
   }
 
   Future<void> _fetchChildren() async {

@@ -151,7 +151,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
                     itemBuilder: (_, i) {
                       final q = questions[i] as Map<String, dynamic>;
                       final qId = q['id'] as String? ?? '$i';
-                      final options = (q['options'] as List?) ?? [];
+                      final options = (q['answers'] as List?) ?? [];
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: Padding(
@@ -177,7 +177,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
                                     child: Row(children: [
                                       Icon(selected ? Icons.radio_button_checked : Icons.radio_button_unchecked, size: 20, color: selected ? DesignTokens.primary : DesignTokens.textTertiary),
                                       const SizedBox(width: 12),
-                                      Expanded(child: Text(opt['text'] ?? '', style: theme.textTheme.bodyMedium)),
+                                      Expanded(child: Text(opt['answerText'] ?? '', style: theme.textTheme.bodyMedium)),
                                     ]),
                                   ),
                                 ),
@@ -194,7 +194,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: (_submitting || _attemptId == null) ? null : () {
+                      onPressed: (_submitting || _attemptId == null || answered == 0) ? null : () {
                         _submit(quiz['id'], ref.read(graphqlClientProvider));
                       },
                       child: _submitting

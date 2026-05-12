@@ -16,11 +16,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
   bool _obscure = true;
   bool _loading = false;
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_passwordCtrl.text != _confirmCtrl.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match'), backgroundColor: DesignTokens.error),
+      );
+      return;
+    }
     setState(() => _loading = true);
     final ok = await ref.read(authProvider.notifier).register(
       _usernameCtrl.text.trim(),
@@ -91,6 +98,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _submit(),
                   validator: (v) => v!.length < 8 ? 'At least 8 characters' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _confirmCtrl,
+                  obscureText: _obscure,
+                  decoration: const InputDecoration(
+                    labelText: 'Confirm password',
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _submit(),
+                  validator: (v) => v!.isEmpty ? 'Confirm your password' : null,
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(

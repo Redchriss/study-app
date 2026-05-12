@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../../../core/services/download_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class MaterialDetailScreen extends ConsumerStatefulWidget {
@@ -104,14 +104,21 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
               const SizedBox(height: DesignTokens.spMd),
 
               if (m['youtubeEmbedUrl'] != null)
-                GlassCard(child: Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                  ),
-                  child: const Center(child: Icon(Icons.play_circle_fill, color: Colors.white, size: 64)),
-                )),
+                GestureDetector(
+                  onTap: () {
+                    final url = (m['youtubeEmbedUrl'] as String?) ?? '';
+                    final videoId = Uri.tryParse(url)?.queryParameters['v'] ?? url.split('/').last;
+                    launchUrl(Uri.parse('https://youtu.be/$videoId'), mode: LaunchMode.externalApplication);
+                  },
+                  child: GlassCard(child: Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                    ),
+                    child: const Center(child: Icon(Icons.play_circle_fill, color: Colors.white, size: 64)),
+                  )),
+                ),
 
               if (m['fileUrl'] != null) ...[
                 const SizedBox(height: DesignTokens.spSm),

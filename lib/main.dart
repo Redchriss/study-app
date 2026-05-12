@@ -19,7 +19,7 @@ class StudyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    final client = buildGraphQLClient();
+    final client = ref.watch(graphqlClientProvider);
     return GraphQLProvider(
       client: ValueNotifier(client),
       child: MaterialApp.router(
