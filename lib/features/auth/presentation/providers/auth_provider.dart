@@ -41,8 +41,8 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
     // Verify token by fetching me
     try {
-      final client = await ref.read(graphqlClientProvider.future);
-      final result = await client.query(QueryOptions(document: gql(kMe)));
+      final client = await ref.read(graphqlClientProvider.future).timeout(const Duration(seconds: 20));
+      final result = await client.query(QueryOptions(document: gql(kMe))).timeout(const Duration(seconds: 15));
       if (result.hasException || result.data?['me'] == null) {
         await SecureStorage.clearTokens();
         return const AuthState(isAuthenticated: false, isLoading: false);
