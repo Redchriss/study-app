@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final client = ref.read(graphqlClientProvider);
     return Query(
       options: QueryOptions(document: gql(kNotifications), variables: {'unreadOnly': false}),
       builder: (result, {fetchMore, refetch}) {
@@ -22,7 +25,6 @@ class NotificationsScreen extends StatelessWidget {
                   icon: const Icon(Icons.done_all),
                   tooltip: 'Mark all read',
                   onPressed: () async {
-                    final client = GraphQLProvider.of(context).value;
                     await client.mutate(MutationOptions(document: gql(kMarkAllNotificationsRead)));
                     refetch?.call();
                   },

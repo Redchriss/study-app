@@ -22,12 +22,12 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   bool _sending = false;
   bool _streaming = false;
   String _streamingText = '';
-  late AnimationController _cursorCtrl;
-  late Animation<double> _cursorAnim;
+  late final http.Client _httpClient;
 
   @override
   void initState() {
     super.initState();
+    _httpClient = http.Client();
     _cursorCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -37,6 +37,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
 
   @override
   void dispose() {
+    _httpClient.close();
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     _cursorCtrl.dispose();
@@ -73,7 +74,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         'session_id': _sessionId,
       })));
       request.sink.close();
-      final response = await http.Client().send(request);
+      final response = await _httpClient.send(request);
 
       final lines = response.stream.transform(utf8.decoder);
       String eventType = '';
