@@ -104,15 +104,13 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
               standard: kid['standard'] as int? ?? 1,
               token: data['token'],
             );
+            if (mounted) context.go('/kids/learn');
           } else {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(data?['errors']?.first ?? 'Wrong PIN'), backgroundColor: DesignTokens.error),
             );
             }
-          if (mounted && data?['success'] == true) {
-            context.go('/kids/learn');
-          }
           }
         },
       ),

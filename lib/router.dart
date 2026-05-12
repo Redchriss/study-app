@@ -1,6 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
+
+class _RouterRefresh extends ChangeNotifier {
+  _RouterRefresh(Ref ref) {
+    ref.listen(authProvider, (_, __) => notifyListeners());
+  }
+}
 import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
@@ -26,9 +33,8 @@ import '../features/profile/presentation/screens/about_screen.dart';
 import 'shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  ref.watch(authProvider); // Rebuild router when auth changes
-
   return GoRouter(
+    refreshListenable: _RouterRefresh(ref),
     initialLocation: '/splash',
     redirect: (context, state) {
       final authAsync = ref.read(authProvider);
