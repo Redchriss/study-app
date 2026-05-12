@@ -24,7 +24,7 @@ class QuizResultsScreen extends ConsumerWidget {
           }
         }
       '''), variables: {'id': attemptId}),
-      builder: (result, {refetch}) {
+      builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
         final attempt = result.data?['quizAttempt'];
         if (attempt == null) return const Scaffold(body: Center(child: Text('Attempt not found')));

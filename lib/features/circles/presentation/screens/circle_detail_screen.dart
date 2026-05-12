@@ -33,7 +33,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
           studyCircle(slug: $slug) { id name description memberCount isMember isFavorite educationLevel }
         }
       '''), variables: {'slug': widget.slug}),
-      builder: (result, {refetch}) {
+      builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
         final circle = result.data?['studyCircle'];
         if (circle == null) return const Scaffold(body: Center(child: Text('Circle not found')));
@@ -128,7 +128,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                     document: gql(kCirclePosts),
                     variables: {'circleSlug': widget.slug, 'sort': _sort},
                   ),
-                  builder: (postResult, {refetch: refetchPosts}) {
+                  builder: (postResult, {fetchMore, refetch}) {
                     if (postResult.isLoading) return const Center(child: CircularProgressIndicator());
                     final posts = (postResult.data?['circlePosts'] as List?) ?? [];
                     if (posts.isEmpty) return Center(child: Text('No posts yet', style: TextStyle(color: AppColors.textSecondary)));

@@ -53,7 +53,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
   Widget build(BuildContext context) {
     return Query(
       options: QueryOptions(document: gql(kQuiz), variables: {'slug': widget.slug}),
-      builder: (result, {refetch}) {
+      builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
         final quiz = result.data?['quiz'];
         if (quiz == null) return const Scaffold(body: Center(child: Text('Quiz not found')));

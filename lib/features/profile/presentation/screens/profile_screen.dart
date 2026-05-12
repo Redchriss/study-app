@@ -11,7 +11,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Query(
       options: QueryOptions(document: gql(kMe)),
-      builder: (result, {refetch}) {
+      builder: (result, {fetchMore, refetch}) {
         final me = result.data?['me'];
         final profile = me?['profile'] as Map<String, dynamic>?;
         if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));

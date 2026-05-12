@@ -17,7 +17,7 @@ class LeaderboardScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Leaderboard'), centerTitle: true),
       body: Query(
         options: QueryOptions(document: gql(kLeaderboard)),
-        builder: (result, {refetch}) {
+        builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
           return Center(
             child: Column(

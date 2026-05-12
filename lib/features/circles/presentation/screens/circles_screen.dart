@@ -13,7 +13,7 @@ class CirclesScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Study Circles'), centerTitle: true),
       body: Query(
         options: QueryOptions(document: gql(kMyCircles)),
-        builder: (result, {refetch}) {
+        builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
           final circles = (result.data?['myCircles'] as List?) ?? [];
           if (circles.isEmpty) {

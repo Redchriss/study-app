@@ -47,7 +47,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   @override
   void dispose() {
     _tts.stop();
-    _tts.setCompletionHandler(null);
+    _tts.setCompletionHandler(() {});
     super.dispose();
   }
 
@@ -487,6 +487,28 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
         Text('⭐ $_stars stars', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
       ],
     );
+  }
+}
+
+Color _subjectColor(String name) {
+  switch (name.toLowerCase()) {
+    case 'english': return const Color(0xFF4A90D9);
+    case 'chichewa': return const Color(0xFF27AE60);
+    case 'mathematics': return const Color(0xFFE67E22);
+    case 'science': return const Color(0xFF8E44AD);
+    case 'social studies': return const Color(0xFFE74C3C);
+    default: return const Color(0xFF4A90D9);
+  }
+}
+
+IconData _subjectIcon(String name) {
+  switch (name.toLowerCase()) {
+    case 'english': return Icons.abc;
+    case 'chichewa': return Icons.translate;
+    case 'mathematics': return Icons.calculate;
+    case 'science': return Icons.biotech;
+    case 'social studies': return Icons.public;
+    default: return Icons.book;
   }
 }
 

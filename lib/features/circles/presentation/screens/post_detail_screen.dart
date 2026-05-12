@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/config/theme/app_colors.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
   final String circleSlug;
@@ -36,7 +37,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         '''),
         variables: {'circleSlug': widget.circleSlug, 'postSlug': widget.postSlug},
       ),
-      builder: (result, {refetch}) {
+      builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
         final post = result.data?['circlePost'];
         if (post == null) return const Scaffold(body: Center(child: Text('Post not found')));
@@ -85,7 +86,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                           document: gql(kPostComments),
                           variables: {'postId': post['id']},
                         ),
-                        builder: (cResult, {refetch: refetchComments}) {
+                        builder: (cResult, {fetchMore, refetch}) {
                           if (cResult.isLoading) return const CircularProgressIndicator();
                           final comments = (cResult.data?['postComments'] as List?) ?? [];
                           return Column(

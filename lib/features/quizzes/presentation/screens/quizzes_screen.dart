@@ -13,7 +13,7 @@ class QuizzesScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Quizzes'), centerTitle: true),
       body: Query(
         options: QueryOptions(document: gql(kQuizzes), variables: {'limit': 50}),
-        builder: (result, {refetch}) {
+        builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
           final quizzes = (result.data?['quizzes'] as List?) ?? [];
           if (quizzes.isEmpty) return const Center(child: Text('No quizzes yet'));
