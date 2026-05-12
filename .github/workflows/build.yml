@@ -1,0 +1,77 @@
+name: Build and Release Flutter APK
+
+on:
+  push:
+    branches: [master, main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Flutter APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Clean build
+        run: flutter clean
+
+      - name: Build split APKs per ABI
+        run: flutter build apk --split-per-abi --release --build-name=1.0.0 --build-number=${{ github.run_number }}
+
+      - name: Build universal APK
+        run: flutter build apk --release --build-name=1.0.0 --build-number=${{ github.run_number }}
+
+      - name: List build outputs
+        run: ls -lh build/app/outputs/flutter-apk/
+
+      - name: Generate release tag
+        id: tag
+        run: |
+          DATE_TAG="v$(date +'%Y.%m.%d')-${{ github.run_number }}"
+          echo "tag=$DATE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/master'
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: "Yaza ${{ steps.tag.outputs.tag }}"
+          body: |
+            ## Yaza Mobile Release
+            
+            - Build: ${{ github.run_number }}
+            - Commit: ${{ github.sha }}
+            
+            ### Downloads
+            Choose the file for your device:
+            - **arm64-v8a** (most modern phones: Samsung A series, etc.)
+            - **armeabi-v7a** (older phones)
+            - **x86_64** (tablets, emulators)
+            - **universal** (works everywhere, larger file)
+          draft: false
+          prerelease: false
+          files: |
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
+            build/app/outputs/flutter-apk/app-release.apk
