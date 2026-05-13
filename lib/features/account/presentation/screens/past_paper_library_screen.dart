@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -27,9 +28,9 @@ class PastPaperLibraryScreen extends StatelessWidget {
                   title: Text(p['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text('${p['subject'] ?? ''} · ${p['examType'] ?? ''} ${p['year'] ?? ''}', style: const TextStyle(fontSize: 12)),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Paper details coming soon')),
-                  ),
+                  onTap: () {
+                    context.push('/past-paper/view', extra: Map<String, dynamic>.from(p as Map));
+                  },
                 ),
               );
             },

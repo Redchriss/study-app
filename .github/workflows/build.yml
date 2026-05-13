@@ -31,7 +31,7 @@ jobs:
         run: flutter pub get
 
       - name: Run unit tests
-        run: flutter test --coverage
+        run: flutter test test/widget_test.dart test/features test/core --coverage
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4

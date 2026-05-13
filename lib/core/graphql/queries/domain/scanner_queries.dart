@@ -26,6 +26,15 @@ query MySolveSessions($limit: Int) {
 
 const String kPastPapers = r'''
 query PastPapers($subject: String, $year: Int, $examType: String) {
-  pastPapers(subject: $subject, year: $year, examType: $examType) { id title subject examType year }
+  pastPapers(subject: $subject, year: $year, examType: $examType) {
+    id
+    title
+    slug
+    subject
+    examType
+    year
+    educationLevel
+    fileUrl
+  }
 }
 ''';
