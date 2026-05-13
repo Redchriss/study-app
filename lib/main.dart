@@ -5,10 +5,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/theme/app_theme.dart';
-import 'core/graphql/client.dart';
 import 'core/config/app_config.dart';
 import 'core/services/analytics_service.dart';
-import 'core/services/connectivity_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/widgets/offline_banner.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
@@ -28,7 +26,6 @@ void main() async {
         options.dsn = AppConfig.sentryDsn;
         options.environment = AppConfig.sentryEnvironment;
         options.tracesSampleRate = 1.0;
-        options.profilesSampleRate = 1.0;
       },
       appRunner: () async => _runApp(),
     );
@@ -51,6 +48,12 @@ Future<void> _runApp() async {
 
   // Initialize Firebase Analytics if enabled
   await AnalyticsService.initialize();
+  try {
+    await NotificationService.initialize();
+  } catch (e, st) {
+    debugPrint('NotificationService init failed: $e');
+    await Sentry.captureException(e, stackTrace: st);
+  }
 
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('theme_mode');
@@ -81,6 +84,9 @@ class StudyApp extends ConsumerWidget {
         themeMode: themeMode,
         routerConfig: router,
         debugShowCheckedModeBanner: false,
+        builder: (context, child) {
+          return OfflineBanner(child: child ?? const SizedBox.shrink());
+        },
       ),
     );
   }

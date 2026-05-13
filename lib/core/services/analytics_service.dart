@@ -1,5 +1,6 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 
 class AnalyticsService {
@@ -21,7 +22,7 @@ class AnalyticsService {
       _instance = FirebaseAnalytics.instance;
       await _instance?.setAnalyticsCollectionEnabled(true);
     } catch (e) {
-      print('Failed to initialize Firebase Analytics: $e');
+      debugPrint('Failed to initialize Firebase Analytics: $e');
     }
   }
 
@@ -33,7 +34,7 @@ class AnalyticsService {
         parameters: parameters,
       );
     } catch (e) {
-      print('Failed to log event: $e');
+      debugPrint('Failed to log event: $e');
     }
   }
 
@@ -42,7 +43,7 @@ class AnalyticsService {
     try {
       await _instance!.logScreenView(screenName: screenName);
     } catch (e) {
-      print('Failed to log screen view: $e');
+      debugPrint('Failed to log screen view: $e');
     }
   }
 
@@ -51,7 +52,7 @@ class AnalyticsService {
     try {
       await _instance!.logLogin(loginMethod: loginMethod);
     } catch (e) {
-      print('Failed to log login: $e');
+      debugPrint('Failed to log login: $e');
     }
   }
 
@@ -60,7 +61,7 @@ class AnalyticsService {
     try {
       await _instance!.logSignUp(signUpMethod: signUpMethod);
     } catch (e) {
-      print('Failed to log sign up: $e');
+      debugPrint('Failed to log sign up: $e');
     }
   }
 
@@ -69,7 +70,7 @@ class AnalyticsService {
     try {
       await _instance!.setUserId(id: userId);
     } catch (e) {
-      print('Failed to set user id: $e');
+      debugPrint('Failed to set user id: $e');
     }
   }
 
@@ -78,7 +79,7 @@ class AnalyticsService {
     try {
       await _instance!.setUserProperty(name: name, value: value);
     } catch (e) {
-      print('Failed to set user property: $e');
+      debugPrint('Failed to set user property: $e');
     }
   }
 }

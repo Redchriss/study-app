@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
 
 class LeaderboardScreen extends ConsumerWidget {
   const LeaderboardScreen({super.key});
@@ -35,7 +34,6 @@ class _LeaderboardTab extends ConsumerWidget {
   const _LeaderboardTab({required this.category});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     return Query(
       options: QueryOptions(
         document: gql(kLeaderboardRankings),
@@ -44,14 +42,16 @@ class _LeaderboardTab extends ConsumerWidget {
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Center(child: CircularProgressIndicator());
         final entries = (result.data?['leaderboard'] as List?) ?? [];
-        if (entries.isEmpty) return Center(
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(Icons.emoji_events, size: 64, color: DesignTokens.textTertiary.withValues(alpha: 0.5)),
-            const SizedBox(height: 16),
-            Text(category == 'learners' ? 'No learners yet. Take a quiz!' : 'No contributors yet. Answer questions!',
-              style: const TextStyle(color: DesignTokens.textTertiary)),
-          ]),
-        );
+        if (entries.isEmpty) {
+          return Center(
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(Icons.emoji_events, size: 64, color: DesignTokens.textTertiary.withValues(alpha: 0.5)),
+              const SizedBox(height: 16),
+              Text(category == 'learners' ? 'No learners yet. Take a quiz!' : 'No contributors yet. Answer questions!',
+                  style: const TextStyle(color: DesignTokens.textTertiary)),
+            ]),
+          );
+        }
         return ListView.builder(
           padding: const EdgeInsets.all(DesignTokens.spMd),
           itemCount: entries.length,

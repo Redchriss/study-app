@@ -1,15 +1,12 @@
-import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:studyapp/core/graphql/client.dart';
 import 'package:studyapp/core/theme/app_theme.dart';
 import 'package:studyapp/router.dart';
+import 'package:studyapp/features/auth/presentation/providers/auth_provider.dart';
 import 'package:studyapp/features/auth/presentation/screens/splash_screen.dart';
-import 'package:studyapp/features/auth/presentation/screens/login_screen.dart';
-import 'package:studyapp/features/auth/presentation/screens/register_screen.dart';
 import 'package:studyapp/features/auth/presentation/screens/onboarding_screen.dart';
 
 /// Integration tests run on a real device or emulator.
@@ -23,7 +20,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   Widget buildApp() {
-    return ProviderScope(
+    return const ProviderScope(
       child: _TestApp(),
     );
   }
@@ -55,10 +52,9 @@ void main() {
 
       // Navigate to login
       final loginButtons = find.text('Log In');
-      if (loginButtons.isEmpty) {
-        // Find any navigate-to-login button
+      if (loginButtons.evaluate().isEmpty) {
         final loginLinks = find.text('Log in');
-        if (loginLinks.isNotEmpty) {
+        if (loginLinks.evaluate().isNotEmpty) {
           await tester.tap(loginLinks.first);
           await tester.pumpAndSettle();
         }
@@ -76,7 +72,7 @@ void main() {
 
       // Find and tap login button
       final loginBtn = find.text('Log In');
-      if (loginBtn.isNotEmpty) {
+      if (loginBtn.evaluate().isNotEmpty) {
         await tester.ensureVisible(loginBtn.first);
         await tester.tap(loginBtn.first);
         await tester.pump();
@@ -92,7 +88,7 @@ void main() {
 
       // Navigate to register
       final signupLinks = find.text("Don't have an account? Sign up");
-      if (signupLinks.isNotEmpty) {
+      if (signupLinks.evaluate().isNotEmpty) {
         await tester.ensureVisible(signupLinks.first);
         await tester.tap(signupLinks.first);
         await tester.pumpAndSettle();
@@ -104,12 +100,9 @@ void main() {
     });
 
     testWidgets('6. Bottom navigation renders on authenticated pages', (tester) async {
-      // Test that navigation shell renders correctly
       await tester.pumpWidget(buildApp());
       await tester.pump(const Duration(seconds: 2));
 
-      // These navigation items should render on auth pages
-      // Check that basic navigation elements are present
       expect(find.byType(Navigator), findsAtLeast(1));
     });
   });
@@ -119,7 +112,6 @@ void main() {
       await tester.pumpWidget(buildApp());
       await tester.pump(const Duration(seconds: 1));
 
-      // Verify the app still renders without crashes
       expect(tester.takeException(), isNull);
     });
 
@@ -127,9 +119,8 @@ void main() {
       await tester.pumpWidget(buildApp());
       await tester.pump(const Duration(seconds: 2));
 
-      // Try scrolling on onboarding (if visible)
       final listViews = find.byType(ListView);
-      if (listViews.isNotEmpty) {
+      if (listViews.evaluate().isNotEmpty) {
         await tester.drag(listViews.first, const Offset(0, -500));
         await tester.pump();
         await tester.drag(listViews.first, const Offset(0, 500));
@@ -145,10 +136,9 @@ void main() {
       await tester.pumpWidget(buildApp());
       await tester.pump(const Duration(seconds: 1));
 
-      // Rapidly tap multiple buttons to test for crashes
       for (var i = 0; i < 5; i++) {
         final buttons = find.byType(ElevatedButton);
-        if (buttons.isNotEmpty) {
+        if (buttons.evaluate().isNotEmpty) {
           try {
             await tester.tap(buttons.first);
             await tester.pump(const Duration(milliseconds: 50));
@@ -158,7 +148,6 @@ void main() {
         }
       }
 
-      // App should not crash from rapid taps
       expect(tester.takeException(), isNull);
     });
 
@@ -166,12 +155,11 @@ void main() {
       await tester.pumpWidget(buildApp());
       await tester.pump(const Duration(seconds: 2));
 
-      // Tap text fields to trigger keyboard
       final textFields = find.byType(TextFormField);
-      if (textFields.isNotEmpty) {
+      if (textFields.evaluate().isNotEmpty) {
         await tester.tap(textFields.first);
         await tester.pump();
-        await tester.testTextInput.enterText('test input');
+        tester.testTextInput.enterText('test input');
         await tester.pump();
       }
 
@@ -181,19 +169,16 @@ void main() {
 
   group('Device Compatibility', () {
     testWidgets('11. Small screen renders without overflow', (tester) async {
-      // Test on 360x640 (small Android phone)
       tester.binding.setSurfaceSize(const Size(360, 640));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(buildApp());
       await tester.pump(const Duration(seconds: 2));
 
-      // No overflow errors
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('12. Tablet screen renders correctly', (tester) async {
-      // Test on 1024x768 (tablet)
       tester.binding.setSurfaceSize(const Size(1024, 768));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -207,13 +192,14 @@ void main() {
       await tester.pumpWidget(buildApp());
       await tester.pump(const Duration(seconds: 1));
 
-      // Just verify the app initializes without crashing
       expect(tester.takeException(), isNull);
     });
   });
 }
 
 class _TestApp extends ConsumerWidget {
+  const _TestApp();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final client = ref.watch(graphqlClientProvider);

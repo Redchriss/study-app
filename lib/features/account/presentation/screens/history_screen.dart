@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
 
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});

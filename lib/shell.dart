@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'core/theme/design_tokens.dart';
 
+/// Main app shell: Material 3 [NavigationBar] with clear hierarchy and
+/// a visually distinct Scanner entry (common pattern in consumer apps).
 class MainShell extends StatelessWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
@@ -14,13 +15,25 @@ class MainShell extends StatelessWidget {
     return 0;
   }
 
-  void _onTap(BuildContext context, int index) {
+  void _onDestinationSelected(BuildContext context, int index) {
     switch (index) {
-      case 0: context.go('/home');
-      case 1: context.go('/materials');
-      case 2: context.go('/scanner');
-      case 3: context.go('/circles');
-      case 4: context.go('/profile');
+      case 0:
+        context.go('/home');
+        return;
+      case 1:
+        context.go('/materials');
+        return;
+      case 2:
+        context.go('/scanner');
+        return;
+      case 3:
+        context.go('/circles');
+        return;
+      case 4:
+        context.go('/profile');
+        return;
+      default:
+        return;
     }
   }
 
@@ -28,30 +41,87 @@ class MainShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _locationToIndex(location);
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: (i) => _onTap(context, i),
-        items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
-          const BottomNavigationBarItem(icon: Icon(Icons.menu_book_outlined), activeIcon: Icon(Icons.menu_book), label: 'Materials'),
-          BottomNavigationBarItem(
-            icon: Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
-                color: DesignTokens.secondary,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.document_scanner_outlined, color: Colors.white),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: currentIndex,
+        onDestinationSelected: (i) => _onDestinationSelected(context, i),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.menu_book_outlined),
+            selectedIcon: Icon(Icons.menu_book_rounded),
+            label: 'Materials',
+          ),
+          NavigationDestination(
+            icon: _ScannerNavIcon(
+              selected: false,
+              foreground: scheme.onPrimaryContainer,
+              background: scheme.primaryContainer,
+            ),
+            selectedIcon: _ScannerNavIcon(
+              selected: true,
+              foreground: scheme.onPrimary,
+              background: scheme.primary,
             ),
             label: 'Scanner',
           ),
-          const BottomNavigationBarItem(icon: Icon(Icons.groups_outlined), activeIcon: Icon(Icons.groups), label: 'Circles'),
-          const BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
+          const NavigationDestination(
+            icon: Icon(Icons.groups_outlined),
+            selectedIcon: Icon(Icons.groups_rounded),
+            label: 'Circles',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Profile',
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _ScannerNavIcon extends StatelessWidget {
+  const _ScannerNavIcon({
+    required this.selected,
+    required this.foreground,
+    required this.background,
+  });
+
+  final bool selected;
+  final Color foreground;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: background,
+        shape: BoxShape.circle,
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: foreground.withValues(alpha: 0.25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: Icon(
+        selected ? Icons.document_scanner_rounded : Icons.document_scanner_outlined,
+        color: foreground,
+        size: 22,
       ),
     );
   }

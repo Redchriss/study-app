@@ -4,7 +4,6 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class UploadMaterialScreen extends ConsumerStatefulWidget {
@@ -78,13 +77,22 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
           TextField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title'), textInputAction: TextInputAction.next),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _subjectId, decoration: const InputDecoration(labelText: 'Subject'),
-            items: (_subjects ?? []).map((s) => DropdownMenuItem<String>(value: s['id']?.toString(), child: Text(s['name']?.toString() ?? ''))).toList(),
+            key: ValueKey('subject_${_subjects?.length}_$_subjectId'),
+            initialValue: _subjectId,
+            decoration: const InputDecoration(labelText: 'Subject'),
+            items: (_subjects ?? [])
+                .map((s) => DropdownMenuItem<String>(
+                      value: s['id']?.toString(),
+                      child: Text(s['name']?.toString() ?? ''),
+                    ))
+                .toList(),
             onChanged: (v) => setState(() => _subjectId = v),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _contentType, decoration: const InputDecoration(labelText: 'Type'),
+            key: ValueKey(_contentType),
+            initialValue: _contentType,
+            decoration: const InputDecoration(labelText: 'Type'),
             items: 'pdf|text|video|image'.split('|').map((t) => DropdownMenuItem(value: t, child: Text(t.toUpperCase()))).toList(),
             onChanged: (v) => setState(() => _contentType = v ?? 'text'),
           ),

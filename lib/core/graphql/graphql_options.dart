@@ -12,7 +12,7 @@ class GraphQLOptions {
   }) {
     return QueryOptions(
       document: gql(document),
-      variables: variables,
+      variables: variables ?? const <String, dynamic>{},
       fetchPolicy: fetchPolicy ?? FetchPolicy.networkOnly,
     );
   }
@@ -25,7 +25,7 @@ class GraphQLOptions {
   }) {
     return MutationOptions(
       document: gql(document),
-      variables: variables,
+      variables: variables ?? const <String, dynamic>{},
       fetchPolicy: fetchPolicy ?? FetchPolicy.noCache,
     );
   }
@@ -38,7 +38,7 @@ class GraphQLOptions {
   }) {
     return WatchQueryOptions(
       document: gql(document),
-      variables: variables,
+      variables: variables ?? const <String, dynamic>{},
       fetchPolicy: fetchPolicy ?? FetchPolicy.cacheAndNetwork,
     );
   }

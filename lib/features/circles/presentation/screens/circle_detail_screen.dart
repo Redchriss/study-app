@@ -24,8 +24,6 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
   bool _showNewPost = false;
   File? _postImage;
   String _postType = 'discussion';
-  String _searchQuery = '';
-  dynamic _refetch;
   bool _posting = false;
 
   @override
@@ -128,12 +126,18 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                         ),
                       ),
                     const SizedBox(width: 12),
-                    Expanded(child: DropdownButtonFormField<String>(
-                      value: _postType,
-                      decoration: const InputDecoration(labelText: 'Type', isDense: true),
-                      items: 'discussion|question|resource'.split('|').map((t) => DropdownMenuItem(value: t, child: Text(t[0].toUpperCase()+t.substring(1)))).toList(),
-                      onChanged: (v) => setState(() => _postType = v ?? 'discussion'),
-                    )),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        key: ValueKey(_postType),
+                        initialValue: _postType,
+                        decoration: const InputDecoration(labelText: 'Type', isDense: true),
+                        items: 'discussion|question|resource'
+                            .split('|')
+                            .map((t) => DropdownMenuItem(value: t, child: Text(t[0].toUpperCase() + t.substring(1))))
+                            .toList(),
+                        onChanged: (v) => setState(() => _postType = v ?? 'discussion'),
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     ElevatedButton(onPressed: () => _createPost(refetch), child: const Text('Post')),
                   ]),
@@ -153,9 +157,11 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
     if (_postImage != null) {
       final bytes = await _postImage!.readAsBytes();
       if (bytes.length > 3 * 1024 * 1024) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image too large (max 3MB)'), backgroundColor: DesignTokens.error),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Image too large (max 3MB)'), backgroundColor: DesignTokens.error),
+          );
+        }
         setState(() => _posting = false);
         return;
       }
@@ -191,7 +197,6 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
   }
 
   Widget _buildPostsList(String slug, dynamic refetch) {
-    _refetch = refetch;
     return Query(
       options: QueryOptions(
         document: gql(kCirclePosts),

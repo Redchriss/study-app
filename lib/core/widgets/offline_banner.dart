@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import '../theme/design_tokens.dart';
 import '../services/connectivity_service.dart';
 
@@ -43,10 +42,10 @@ class _OfflineBannerState extends State<OfflineBanner> {
             ),
             color: DesignTokens.warning,
             child: Row(
-              children: [
-                const Icon(Icons.wifi_off, color: Colors.white, size: 16),
-                const SizedBox(width: DesignTokens.spSm),
-                const Text(
+              children: const [
+                Icon(Icons.wifi_off, color: Colors.white, size: 16),
+                SizedBox(width: DesignTokens.spSm),
+                Text(
                   'You\'re offline. Some features may not work.',
                   style: TextStyle(color: Colors.white, fontSize: 12),
                 ),

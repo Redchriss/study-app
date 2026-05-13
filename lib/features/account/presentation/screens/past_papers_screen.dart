@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
 
 class PastPapersScreen extends StatelessWidget {
   const PastPapersScreen({super.key});
@@ -35,7 +34,6 @@ class PastPapersScreen extends StatelessWidget {
                   subtitle: Text('${s['subject'] ?? ''} · ${s['examType'] ?? ''} ${s['year'] ?? ''}', style: const TextStyle(fontSize: 12)),
                   trailing: Text(s['status'] ?? '', style: const TextStyle(fontSize: 12, color: DesignTokens.primary)),
                   onTap: () {
-                    final uuid = s['publicId'] ?? s['id'];
                     context.push('/scanner/results', extra: s);
                   },
                 ),

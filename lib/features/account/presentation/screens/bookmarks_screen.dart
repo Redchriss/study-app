@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
 
 class BookmarksScreen extends ConsumerWidget {
   const BookmarksScreen({super.key});
@@ -18,15 +17,17 @@ class BookmarksScreen extends ConsumerWidget {
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
           final items = (result.data?['bookmarkedMaterials'] as List?) ?? [];
-          if (items.isEmpty) return Center(
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const Icon(Icons.bookmark_border, size: 64, color: DesignTokens.textTertiary),
-              const SizedBox(height: 16),
-              const Text('No bookmarks yet', style: TextStyle(color: DesignTokens.textTertiary)),
-              const SizedBox(height: 8),
-              ElevatedButton(onPressed: () => context.go('/materials'), child: const Text('Browse materials')),
-            ]),
-          );
+          if (items.isEmpty) {
+            return Center(
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                const Icon(Icons.bookmark_border, size: 64, color: DesignTokens.textTertiary),
+                const SizedBox(height: 16),
+                const Text('No bookmarks yet', style: TextStyle(color: DesignTokens.textTertiary)),
+                const SizedBox(height: 8),
+                ElevatedButton(onPressed: () => context.go('/materials'), child: const Text('Browse materials')),
+              ]),
+            );
+          }
           return ListView.builder(
             padding: const EdgeInsets.all(DesignTokens.spMd),
             itemCount: items.length,

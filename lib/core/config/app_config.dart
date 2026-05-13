@@ -17,6 +17,12 @@ class AppConfig {
   static String get sentryEnvironment =>
       dotenv.env['SENTRY_ENVIRONMENT'] ?? 'development';
 
-  static bool get firebaseEnabled =>
-      dotenv.env['FIREBASE_ENABLED'] == 'true';
+  static bool get firebaseEnabled {
+    try {
+      return dotenv.env['FIREBASE_ENABLED'] == 'true';
+    } catch (_) {
+      // Tests and one-off scripts may read config before dotenv.load().
+      return false;
+    }
+  }
 }

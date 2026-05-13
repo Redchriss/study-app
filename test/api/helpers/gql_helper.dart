@@ -1,7 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
 
-const String kApiUrl = 'https://yaza-ai-tutor.onrender.com/graphql/';
+/// Live GraphQL endpoint for API tests. Override with `GRAPHQL_TEST_URL` (e.g. local Django).
+String get graphqlTestUrl {
+  final fromEnv = Platform.environment['GRAPHQL_TEST_URL'];
+  if (fromEnv != null && fromEnv.isNotEmpty) {
+    return fromEnv;
+  }
+  return 'https://yaza-ai-tutor.onrender.com/graphql/';
+}
 
 Map<String, dynamic> gqlBody(String query, {Map<String, dynamic>? variables}) {
   return {
@@ -15,9 +24,27 @@ Future<Map<String, dynamic>> gqlPost(String query, {Map<String, dynamic>? variab
   if (token != null) headers['Authorization'] = 'Bearer $token';
 
   final response = await http
-      .post(Uri.parse(kApiUrl), headers: headers, body: jsonEncode(gqlBody(query, variables: variables)))
+      .post(
+        Uri.parse(graphqlTestUrl),
+        headers: headers,
+        body: jsonEncode(gqlBody(query, variables: variables)),
+      )
       .timeout(const Duration(seconds: 30));
-  return jsonDecode(response.body) as Map<String, dynamic>;
+
+  final raw = response.body;
+  final trimmed = raw.trimLeft();
+  if (trimmed.startsWith('<')) {
+    final preview = trimmed.length > 200 ? '${trimmed.substring(0, 200)}…' : trimmed;
+    throw StateError(
+      'GraphQL at $graphqlTestUrl returned HTML (HTTP ${response.statusCode}), not JSON. '
+      'Usually a Django 500 / schema import error. Preview: $preview',
+    );
+  }
+  try {
+    return jsonDecode(raw) as Map<String, dynamic>;
+  } on FormatException catch (e) {
+    throw StateError('GraphQL response is not JSON ($e). First chars: ${trimmed.substring(0, trimmed.length > 80 ? 80 : trimmed.length)}');
+  }
 }
 
 /// Creates a unique test user and returns their token. Used by multiple test files.
