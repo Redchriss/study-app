@@ -47,34 +47,3 @@ class EmptyState extends StatelessWidget {
     );
   }
 }
-
-/// Error state with retry button.
-class ErrorState extends StatelessWidget {
-  final String message;
-  final VoidCallback? onRetry;
-  const ErrorState({super.key, required this.message, this.onRetry});
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(DesignTokens.spXl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.cloud_off, size: 72, color: DesignTokens.error.withValues(alpha: 0.5)),
-            const SizedBox(height: DesignTokens.spMd),
-            Text(message, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
-            if (onRetry != null) ...[
-              const SizedBox(height: DesignTokens.spLg),
-              OutlinedButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Retry'),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}

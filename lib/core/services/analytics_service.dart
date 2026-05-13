@@ -25,7 +25,7 @@ class AnalyticsService {
     }
   }
 
-  static Future<void> logEvent(String name, {Map<String, dynamic>? parameters}) async {
+  static Future<void> logEvent(String name, {Map<String, Object?>? parameters}) async {
     if (!_isEnabled || _instance == null) return;
     try {
       await _instance!.logEvent(
