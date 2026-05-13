@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:studyapp/features/auth/presentation/screens/login_screen.dart';
 
 void main() {
   group('LoginScreen Widget Tests', () {
-    testWidgets('should display login form', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: LoginScreen(),
-          ),
+    Widget createApp({List<GoRoute> extraRoutes = const []}) {
+      final router = GoRouter(
+        initialLocation: '/login',
+        routes: [
+          GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+          ...extraRoutes,
+        ],
+      );
+      return ProviderScope(
+        child: MaterialApp.router(
+          routerConfig: router,
         ),
       );
+    }
+
+    testWidgets('should display login form', (WidgetTester tester) async {
+      await tester.pumpWidget(createApp());
 
       expect(find.text('Welcome back'), findsOneWidget);
       expect(find.text('Log in to continue studying'), findsOneWidget);
@@ -21,13 +31,7 @@ void main() {
     });
 
     testWidgets('should show password visibility toggle', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: LoginScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(createApp());
 
       final passwordField = find.byType(TextFormField).last;
       await tester.tap(passwordField);
@@ -37,13 +41,7 @@ void main() {
     });
 
     testWidgets('should validate empty fields', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: LoginScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(createApp());
 
       final loginButton = find.text('Log In');
       await tester.tap(loginButton);
@@ -52,16 +50,18 @@ void main() {
       expect(find.text('Required'), findsNWidgets(2));
     });
 
-    testWidgets('should show register navigation option', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: LoginScreen(),
-          ),
-        ),
-      );
+    testWidgets('should navigate to register on tap', (WidgetTester tester) async {
+      await tester.pumpWidget(createApp(
+        extraRoutes: [
+          GoRoute(path: '/register', builder: (_, __) => const Scaffold(body: Text('Register Page'))),
+        ],
+      ));
 
-      expect(find.text("Don't have an account? Sign up"), findsOneWidget);
+      await tester.tap(find.text("Don't have an account? Sign up"));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('Register Page'), findsOneWidget);
     });
   });
 }
