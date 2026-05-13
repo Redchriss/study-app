@@ -1,0 +1,27 @@
+const String kCreditPackages = r'''
+query CreditPackages {
+  creditPackages { code name amount credits label purchaseType badge }
+  aiActionCatalog { code label cost description }
+  me { profile { aiCredits } }
+}
+''';
+
+const String kCreditLedger = r'''
+query CreditLedger($limit: Int) {
+  creditLedger(limit: $limit) { id entryType actionCode delta description createdAt }
+}
+''';
+
+const String kPaymentHistory = r'''
+query PaymentHistory($limit: Int) {
+  paymentHistory(limit: $limit) { id amount description status createdAt }
+}
+''';
+
+const String kInitializePayment = r'''
+mutation InitializePayment($packageCode: String!, $purchaseType: String!) {
+  initializePayment(packageCode: $packageCode, purchaseType: $purchaseType) {
+    success checkoutUrl transactionId errors
+  }
+}
+''';
