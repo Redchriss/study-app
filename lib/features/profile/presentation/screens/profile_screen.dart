@@ -69,6 +69,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: DesignTokens.spMd),
                 _MenuButton(icon: Icons.bookmark, label: 'Bookmarks', onTap: () => context.go('/bookmarks')),
+                _MenuButton(icon: Icons.edit, label: 'Edit Profile', onTap: () => context.go('/edit-profile')),
                 _MenuButton(icon: Icons.emoji_events, label: 'Leaderboard', onTap: () => context.go('/leaderboard')),
                 _MenuButton(icon: Icons.auto_awesome, label: 'Plans & Credits', onTap: () => context.go('/upgrade')),
                 _MenuButton(icon: Icons.history, label: 'History', onTap: () => context.go('/history')),

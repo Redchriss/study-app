@@ -16,8 +16,10 @@ query PaperSolveSession($uuid: String!) {
 }
 ''';
 
-const String kPaperSolveSessions = r'''
-query PaperSolveSessions($limit: Int) {
-  pastPapers(limit: $limit) { id title subject }
+const String kMySolveSessions = r'''
+query MySolveSessions($limit: Int) {
+  mySolveSessions(limit: $limit) {
+    id publicId filename subject educationLevel examType year status creditCharged createdAt
+  }
 }
 ''';

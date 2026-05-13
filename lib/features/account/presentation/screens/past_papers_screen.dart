@@ -11,25 +11,33 @@ class PastPapersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text('Past Papers', style: theme.textTheme.titleLarge)),
+      appBar: AppBar(title: Text('My Solve History', style: theme.textTheme.titleLarge)),
       body: Query(
-        options: QueryOptions(document: gql(kPaperSolveSessions), variables: {'limit': 50}),
+        options: QueryOptions(document: gql(kMySolveSessions), variables: {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
-          final papers = (result.data?['pastPapers'] as List?) ?? [];
-          if (papers.isEmpty) return const Center(child: Text('No past papers', style: TextStyle(color: DesignTokens.textTertiary)));
+          final sessions = (result.data?['mySolveSessions'] as List?) ?? [];
+          if (sessions.isEmpty) return const Center(child: Text('No solved papers yet. Use the scanner!', style: TextStyle(color: DesignTokens.textTertiary)));
           return ListView.builder(
             padding: const EdgeInsets.all(DesignTokens.spMd),
-            itemCount: papers.length,
+            itemCount: sessions.length,
             itemBuilder: (_, i) {
-              final p = papers[i];
+              final s = sessions[i];
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
-                  title: Text(p['title'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                  subtitle: Text('${p['subject'] ?? ''} · ${p['year'] ?? ''}', style: const TextStyle(fontSize: 12)),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/scanner/results', extra: p),
+                  leading: Container(
+                    width: 44, height: 44,
+                    decoration: BoxDecoration(color: DesignTokens.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.description, color: DesignTokens.success, size: 22),
+                  ),
+                  title: Text(s['filename'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  subtitle: Text('${s['subject'] ?? ''} · ${s['examType'] ?? ''} ${s['year'] ?? ''}', style: const TextStyle(fontSize: 12)),
+                  trailing: Text(s['status'] ?? '', style: const TextStyle(fontSize: 12, color: DesignTokens.primary)),
+                  onTap: () {
+                    final uuid = s['publicId'] ?? s['id'];
+                    context.push('/scanner/results', extra: s);
+                  },
                 ),
               );
             },
