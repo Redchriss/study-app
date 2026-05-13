@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../main.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
@@ -75,6 +76,16 @@ class ProfileScreen extends ConsumerWidget {
                 _MenuButton(icon: Icons.history, label: 'History', onTap: () => context.go('/history')),
                 _MenuButton(icon: Icons.article, label: 'Past Papers', onTap: () => context.go('/past-papers')),
                 _MenuButton(icon: Icons.info_outline, label: 'About Yaza', onTap: () => context.go('/about')),
+                const Divider(height: DesignTokens.spMd),
+                _MenuButton(
+                  icon: ref.watch(themeModeProvider) == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
+                  label: ref.watch(themeModeProvider) == ThemeMode.dark ? 'Light Mode' : 'Dark Mode',
+                  onTap: () {
+                    final current = ref.read(themeModeProvider);
+                    ref.read(themeModeProvider.notifier).state =
+                      current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+                  },
+                ),
                 const SizedBox(height: DesignTokens.spSm),
                 SizedBox(
                   width: double.infinity,

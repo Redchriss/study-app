@@ -7,6 +7,8 @@ import 'core/graphql/client.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'router.dart';
 
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
@@ -21,13 +23,14 @@ class StudyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final client = ref.watch(graphqlClientProvider);
+    final themeMode = ref.watch(themeModeProvider);
     return GraphQLProvider(
       client: ValueNotifier(client),
       child: MaterialApp.router(
         title: 'Yaza',
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
-        themeMode: ThemeMode.system,
+        themeMode: themeMode,
         routerConfig: router,
         debugShowCheckedModeBanner: false,
       ),

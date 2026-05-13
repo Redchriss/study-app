@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class UpgradeScreen extends ConsumerWidget {
   const UpgradeScreen({super.key});
@@ -45,24 +47,56 @@ class UpgradeScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               ...pkgs.map((p) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: GlassCard(child: ListTile(
-                  leading: Container(
-                    width: 48, height: 48,
-                    decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                    child: Icon(p['purchaseType'] == 'subscription' ? Icons.auto_awesome : Icons.add_circle, color: DesignTokens.primary),
-                  ),
-                  title: Text(p['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text('${p['credits']} credits', style: const TextStyle(fontSize: 12)),
-                  trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
-                    Text('MK ${p['amount']?.toStringAsFixed(0) ?? '0'}', style: const TextStyle(fontWeight: FontWeight.w700, color: DesignTokens.primary)),
-                    if (p['badge'] != null) Text(p['badge'], style: const TextStyle(fontSize: 10, color: DesignTokens.warning)),
-                  ]),
-                )),
+                child: GlassCard(child: _PackageTile(p, ref)),
               )),
             ],
           );
         },
       ),
+    );
+  }
+}
+
+class _PackageTile extends StatelessWidget {
+  final Map<String, dynamic> p;
+  final WidgetRef ref;
+  const _PackageTile(this.p, this.ref);
+
+  Future<void> _purchase(BuildContext context) async {
+    final client = ref.read(graphqlClientProvider);
+    final result = await client.mutate(MutationOptions(
+      document: gql(kInitializePayment),
+      variables: {'packageCode': p['code'], 'purchaseType': p['purchaseType'] ?? 'topup'},
+    ));
+    if (!context.mounted) return;
+    final data = result.data?['initializePayment'];
+    if (data == null || data['success'] != true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data?['errors']?.join(', ') ?? 'Payment failed'), backgroundColor: DesignTokens.error),
+      );
+      return;
+    }
+    final url = data['checkoutUrl'] as String?;
+    if (url != null && await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Container(
+        width: 48, height: 48,
+        decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+        child: Icon(p['purchaseType'] == 'subscription' ? Icons.auto_awesome : Icons.add_circle, color: DesignTokens.primary),
+      ),
+      title: Text(p['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: Text('${p['credits']} credits', style: const TextStyle(fontSize: 12)),
+      trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
+        Text('MK ${p['amount']?.toStringAsFixed(0) ?? '0'}', style: const TextStyle(fontWeight: FontWeight.w700, color: DesignTokens.primary)),
+        if (p['badge'] != null) Text(p['badge'], style: const TextStyle(fontSize: 10, color: DesignTokens.warning)),
+      ]),
+      onTap: () => _purchase(context),
     );
   }
 }
