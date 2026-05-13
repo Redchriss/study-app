@@ -101,3 +101,9 @@ mutation ToggleFavouriteCircle($circleSlug: String!) {
   toggleFavouriteCircle(circleSlug: $circleSlug) { success }
 }
 ''';
+
+const String kMarkAnswer = r'''
+mutation MarkAnswer($commentId: ID!, $postId: ID!) {
+  markAnswer(commentId: $commentId, postId: $postId) { success }
+}
+''';

@@ -55,6 +55,14 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                   builder: (run, _) => IconButton(icon: const Icon(Icons.person_add), onPressed: () { run({'circleSlug': widget.slug}); refetch?.call(); }),
                 ),
               IconButton(icon: const Icon(Icons.search), onPressed: () => _showSearch(context)),
+              if (circle['isMember'] == true)
+                Mutation(
+                  options: MutationOptions(document: gql(kToggleFavouriteCircle)),
+                  builder: (run, _) => IconButton(
+                    icon: Icon(circle['isFavorite'] == true ? Icons.star : Icons.star_border, color: circle['isFavorite'] == true ? DesignTokens.warning : null),
+                    onPressed: () => run({'circleSlug': widget.slug}),
+                  ),
+                ),
             ],
           ),
           body: Column(children: [

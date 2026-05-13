@@ -27,6 +27,8 @@ import '../features/account/presentation/screens/history_screen.dart';
 import '../features/account/presentation/screens/bookmarks_screen.dart';
 import '../features/account/presentation/screens/past_papers_screen.dart';
 import '../features/account/presentation/screens/edit_profile_screen.dart';
+import '../features/account/presentation/screens/upload_material_screen.dart';
+import '../features/account/presentation/screens/past_paper_library_screen.dart';
 import '../features/kids_mode/presentation/screens/kids_home_screen.dart';
 import '../features/kids_mode/presentation/screens/kid_login_screen.dart';
 import '../features/profile/presentation/screens/about_screen.dart';
@@ -146,6 +148,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/bookmarks', builder: (_, __) => const BookmarksScreen()),
       GoRoute(path: '/edit-profile', builder: (_, __) => const EditProfileScreen()),
       GoRoute(path: '/past-papers', builder: (_, __) => const PastPapersScreen()),
+      GoRoute(path: '/paper-library', builder: (_, __) => const PastPaperLibraryScreen()),
+      GoRoute(path: '/upload-material', builder: (_, __) => const UploadMaterialScreen()),
       GoRoute(
         path: '/quizzes',
         builder: (_, __) => const QuizzesScreen(),

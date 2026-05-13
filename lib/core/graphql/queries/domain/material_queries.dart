@@ -61,3 +61,18 @@ query BookmarkedMaterials {
   bookmarkedMaterials { id title slug subject { name } contentType }
 }
 ''';
+
+const String kUploadMaterial = r'''
+mutation UploadMaterial($title: String!, $subjectId: ID!, $contentType: String!, $description: String, $contentText: String, $youtubeUrl: String) {
+  uploadMaterial(title: $title, subjectId: $subjectId, contentType: $contentType, description: $description, contentText: $contentText, youtubeUrl: $youtubeUrl) {
+    success errors
+    material { id title slug }
+  }
+}
+''';
+
+const String kSubjects = r'''
+query Subjects($educationLevel: String) {
+  subjects(educationLevel: $educationLevel) { id name }
+}
+''';
