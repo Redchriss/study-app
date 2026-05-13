@@ -109,8 +109,17 @@ query Dashboard {
     questionsPracticed
     questionsCorrect
     attemptCount
-    strongestTopics
-    weakestTopics
+    strongestTopics { name accuracy questionsCorrect questionsSeen }
+    weakestTopics { name accuracy questionsCorrect questionsSeen }
+  }
+  activityFeed(limit: 5) {
+    kind
+    message
+    detail
+    createdAt
+  }
+  learningProfile {
+    learningStyle
   }
   myCircles {
     id
