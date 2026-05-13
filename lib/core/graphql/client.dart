@@ -10,15 +10,22 @@ GraphQLClient buildGraphQLClient() {
     },
   );
 
-  final httpLink = HttpLink(AppConfig.graphqlUrl);
+  final httpLink = HttpLink(
+    AppConfig.graphqlUrl,
+  );
+
   final link = authLink.concat(httpLink);
 
   return GraphQLClient(
     link: link,
     cache: GraphQLCache(store: HiveStore()),
     defaultPolicies: DefaultPolicies(
-      query: Policies(fetch: FetchPolicy.networkOnly),
-      mutate: Policies(fetch: FetchPolicy.networkOnly),
+      query: Policies(
+        fetch: FetchPolicy.networkOnly,
+      ),
+      mutate: Policies(
+        fetch: FetchPolicy.networkOnly,
+      ),
     ),
   );
 }

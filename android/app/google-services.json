@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "478135581317",
+    "project_id": "yaza-1f48e",
+    "storage_bucket": "yaza-1f48e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:478135581317:android:127ab995aab6271c9987ec",
+        "android_client_info": {
+          "package_name": "mw.yaza.studyapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbqcPjf7aFjiT2uzHr92WJbPAmtR4RNZo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

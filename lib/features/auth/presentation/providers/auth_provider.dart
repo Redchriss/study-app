@@ -67,7 +67,10 @@ class AuthNotifier extends Notifier<AuthState> {
 
       final client = ref.read(graphqlClientProvider);
       final result = await client.query(
-        QueryOptions(document: gql(kMe), fetchPolicy: FetchPolicy.networkOnly),
+        QueryOptions(
+          document: gql(kMe),
+          fetchPolicy: FetchPolicy.networkOnly,
+        ),
       ).timeout(const Duration(seconds: 30));
 
       if (result.hasException || result.data?['me'] == null) {
@@ -79,6 +82,7 @@ class AuthNotifier extends Notifier<AuthState> {
       state = AuthState(isAuthenticated: true, isLoading: false, user: result.data!['me']);
       _scheduleRefresh();
     } catch (e) {
+      debugPrint('Auth bootstrap failed: $e');
       state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Connection error. Check your network.');
     }
   }
@@ -104,6 +108,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _scheduleRefresh();
       return state.isAuthenticated;
     } catch (e) {
+      debugPrint('Login failed: $e');
       state = AuthState(isAuthenticated: false, isLoading: false, error: e.toString());
       return false;
     }
@@ -136,6 +141,7 @@ class AuthNotifier extends Notifier<AuthState> {
       _scheduleRefresh();
       return state.isAuthenticated;
     } catch (e) {
+      debugPrint('Registration failed: $e');
       state = AuthState(isAuthenticated: false, isLoading: false, error: e.toString());
       return false;
     }
