@@ -54,7 +54,15 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
       if (result.hasException || result.data?['uploadMaterial']?['success'] != true) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Upload failed'), backgroundColor: DesignTokens.error));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Material submitted for review'), backgroundColor: DesignTokens.success));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Material submitted for review'),
+          backgroundColor: DesignTokens.success,
+          action: SnackBarAction(
+            label: 'My uploads',
+            textColor: Colors.white,
+            onPressed: () => context.push('/my-uploads'),
+          ),
+        ));
         context.pop();
       }
     }

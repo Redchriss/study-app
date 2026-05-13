@@ -78,6 +78,8 @@ class ProfileScreen extends ConsumerWidget {
                 _MenuButton(icon: Icons.article, label: 'Past Papers', onTap: () => context.go('/past-papers')),
                 _MenuButton(icon: Icons.library_books, label: 'Paper Library', onTap: () => context.go('/paper-library')),
                 _MenuButton(icon: Icons.upload_file, label: 'Upload Material', onTap: () => context.go('/upload-material')),
+                _MenuButton(icon: Icons.folder_special_outlined, label: 'My uploads', onTap: () => context.push('/my-uploads')),
+                _MenuButton(icon: Icons.bookmark_outline, label: 'Bookmarks', onTap: () => context.go('/bookmarks')),
                 _MenuButton(icon: Icons.info_outline, label: 'About Yaza', onTap: () => context.go('/about')),
                 const Divider(height: DesignTokens.spMd),
                 _MenuButton(

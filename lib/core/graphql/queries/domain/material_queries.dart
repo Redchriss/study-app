@@ -76,3 +76,26 @@ query Subjects($educationLevel: String) {
   subjects(educationLevel: $educationLevel) { id name }
 }
 ''';
+
+const String kMyUploadedMaterials = r'''
+query MyUploadedMaterials($limit: Int, $offset: Int) {
+  myUploadedMaterials(limit: $limit, offset: $offset) {
+    id
+    title
+    slug
+    contentType
+    isApproved
+    subject { id name }
+    createdAt
+  }
+}
+''';
+
+const String kDeleteMyMaterial = r'''
+mutation DeleteMyMaterial($slug: String!) {
+  deleteMyMaterial(slug: $slug) {
+    success
+    errors
+  }
+}
+''';
