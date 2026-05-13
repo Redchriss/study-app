@@ -13,7 +13,7 @@ class PastPapersScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('Past Papers', style: theme.textTheme.titleLarge)),
       body: Query(
-        options: QueryOptions(document: gql(kPastPapers), variables: {'limit': 50}),
+        options: QueryOptions(document: gql(kPaperSolveSessions), variables: {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
           final papers = (result.data?['pastPapers'] as List?) ?? [];

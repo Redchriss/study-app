@@ -776,20 +776,3 @@ query BookmarkedMaterials {
 }
 ''';
 
-const String kPaperSolveSession = r'''
-query PaperSolveSession($uuid: String!) {
-  paperSolveSession(uuid: $uuid) {
-    id publicId filename subject educationLevel examType year status creditCharged createdAt
-    solutions {
-      questionNumber questionText answer explanation confidence
-      steps { text }
-    }
-  }
-}
-''';
-
-const String kPastPapers = r'''
-query PastPapers($limit: Int) {
-  pastPapers(limit: $limit) { id title subject year examType }
-}
-''';
