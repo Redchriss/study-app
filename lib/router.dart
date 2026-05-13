@@ -29,6 +29,7 @@ import '../features/account/presentation/screens/past_papers_screen.dart';
 import '../features/account/presentation/screens/edit_profile_screen.dart';
 import '../features/account/presentation/screens/upload_material_screen.dart';
 import '../features/account/presentation/screens/past_paper_library_screen.dart';
+import '../features/account/presentation/screens/quiz_share_screen.dart';
 import '../features/kids_mode/presentation/screens/kids_home_screen.dart';
 import '../features/kids_mode/presentation/screens/kid_login_screen.dart';
 import '../features/profile/presentation/screens/about_screen.dart';
@@ -153,6 +154,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/quizzes',
         builder: (_, __) => const QuizzesScreen(),
+        routes: [
+          GoRoute(path: ':slug/share', builder: (_, state) => QuizShareScreen(quizSlug: state.pathParameters['slug']!)),
+        ],
       ),
     ],
   );

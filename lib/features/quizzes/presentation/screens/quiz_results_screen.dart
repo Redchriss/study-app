@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class QuizResultsScreen extends ConsumerWidget {
   final String attemptId;
@@ -23,7 +25,16 @@ class QuizResultsScreen extends ConsumerWidget {
         final score = attempt['score']?.toStringAsFixed(0) ?? '0';
         final total = attempt['totalPoints'] ?? answers.length;
         return Scaffold(
-          appBar: AppBar(title: Text(attempt['quiz']?['title'] ?? 'Results'), centerTitle: true),
+          appBar: AppBar(
+            title: Text(attempt['quiz']?['title'] ?? 'Results'),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.share),
+                onPressed: () => _showShareSheet(context, attempt, ref),
+              ),
+            ],
+          ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(DesignTokens.spMd),
             child: Column(children: [
@@ -70,4 +81,46 @@ class QuizResultsScreen extends ConsumerWidget {
       },
     );
   }
+}
+
+void _showShareSheet(BuildContext context, Map<String, dynamic>? attempt, WidgetRef ref) {
+  showModalBottomSheet(
+    context: context,
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Share Quiz', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.groups),
+              label: const Text('Share to a Circle'),
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.push('/quizzes/${attempt?['quiz']?['slug']}/share');
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.public),
+              label: const Text('Make Public'),
+              onPressed: () async {
+                final client = ref.read(graphqlClientProvider);
+                await client.mutate(MutationOptions(
+                  document: gql(kShareQuiz),
+                  variables: {'quizSlug': attempt?['quiz']?['slug'], 'makePublic': true},
+                ));
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+            ),
+          ),
+        ]),
+      ),
+    ),
+  );
 }

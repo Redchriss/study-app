@@ -48,6 +48,25 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       icon: Icon(post['userVote'] == 'down' ? Icons.thumb_down : Icons.thumb_down_outlined, size: 20, color: post['userVote'] == 'down' ? DesignTokens.error : null),
                       onPressed: () { _vote(post['id'], 'down', refetch); },
                     ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.auto_awesome, size: 20, color: DesignTokens.info),
+                      tooltip: 'Ask AI to reply',
+                      onPressed: () async {
+                        final client = ref.read(graphqlClientProvider);
+                        final content = '${post['title'] ?? ''}\n${post['body'] ?? ''}';
+                        final result = await client.mutate(MutationOptions(
+                          document: gql(kAskAiOnPost),
+                          variables: {'postId': post['id'], 'postContent': content},
+                        ));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(result.data?['askAiOnPost']?['reply'] ?? 'AI replied!')),
+                          );
+                          refetch?.call();
+                        }
+                      },
+                    ),
                   ]),
                   const SizedBox(height: 8),
                   Text(post['body'] ?? ''),

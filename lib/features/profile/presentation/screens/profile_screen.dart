@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../main.dart';
@@ -84,8 +85,9 @@ class ProfileScreen extends ConsumerWidget {
                   label: ref.watch(themeModeProvider) == ThemeMode.dark ? 'Light Mode' : 'Dark Mode',
                   onTap: () {
                     final current = ref.read(themeModeProvider);
-                    ref.read(themeModeProvider.notifier).state =
-                      current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+                    final next = current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+                    ref.read(themeModeProvider.notifier).state = next;
+                    SharedPreferences.getInstance().then((p) => p.setString('theme_mode', next == ThemeMode.dark ? 'dark' : 'light'));
                   },
                 ),
                 const SizedBox(height: DesignTokens.spSm),
