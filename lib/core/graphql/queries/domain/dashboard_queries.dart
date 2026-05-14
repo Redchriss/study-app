@@ -80,8 +80,10 @@ query Me {
       studyPoints
       activePlanName
       avatarUrl
-      university { id name shortName }
-      program { id name }
+      primarySchool { id name district region }
+      secondarySchool { id name district region }
+      university { id name shortName location universityType description }
+      program { id name faculty durationYears }
     }
   }
 }

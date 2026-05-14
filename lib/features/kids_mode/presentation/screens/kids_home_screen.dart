@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -6,7 +7,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
+import '../../kids_visual_theme.dart';
+import '../widgets/kids_daily_goal_ring.dart';
+import '../widgets/kids_lesson_step_bar.dart';
+import '../widgets/kids_playful_button.dart';
+import '../widgets/kids_subject_card.dart';
 import 'kid_login_screen.dart';
 
 class KidsHomeScreen extends ConsumerStatefulWidget {
@@ -15,7 +20,7 @@ class KidsHomeScreen extends ConsumerStatefulWidget {
   ConsumerState<KidsHomeScreen> createState() => _KidsHomeScreenState();
 }
 
-class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
+class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTickerProviderStateMixin {
   final _tts = FlutterTts();
   Map<String, dynamic>? _selectedSubject;
   Map<String, dynamic>? _currentLesson;
@@ -30,10 +35,14 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   int _stars = 0;
   int _streak = 0;
   bool _fetchedSubjects = false;
+  bool _showCorrectBurst = false;
+  Map<String, dynamic>? _dailySummary;
+  late final AnimationController _burstCtrl;
 
   @override
   void initState() {
     super.initState();
+    _burstCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _tts.setSpeechRate(0.45);
     _tts.setVolume(1.0);
     _tts.setCompletionHandler(() {
@@ -43,6 +52,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
 
   @override
   void dispose() {
+    _burstCtrl.dispose();
     _tts.stop();
     _tts.setCompletionHandler(() {});
     super.dispose();
@@ -58,16 +68,62 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
     return _kidClient!;
   }
 
-  Future<void> _fetchSubjects() async {
+  Future<void> _fetchDailySummary() async {
+    final auth = ref.read(kidAuthStateProvider);
+    if (!auth.isAuthenticated) return;
     final c = _buildKidClient();
-    final result = await c.query(QueryOptions(document: gql(kPrimarySubjects)));
+    final result = await c.query(QueryOptions(document: gql(kKidDailySummary), fetchPolicy: FetchPolicy.networkOnly));
+    if (!mounted || result.data == null) return;
+    final s = result.data!['kidDailySummary'] as Map<String, dynamic>?;
+    if (s != null) {
+      setState(() {
+        _dailySummary = Map<String, dynamic>.from(s);
+        final ts = (_dailySummary!['totalStars'] as num?)?.toInt();
+        if (ts != null) _stars = ts;
+      });
+    }
+  }
+
+  Future<void> _fetchSubjects() async {
+    final auth = ref.read(kidAuthStateProvider);
+    final c = _buildKidClient();
+    final result = await c.query(QueryOptions(
+      document: gql(kPrimarySubjects),
+      variables: {'standard': auth.standard, 'educationTrack': auth.educationTrack},
+    ));
     if (result.data != null && mounted) {
       setState(() {
-        _subjects = ((result.data!['primarySubjects'] as List?) ?? []).map((s) => Map<String, dynamic>.from(s as Map)).toList();
+        _subjects = ((result.data!['primarySubjects'] as List?) ?? [])
+            .map((s) => Map<String, dynamic>.from(s as Map))
+            .toList();
         _fetchedSubjects = true;
       });
+      await _fetchDailySummary();
     } else {
       setState(() => _fetchedSubjects = true);
+    }
+  }
+
+  Future<void> _claimDailyChest() async {
+    final c = _buildKidClient();
+    final result = await c.mutate(MutationOptions(document: gql(kClaimKidDailyChest)));
+    final payload = result.data?['claimKidDailyChest'] as Map<String, dynamic>?;
+    if (payload?['success'] == true && mounted) {
+      HapticFeedback.heavyImpact();
+      final s = payload!['summary'] as Map<String, dynamic>?;
+      if (s != null) {
+        setState(() {
+          _dailySummary = Map<String, dynamic>.from(s);
+          final ts = (_dailySummary!['totalStars'] as num?)?.toInt();
+          if (ts != null) _stars = ts;
+        });
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You earned bonus stars!'), backgroundColor: DesignTokens.success),
+      );
+    } else if (mounted) {
+      final errs = (payload?['errors'] as List?)?.cast<String>() ?? const ['Try again later'];
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errs.join(', '))));
     }
   }
 
@@ -79,7 +135,10 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('TTS unavailable on this device'), backgroundColor: DesignTokens.error),
+          const SnackBar(
+            content: Text('Reading aloud is not available on this device'),
+            backgroundColor: DesignTokens.error,
+          ),
         );
       }
     }
@@ -98,9 +157,13 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
         setState(() {
           _currentLesson = data['lesson'];
           _quiz = (_currentLesson?['quiz'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-          _inQuiz = false; _quizAnswered = false; _quizSelected = null; _loading = false;
+          _inQuiz = false;
+          _quizAnswered = false;
+          _quizSelected = null;
+          _loading = false;
         });
       }
+      await _fetchDailySummary();
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -108,7 +171,13 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   void _startQuiz() {
     if (_quiz.isEmpty) return;
     final q = _quiz[0];
-    setState(() { _quizCorrectIndex = q['correct'] as int? ?? 0; _inQuiz = true; _quizAnswered = false; _quizSelected = null; });
+    setState(() {
+      _quizCorrectIndex = q['correct'] as int? ?? 0;
+      _inQuiz = true;
+      _quizAnswered = false;
+      _quizSelected = null;
+    });
+    HapticFeedback.mediumImpact();
     _speak(q['question'] as String? ?? '');
   }
 
@@ -119,13 +188,30 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
       document: gql(kAnswerKidQuiz),
       variables: {'lessonId': _currentLesson!['id'], 'selectedIndex': idx},
     ));
-    final correct = result.data?['answerKidQuiz']?['correct'] == true;
+    final payload = result.data?['answerKidQuiz'] as Map<String, dynamic>?;
+    final correct = payload?['correct'] == true;
+    if (payload?['success'] == false && mounted) {
+      final errs = (payload?['errors'] as List?)?.cast<String>() ?? const ['Could not save answer'];
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errs.join(', '))));
+    }
     setState(() {
-      _quizSelected = idx; _quizAnswered = true;
-      _stars = result.data?['answerKidQuiz']?['starsEarned'] ?? _stars;
-      _streak = result.data?['answerKidQuiz']?['streak'] ?? _streak;
+      _quizSelected = idx;
+      _quizAnswered = true;
+      _stars = (payload?['starsEarned'] as num?)?.toInt() ?? _stars;
+      _streak = (payload?['streak'] as num?)?.toInt() ?? _streak;
     });
-    _speak(correct ? 'Correct! Well done!' : 'Not quite. Try the next one!');
+    if (correct) {
+      HapticFeedback.heavyImpact();
+      _burstCtrl.forward(from: 0);
+      setState(() => _showCorrectBurst = true);
+      await Future.delayed(const Duration(milliseconds: 850));
+      if (mounted) setState(() => _showCorrectBurst = false);
+      _speak('Correct! Well done!');
+    } else {
+      HapticFeedback.selectionClick();
+      _speak('Nice try! The right answer is highlighted.');
+    }
+    await _fetchDailySummary();
   }
 
   @override
@@ -136,172 +222,302 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/kids'));
       return const Scaffold(body: Center(child: Text('Redirecting...')));
     }
-    if (!_fetchedSubjects) { _fetchSubjects(); return const Scaffold(body: Center(child: CircularProgressIndicator())); }
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(children: [
-          const Icon(Icons.auto_awesome, color: DesignTokens.warning, size: 20),
-          const SizedBox(width: 6),
-          Text('Yaza Kids', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-        ]),
-        actions: [
-          GestureDetector(
-            onTap: () { ref.read(kidAuthStateProvider.notifier).state = const KidAuthState(); context.go('/kids'); },
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: DesignTokens.textTertiary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
-              child: const Text('Switch', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+    if (!_fetchedSubjects) {
+      _fetchSubjects();
+      return Theme(
+        data: KidsVisualTheme.overlayOn(theme),
+        child: Container(
+          decoration: BoxDecoration(gradient: KidsVisualTheme.backgroundGradient),
+          child: const Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Center(child: CircularProgressIndicator(color: Colors.white)),
+          ),
+        ),
+      );
+    }
+
+    return Theme(
+      data: KidsVisualTheme.overlayOn(theme),
+      child: Container(
+        decoration: BoxDecoration(gradient: KidsVisualTheme.backgroundGradient),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: DesignTokens.shadowSm(theme.brightness == Brightness.dark),
+                  ),
+                  child: const Icon(Icons.school_rounded, color: KidsVisualTheme.pathBlue, size: 22),
+                ),
+                const SizedBox(width: 10),
+                const Text('Yaza Kids'),
+              ],
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Material(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(20),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      ref.read(kidAuthStateProvider.notifier).state = const KidAuthState();
+                      context.go('/kids');
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      child: Text('Switch', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          body: SafeArea(
+            child: AnimatedSwitcher(
+              duration: DesignTokens.durNormal,
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              child: _selectedSubject == null
+                  ? KeyedSubtree(key: const ValueKey('picker'), child: _buildPicker(auth))
+                  : KeyedSubtree(key: const ValueKey('lesson'), child: _buildLesson(auth)),
             ),
           ),
-        ],
+        ),
       ),
-      body: _selectedSubject == null ? _buildPicker() : _buildLesson(),
     );
   }
 
-  Widget _buildPicker() {
+  String _mascotMessage(KidAuthState auth) {
+    final act = (_dailySummary?['activitiesToday'] as num?)?.toInt() ?? 0;
+    final goal = (_dailySummary?['dailyGoal'] as num?)?.toInt() ?? 3;
+    if (act >= goal) {
+      return 'Today’s goal is complete. You can still play lessons—or rest. Both are great!';
+    }
+    final left = goal - act;
+    final unit = left == 1 ? 'step' : 'steps';
+    final track = auth.educationTrack == 'ecd' ? 'Little learner' : 'Super learner';
+    return '$track, only $left small $unit left to fill today’s ring.';
+  }
+
+  Widget _buildPicker(KidAuthState auth) {
     final theme = Theme.of(context);
-    final auth = ref.read(kidAuthStateProvider);
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(DesignTokens.spMd),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GlassCard(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          _KidsHeroCard(
+            childName: auth.childName,
+            standard: auth.standard,
+            educationTrack: auth.educationTrack,
+            summary: _dailySummary,
+            quizHotStreak: _streak,
+            stars: _stars,
+            onStarsTap: () {
+              HapticFeedback.selectionClick();
+              _speak('You have $_stars stars. Keep learning!');
+            },
+          ),
+          const SizedBox(height: 12),
+          KidsMascotHint(message: _mascotMessage(auth)),
+          const SizedBox(height: 12),
+          if (_dailySummary != null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: KidsDailyChestChip(
+                available: _dailySummary!['chestAvailable'] == true,
+                claimed: _dailySummary!['chestClaimed'] == true,
+                onClaim: _claimDailyChest,
+              ),
+            ),
+          const SizedBox(height: 20),
+          Text(
+            'Pick a path',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: KidsVisualTheme.ink,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'One short lesson at a time',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: KidsVisualTheme.inkMuted.withValues(alpha: 0.95),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (_subjects.isEmpty)
+            _KidsEmptySubjects()
+          else
+            ..._subjects.map((s) {
+              final name = s['name'] as String? ?? '';
+              final c = _kidsSubjectColor(name);
+              final icon = _kidsSubjectIcon(name);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: KidsSubjectCard(
+                  name: name,
+                  accent: c,
+                  icon: icon,
+                  onTap: () {
+                    setState(() => _selectedSubject = Map<String, dynamic>.from(s));
+                    _fetchLesson(s['id'], auth.standard);
+                  },
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLesson(KidAuthState auth) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
+    }
+    if (_currentLesson == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'No lesson yet — tap Next to try again',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.95), fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ),
+      );
+    }
+    final text = _currentLesson!['bodyText'] as String? ?? '';
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Hi ${auth.childName}! ⭐', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-                  Text('Standard ${auth.standard}', style: const TextStyle(color: DesignTokens.textSecondary)),
-                ]),
-                GestureDetector(
-                  onTap: () => _speak('You have $_stars stars!'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(color: DesignTokens.warning.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
-                    child: Row(children: [
-                      const Icon(Icons.star, color: DesignTokens.warning, size: 20),
-                      const SizedBox(width: 4),
-                      Text('$_stars', style: const TextStyle(fontWeight: FontWeight.w800, color: DesignTokens.warning)),
-                    ]),
-                  ),
+                Row(
+                  children: [
+                    Material(
+                      color: Colors.white.withValues(alpha: 0.95),
+                      borderRadius: BorderRadius.circular(16),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() => _selectedSubject = null);
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Icon(Icons.arrow_back_rounded, color: KidsVisualTheme.pathBlue, size: 22),
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      auth.childName,
+                      style: const TextStyle(
+                        color: KidsVisualTheme.ink,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                KidsLessonStepBar(inQuiz: _inQuiz),
+                const SizedBox(height: 18),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    _KidsFloatingPanel(
+                      child: _inQuiz ? _buildQuizContent(Theme.of(context)) : _buildStoryPanel(text),
+                    ),
+                    if (_showCorrectBurst) _CorrectBurstOverlay(controller: _burstCtrl),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                KidsPlayfulPrimaryButton(
+                  label: 'Next lesson',
+                  icon: Icons.auto_awesome,
+                  onTap: () => _fetchLesson(_selectedSubject!['id']!, auth.standard),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: DesignTokens.spLg),
-          const SectionHeader(title: 'Pick a subject'),
-          const SizedBox(height: DesignTokens.spSm),
-          ...(_subjects.isEmpty ? [
-            Container(
-              padding: const EdgeInsets.all(DesignTokens.spXl),
-              decoration: BoxDecoration(
-                color: DesignTokens.surfaceVariant, borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-              ),
-              child: const Center(child: Text('No subjects loaded', style: TextStyle(color: DesignTokens.textSecondary))),
-            )
-          ] : _subjects.map((s) {
-            final name = s['name'] as String? ?? '';
-            final c = _kidsSubjectColor(name);
-            final icon = _kidsSubjectIcon(name);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: DesignTokens.spSm),
-              child: AnimatedPress(
-                onTap: () {
-                  setState(() => _selectedSubject = Map<String, dynamic>.from(s));
-                  _fetchLesson(s['id'], auth.standard);
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spSm),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardTheme.color,
-                    borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-                    border: Border.all(color: c.withValues(alpha: 0.3)),
-                    boxShadow: DesignTokens.shadowSm(Theme.of(context).brightness == Brightness.dark),
-                  ),
-                  child: Row(children: [
-                    Container(
-                      width: 48, height: 48,
-                      decoration: BoxDecoration(color: c.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(DesignTokens.radiusMd)),
-                      child: Icon(icon, color: c, size: 24),
-                    ),
-                    const SizedBox(width: DesignTokens.spMd),
-                    Text(name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-                  ]),
-                ),
-              ),
-            );
-          })),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildLesson() {
-    final theme = Theme.of(context);
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_currentLesson == null) return const Center(child: Text('No lesson available'));
-    final text = _currentLesson!['bodyText'] as String? ?? '';
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(DesignTokens.spMd),
-      child: Column(children: [
-        Row(children: [
-          AnimatedPress(
-            onTap: () => setState(() => _selectedSubject = null),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
-              child: const Icon(Icons.arrow_back, size: 18, color: DesignTokens.primary),
-            ),
+  Widget _buildStoryPanel(String text) {
+    return Column(
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            gradient: KidsVisualTheme.ctaGradient,
+            shape: BoxShape.circle,
+            boxShadow: KidsVisualTheme.chunkyShadow(const Color(0xFF2A8F4A), dy: 3),
           ),
-          const Spacer(),
-          Text(ref.read(kidAuthStateProvider).childName, style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 14)),
-        ]),
-        const SizedBox(height: DesignTokens.spMd),
-        if (_inQuiz) ...[
-          GlassCard(child: _buildQuizContent(theme))
-        ] else ...[
-          GlassCard(child: Column(children: [
-            Container(
-              width: 64, height: 64,
-              decoration: BoxDecoration(color: DesignTokens.primaryLight.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(16)),
-              child: const Icon(Icons.auto_stories, size: 32, color: DesignTokens.primaryLight),
+          child: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 36),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 20,
+            height: 1.55,
+            fontWeight: FontWeight.w700,
+            color: KidsVisualTheme.ink,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            KidsPlayfulSecondaryButton(
+              icon: _isSpeaking ? Icons.stop_rounded : Icons.volume_up_rounded,
+              label: _isSpeaking ? 'Stop' : 'Listen',
+              color: KidsVisualTheme.pathBlue,
+              onTap: () {
+                if (_isSpeaking) {
+                  _tts.stop();
+                  setState(() => _isSpeaking = false);
+                } else {
+                  _speak(text);
+                }
+              },
             ),
-            const SizedBox(height: DesignTokens.spMd),
-            Text(text, style: const TextStyle(fontSize: 22, height: 1.6, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-            const SizedBox(height: DesignTokens.spLg),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _KidButton(icon: _isSpeaking ? Icons.stop : Icons.volume_up, label: _isSpeaking ? 'Stop' : 'Listen', color: DesignTokens.success, onTap: () {
-                if (_isSpeaking) { _tts.stop(); setState(() => _isSpeaking = false); } else { _speak(text); }
-              }),
-              const SizedBox(width: DesignTokens.spSm),
-              _KidButton(icon: Icons.quiz_outlined, label: 'Quiz', color: DesignTokens.secondary, onTap: _quiz.isNotEmpty ? _startQuiz : null),
-            ]),
-          ])),
-          if (_streak >= 2) ...[
-            const SizedBox(height: DesignTokens.spSm),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(color: DesignTokens.warning.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.local_fire_department, color: DesignTokens.secondary, size: 20),
-                const SizedBox(width: 6),
-                Text('$_streak streak!', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: DesignTokens.secondary)),
-              ]),
+            KidsPlayfulSecondaryButton(
+              icon: Icons.quiz_rounded,
+              label: 'Quiz time!',
+              color: const Color(0xFF9B59B6),
+              onTap: _quiz.isNotEmpty ? _startQuiz : null,
             ),
           ],
-        ],
-        const SizedBox(height: DesignTokens.spSm),
-        AnimatedPress(
-          onTap: () => _fetchLesson(_selectedSubject!['id']!, ref.read(kidAuthStateProvider).standard),
-          child: Container(
-            width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(color: DesignTokens.primary, borderRadius: BorderRadius.circular(16)),
-            child: const Text('Next Lesson', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
-          ),
         ),
-      ]),
+        if (_streak > 0) ...[
+          const SizedBox(height: 16),
+          _StreakChip(streak: _streak, quizMode: true),
+        ],
+      ],
     );
   }
 
@@ -310,103 +526,407 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
     final q = _quiz[0];
     final question = q['question'] as String? ?? '';
     final options = (q['options'] as List?)?.cast<String>() ?? [];
-    return Column(children: [
-      GestureDetector(
-        onTap: () => _speak(question),
-        child: Container(
-          width: double.infinity, padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: DesignTokens.warning.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Flexible(child: Text(question, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700), textAlign: TextAlign.center)),
-            const SizedBox(width: 8), const Icon(Icons.volume_up, color: DesignTokens.secondary, size: 22),
-          ]),
-        ),
-      ),
-      const SizedBox(height: DesignTokens.spMd),
-      ...options.asMap().entries.map((e) {
-        final idx = e.key; final opt = e.value;
-        Color bg = DesignTokens.surfaceVariant; Color fg = DesignTokens.textPrimary;
-        if (_quizAnswered) {
-          if (idx == _quizCorrectIndex) { bg = DesignTokens.success; fg = Colors.white; }
-          else if (idx == _quizSelected) { bg = DesignTokens.error; fg = Colors.white; }
-        }
-        return Padding(
-          padding: const EdgeInsets.only(bottom: DesignTokens.spXs),
-          child: AnimatedPress(
-            onTap: () => _answerQuiz(idx),
-            child: Container(
-              width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: _quizAnswered && idx == _quizCorrectIndex ? DesignTokens.success : Colors.transparent, width: 2)),
-              child: Row(children: [
-                Container(width: 32, height: 32,
-                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), shape: BoxShape.circle),
-                  child: Center(child: Text(String.fromCharCode(65 + idx), style: TextStyle(fontWeight: FontWeight.w800, color: fg)))),
-                const SizedBox(width: DesignTokens.spSm),
-                Expanded(child: Text(opt, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: fg))),
-                if (_quizAnswered && idx == _quizCorrectIndex) const Icon(Icons.check_circle, color: Colors.white, size: 24),
-              ]),
+    return Column(
+      children: [
+        Material(
+          color: KidsVisualTheme.sunGold.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(18),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => _speak(question),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      question,
+                      style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: KidsVisualTheme.ink),
+                    ),
+                  ),
+                  const Icon(Icons.volume_up_rounded, color: KidsVisualTheme.pathBlue, size: 26),
+                ],
+              ),
             ),
           ),
-        );
-      }),
-      if (_quizAnswered) ...[
-        const SizedBox(height: DesignTokens.spSm),
-        AnimatedPress(
-          onTap: () => setState(() { _inQuiz = false; _quizAnswered = false; _quizSelected = null; }),
-          child: Container(
-            width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(color: DesignTokens.primary, borderRadius: BorderRadius.circular(16)),
-            child: const Text('Continue', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
-          ),
         ),
+        const SizedBox(height: 14),
+        ...options.asMap().entries.map((e) {
+          final idx = e.key;
+          final opt = e.value;
+          Color bg = Colors.white;
+          Color fg = KidsVisualTheme.ink;
+          double borderW = 2;
+          Color borderC = KidsVisualTheme.ink.withValues(alpha: 0.08);
+          if (_quizAnswered) {
+            if (idx == _quizCorrectIndex) {
+              bg = DesignTokens.success;
+              fg = Colors.white;
+              borderC = DesignTokens.success;
+            } else if (idx == _quizSelected) {
+              bg = DesignTokens.error;
+              fg = Colors.white;
+              borderC = DesignTokens.error;
+            }
+          }
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: bg,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: _quizAnswered ? null : () => _answerQuiz(idx),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: borderC, width: borderW),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: _quizAnswered && idx == _quizCorrectIndex ? 0.25 : 0.95),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            String.fromCharCode(65 + idx),
+                            style: TextStyle(fontWeight: FontWeight.w900, color: fg, fontSize: 16),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(opt, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: fg))),
+                      if (_quizAnswered && idx == _quizCorrectIndex)
+                        const Icon(Icons.check_circle_rounded, color: Colors.white, size: 26),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+        if (_quizAnswered) ...[
+          const SizedBox(height: 8),
+          KidsPlayfulPrimaryButton(
+            label: 'Back to story',
+            onTap: () => setState(() {
+              _inQuiz = false;
+              _quizAnswered = false;
+              _quizSelected = null;
+            }),
+          ),
+        ],
       ],
-    ]);
+    );
+  }
+}
+
+class _KidsHeroCard extends StatelessWidget {
+  const _KidsHeroCard({
+    required this.childName,
+    required this.standard,
+    required this.educationTrack,
+    required this.summary,
+    required this.quizHotStreak,
+    required this.stars,
+    required this.onStarsTap,
+  });
+
+  final String childName;
+  final int standard;
+  final String educationTrack;
+  final Map<String, dynamic>? summary;
+  final int quizHotStreak;
+  final int stars;
+  final VoidCallback onStarsTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final act = (summary?['activitiesToday'] as num?)?.toInt() ?? 0;
+    final goal = (summary?['dailyGoal'] as num?)?.toInt() ?? 3;
+    final cal = (summary?['calendarStreak'] as num?)?.toInt() ?? 0;
+    final trackLabel = educationTrack == 'ecd' ? 'Early childhood' : 'Primary';
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(color: KidsVisualTheme.pathBlue.withValues(alpha: 0.18), blurRadius: 0, offset: const Offset(0, 6)),
+          ...DesignTokens.shadowSm(Theme.of(context).brightness == Brightness.dark),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hi, $childName!',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: KidsVisualTheme.ink,
+                            letterSpacing: -0.5,
+                          ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '$trackLabel · Standard $standard',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: KidsVisualTheme.inkMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (summary != null) ...[
+                KidsDailyGoalRing(activities: act, goal: goal, size: 76, stroke: 8),
+                const SizedBox(width: 12),
+              ],
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Material(
+                    color: KidsVisualTheme.sunGold.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(20),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: onStarsTap,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        child: Row(
+                          children: [
+                            Icon(Icons.star_rounded, color: KidsVisualTheme.sunGold.shade700, size: 26),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$stars',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 18,
+                                color: KidsVisualTheme.sunGold.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (cal > 0 || quizHotStreak > 0) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (cal > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: KidsVisualTheme.pathBlue.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.wb_sunny_rounded, color: KidsVisualTheme.pathBlue, size: 18),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$cal learning days in a row',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: KidsVisualTheme.ink),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (quizHotStreak > 0)
+                  _StreakChip(streak: quizHotStreak, compact: true, quizMode: true),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+extension _KidsColorShades on Color {
+  Color get shade700 => Color.alphaBlend(withValues(alpha: 0.85), Colors.black);
+  Color get shade800 => Color.alphaBlend(withValues(alpha: 0.75), Colors.black);
+}
+
+class _StreakChip extends StatelessWidget {
+  const _StreakChip({required this.streak, this.compact = false, this.quizMode = false});
+
+  final int streak;
+  final bool compact;
+  final bool quizMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: compact ? 6 : 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [DesignTokens.warning, DesignTokens.warning.withValues(alpha: 0.85)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: DesignTokens.warning.withValues(alpha: 0.35), offset: const Offset(0, 3), blurRadius: 0)],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.local_fire_department_rounded, color: Colors.white.withValues(alpha: 0.95), size: compact ? 18 : 22),
+          const SizedBox(width: 6),
+          Text(
+            quizMode ? '$streak quiz streak' : '$streak day streak',
+            style: TextStyle(
+              fontSize: compact ? 12 : 14,
+              fontWeight: FontWeight.w900,
+              color: Colors.white.withValues(alpha: 0.98),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KidsEmptySubjects extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: const Column(
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 48, color: KidsVisualTheme.inkMuted),
+          SizedBox(height: 12),
+          Text(
+            'Subjects could not load. Check your connection and pull to refresh from the parent app.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.w600, color: KidsVisualTheme.inkMuted, height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KidsFloatingPanel extends StatelessWidget {
+  const _KidsFloatingPanel({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(color: KidsVisualTheme.pathBlue.withValues(alpha: 0.12), offset: const Offset(0, 8), blurRadius: 24),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _CorrectBurstOverlay extends StatelessWidget {
+  const _CorrectBurstOverlay({required this.controller});
+
+  final AnimationController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: -8,
+      left: 0,
+      right: 0,
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: controller,
+          builder: (context, _) {
+            final t = Curves.easeOut.transform(controller.value);
+            return Opacity(
+              opacity: 1.0 - t,
+              child: Transform.scale(
+                scale: 0.85 + 0.35 * t,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (i) {
+                    final rot = (i - 2) * 0.15 * (1 - t);
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Transform.rotate(
+                        angle: rot,
+                        child: Icon(Icons.star_rounded, size: 32 + 12 * t, color: KidsVisualTheme.sunGold),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }
 
 Color _kidsSubjectColor(String name) {
   switch (name.toLowerCase()) {
-    case 'english': return DesignTokens.primaryLight;
-    case 'chichewa': return DesignTokens.success;
-    case 'mathematics': return DesignTokens.warning;
-    case 'science': return const Color(0xFF8E44AD);
-    case 'social studies': return DesignTokens.error;
-    default: return DesignTokens.primary;
+    case 'english':
+      return KidsVisualTheme.pathBlue;
+    case 'chichewa':
+      return KidsVisualTheme.trailGreen;
+    case 'mathematics':
+      return KidsVisualTheme.sunGold;
+    case 'science':
+      return const Color(0xFF8E44AD);
+    case 'social studies':
+      return DesignTokens.error;
+    default:
+      return DesignTokens.primary;
   }
 }
 
 IconData _kidsSubjectIcon(String name) {
   switch (name.toLowerCase()) {
-    case 'english': return Icons.abc;
-    case 'chichewa': return Icons.translate;
-    case 'mathematics': return Icons.calculate;
-    case 'science': return Icons.biotech;
-    case 'social studies': return Icons.public;
-    default: return Icons.book;
-  }
-}
-
-class _KidButton extends StatelessWidget {
-  final IconData icon; final String label; final Color color; final VoidCallback? onTap;
-  const _KidButton({required this.icon, required this.label, required this.color, this.onTap});
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedPress(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: onTap != null ? 0.12 : 0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: onTap != null ? 0.3 : 0.1)),
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, color: color.withValues(alpha: onTap != null ? 1.0 : 0.4), size: 20),
-          const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color.withValues(alpha: onTap != null ? 1.0 : 0.4))),
-        ]),
-      ),
-    );
+    case 'english':
+      return Icons.abc_rounded;
+    case 'chichewa':
+      return Icons.translate_rounded;
+    case 'mathematics':
+      return Icons.calculate_rounded;
+    case 'science':
+      return Icons.science_rounded;
+    case 'social studies':
+      return Icons.public_rounded;
+    default:
+      return Icons.menu_book_rounded;
   }
 }

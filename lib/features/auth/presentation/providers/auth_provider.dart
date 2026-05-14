@@ -152,4 +152,21 @@ class AuthNotifier extends Notifier<AuthState> {
     await SecureStorage.clearTokens();
     state = const AuthState(isAuthenticated: false, isLoading: false);
   }
+
+  /// Reload `me` after profile / education updates (e.g. Edit profile).
+  Future<void> refreshUser() async {
+    final token = await SecureStorage.getToken();
+    if (token == null) return;
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.query(
+        QueryOptions(document: gql(kMe), fetchPolicy: FetchPolicy.networkOnly),
+      );
+      if (result.data?['me'] != null) {
+        state = AuthState(isAuthenticated: true, isLoading: false, user: result.data!['me']);
+      }
+    } catch (e) {
+      debugPrint('refreshUser failed: $e');
+    }
+  }
 }

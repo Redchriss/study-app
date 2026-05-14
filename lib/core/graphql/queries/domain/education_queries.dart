@@ -1,6 +1,8 @@
 const String kUniversities = r'''
-query Universities {
-  universities { id name location universityType shortName }
+query Universities($search: String, $universityType: String) {
+  universities(search: $search, universityType: $universityType) {
+    id name location universityType shortName description
+  }
 }
 ''';
 
@@ -13,13 +15,13 @@ query Programs($universityId: ID!) {
 ''';
 
 const String kPrimarySchools = r'''
-query PrimarySchools {
-  primarySchools { id name district region }
+query PrimarySchools($search: String) {
+  primarySchools(search: $search) { id name district region }
 }
 ''';
 
 const String kSecondarySchools = r'''
-query SecondarySchools {
-  secondarySchools { id name district region }
+query SecondarySchools($search: String) {
+  secondarySchools(search: $search) { id name district region }
 }
 ''';

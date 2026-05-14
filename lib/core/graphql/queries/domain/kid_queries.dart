@@ -1,6 +1,37 @@
 const String kPrimarySubjects = r'''
-query PrimarySubjects {
-  primarySubjects(standard: 1) { id name slug }
+query PrimarySubjects($standard: Int, $educationTrack: String) {
+  primarySubjects(standard: $standard, educationTrack: $educationTrack) { id name slug }
+}
+''';
+
+const String kKidDailySummary = r'''
+query KidDailySummary {
+  kidDailySummary {
+    date
+    activitiesToday
+    dailyGoal
+    chestAvailable
+    chestClaimed
+    calendarStreak
+    totalStars
+  }
+}
+''';
+
+const String kClaimKidDailyChest = r'''
+mutation ClaimKidDailyChest {
+  claimKidDailyChest {
+    success errors
+    summary {
+      date
+      activitiesToday
+      dailyGoal
+      chestAvailable
+      chestClaimed
+      calendarStreak
+      totalStars
+    }
+  }
 }
 ''';
 
@@ -31,10 +62,9 @@ mutation FetchKidLesson($subjectId: ID!, $standard: Int!, $topicId: ID) {
 ''';
 
 const String kAnswerKidQuiz = r'''
-mutation AnswerKidQuiz($lessonId: ID!, $questionId: ID!, $selectedIndex: Int!) {
-  answerKidQuiz(lessonId: $lessonId, questionId: $questionId, selectedIndex: $selectedIndex) {
-    correct starsEarned
-    oldProgress { lessonsCompleted quizzesTaken quizzesCorrect starsEarned }
+mutation AnswerKidQuiz($lessonId: ID!, $selectedIndex: Int!) {
+  answerKidQuiz(lessonId: $lessonId, selectedIndex: $selectedIndex) {
+    success correct starsEarned streak errors
   }
 }
 ''';
@@ -48,10 +78,10 @@ query KidProgress($subjectId: ID!, $standard: Int!) {
 ''';
 
 const String kCreateChildProfile = r'''
-mutation CreateChildProfile($childName: String!, $standard: Int!, $pinCode: String!) {
-  createChildProfile(childName: $childName, standard: $standard, pinCode: $pinCode) {
+mutation CreateChildProfile($childName: String!, $standard: Int!, $pinCode: String!, $educationTrack: String) {
+  createChildProfile(childName: $childName, standard: $standard, pinCode: $pinCode, educationTrack: $educationTrack) {
     success errors
-    child { id childName standard }
+    child { id childName standard childEducationTrack }
   }
 }
 ''';
@@ -60,7 +90,7 @@ const String kKidLogin = r'''
 mutation KidLogin($username: String!, $pinCode: String!) {
   kidLogin(username: $username, pinCode: $pinCode) {
     success token errors
-    child { id childName standard isChild username }
+    child { id childName standard isChild username childEducationTrack kidBonusStars }
   }
 }
 ''';
@@ -68,7 +98,7 @@ mutation KidLogin($username: String!, $pinCode: String!) {
 const String kMyChildren = r'''
 query MyChildren {
   myChildren {
-    id childName standard isChild username createdAt
+    id childName standard isChild username createdAt childEducationTrack kidBonusStars
   }
 }
 ''';
