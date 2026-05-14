@@ -462,7 +462,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: _newKidEducationTrack,
+                  value: _newKidEducationTrack,
                   decoration: const InputDecoration(
                     labelText: 'Learning track',
                     helperText: 'ECD uses infant-friendly subjects; progress is kept separate',
@@ -476,7 +476,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
-                  initialValue: _newKidStandard,
+                  value: _newKidStandard,
                   decoration: const InputDecoration(labelText: 'Standard', isDense: true),
                   items: List.generate(
                     8,

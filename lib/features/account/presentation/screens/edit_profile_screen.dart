@@ -284,7 +284,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               DropdownButtonFormField<int>(
                 key: ValueKey('std_${_standard ?? 0}'),
                 decoration: const InputDecoration(labelText: 'Standard', border: OutlineInputBorder()),
-                initialValue: _standard,
+                value: _standard,
                 items: List.generate(
                   8,
                   (i) => DropdownMenuItem(value: i + 1, child: Text('Standard ${i + 1}')),
@@ -295,7 +295,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               DropdownButtonFormField<String>(
                 key: ValueKey('term_${_term ?? 'x'}'),
                 decoration: const InputDecoration(labelText: 'Term', border: OutlineInputBorder()),
-                initialValue: _term != null && ['1', '2', '3'].contains(_term) ? _term : null,
+                value: _term != null && ['1', '2', '3'].contains(_term) ? _term : null,
                 items: const [
                   DropdownMenuItem(value: '1', child: Text('Term 1')),
                   DropdownMenuItem(value: '2', child: Text('Term 2')),
@@ -316,7 +316,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               DropdownButtonFormField<int>(
                 key: ValueKey('form_${_form ?? 0}'),
                 decoration: const InputDecoration(labelText: 'Form', border: OutlineInputBorder()),
-                initialValue: _form,
+                value: _form,
                 items: List.generate(
                   4,
                   (i) => DropdownMenuItem(value: i + 1, child: Text('Form ${i + 1}')),
@@ -327,7 +327,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               DropdownButtonFormField<String>(
                 key: ValueKey('term_${_term ?? 'x'}'),
                 decoration: const InputDecoration(labelText: 'Term', border: OutlineInputBorder()),
-                initialValue: _term != null && ['1', '2', '3'].contains(_term) ? _term : null,
+                value: _term != null && ['1', '2', '3'].contains(_term) ? _term : null,
                 items: const [
                   DropdownMenuItem(value: '1', child: Text('Term 1')),
                   DropdownMenuItem(value: '2', child: Text('Term 2')),
