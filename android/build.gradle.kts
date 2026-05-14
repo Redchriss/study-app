@@ -5,11 +5,8 @@ allprojects {
     }
 }
 
-buildscript {
-    dependencies {
-        classpath("com.google.gms:google-services:4.4.4")
-    }
-}
+// Google Services is applied in app/build.gradle.kts via the plugins DSL
+// (do not add a root buildscript classpath here without a buildscript.repositories block).
 
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
