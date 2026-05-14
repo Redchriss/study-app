@@ -5,32 +5,52 @@
 -keep class io.flutter.view.**  { *; }
 -keep class io.flutter.**  { *; }
 -keep class io.flutter.plugins.**  { *; }
+-keep class io.flutter.plugin.editing.** { *; }
+
+# Dart core
+-keep class dart:** { *; }
+-keep class com.dart.** { *; }
+
+# Firebase
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-keepattributes *Annotation*
+-keepattributes Signature
+-keep class * extends java.util.ListResourceBundle { *; }
+
+# Sentry
+-keep class io.sentry.** { *; }
+-keep class io.sentry.flutter.** { *; }
+-keep class io.sentry.android.** { *; }
 
 # GraphQL
 -keep class com.apollographql.apollo.** { *; }
 -dontwarn com.apollographql.apollo.**
 
-# Riverpod
--keep class ** extends androidx.lifecycle.ViewModel
--keep class ** extends androidx.lifecycle.AndroidViewModel
-
 # Secure storage
 -keep class com.it_nomads_fluttersecurestorage.** { *; }
 -dontwarn com.it_nomads_fluttersecurestorage.**
 
-# Firebase
--keepattributes Signature
--keepattributes *Annotation*
--dontwarn com.google.firebase.**
+# Riverpod / lifecycle
+-keep class * extends androidx.lifecycle.ViewModel { *; }
+-keep class * extends androidx.lifecycle.AndroidViewModel { *; }
+-keep class androidx.lifecycle.** { *; }
+-keep class * implements androidx.lifecycle.LifecycleObserver { *; }
 
-# Sentry
--keep class io.sentry.** { *; }
--dontwarn io.sentry.**
+# YouTube player (WebView)
+-keep class com.pichillilorenzo.flutter_inappwebview.** { *; }
 
-# Play Core (Flutter engine references split/install APIs; optional at runtime)
+# Play Core
 -dontwarn com.google.android.play.core.**
 
-# Keep native methods
--keepclasseswithmembernames class * {
-    native <methods>;
-}
+# Method channels (all plugins use these reflectively)
+-keep class **.Flutter** { *; }
+-keep class **.MethodCallHandler { *; }
+-keep class **.MethodChannel** { *; }
+
+# Keep all native methods
+-keepclasseswithmembernames class * { native <methods>; }
+
+# General AndroidX
+-keep class androidx.** { *; }
+-keep class * extends androidx.** { *; }
