@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -18,7 +20,10 @@ class AnalyticsService {
     if (!_isEnabled) return;
 
     try {
-      await Firebase.initializeApp();
+      await Firebase.initializeApp().timeout(
+        const Duration(seconds: 12),
+        onTimeout: () => throw TimeoutException('Firebase.initializeApp'),
+      );
       _instance = FirebaseAnalytics.instance;
       await _instance?.setAnalyticsCollectionEnabled(true);
     } catch (e) {

@@ -32,27 +32,43 @@ class _OfflineBannerState extends State<OfflineBanner> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    // Use Stack, not Column+Expanded: wrapping MaterialApp.router in Expanded can
+    // break navigator layout and produce a permanent blank screen on some devices.
+    return Stack(
+      fit: StackFit.expand,
       children: [
+        widget.child,
         if (_isOffline)
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DesignTokens.spMd,
-              vertical: DesignTokens.spSm,
-            ),
-            color: DesignTokens.warning,
-            child: Row(
-              children: const [
-                Icon(Icons.wifi_off, color: Colors.white, size: 16),
-                SizedBox(width: DesignTokens.spSm),
-                Text(
-                  'You\'re offline. Some features may not work.',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Material(
+              elevation: 2,
+              color: DesignTokens.warning,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DesignTokens.spMd,
+                    vertical: DesignTokens.spSm,
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.wifi_off, color: Colors.white, size: 16),
+                      SizedBox(width: DesignTokens.spSm),
+                      Expanded(
+                        child: Text(
+                          'You\'re offline. Some features may not work.',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
-        Expanded(child: widget.child),
       ],
     );
   }

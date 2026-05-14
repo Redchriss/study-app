@@ -1,8 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
   static Future<void> init() async {
-    await dotenv.load(fileName: '.env');
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (e, st) {
+      // Release APK must still start if .env is missing or mis-packaged; getters use defaults.
+      debugPrint('AppConfig: could not load .env ($e)');
+      debugPrint('$st');
+    }
   }
 
   static String get apiUrl =>

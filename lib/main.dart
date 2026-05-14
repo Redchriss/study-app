@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/design_tokens.dart';
 import 'core/config/app_config.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
@@ -85,7 +86,13 @@ class StudyApp extends ConsumerWidget {
         routerConfig: router,
         debugShowCheckedModeBanner: false,
         builder: (context, child) {
-          return OfflineBanner(child: child ?? const SizedBox.shrink());
+          // Router can pass null child briefly; SizedBox.shrink() looks like a "frozen" blank screen.
+          final routed = child ??
+              const Scaffold(
+                backgroundColor: DesignTokens.primary,
+                body: Center(child: CircularProgressIndicator(color: Colors.white)),
+              );
+          return OfflineBanner(child: routed);
         },
       ),
     );

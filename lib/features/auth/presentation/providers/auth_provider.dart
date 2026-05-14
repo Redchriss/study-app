@@ -60,7 +60,10 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> _bootstrap() async {
     try {
-      final token = await SecureStorage.getToken();
+      final token = await SecureStorage.getToken().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => null,
+      );
       if (token == null) {
         state = const AuthState(isAuthenticated: false, isLoading: false);
         return;
@@ -72,7 +75,7 @@ class AuthNotifier extends Notifier<AuthState> {
           document: gql(kMe),
           fetchPolicy: FetchPolicy.networkOnly,
         ),
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(const Duration(seconds: 25));
 
       if (result.hasException || result.data?['me'] == null) {
         await SecureStorage.clearTokens();
