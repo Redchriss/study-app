@@ -32,21 +32,24 @@ android {
 
     signingConfigs {
         create("release") {
-            // Load keystore properties from environment or local file
+            // CI and devs without an upload key: use debug keystore so `assembleRelease` works.
+            // Tag/release workflows decode `release-keystore.jks` and write `keystore.properties`; then we override.
+            initWith(signingConfigs.getByName("debug"))
             val keystorePropertiesFile = rootProject.file("keystore.properties")
             if (keystorePropertiesFile.exists()) {
                 val keystoreProperties = Properties()
-                keystoreProperties.load(keystorePropertiesFile.inputStream())
-                storeFile = file(keystoreProperties.getProperty("storeFile")!!)
-                storePassword = keystoreProperties.getProperty("storePassword")!!
-                keyAlias = keystoreProperties.getProperty("keyAlias")!!
-                keyPassword = keystoreProperties.getProperty("keyPassword")!!
-            } else {
-                // Fallback to environment variables for CI/CD
-                storeFile = file(System.getenv("KEYSTORE_FILE") ?: "debug.keystore")
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
-                keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
-                keyPassword = System.getenv("KEY_PASSWORD") ?: "android"
+                keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+                val storeRel = keystoreProperties.getProperty("storeFile")
+                if (storeRel != null) {
+                    val resolved = listOf(rootProject.file(storeRel), project.file(storeRel))
+                        .firstOrNull { it.isFile }
+                    if (resolved != null) {
+                        storeFile = resolved
+                        storePassword = keystoreProperties.getProperty("storePassword")!!
+                        keyAlias = keystoreProperties.getProperty("keyAlias")!!
+                        keyPassword = keystoreProperties.getProperty("keyPassword")!!
+                    }
+                }
             }
         }
     }
