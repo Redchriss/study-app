@@ -69,6 +69,9 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // Flutter embedding references Play Core for deferred components; R8 needs these
+    // classes on the classpath when minifyReleaseWithR8 runs (see missing_rules / CI).
+    implementation("com.google.android.play:core:1.10.3")
 }
 
 flutter {

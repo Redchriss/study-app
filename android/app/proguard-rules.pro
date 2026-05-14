@@ -27,6 +27,9 @@
 -keep class io.sentry.** { *; }
 -dontwarn io.sentry.**
 
+# Play Core (Flutter engine references split/install APIs; optional at runtime)
+-dontwarn com.google.android.play.core.**
+
 # Keep native methods
 -keepclasseswithmembernames class * {
     native <methods>;
