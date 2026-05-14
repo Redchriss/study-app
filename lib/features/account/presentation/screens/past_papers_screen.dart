@@ -12,7 +12,7 @@ class PastPapersScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('My Solve History', style: theme.textTheme.titleLarge)),
       body: Query(
-        options: QueryOptions(document: gql(kMySolveSessions), variables: {'limit': 50}),
+        options: QueryOptions(document: gql(kMySolveSessions), variables: const {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
           if (result.hasException) {

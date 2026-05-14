@@ -68,7 +68,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(DesignTokens.spMd),
                 color: DesignTokens.primary.withValues(alpha: 0.04),
-                child: Text(circle['description'], style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                child: Text(circle['description'], style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
               ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spXs),
@@ -108,7 +108,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                         Positioned(right: 0, top: 0, child: GestureDetector(
                           onTap: () => setState(() => _postImage = null),
                           child: Container(
-                            decoration: BoxDecoration(color: DesignTokens.error, shape: BoxShape.circle),
+                            decoration: const BoxDecoration(color: DesignTokens.error, shape: BoxShape.circle),
                             child: const Icon(Icons.close, size: 16, color: Colors.white),
                           ),
                         )),
@@ -217,7 +217,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
       builder: (postResult, {fetchMore, refetch}) {
         if (postResult.isLoading) return const Center(child: CircularProgressIndicator());
         final posts = (postResult.data?['circlePosts'] as List?) ?? [];
-        if (posts.isEmpty) return Center(child: Text('No posts yet', style: TextStyle(color: DesignTokens.textSecondary)));
+        if (posts.isEmpty) return const Center(child: Text('No posts yet', style: TextStyle(color: DesignTokens.textSecondary)));
         return RefreshIndicator(
           onRefresh: () async => refetch?.call(),
           child: ListView.builder(
@@ -242,10 +242,10 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)),
-                          child: Text(p['postType'] ?? '', style: TextStyle(fontSize: 10, color: DesignTokens.primary, fontWeight: FontWeight.w600)),
+                          child: Text(p['postType'] ?? '', style: const TextStyle(fontSize: 10, color: DesignTokens.primary, fontWeight: FontWeight.w600)),
                         ),
                         const SizedBox(width: 8),
-                        Text(p['author']?['username'] ?? '', style: TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
+                        Text(p['author']?['username'] ?? '', style: const TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
                       ]),
                       const SizedBox(height: 6),
                       Text(p['title'] ?? '', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
@@ -258,11 +258,11 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                       ],
                       const SizedBox(height: 8),
                       Row(children: [
-                        Icon(Icons.arrow_upward, size: 14, color: DesignTokens.textTertiary),
-                        Text('${p['score'] ?? 0}', style: TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
+                        const Icon(Icons.arrow_upward, size: 14, color: DesignTokens.textTertiary),
+                        Text('${p['score'] ?? 0}', style: const TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
                         const SizedBox(width: 12),
-                        Icon(Icons.chat_bubble_outline, size: 14, color: DesignTokens.textTertiary),
-                        Text('${p['commentCount'] ?? 0}', style: TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
+                        const Icon(Icons.chat_bubble_outline, size: 14, color: DesignTokens.textTertiary),
+                        Text('${p['commentCount'] ?? 0}', style: const TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
                       ]),
                     ]),
                   ),

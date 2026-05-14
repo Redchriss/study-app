@@ -48,7 +48,7 @@ class _OfflineBannerState extends State<OfflineBanner> {
       children: [
         widget.child,
         if (_isOffline)
-          Positioned(
+          const Positioned(
             top: 0,
             left: 0,
             right: 0,
@@ -58,12 +58,12 @@ class _OfflineBannerState extends State<OfflineBanner> {
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: DesignTokens.spMd,
                     vertical: DesignTokens.spSm,
                   ),
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.wifi_off, color: Colors.white, size: 16),
                       SizedBox(width: DesignTokens.spSm),
                       Expanded(

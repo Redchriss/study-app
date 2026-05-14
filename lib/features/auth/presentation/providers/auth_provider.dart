@@ -99,7 +99,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<bool> login(String username, String password) async {
     try {
-      state = AuthState(isAuthenticated: false, isLoading: true);
+      state = const AuthState(isAuthenticated: false, isLoading: true);
       final client = ref.read(graphqlClientProvider);
       final result = await client.mutate(MutationOptions(
         document: gql(kTokenAuth),
@@ -130,7 +130,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<bool> register(String username, String email, String password, {String? phone}) async {
     try {
-      state = AuthState(isAuthenticated: false, isLoading: true);
+      state = const AuthState(isAuthenticated: false, isLoading: true);
       final client = ref.read(graphqlClientProvider);
       final result = await client.mutate(MutationOptions(
         document: gql(kRegister),

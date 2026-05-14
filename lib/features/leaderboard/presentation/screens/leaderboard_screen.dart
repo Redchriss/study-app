@@ -15,13 +15,13 @@ class LeaderboardScreen extends ConsumerWidget {
         appBar: AppBar(
           title: Text('Leaderboard', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
           centerTitle: true,
-          bottom: TabBar(
-            tabs: const [Tab(text: 'Top Learners'), Tab(text: 'Top Contributors')],
+          bottom: const TabBar(
+            tabs: [Tab(text: 'Top Learners'), Tab(text: 'Top Contributors')],
             indicatorColor: DesignTokens.primary,
             labelColor: DesignTokens.primary,
           ),
         ),
-        body: TabBarView(
+        body: const TabBarView(
           children: [_LeaderboardTab(category: 'learners'), _LeaderboardTab(category: 'contributors')],
         ),
       ),

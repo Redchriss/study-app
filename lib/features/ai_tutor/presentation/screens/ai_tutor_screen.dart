@@ -232,10 +232,13 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
                 const SizedBox(width: DesignTokens.spXs),
                 AnimatedPress(
                   onTap: _sending ? null : _send,
-                  child: Container(
-                    width: 48, height: 48,
-                    decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
-                    child: const Icon(Icons.send, color: Colors.white, size: 20),
+                  child: const SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
+                      child: Icon(Icons.send, color: Colors.white, size: 20),
+                    ),
                   ),
                 ),
               ]),
@@ -346,4 +349,3 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
     );
   }
 }
-

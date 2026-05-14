@@ -6,7 +6,7 @@ void main() {
   group('LoadingOverlay Widget Tests', () {
     testWidgets('should show loading indicator when visible', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LoadingOverlay(
               visible: true,
@@ -22,7 +22,7 @@ void main() {
 
     testWidgets('should not show when visible is false', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LoadingOverlay(
               visible: false,
@@ -37,7 +37,7 @@ void main() {
     testWidgets('should show message when provided', (WidgetTester tester) async {
       const testMessage = 'Please wait...';
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LoadingOverlay(
               visible: true,
@@ -54,11 +54,11 @@ void main() {
   group('LoadingBuilder Widget Tests', () {
     testWidgets('should show child when not loading', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LoadingBuilder(
               loading: false,
-              child: const Text('Content'),
+              child: Text('Content'),
             ),
           ),
         ),
@@ -70,11 +70,11 @@ void main() {
 
     testWidgets('should show overlay when loading', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LoadingBuilder(
               loading: true,
-              child: const Text('Content'),
+              child: Text('Content'),
             ),
           ),
         ),

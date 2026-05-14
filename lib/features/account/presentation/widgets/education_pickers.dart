@@ -263,7 +263,7 @@ class _SchoolPickerSheetState extends State<SchoolPickerSheet> {
                       return ListTile(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: DesignTokens.border),
+                          side: const BorderSide(color: DesignTokens.border),
                         ),
                         title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Text(sub),

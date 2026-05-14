@@ -153,11 +153,11 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
                     final path = await DownloadService.downloadFile(url, fname);
                     if (path != null && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Saved to Downloads/Yaza/'), backgroundColor: DesignTokens.success),
+                        const SnackBar(content: Text('Saved to Downloads/Yaza/'), backgroundColor: DesignTokens.success),
                       );
                     } else if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Download failed. Try again.'), backgroundColor: DesignTokens.error),
+                        const SnackBar(content: Text('Download failed. Try again.'), backgroundColor: DesignTokens.error),
                       );
                     }
                   },

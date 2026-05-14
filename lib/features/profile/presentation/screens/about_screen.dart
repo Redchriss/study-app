@@ -30,9 +30,9 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: DesignTokens.spMd),
             Text('Yaza', style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w800)),
-            Text('AI Study Companion for Malawian Students', style: TextStyle(color: DesignTokens.textSecondary)),
+            const Text('AI Study Companion for Malawian Students', style: TextStyle(color: DesignTokens.textSecondary)),
             const SizedBox(height: DesignTokens.spSm),
-            Text('v1.0.0', style: TextStyle(color: DesignTokens.textTertiary, fontSize: 12)),
+            const Text('v1.0.0', style: TextStyle(color: DesignTokens.textTertiary, fontSize: 12)),
 
             const SizedBox(height: DesignTokens.spXl),
 
@@ -43,7 +43,7 @@ class AboutScreen extends StatelessWidget {
                 children: [
                   Text('Meet the Team', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: DesignTokens.spMd),
-                  _TeamMember(
+                  const _TeamMember(
                     name: 'Redson Ngwira',
                     role: 'Founder & Developer',
                     twitter: 'RedsonNgwira',
@@ -51,7 +51,7 @@ class AboutScreen extends StatelessWidget {
                     color: DesignTokens.primary,
                   ),
                   const Divider(height: DesignTokens.spXl),
-                  _TeamMember(
+                  const _TeamMember(
                     name: 'Yankho Mtewa',
                     role: 'Co-Founder',
                     twitter: null,
@@ -71,7 +71,7 @@ class AboutScreen extends StatelessWidget {
                 children: [
                   Text('Our Mission', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: DesignTokens.spSm),
-                  Text(
+                  const Text(
                     'Yaza exists to bridge the education gap in Malawi. '
                     'We use AI to make exam preparation, study materials, and tutoring '
                     'accessible to every student — regardless of their school or location.',
@@ -82,7 +82,7 @@ class AboutScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: DesignTokens.spLg),
-            Text('Made with ❤️ in Malawi', style: TextStyle(color: DesignTokens.textTertiary)),
+            const Text('Made with ❤️ in Malawi', style: TextStyle(color: DesignTokens.textTertiary)),
             const SizedBox(height: DesignTokens.spXxl),
           ],
         ),
@@ -133,7 +133,7 @@ class _TeamMember extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(name, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                  Text(role, style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                  Text(role, style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
                 ],
               ),
             ),
@@ -157,7 +157,7 @@ class _TeamMember extends StatelessWidget {
           ],
         ),
         const SizedBox(height: DesignTokens.spSm),
-        Text(bio, style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13, height: 1.4)),
+        Text(bio, style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 13, height: 1.4)),
       ],
     );
   }

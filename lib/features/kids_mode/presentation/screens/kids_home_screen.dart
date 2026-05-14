@@ -762,7 +762,7 @@ class _KidsHeroCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.wb_sunny_rounded, color: KidsVisualTheme.pathBlue, size: 18),
+                        const Icon(Icons.wb_sunny_rounded, color: KidsVisualTheme.pathBlue, size: 18),
                         const SizedBox(width: 6),
                         Text(
                           '$cal learning days in a row',

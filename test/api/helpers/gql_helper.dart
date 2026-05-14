@@ -51,7 +51,7 @@ Future<Map<String, dynamic>> gqlPost(String query, {Map<String, dynamic>? variab
 Future<({String username, String token, String refreshToken})> createTestUser() async {
   final ts = DateTime.now().millisecondsSinceEpoch;
   final username = 'api_test_${ts}_${ts % 10000}';
-  final password = 'TestPass123!';
+  const password = 'TestPass123!';
 
   final result = await gqlPost('''
     mutation Register(\$username: String!, \$email: String!, \$password: String!) {

@@ -147,7 +147,7 @@ class KidsDailyChestChip extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 label,
-                style: TextStyle(fontWeight: FontWeight.w800, color: KidsVisualTheme.ink),
+                style: const TextStyle(fontWeight: FontWeight.w800, color: KidsVisualTheme.ink),
               ),
             ],
           ),

@@ -41,7 +41,7 @@ class QuizResultsScreen extends ConsumerWidget {
               GlassCard(child: Column(children: [
                 Container(
                   width: 96, height: 96,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(colors: [DesignTokens.primary, DesignTokens.accent]),
                     shape: BoxShape.circle,
                   ),

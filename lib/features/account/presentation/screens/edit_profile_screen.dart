@@ -263,7 +263,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
           const SizedBox(height: 16),
           if (level == null || level.isEmpty)
-            Text(
+            const Text(
               'Complete onboarding first to set your education level.',
               style: TextStyle(color: DesignTokens.textSecondary),
             )

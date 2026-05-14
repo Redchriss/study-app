@@ -14,8 +14,8 @@ class HistoryScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text('History', style: theme.textTheme.titleLarge),
-          bottom: TabBar(
-            tabs: const [Tab(text: 'Transactions'), Tab(text: 'Credit Usage')],
+          bottom: const TabBar(
+            tabs: [Tab(text: 'Transactions'), Tab(text: 'Credit Usage')],
             indicatorColor: DesignTokens.primary,
             labelColor: DesignTokens.primary,
           ),
@@ -23,7 +23,7 @@ class HistoryScreen extends ConsumerWidget {
         body: TabBarView(
           children: [
             Query(
-              options: QueryOptions(document: gql(kPaymentHistory), variables: {'limit': 50}),
+              options: QueryOptions(document: gql(kPaymentHistory), variables: const {'limit': 50}),
               builder: (result, {fetchMore, refetch}) {
                 if (result.isLoading) return const Center(child: CircularProgressIndicator());
                 if (result.hasException) {
@@ -54,7 +54,7 @@ class HistoryScreen extends ConsumerWidget {
               },
             ),
             Query(
-              options: QueryOptions(document: gql(kCreditLedger), variables: {'limit': 50}),
+              options: QueryOptions(document: gql(kCreditLedger), variables: const {'limit': 50}),
               builder: (result, {fetchMore, refetch}) {
                 if (result.isLoading) return const Center(child: CircularProgressIndicator());
                 if (result.hasException) {

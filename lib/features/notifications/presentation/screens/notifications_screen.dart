@@ -14,7 +14,7 @@ class NotificationsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final client = ref.read(graphqlClientProvider);
     return Query(
-      options: QueryOptions(document: gql(kNotifications), variables: {'unreadOnly': false}),
+      options: QueryOptions(document: gql(kNotifications), variables: const {'unreadOnly': false}),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) {
           return Scaffold(
@@ -71,7 +71,7 @@ class NotificationsScreen extends ConsumerWidget {
             child: items.isEmpty
             ? ListView(children: [
                 SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-                EmptyState(
+                const EmptyState(
                   icon: Icons.notifications_none,
                   title: 'No notifications yet',
                 ),

@@ -154,9 +154,9 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.timer, size: 16, color: DesignTokens.warning),
+                  const Icon(Icons.timer, size: 16, color: DesignTokens.warning),
                   const SizedBox(width: 4),
-                  Text('${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}', style: TextStyle(fontWeight: FontWeight.w600, color: DesignTokens.warning)),
+                  Text('${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}', style: const TextStyle(fontWeight: FontWeight.w600, color: DesignTokens.warning)),
                 ]),
               ),
             ],
@@ -167,7 +167,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
               child: Row(children: [
                 Text('$answered/${questions.length} answered', style: theme.textTheme.bodySmall),
                 const Spacer(),
-                Text('${(answered / (questions.length == 0 ? 1 : questions.length) * 100).round()}%', style: theme.textTheme.bodySmall),
+                Text('${(answered / (questions.isEmpty ? 1 : questions.length) * 100).round()}%', style: theme.textTheme.bodySmall),
               ]),
             ),
             if (questions.isNotEmpty)
