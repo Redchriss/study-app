@@ -65,20 +65,15 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # Same pattern as voxa_app: decode secrets into files before Gradle runs.
+      # Repo secrets: KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
       - name: Decode keystore
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release-keystore.jks
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-keystore.jks
 
-      - name: Create keystore properties
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+      - name: Create key.properties
         run: |
-          cat > android/keystore.properties << EOF
-          storeFile=app/release-keystore.jks
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          EOF
+          printf 'storePassword=${{ secrets.KEYSTORE_PASSWORD }}\nkeyPassword=${{ secrets.KEY_PASSWORD }}\nkeyAlias=${{ secrets.KEY_ALIAS }}\nstoreFile=release-keystore.jks\n' > android/key.properties
 
       - name: Clean build
         run: flutter clean

@@ -1,3 +1,4 @@
+import java.io.FileInputStream
 import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -8,6 +9,13 @@ plugins {
     id("com.google.gms.google-services") version "4.4.4"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// CI writes android/key.properties (see .github/workflows/build.yml); matches voxa_app pattern.
+val keyProperties = Properties()
+val keyPropertiesFile = rootProject.file("key.properties")
+if (keyPropertiesFile.exists()) {
+    keyProperties.load(FileInputStream(keyPropertiesFile))
 }
 
 android {
@@ -32,25 +40,10 @@ android {
 
     signingConfigs {
         create("release") {
-            // CI and devs without an upload key: use debug keystore so `assembleRelease` works.
-            // Tag/release workflows decode `release-keystore.jks` and write `keystore.properties`; then we override.
-            initWith(signingConfigs.getByName("debug"))
-            val keystorePropertiesFile = rootProject.file("keystore.properties")
-            if (keystorePropertiesFile.exists()) {
-                val keystoreProperties = Properties()
-                keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
-                val storeRel = keystoreProperties.getProperty("storeFile")
-                if (storeRel != null) {
-                    val resolved = listOf(rootProject.file(storeRel), project.file(storeRel))
-                        .firstOrNull { it.isFile }
-                    if (resolved != null) {
-                        storeFile = resolved
-                        storePassword = keystoreProperties.getProperty("storePassword")!!
-                        keyAlias = keystoreProperties.getProperty("keyAlias")!!
-                        keyPassword = keystoreProperties.getProperty("keyPassword")!!
-                    }
-                }
-            }
+            keyAlias = keyProperties["keyAlias"] as String
+            keyPassword = keyProperties["keyPassword"] as String
+            storeFile = keyProperties["storeFile"]?.let { file(it) }
+            storePassword = keyProperties["storePassword"] as String
         }
     }
 
