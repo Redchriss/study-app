@@ -22,6 +22,7 @@ query Dashboard {
   recentMaterials(limit: 5) {
     id
     title
+    slug
     contentType
     thumbnailUrl
     subject { name }

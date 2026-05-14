@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/services/study_progress_store.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
@@ -13,6 +14,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
+    final progressStore = StudyProgressStore();
 
     return Query(
       options: QueryOptions(document: gql(kDashboard)),
@@ -111,6 +113,104 @@ class DashboardScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
+                  ),
+                ),
+
+                SliverToBoxAdapter(
+                  child: FutureBuilder<StudyMaterialProgress?>(
+                    future: progressStore.loadLastMaterial(),
+                    builder: (context, snapshot) {
+                      final saved = snapshot.data;
+                      if (saved == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          DesignTokens.spMd,
+                          0,
+                          DesignTokens.spMd,
+                          DesignTokens.spLg,
+                        ),
+                        child: AnimatedPress(
+                          onTap: () => context.push('/materials/${saved.slug}/read'),
+                          child: Container(
+                            padding: const EdgeInsets.all(DesignTokens.spMd),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFF123B62), Color(0xFF0E2236)],
+                              ),
+                              borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+                              boxShadow: DesignTokens.shadowMd(dark),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Icon(
+                                    _materialIcon(saved.contentType),
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: DesignTokens.spMd),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Continue Studying',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.3,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        saved.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.titleMedium?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        saved.subjectName.isEmpty ? saved.progressLabel : '${saved.subjectName} • ${saved.progressLabel}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(999),
+                                        child: LinearProgressIndicator(
+                                          minHeight: 6,
+                                          value: saved.completionRatio <= 0 ? 0.08 : saved.completionRatio,
+                                          backgroundColor: Colors.white.withValues(alpha: 0.12),
+                                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFEEC66D)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: DesignTokens.spSm),
+                                const Icon(Icons.chevron_right, color: Colors.white70),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -369,7 +469,7 @@ class DashboardScreen extends ConsumerWidget {
                                               color: DesignTokens.primary.withValues(alpha: 0.1),
                                               borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
                                             ),
-                                            child: const Icon(Icons.description, size: 16, color: DesignTokens.primary),
+                                        child: const Icon(Icons.description, size: 16, color: DesignTokens.primary),
                                           ),
                                         ]),
                                         const Spacer(),
@@ -398,6 +498,21 @@ class DashboardScreen extends ConsumerWidget {
         );
       },
     );
+  }
+}
+
+IconData _materialIcon(String type) {
+  switch (type.toLowerCase()) {
+    case 'pdf':
+      return Icons.picture_as_pdf_rounded;
+    case 'video':
+      return Icons.play_circle_fill_rounded;
+    case 'image':
+      return Icons.image_rounded;
+    case 'text':
+      return Icons.menu_book_rounded;
+    default:
+      return Icons.description_rounded;
   }
 }
 

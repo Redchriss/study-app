@@ -83,9 +83,12 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
     final contentType = (material['contentType'] as String? ?? '').toLowerCase();
     final fileUrl = material['fileUrl'] as String? ?? '';
     final contentText = (material['contentText'] as String? ?? '').trim();
+    final youtubeEmbedUrl = material['youtubeEmbedUrl'] as String? ?? '';
     final hasPdf = contentType == 'pdf' || fileUrl.toLowerCase().endsWith('.pdf');
     final hasText = contentType == 'text' && contentText.isNotEmpty;
-    return hasPdf || hasText;
+    final hasVideo = contentType == 'video' && youtubeEmbedUrl.isNotEmpty;
+    final hasImage = contentType == 'image' && fileUrl.isNotEmpty;
+    return hasPdf || hasText || hasVideo || hasImage;
   }
 
   @override
