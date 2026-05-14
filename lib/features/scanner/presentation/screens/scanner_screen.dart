@@ -192,7 +192,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           key: ValueKey(_educationLevel),
-                          value: _educationLevel,
+                          initialValue: _educationLevel,
                           decoration: const InputDecoration(labelText: 'Level'),
                           items: 'primary|secondary|tertiary'
                               .split('|')

@@ -129,7 +129,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         key: ValueKey(_postType),
-                        value: _postType,
+                        initialValue: _postType,
                         decoration: const InputDecoration(labelText: 'Type', isDense: true),
                         items: 'discussion|question|resource'
                             .split('|')

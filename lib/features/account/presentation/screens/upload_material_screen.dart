@@ -86,7 +86,7 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             key: ValueKey('subject_${_subjects?.length}_$_subjectId'),
-            value: _subjectId,
+            initialValue: _subjectId,
             decoration: const InputDecoration(labelText: 'Subject'),
             items: (_subjects ?? [])
                 .map((s) => DropdownMenuItem<String>(
@@ -99,7 +99,7 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             key: ValueKey(_contentType),
-            value: _contentType,
+            initialValue: _contentType,
             decoration: const InputDecoration(labelText: 'Type'),
             items: 'pdf|text|video|image'.split('|').map((t) => DropdownMenuItem(value: t, child: Text(t.toUpperCase()))).toList(),
             onChanged: (v) => setState(() => _contentType = v ?? 'text'),
