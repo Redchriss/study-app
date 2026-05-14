@@ -11,6 +11,7 @@ import '../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../features/notifications/presentation/screens/notifications_screen.dart';
 import '../features/materials/presentation/screens/materials_screen.dart';
 import '../features/materials/presentation/screens/material_detail_screen.dart';
+import '../features/materials/presentation/screens/material_reader_screen.dart';
 import '../features/materials/presentation/screens/my_uploads_screen.dart';
 import '../features/quizzes/presentation/screens/quizzes_screen.dart';
 import '../features/quizzes/presentation/screens/quiz_take_screen.dart';
@@ -103,6 +104,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ':slug',
                 builder: (_, state) => MaterialDetailScreen(slug: state.pathParameters['slug']!),
+                routes: [
+                  GoRoute(
+                    path: 'read',
+                    builder: (_, state) => MaterialReaderScreen(slug: state.pathParameters['slug']!),
+                  ),
+                ],
               ),
             ],
           ),

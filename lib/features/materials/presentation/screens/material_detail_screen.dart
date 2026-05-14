@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import '../../../../core/graphql/queries/queries.dart';
@@ -78,6 +79,15 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
     }
   }
 
+  bool _supportsStudyMode(Map<String, dynamic> material) {
+    final contentType = (material['contentType'] as String? ?? '').toLowerCase();
+    final fileUrl = material['fileUrl'] as String? ?? '';
+    final contentText = (material['contentText'] as String? ?? '').trim();
+    final hasPdf = contentType == 'pdf' || fileUrl.toLowerCase().endsWith('.pdf');
+    final hasText = contentType == 'text' && contentText.isNotEmpty;
+    return hasPdf || hasText;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -89,6 +99,7 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
         if (m == null) return const Scaffold(body: Center(child: Text('Material not found.')));
         final materialId = m['id'] as String? ?? '';
         final isBookmarked = m['isBookmarked'] == true;
+        final supportsStudyMode = _supportsStudyMode(m);
         return Scaffold(
           appBar: AppBar(
             title: Text(m['title'] ?? '', overflow: TextOverflow.ellipsis),
@@ -132,6 +143,46 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
               ])),
 
               const SizedBox(height: DesignTokens.spMd),
+
+              if (supportsStudyMode) ...[
+                AnimatedPress(
+                  onTap: () => context.push('/materials/${widget.slug}/read'),
+                  child: GlassCard(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: DesignTokens.success.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(Icons.chrome_reader_mode_rounded, color: DesignTokens.success, size: 24),
+                        ),
+                        const SizedBox(width: DesignTokens.spMd),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Study now',
+                                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                'Open this material in a focused reader and continue where you left off.',
+                                style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, color: DesignTokens.textTertiary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: DesignTokens.spMd),
+              ],
 
               if (m['youtubeEmbedUrl'] != null)
                 _YoutubeInlinePlayer(
