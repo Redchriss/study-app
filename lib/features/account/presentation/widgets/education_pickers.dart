@@ -95,6 +95,17 @@ class _UniversityPickerSheetState extends State<UniversityPickerSheet> {
                 ),
                 builder: (result, {fetchMore, refetch}) {
                   if (result.isLoading) return const Center(child: CircularProgressIndicator());
+                  if (result.hasException) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load institutions.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
                   final list = (result.data?['universities'] as List?) ?? [];
                   if (list.isEmpty) {
                     return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No results. Try different words.')));
@@ -220,6 +231,17 @@ class _SchoolPickerSheetState extends State<SchoolPickerSheet> {
                 ),
                 builder: (result, {fetchMore, refetch}) {
                   if (result.isLoading) return const Center(child: CircularProgressIndicator());
+                  if (result.hasException) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load schools.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
                   final schools = (result.data?[key] as List?) ?? [];
                   if (schools.isEmpty) {
                     return Center(
@@ -317,6 +339,17 @@ class _ProgramPickerSheetState extends State<ProgramPickerSheet> {
                 options: QueryOptions(document: gql(kPrograms), variables: {'universityId': widget.universityId}),
                 builder: (result, {fetchMore, refetch}) {
                   if (result.isLoading) return const Center(child: CircularProgressIndicator());
+                  if (result.hasException) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load programmes.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
                   final programs = (result.data?['programs'] as List?) ?? [];
                   final q = _filterCtrl.text.trim().toLowerCase();
                   final filtered = q.isEmpty

@@ -34,12 +34,15 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   GraphQLClient? _client;
 
   GraphQLClient _buildClient({String? token}) {
-    if (_client != null) return _client!;
     final t = token ?? _parentToken;
-    final authLink = AuthLink(getToken: () async => t);
+    if (_client != null && token == null) return _client!;
+    final authLink = AuthLink(getToken: () async => t == null ? null : 'Bearer $t');
     final httpLink = HttpLink(AppConfig.graphqlUrl);
-    _client = GraphQLClient(cache: GraphQLCache(), link: authLink.concat(httpLink));
-    return _client!;
+    final client = GraphQLClient(cache: GraphQLCache(), link: authLink.concat(httpLink));
+    if (token == null) {
+      _client = client;
+    }
+    return client;
   }
 
   void _logoutParent() {
@@ -64,6 +67,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
       final t = result.data!['tokenAuth']['token'] as String?;
       if (t != null) {
         _parentToken = t;
+        _client = null;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('parent_token', _parentToken!);
       }
@@ -79,6 +83,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   Future<void> _fetchChildren() async {
     final client = _buildClient();
     final result = await client.query(QueryOptions(document: gql(kMyChildren)));
+    if (!mounted) return;
     setState(() {
       _children = (result.data?['myChildren'] as List?) ?? [];
       _parentLoading = false;
@@ -98,6 +103,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
         'educationTrack': _newKidEducationTrack,
       },
     ));
+    if (!mounted) return;
     setState(() => _creatingKid = false);
     if (result.data?['createChildProfile']?['success'] == true) {
       _nameCtrl.clear();

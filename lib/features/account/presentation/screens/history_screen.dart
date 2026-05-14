@@ -26,16 +26,28 @@ class HistoryScreen extends ConsumerWidget {
               options: QueryOptions(document: gql(kPaymentHistory), variables: {'limit': 50}),
               builder: (result, {fetchMore, refetch}) {
                 if (result.isLoading) return const Center(child: CircularProgressIndicator());
+                if (result.hasException) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load transactions.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
                 final items = (result.data?['paymentHistory'] as List?) ?? [];
                 if (items.isEmpty) return const Center(child: Text('No transactions yet', style: TextStyle(color: DesignTokens.textTertiary)));
                 return ListView.builder(
                   itemCount: items.length,
                   itemBuilder: (_, i) {
                     final t = items[i];
+                    final amount = (t['amount'] as num?)?.toStringAsFixed(0) ?? '0';
                     return ListTile(
                       title: Text(t['description'] ?? 'Payment', style: const TextStyle(fontSize: 14)),
                       subtitle: Text(t['createdAt'] ?? '', style: const TextStyle(fontSize: 11)),
-                      trailing: Text('MK ${t['amount']?.toStringAsFixed(0) ?? '0'}', style: TextStyle(fontWeight: FontWeight.w700, color: t['status'] == 'completed' ? DesignTokens.success : DesignTokens.textSecondary)),
+                      trailing: Text('MK $amount', style: TextStyle(fontWeight: FontWeight.w700, color: t['status'] == 'completed' ? DesignTokens.success : DesignTokens.textSecondary)),
                     );
                   },
                 );
@@ -45,6 +57,17 @@ class HistoryScreen extends ConsumerWidget {
               options: QueryOptions(document: gql(kCreditLedger), variables: {'limit': 50}),
               builder: (result, {fetchMore, refetch}) {
                 if (result.isLoading) return const Center(child: CircularProgressIndicator());
+                if (result.hasException) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load credit usage.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
                 final items = (result.data?['creditLedger'] as List?) ?? [];
                 if (items.isEmpty) return const Center(child: Text('No activity yet', style: TextStyle(color: DesignTokens.textTertiary)));
                 return ListView.builder(

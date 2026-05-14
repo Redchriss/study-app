@@ -18,6 +18,17 @@ class UpgradeScreen extends ConsumerWidget {
         options: QueryOptions(document: gql(kCreditPackages)),
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
+          if (result.hasException) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load plans.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
           final pkgs = (result.data?['creditPackages'] as List?) ?? [];
           final credits = result.data?['me']?['profile']?['aiCredits'] ?? 0;
           final catalog = (result.data?['aiActionCatalog'] as List?) ?? [];
@@ -71,15 +82,26 @@ class _PackageTile extends StatelessWidget {
     if (!context.mounted) return;
     final data = result.data?['initializePayment'];
     if (data == null || data['success'] != true) {
+      final message = result.exception?.graphqlErrors.firstOrNull?.message ??
+          (data?['errors'] as List?)?.join(', ') ??
+          'Payment failed';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data?['errors']?.join(', ') ?? 'Payment failed'), backgroundColor: DesignTokens.error),
+        SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
       );
       return;
     }
     final url = data['checkoutUrl'] as String?;
-    if (url != null && await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    if (url != null) {
+      final uri = Uri.tryParse(url);
+      if (uri != null && await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        return;
+      }
     }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Could not open payment page.'), backgroundColor: DesignTokens.error),
+    );
   }
 
   @override
@@ -93,7 +115,7 @@ class _PackageTile extends StatelessWidget {
       title: Text(p['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Text('${p['credits']} credits', style: const TextStyle(fontSize: 12)),
       trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Text('MK ${p['amount']?.toStringAsFixed(0) ?? '0'}', style: const TextStyle(fontWeight: FontWeight.w700, color: DesignTokens.primary)),
+        Text('MK ${(p['amount'] as num?)?.toStringAsFixed(0) ?? '0'}', style: const TextStyle(fontWeight: FontWeight.w700, color: DesignTokens.primary)),
         if (p['badge'] != null) Text(p['badge'], style: const TextStyle(fontSize: 10, color: DesignTokens.warning)),
       ]),
       onTap: () => _purchase(context),

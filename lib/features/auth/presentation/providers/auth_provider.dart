@@ -29,6 +29,12 @@ final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new)
 class AuthNotifier extends Notifier<AuthState> {
   Timer? _refreshTimer;
 
+  String _errorMessage(OperationException? exception, [String fallback = 'Network error. Check your connection.']) {
+    return exception?.graphqlErrors.firstOrNull?.message ??
+        exception?.linkException?.toString() ??
+        fallback;
+  }
+
   @override
   AuthState build() {
     ref.onDispose(() => _refreshTimer?.cancel());
@@ -51,7 +57,7 @@ class AuthNotifier extends Notifier<AuthState> {
         variables: {'refreshToken': refreshToken},
       ));
       final data = result.data?['refreshToken'];
-      if (data != null) {
+      if (data != null && data['token'] != null && data['refreshToken'] != null) {
         await SecureStorage.saveTokens(data['token'], data['refreshToken']);
         _scheduleRefresh();
       }
@@ -101,12 +107,16 @@ class AuthNotifier extends Notifier<AuthState> {
       ));
 
       if (result.hasException) {
-        final msg = result.exception?.graphqlErrors.firstOrNull?.message ?? 'Network error. Check your connection.';
+        final msg = _errorMessage(result.exception);
         state = AuthState(isAuthenticated: false, isLoading: false, error: msg);
         return false;
       }
 
-      final data = result.data!['tokenAuth'];
+      final data = result.data?['tokenAuth'];
+      if (data == null || data['token'] == null || data['refreshToken'] == null) {
+        state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Login failed.');
+        return false;
+      }
       await SecureStorage.saveTokens(data['token'], data['refreshToken']);
       await _bootstrap();
       _scheduleRefresh();
@@ -128,18 +138,26 @@ class AuthNotifier extends Notifier<AuthState> {
       ));
 
       if (result.hasException) {
-        final msg = result.exception?.graphqlErrors.firstOrNull?.message ?? 'Network error. Check your connection.';
+        final msg = _errorMessage(result.exception);
         state = AuthState(isAuthenticated: false, isLoading: false, error: msg);
         return false;
       }
 
-      final data = result.data!['register'];
+      final data = result.data?['register'];
+      if (data == null) {
+        state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Registration failed.');
+        return false;
+      }
       if (data['success'] != true) {
         final errors = (data['errors'] as List?)?.join(', ') ?? 'Registration failed.';
         state = AuthState(isAuthenticated: false, isLoading: false, error: errors);
         return false;
       }
 
+      if (data['token'] == null || data['refreshToken'] == null) {
+        state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Registration failed.');
+        return false;
+      }
       await SecureStorage.saveTokens(data['token'], data['refreshToken']);
       await _bootstrap();
       _scheduleRefresh();
@@ -152,6 +170,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
+    _refreshTimer?.cancel();
     await SecureStorage.clearTokens();
     state = const AuthState(isAuthenticated: false, isLoading: false);
   }

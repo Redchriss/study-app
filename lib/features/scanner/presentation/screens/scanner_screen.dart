@@ -33,48 +33,59 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   Future<void> _submit() async {
     if (_image == null) return;
     setState(() => _solving = true);
-    final client = ref.read(graphqlClientProvider);
-    final bytes = await _image!.readAsBytes();
-    if (bytes.length > 5 * 1024 * 1024) {
-      if (mounted) {
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final bytes = await _image!.readAsBytes();
+      if (bytes.length > 5 * 1024 * 1024) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Image too large. Choose a smaller file.'), backgroundColor: DesignTokens.error),
+          );
+          setState(() => _solving = false);
+        }
+        return;
+      }
+      final b64 = base64Encode(bytes);
+      final result = await client.mutate(MutationOptions(
+        document: gql(kSubmitScanSession),
+        variables: {
+          'imageBase64': b64,
+          'fileName': _image!.path.split('/').last,
+          'subject': _subject.trim(),
+          'educationLevel': _educationLevel,
+          'examType': _examType.trim(),
+          'year': int.tryParse(_year),
+        },
+      ));
+      if (!mounted) return;
+      setState(() => _solving = false);
+      if (result.hasException || result.data?['submitScanSession'] == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image too large. Choose a smaller file.'), backgroundColor: DesignTokens.error),
+          SnackBar(
+            content: Text(result.exception?.graphqlErrors.firstOrNull?.message ?? 'Failed to solve paper'),
+            backgroundColor: DesignTokens.error,
+          ),
         );
-        setState(() => _solving = false);
+        return;
       }
-      return;
-    }
-    final b64 = base64Encode(bytes);
-    final result = await client.mutate(MutationOptions(
-      document: gql(kSubmitScanSession),
-      variables: {
-        'imageBase64': b64,
-        'fileName': _image!.path.split('/').last,
-        'subject': _subject,
-        'educationLevel': _educationLevel,
-        'examType': _examType,
-        'year': int.tryParse(_year),
-      },
-    ));
-    setState(() => _solving = false);
-    if (result.hasException || result.data?['submitScanSession'] == null) {
-      if (mounted) {
+      final data = result.data!['submitScanSession'];
+      if (data['success'] != true) {
         ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to solve paper'), backgroundColor: DesignTokens.error),
-      );
+          SnackBar(
+            content: Text((data['errors'] as List?)?.firstOrNull?.toString() ?? 'Failed'),
+            backgroundColor: DesignTokens.error,
+          ),
+        );
+        return;
       }
-      return;
-    }
-    final data = result.data!['submitScanSession'];
-    if (data['success'] != true) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text((data['errors'] as List?)?.first ?? 'Failed'), backgroundColor: DesignTokens.error),
+      context.push('/scanner/results', extra: {'solutions': data['session']?['solutions'] ?? []});
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _solving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to solve paper: $e'), backgroundColor: DesignTokens.error),
       );
-      }
-      return;
     }
-    if (mounted) context.push('/scanner/results', extra: {'solutions': data['session']?['solutions'] ?? []});
   }
 
   @override

@@ -39,6 +39,13 @@ class _QuizShareScreenState extends ConsumerState<QuizShareScreen> {
       if (r.data?['shareQuiz']?['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shared to circle!')));
         context.pop();
+      } else {
+        final message = r.exception?.graphqlErrors.firstOrNull?.message ??
+            (r.data?['shareQuiz']?['errors'] as List?)?.firstOrNull?.toString() ??
+            'Could not share quiz.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
+        );
       }
     }
   }

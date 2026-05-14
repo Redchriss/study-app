@@ -24,6 +24,15 @@ class ProfileScreen extends ConsumerWidget {
             body: const Center(child: CircularProgressIndicator()),
           );
         }
+        if (result.hasException) {
+          return Scaffold(
+            appBar: AppBar(title: Text('Profile', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)), centerTitle: true),
+            body: ErrorState(
+              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load profile.',
+              onRetry: () => refetch?.call(),
+            ),
+          );
+        }
         final me = result.data?['me'];
         final profile = me?['profile'] as Map<String, dynamic>?;
         return Scaffold(

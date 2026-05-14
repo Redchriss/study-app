@@ -32,27 +32,49 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
     setState(() => _bookmarking = true);
     final client = ref.read(graphqlClientProvider);
     final doc = currentlyBookmarked ? gql(kUnbookmarkMaterial) : gql(kBookmarkMaterial);
-    await client.mutate(MutationOptions(document: doc, variables: {'materialId': id}));
-    setState(() => _bookmarking = false);
+    try {
+      final result = await client.mutate(MutationOptions(document: doc, variables: {'materialId': id}));
+      if (!mounted) return;
+      if (result.hasException) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.exception?.graphqlErrors.firstOrNull?.message ?? 'Bookmark update failed'),
+            backgroundColor: DesignTokens.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _bookmarking = false);
+      }
+    }
   }
 
   Future<void> _requestAiTask(String materialId, String taskType, dynamic refetch) async {
     if (_aiTaskLoading != null) return;
     setState(() => _aiTaskLoading = taskType);
     final client = ref.read(graphqlClientProvider);
-    final result = await client.mutate(MutationOptions(
-      document: gql(kRequestAiTask),
-      variables: {'materialId': materialId, 'taskType': taskType},
-    ));
-    if (mounted) {
-      if (result.hasException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.exception?.graphqlErrors.first.message ?? 'AI task failed'), backgroundColor: DesignTokens.error),
-        );
-      } else {
-        refetch?.call();
+    try {
+      final result = await client.mutate(MutationOptions(
+        document: gql(kRequestAiTask),
+        variables: {'materialId': materialId, 'taskType': taskType},
+      ));
+      if (mounted) {
+        if (result.hasException) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.exception?.graphqlErrors.firstOrNull?.message ?? 'AI task failed'),
+              backgroundColor: DesignTokens.error,
+            ),
+          );
+        } else {
+          refetch?.call();
+        }
       }
-      setState(() => _aiTaskLoading = null);
+    } finally {
+      if (mounted) {
+        setState(() => _aiTaskLoading = null);
+      }
     }
   }
 
@@ -207,7 +229,14 @@ class _YoutubeInlinePlayerState extends State<_YoutubeInlinePlayer> {
 
   String _extractVideoId(String url) {
     final uri = Uri.tryParse(url);
-    if (uri != null && uri.queryParameters.containsKey('v')) return uri.queryParameters['v']!;
+    if (uri != null) {
+      final fromQuery = uri.queryParameters['v'];
+      if (fromQuery != null && fromQuery.isNotEmpty) return fromQuery;
+      final segments = uri.pathSegments.where((segment) => segment.isNotEmpty).toList();
+      if (uri.host.contains('youtu.be') && segments.isNotEmpty) return segments.first;
+      if (segments.length >= 2 && segments.first == 'embed') return segments[1];
+      if (segments.isNotEmpty) return segments.last;
+    }
     final parts = url.split('/');
     return parts.last.split('?').first;
   }

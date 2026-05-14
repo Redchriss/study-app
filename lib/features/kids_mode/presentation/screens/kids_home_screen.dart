@@ -61,12 +61,14 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
   GraphQLClient? _kidClient;
 
   GraphQLClient _buildKidClient() {
-    if (_kidClient != null) return _kidClient!;
     final auth = ref.read(kidAuthStateProvider);
-    final link = AuthLink(getToken: () => auth.token).concat(HttpLink(AppConfig.graphqlUrl));
+    if (_kidClient != null && auth.token == _kidClientToken) return _kidClient!;
+    final link = AuthLink(getToken: () async => auth.token == null ? null : 'Bearer ${auth.token}').concat(HttpLink(AppConfig.graphqlUrl));
+    _kidClientToken = auth.token;
     _kidClient = GraphQLClient(cache: GraphQLCache(), link: link);
     return _kidClient!;
   }
+  String? _kidClientToken;
 
   Future<void> _fetchDailySummary() async {
     final auth = ref.read(kidAuthStateProvider);
@@ -91,7 +93,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
       document: gql(kPrimarySubjects),
       variables: {'standard': auth.standard, 'educationTrack': auth.educationTrack},
     ));
-    if (result.data != null && mounted) {
+    if (!mounted) return;
+    if (result.data != null) {
       setState(() {
         _subjects = ((result.data!['primarySubjects'] as List?) ?? [])
             .map((s) => Map<String, dynamic>.from(s as Map))
@@ -129,11 +132,13 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
 
   Future<void> _speak(String text) async {
     await _tts.stop();
+    if (!mounted) return;
     setState(() => _isSpeaking = true);
     try {
       await _tts.speak(text.replaceAll('\n', ' ').replaceAll(RegExp(r'\{[^}]*\}'), ''));
     } catch (_) {
       if (mounted) {
+        setState(() => _isSpeaking = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Reading aloud is not available on this device'),
@@ -151,7 +156,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
       document: gql(kFetchKidLesson),
       variables: {'subjectId': subjectId, 'standard': standard, 'topicId': topicId, 'language': 'english'},
     ));
-    if (result.data != null && mounted) {
+    if (!mounted) return;
+    if (result.data != null) {
       final data = result.data!['fetchKidLesson'];
       if (data['success'] == true) {
         setState(() {
@@ -162,10 +168,13 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
           _quizSelected = null;
           _loading = false;
         });
+      } else {
+        final errs = (data['errors'] as List?)?.cast<String>() ?? const ['Could not load lesson'];
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errs.join(', '))));
       }
       await _fetchDailySummary();
     }
-    if (mounted) setState(() => _loading = false);
+    setState(() => _loading = false);
   }
 
   void _startQuiz() {
@@ -193,7 +202,9 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
     if (payload?['success'] == false && mounted) {
       final errs = (payload?['errors'] as List?)?.cast<String>() ?? const ['Could not save answer'];
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errs.join(', '))));
+      return;
     }
+    if (!mounted) return;
     setState(() {
       _quizSelected = idx;
       _quizAnswered = true;
@@ -452,7 +463,12 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                 KidsPlayfulPrimaryButton(
                   label: 'Next lesson',
                   icon: Icons.auto_awesome,
-                  onTap: () => _fetchLesson(_selectedSubject!['id']!, auth.standard),
+                  onTap: () {
+                    final subjectId = _selectedSubject?['id']?.toString();
+                    if (subjectId != null && subjectId.isNotEmpty) {
+                      _fetchLesson(subjectId, auth.standard);
+                    }
+                  },
                 ),
               ],
             ),

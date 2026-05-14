@@ -15,6 +15,17 @@ class PastPapersScreen extends StatelessWidget {
         options: QueryOptions(document: gql(kMySolveSessions), variables: {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
+          if (result.hasException) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load solved papers.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
           final sessions = (result.data?['mySolveSessions'] as List?) ?? [];
           if (sessions.isEmpty) return const Center(child: Text('No solved papers yet. Use the scanner!', style: TextStyle(color: DesignTokens.textTertiary)));
           return ListView.builder(
@@ -34,7 +45,7 @@ class PastPapersScreen extends StatelessWidget {
                   subtitle: Text('${s['subject'] ?? ''} · ${s['examType'] ?? ''} ${s['year'] ?? ''}', style: const TextStyle(fontSize: 12)),
                   trailing: Text(s['status'] ?? '', style: const TextStyle(fontSize: 12, color: DesignTokens.primary)),
                   onTap: () {
-                    context.push('/scanner/results', extra: s);
+                    context.push('/scanner/results', extra: Map<String, dynamic>.from(s as Map));
                   },
                 ),
               );

@@ -50,7 +50,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
             actions: [
               if (circle['isMember'] != true)
                 Mutation(options: MutationOptions(document: gql(kJoinCircle)),
-                  builder: (run, _) => IconButton(icon: const Icon(Icons.person_add), onPressed: () { run({'circleSlug': widget.slug}); refetch?.call(); }),
+                  builder: (run, _) => IconButton(icon: const Icon(Icons.person_add), onPressed: () { run({'slug': widget.slug}); refetch?.call(); }),
                 ),
               IconButton(icon: const Icon(Icons.search), onPressed: () => _showSearch(context)),
               if (circle['isMember'] == true)
@@ -58,7 +58,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                   options: MutationOptions(document: gql(kToggleFavouriteCircle)),
                   builder: (run, _) => IconButton(
                     icon: Icon(circle['isFavorite'] == true ? Icons.star : Icons.star_border, color: circle['isFavorite'] == true ? DesignTokens.warning : null),
-                    onPressed: () => run({'circleSlug': widget.slug}),
+                    onPressed: () { run({'circleSlug': widget.slug}); refetch?.call(); },
                   ),
                 ),
             ],
@@ -153,42 +153,53 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
   Future<void> _createPost(dynamic refetch) async {
     if (_titleCtrl.text.trim().isEmpty || _posting) return;
     setState(() => _posting = true);
-    String? b64;
-    if (_postImage != null) {
-      final bytes = await _postImage!.readAsBytes();
-      if (bytes.length > 3 * 1024 * 1024) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Image too large (max 3MB)'), backgroundColor: DesignTokens.error),
-          );
+    try {
+      String? b64;
+      if (_postImage != null) {
+        final bytes = await _postImage!.readAsBytes();
+        if (bytes.length > 3 * 1024 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Image too large (max 3MB)'), backgroundColor: DesignTokens.error),
+            );
+            setState(() => _posting = false);
+          }
+          return;
         }
-        setState(() => _posting = false);
-        return;
+        b64 = base64Encode(bytes);
       }
-      b64 = base64Encode(bytes);
-    }
-    final client = ref.read(graphqlClientProvider);
-    final result = await client.mutate(MutationOptions(
-      document: gql(kCreatePost),
-      variables: {
-        'circleSlug': widget.slug,
-        'title': _titleCtrl.text,
-        'content': _bodyCtrl.text,
-        'postType': _postType,
-        'imageBase64': b64,
-      },
-    ));
-    if (mounted) {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.mutate(MutationOptions(
+        document: gql(kCreatePost),
+        variables: {
+          'circleSlug': widget.slug,
+          'title': _titleCtrl.text.trim(),
+          'content': _bodyCtrl.text.trim(),
+          'postType': _postType,
+          'imageBase64': b64,
+        },
+      ));
+      if (!mounted) return;
       setState(() => _posting = false);
-      if (result.hasException) {
+      if (result.hasException || result.data?['createPost']?['success'] != true) {
+        final message = result.exception?.graphqlErrors.firstOrNull?.message ??
+            (result.data?['createPost']?['errors'] as List?)?.firstOrNull?.toString() ??
+            'unknown error';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to post: ${result.exception?.graphqlErrors.first.message ?? 'unknown error'}'), backgroundColor: DesignTokens.error),
+          SnackBar(content: Text('Failed to post: $message'), backgroundColor: DesignTokens.error),
         );
         return;
       }
-      _titleCtrl.clear(); _bodyCtrl.clear();
+      _titleCtrl.clear();
+      _bodyCtrl.clear();
       setState(() { _showNewPost = false; _postImage = null; });
       refetch?.call();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _posting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to post: $e'), backgroundColor: DesignTokens.error),
+      );
     }
   }
 

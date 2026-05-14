@@ -36,6 +36,8 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
 
   Future<void> _submit() async {
     if (_titleCtrl.text.trim().isEmpty || _subjectId == null) return;
+    if (_contentType == 'text' && _textCtrl.text.trim().isEmpty) return;
+    if (_contentType == 'video' && _youtubeCtrl.text.trim().isEmpty) return;
     setState(() => _saving = true);
     final client = ref.read(graphqlClientProvider);
     final result = await client.mutate(MutationOptions(
@@ -52,7 +54,10 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
     if (mounted) {
       setState(() => _saving = false);
       if (result.hasException || result.data?['uploadMaterial']?['success'] != true) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Upload failed'), backgroundColor: DesignTokens.error));
+        final message = result.exception?.graphqlErrors.firstOrNull?.message ??
+            (result.data?['uploadMaterial']?['errors'] as List?)?.firstOrNull?.toString() ??
+            'Upload failed';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: DesignTokens.error));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Material submitted for review'),

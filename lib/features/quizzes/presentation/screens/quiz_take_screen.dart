@@ -19,7 +19,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
   int _time = 0;
   String? _attemptId;
   bool _submitting = false;
-  bool _startedAttempt = false;
+  bool _startingAttempt = false;
   Timer? _timer;
   bool _paused = false;
 
@@ -51,8 +51,31 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
     setState(() => _time++);
   }
 
-  Future<void> _submit(String quizId, GraphQLClient client) async {
-    if (_submitting) return;
+  Future<void> _startAttempt(String quizId, GraphQLClient client) async {
+    if (_startingAttempt || _attemptId != null) return;
+    _startingAttempt = true;
+    try {
+      final result = await client.mutate(MutationOptions(
+        document: gql(kStartQuizAttempt),
+        variables: {'quizId': quizId},
+      ));
+      if (!mounted) return;
+      final attemptId = result.data?['startQuizAttempt']?['attempt']?['id'] as String?;
+      if (attemptId == null || attemptId.isEmpty) {
+        final message = result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not start quiz.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
+        );
+        return;
+      }
+      setState(() => _attemptId = attemptId);
+    } finally {
+      _startingAttempt = false;
+    }
+  }
+
+  Future<void> _submit(GraphQLClient client) async {
+    if (_submitting || _attemptId == null) return;
     setState(() => _submitting = true);
     final answers = _answers.entries.map((e) => {
       'questionId': e.key,
@@ -67,13 +90,25 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
         setState(() => _submitting = false);
         if (result.hasException) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result.exception?.graphqlErrors.first.message ?? 'Submit failed'), backgroundColor: DesignTokens.error),
+            SnackBar(
+              content: Text(result.exception?.graphqlErrors.firstOrNull?.message ?? 'Submit failed'),
+              backgroundColor: DesignTokens.error,
+            ),
           );
           return;
         }
-        if (result.data?['submitQuizAttempt']?['success'] == true) {
-          context.go('/quiz-results/${result.data!['submitQuizAttempt']['attempt']['id']}');
+        final submitted = result.data?['submitQuizAttempt'];
+        final attemptId = submitted?['attempt']?['id'] as String?;
+        if (submitted?['success'] == true && attemptId != null && attemptId.isNotEmpty) {
+          context.go('/quiz-results/$attemptId');
+          return;
         }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text((submitted?['errors'] as List?)?.firstOrNull?.toString() ?? 'Submit failed'),
+            backgroundColor: DesignTokens.error,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -96,117 +131,113 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
         final quiz = result.data?['quiz'];
         if (quiz == null) return const Scaffold(body: Center(child: Text('Quiz not found')));
         final questions = (quiz['questions'] as List?) ?? [];
-        return Mutation(
-          options: MutationOptions(document: gql(kStartQuizAttempt)),
-          builder: (runMutation, mutResult) {
-            if (!_startedAttempt) {
-              _startedAttempt = true;
-              runMutation({'quizId': quiz['id']});
-              final resultData = mutResult?.data;
-              if (resultData != null) _attemptId = resultData['startQuizAttempt']['attempt']['id'];
+        final quizId = quiz['id'] as String?;
+        if (quizId != null && quizId.isNotEmpty && _attemptId == null && !_startingAttempt) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _startAttempt(quizId, ref.read(graphqlClientProvider));
             }
-            final mins = _time ~/ 60;
-            final secs = _time % 60;
-            final answered = _answers.length;
-            return Scaffold(
-              appBar: AppBar(
-                title: Text(quiz['title'] ?? '', overflow: TextOverflow.ellipsis),
-                actions: [
-                  Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: dark ? DesignTokens.warning.withValues(alpha: 0.15) : DesignTokens.warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.timer, size: 16, color: DesignTokens.warning),
-                      const SizedBox(width: 4),
-                      Text('${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}', style: TextStyle(fontWeight: FontWeight.w600, color: DesignTokens.warning)),
-                    ]),
-                  ),
-                ],
+          });
+        }
+        final mins = _time ~/ 60;
+        final secs = _time % 60;
+        final answered = _answers.length;
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(quiz['title'] ?? '', overflow: TextOverflow.ellipsis),
+            actions: [
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: dark ? DesignTokens.warning.withValues(alpha: 0.15) : DesignTokens.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.timer, size: 16, color: DesignTokens.warning),
+                  const SizedBox(width: 4),
+                  Text('${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}', style: TextStyle(fontWeight: FontWeight.w600, color: DesignTokens.warning)),
+                ]),
               ),
-              body: Column(children: [
-                // Progress bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(children: [
-                    Text('$answered/${questions.length} answered', style: theme.textTheme.bodySmall),
-                    const Spacer(),
-                    Text('${(answered / (questions.length == 0 ? 1 : questions.length) * 100).round()}%', style: theme.textTheme.bodySmall),
-                  ]),
-                ),
-                if (questions.isNotEmpty)
-                  LinearProgressIndicator(
-                    value: answered / questions.length,
-                    backgroundColor: dark ? DesignTokens.surfaceVariant : DesignTokens.border,
-                    color: answered == questions.length ? DesignTokens.success : DesignTokens.primary,
-                    minHeight: 4,
-                  ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: questions.length,
-                    itemBuilder: (_, i) {
-                      final q = questions[i] as Map<String, dynamic>;
-                      final qId = q['id'] as String? ?? '$i';
-                      final options = (q['answers'] as List?) ?? [];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('Q${i + 1}. ${q['questionText'] ?? ''}', style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 12),
-                            ...options.map((opt) {
-                              final optId = opt['id'] as String? ?? '';
-                              final selected = _answers[qId] == optId;
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: InkWell(
-                                  onTap: () => setState(() => _answers[qId] = optId),
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: selected ? DesignTokens.primary : DesignTokens.border),
-                                      borderRadius: BorderRadius.circular(12),
-                                      color: selected ? DesignTokens.primary.withValues(alpha: 0.08) : null,
-                                    ),
-                                    child: Row(children: [
-                                      Icon(selected ? Icons.radio_button_checked : Icons.radio_button_unchecked, size: 20, color: selected ? DesignTokens.primary : DesignTokens.textTertiary),
-                                      const SizedBox(width: 12),
-                                      Expanded(child: Text(opt['answerText'] ?? '', style: theme.textTheme.bodyMedium)),
-                                    ]),
-                                  ),
-                                ),
-                              );
-                            }),
-                          ]),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: (_submitting || _attemptId == null || answered == 0) ? null : () {
-                        _submit(quiz['id'], ref.read(graphqlClientProvider));
-                      },
-                      child: _submitting
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : Text('Submit ($answered/${questions.length})'),
-                    ),
-                  ),
-                ),
+            ],
+          ),
+          body: Column(children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(children: [
+                Text('$answered/${questions.length} answered', style: theme.textTheme.bodySmall),
+                const Spacer(),
+                Text('${(answered / (questions.length == 0 ? 1 : questions.length) * 100).round()}%', style: theme.textTheme.bodySmall),
               ]),
-            );
-          },
+            ),
+            if (questions.isNotEmpty)
+              LinearProgressIndicator(
+                value: answered / questions.length,
+                backgroundColor: dark ? DesignTokens.surfaceVariant : DesignTokens.border,
+                color: answered == questions.length ? DesignTokens.success : DesignTokens.primary,
+                minHeight: 4,
+              ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: questions.length,
+                itemBuilder: (_, i) {
+                  final q = questions[i] as Map<String, dynamic>;
+                  final qId = q['id'] as String? ?? '$i';
+                  final options = (q['answers'] as List?) ?? [];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Q${i + 1}. ${q['questionText'] ?? ''}', style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 12),
+                        ...options.map((opt) {
+                          final optId = opt['id'] as String? ?? '';
+                          final selected = _answers[qId] == optId;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: InkWell(
+                              onTap: () => setState(() => _answers[qId] = optId),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: selected ? DesignTokens.primary : DesignTokens.border),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: selected ? DesignTokens.primary.withValues(alpha: 0.08) : null,
+                                ),
+                                child: Row(children: [
+                                  Icon(selected ? Icons.radio_button_checked : Icons.radio_button_unchecked, size: 20, color: selected ? DesignTokens.primary : DesignTokens.textTertiary),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: Text(opt['answerText'] ?? '', style: theme.textTheme.bodyMedium)),
+                                ]),
+                              ),
+                            ),
+                          );
+                        }),
+                      ]),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: (_submitting || _attemptId == null || answered == 0) ? null : () {
+                    _submit(ref.read(graphqlClientProvider));
+                  },
+                  child: _submitting
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text('Submit ($answered/${questions.length})'),
+                ),
+              ),
+            ),
+          ]),
         );
       },
     );

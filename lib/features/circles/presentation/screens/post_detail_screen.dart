@@ -19,6 +19,35 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   @override
   void dispose() { _commentCtrl.dispose(); super.dispose(); }
 
+  Future<void> _submitComment(String postId, VoidCallback? refetch) async {
+    final content = _commentCtrl.text.trim();
+    if (content.isEmpty || _sendingComment) return;
+    setState(() => _sendingComment = true);
+    try {
+      final result = await ref.read(graphqlClientProvider).mutate(MutationOptions(
+        document: gql(kAddComment),
+        variables: {'postId': postId, 'content': content},
+      ));
+      if (!mounted) return;
+      final payload = result.data?['addComment'];
+      if (result.hasException || payload?['success'] != true) {
+        final message = result.exception?.graphqlErrors.firstOrNull?.message ??
+            (payload?['errors'] as List?)?.firstOrNull?.toString() ??
+            'Could not add comment';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
+        );
+        return;
+      }
+      _commentCtrl.clear();
+      refetch?.call();
+    } finally {
+      if (mounted) {
+        setState(() => _sendingComment = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -60,8 +89,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                           variables: {'postId': post['id'], 'postContent': content},
                         ));
                         if (context.mounted) {
+                          final message = result.data?['askAiOnPost']?['reply'] ??
+                              result.exception?.graphqlErrors.firstOrNull?.message ??
+                              'AI replied!';
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(result.data?['askAiOnPost']?['reply'] ?? 'AI replied!')),
+                            SnackBar(content: Text(message)),
                           );
                           refetch?.call();
                         }
@@ -121,42 +153,29 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               ]),
             )),
             SafeArea(
-              child: Mutation(
-                options: MutationOptions(
-                  document: gql(kAddComment),
-                  onCompleted: (_) {
-                    _commentCtrl.clear();
-                    setState(() => _sendingComment = false);
-                  },
-                ),
-                builder: (run, mutResult) => Container(
-                  padding: const EdgeInsets.all(DesignTokens.spSm),
-                  child: Row(children: [
-                    Expanded(child: TextField(
-                      controller: _commentCtrl,
-                      decoration: InputDecoration(
-                        hintText: 'Add a comment...', isDense: true,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      ),
-                    )),
-                    const SizedBox(width: 8),
-                    AnimatedPress(
-                      onTap: () {
-                        if (_commentCtrl.text.trim().isEmpty || _sendingComment) return;
-                        _sendingComment = true;
-                        run({'postId': post['id'], 'content': _commentCtrl.text.trim()});
-                      },
-                      child: Container(
-                        width: 48, height: 48,
-                        decoration: const BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
-                        child: _sendingComment
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.send, color: Colors.white, size: 20),
-                      ),
+              child: Container(
+                padding: const EdgeInsets.all(DesignTokens.spSm),
+                child: Row(children: [
+                  Expanded(child: TextField(
+                    controller: _commentCtrl,
+                    decoration: InputDecoration(
+                      hintText: 'Add a comment...', isDense: true,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     ),
-                  ]),
-                ),
+                  )),
+                  const SizedBox(width: 8),
+                  AnimatedPress(
+                    onTap: () => _submitComment(post['id'], refetch),
+                    child: Container(
+                      width: 48, height: 48,
+                      decoration: const BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
+                      child: _sendingComment
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.send, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ]),
               ),
             ),
           ]),
@@ -168,6 +187,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   void _vote(String postId, String direction, dynamic refetch) {
     ref.read(graphqlClientProvider).mutate(MutationOptions(
       document: gql(kVotePost), variables: {'postId': postId, 'direction': direction},
-    )).then((_) => refetch?.call());
+    )).then((_) {
+      if (mounted) {
+        refetch?.call();
+      }
+    });
   }
 }

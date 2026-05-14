@@ -17,6 +17,19 @@ class DashboardScreen extends ConsumerWidget {
     return Query(
       options: QueryOptions(document: gql(kDashboard)),
       builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (result.hasException) {
+          return Scaffold(
+            body: ErrorState(
+              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load dashboard.',
+              onRetry: () => refetch?.call(),
+            ),
+          );
+        }
         final me = result.data?['me'];
         final profile = me?['profile'];
         final recentMaterials = (result.data?['recentMaterials'] as List?) ?? [];

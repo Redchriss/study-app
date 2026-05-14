@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import '../theme/design_tokens.dart';
 import '../services/connectivity_service.dart';
@@ -13,14 +15,21 @@ class OfflineBanner extends StatefulWidget {
 
 class _OfflineBannerState extends State<OfflineBanner> {
   bool _isOffline = false;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
   @override
   void initState() {
     super.initState();
     _checkConnectivity();
-    ConnectivityService.onConnectivityChanged.listen((_) {
+    _connectivitySub = ConnectivityService.onConnectivityChanged.listen((_) {
       _checkConnectivity();
     });
+  }
+
+  @override
+  void dispose() {
+    _connectivitySub?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkConnectivity() async {

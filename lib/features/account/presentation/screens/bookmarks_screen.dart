@@ -16,6 +16,17 @@ class BookmarksScreen extends ConsumerWidget {
         options: QueryOptions(document: gql(kBookmarkedMaterials)),
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
+          if (result.hasException) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load bookmarks.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
           final items = (result.data?['bookmarkedMaterials'] as List?) ?? [];
           if (items.isEmpty) {
             return Center(

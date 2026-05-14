@@ -16,6 +16,30 @@ class NotificationsScreen extends ConsumerWidget {
     return Query(
       options: QueryOptions(document: gql(kNotifications), variables: {'unreadOnly': false}),
       builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Notifications', style: theme.textTheme.titleLarge),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (result.hasException) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Notifications', style: theme.textTheme.titleLarge),
+            ),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load notifications.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          );
+        }
         final items = (result.data?['notifications'] as List?) ?? <Map<String, dynamic>>[];
         final unreadCount = result.data?['unreadNotificationCount'] as int? ?? 0;
         return Scaffold(
@@ -26,7 +50,17 @@ class NotificationsScreen extends ConsumerWidget {
                   icon: const Icon(Icons.done_all),
                   tooltip: 'Mark all read',
                   onPressed: () async {
-                    await client.mutate(MutationOptions(document: gql(kMarkAllNotificationsRead)));
+                    final markResult = await client.mutate(MutationOptions(document: gql(kMarkAllNotificationsRead)));
+                    if (!context.mounted) return;
+                    if (markResult.hasException) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(markResult.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not mark notifications as read.'),
+                          backgroundColor: DesignTokens.error,
+                        ),
+                      );
+                      return;
+                    }
                     refetch?.call();
                   },
                 )]
