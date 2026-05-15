@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Yaza uses the camera so learners can scan papers and attach study images.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Yaza uses your photo library so learners can pick study images and upload materials.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Yaza may save generated or selected study assets for learner use.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
