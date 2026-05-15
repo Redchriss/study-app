@@ -21,6 +21,7 @@ class ProfileSetupScreen extends ConsumerStatefulWidget {
 class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   final _preferences = AppPreferencesService();
   int _step = 1;
+  bool _saving = false;
   String? _level;
   int? _standard;
   int? _form;
@@ -56,33 +57,37 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   Future<void> _saveAndFinish() async {
+    if (_saving) return;
+    setState(() => _saving = true);
     final client = ref.read(graphqlClientProvider);
-    final result = await client.mutate(MutationOptions(
-      document: gql(kUpdateProfile),
-      variables: {
-        'input': {
-          'educationLevel': _level,
-          if (_standard != null) 'standard': _standard,
-          if (_form != null) 'form': _form,
-          if (_universityId != null) 'universityId': _universityId,
-          if (_programId != null) 'programId': _programId,
-          if (_term != null) 'term': _term,
-          if (_primarySchoolId != null) 'primarySchoolId': _primarySchoolId,
-          if (_secondarySchoolId != null) 'secondarySchoolId': _secondarySchoolId,
-        }
-      },
-    ));
-    if (mounted) {
-      if (result.hasException || result.data?['updateProfile']?['success'] != true) {
+    try {
+      final result = await client.mutate(MutationOptions(
+        document: gql(kUpdateProfile),
+        variables: {
+          'input': {
+            'educationLevel': _level,
+            if (_standard != null) 'standard': _standard,
+            if (_form != null) 'form': _form,
+            if (_universityId != null) 'universityId': _universityId,
+            if (_programId != null) 'programId': _programId,
+            if (_term != null) 'term': _term,
+            if (_primarySchoolId != null) 'primarySchoolId': _primarySchoolId,
+            if (_secondarySchoolId != null) 'secondarySchoolId': _secondarySchoolId,
+          }
+        },
+      ));
+      if (!mounted) return;
+      final payload = result.data?['updateProfile'] as Map<String, dynamic>?;
+      final payloadErrors = ((payload?['errors'] as List?) ?? const [])
+          .map((item) => item.toString())
+          .where((item) => item.trim().isNotEmpty)
+          .toList();
+      final graphQLError = result.exception?.graphqlErrors.firstOrNull?.message;
+      final linkError = result.exception?.linkException?.toString();
+      if (result.hasException || payload?['success'] != true) {
+        final message = payloadErrors.firstOrNull ?? graphQLError ?? linkError ?? 'Save failed. Try again.';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result.hasException
-                  ? 'Save failed. Try again.'
-                  : (result.data?['updateProfile']?['errors'] as List?)?.first ?? 'Save failed.',
-            ),
-            backgroundColor: DesignTokens.error,
-          ),
+          SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
         );
         return;
       }
@@ -99,6 +104,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           break;
         default:
           context.go('/materials');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
       }
     }
   }
@@ -131,7 +140,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         _programId = picked['id'] as String?;
         _programName = picked['name'] as String?;
       });
-      await _saveAndFinish();
     }
   }
 
@@ -413,8 +421,19 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Choosing a programme saves your profile and finishes setup.',
+          'Choose your programme, then finish setup.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary),
+        ),
+        const SizedBox(height: 20),
+        FilledButton(
+          onPressed: (_programId == null || _saving) ? null : _saveAndFinish,
+          child: _saving
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text('Finish setup'),
         ),
       ],
     );
