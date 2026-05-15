@@ -81,40 +81,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Yaza',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1,
-                        ),
-                      ).animate().fadeIn().slideX(begin: -0.2),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Welcome\nback',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 42,
-                          fontWeight: FontWeight.w900,
-                          height: 1.05,
-                          letterSpacing: -1.5,
-                        ),
-                      ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.3),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Log in to continue studying',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ).animate(delay: 200.ms).fadeIn(),
-                    ],
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Yaza',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                          ),
+                        ).animate().fadeIn().slideX(begin: -0.2),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Welcome\nback',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 42,
+                            fontWeight: FontWeight.w900,
+                            height: 1.05,
+                            letterSpacing: -1.5,
+                          ),
+                        ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.3),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Log in to continue studying',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ).animate(delay: 200.ms).fadeIn(),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -217,8 +220,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Center(
                             child: TextButton(
                               onPressed: () => context.go('/register'),
-                              child: RichText(
-                                text: TextSpan(
+                              child: Text.rich(
+                                TextSpan(
                                   style: theme.textTheme.bodyMedium,
                                   children: [
                                     const TextSpan(
