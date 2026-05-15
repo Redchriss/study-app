@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
@@ -95,10 +94,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             fontWeight: FontWeight.w900,
                             letterSpacing: -1,
                           ),
-                        ).animate().fadeIn().slideX(begin: -0.2),
+                        ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Welcome\nback',
+                          'Welcome back',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 42,
@@ -106,7 +105,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             height: 1.05,
                             letterSpacing: -1.5,
                           ),
-                        ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.3),
+                        ),
                         const SizedBox(height: 10),
                         Text(
                           'Log in to continue studying',
@@ -115,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
-                        ).animate(delay: 200.ms).fadeIn(),
+                        ),
                       ],
                     ),
                   ),
@@ -154,18 +153,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             style: theme.textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
-                          ).animate(delay: 200.ms).fadeIn().slideY(begin: 0.2),
+                          ),
                           const SizedBox(height: 24),
                           TextFormField(
                             controller: _usernameCtrl,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               labelText: 'Username or Email',
-                              prefixIcon: const Icon(Icons.person_outline_rounded),
+                              prefixIcon: Icon(Icons.person_outline_rounded),
                               hintText: 'Enter your username...',
                             ),
                             textInputAction: TextInputAction.next,
                             validator: (v) => v!.isEmpty ? 'Required' : null,
-                          ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.2),
+                          ),
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _passwordCtrl,
@@ -186,7 +185,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             textInputAction: TextInputAction.done,
                             onFieldSubmitted: (_) => _submit(),
                             validator: (v) => v!.isEmpty ? 'Required' : null,
-                          ).animate(delay: 350.ms).fadeIn().slideY(begin: 0.2),
+                          ),
                           const SizedBox(height: 28),
                           SizedBox(
                             width: double.infinity,
@@ -215,7 +214,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       ),
                                     ),
                             ),
-                          ).animate(delay: 400.ms).fadeIn().slideY(begin: 0.2),
+                          ),
                           const SizedBox(height: 20),
                           Center(
                             child: TextButton(
@@ -241,11 +240,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                             ),
-                          ).animate(delay: 450.ms).fadeIn(),
+                          ),
                         ],
                       ),
                     ),
-                  ).animate(delay: 150.ms).fadeIn().slideY(begin: 0.15),
+                  ),
                 ],
               ),
             ),
