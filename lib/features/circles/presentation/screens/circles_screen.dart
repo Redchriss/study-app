@@ -19,10 +19,8 @@ class CirclesScreen extends StatelessWidget {
       body: Query(
         options: QueryOptions(document: gql(kMyCircles)),
         builder: (result, {fetchMore, refetch}) {
-          if (result.hasException) {
-          return ErrorState(message: 'Could not load. Check your connection.', onRetry: () => refetch?.call());
-          }
-          if (result.isLoading) {
+          final circles = (result.data?['myCircles'] as List?) ?? [];
+          if (result.isLoading && circles.isEmpty) {
             return ListView.builder(
               padding: const EdgeInsets.all(DesignTokens.spMd),
               itemCount: 6, itemBuilder: (_, __) => const Padding(
@@ -31,7 +29,9 @@ class CirclesScreen extends StatelessWidget {
               ),
             );
           }
-          final circles = (result.data?['myCircles'] as List?) ?? [];
+          if (result.hasException && circles.isEmpty) {
+            return ErrorState(message: 'Could not load. Check your connection.', onRetry: () => refetch?.call());
+          }
           if (circles.isEmpty) {
             return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(Icons.groups_outlined, size: 80, color: DesignTokens.textTertiary.withValues(alpha: 0.5)),

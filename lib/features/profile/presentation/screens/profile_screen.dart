@@ -21,13 +21,14 @@ class ProfileScreen extends ConsumerWidget {
     return Query(
       options: QueryOptions(document: gql(kMe)),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) {
+        final me = result.data?['me'];
+        if (result.isLoading && me == null) {
           return Scaffold(
             appBar: AppBar(title: Text('Profile', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)), centerTitle: true),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
-        if (result.hasException) {
+        if (result.hasException && me == null) {
           return Scaffold(
             appBar: AppBar(title: Text('Profile', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)), centerTitle: true),
             body: ErrorState(
@@ -36,7 +37,6 @@ class ProfileScreen extends ConsumerWidget {
             ),
           );
         }
-        final me = result.data?['me'];
         final profile = me?['profile'] as Map<String, dynamic>?;
         return Scaffold(
           appBar: AppBar(

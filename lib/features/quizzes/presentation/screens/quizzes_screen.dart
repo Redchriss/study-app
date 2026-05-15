@@ -19,10 +19,8 @@ class QuizzesScreen extends StatelessWidget {
       body: Query(
         options: QueryOptions(document: gql(kQuizzes), variables: const {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
-          if (result.hasException) {
-          return ErrorState(message: 'Could not load. Check your connection.', onRetry: () => refetch?.call());
-          }
-          if (result.isLoading) {
+          final quizzes = (result.data?['quizzes'] as List?) ?? [];
+          if (result.isLoading && quizzes.isEmpty) {
             return ListView.builder(
               padding: const EdgeInsets.all(DesignTokens.spMd),
               itemCount: 8, itemBuilder: (_, __) => const Padding(
@@ -31,7 +29,9 @@ class QuizzesScreen extends StatelessWidget {
               ),
             );
           }
-          final quizzes = (result.data?['quizzes'] as List?) ?? [];
+          if (result.hasException && quizzes.isEmpty) {
+            return ErrorState(message: 'Could not load. Check your connection.', onRetry: () => refetch?.call());
+          }
           if (quizzes.isEmpty) {
             return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Icon(Icons.quiz_outlined, size: 80, color: DesignTokens.textTertiary.withValues(alpha: 0.5)),
