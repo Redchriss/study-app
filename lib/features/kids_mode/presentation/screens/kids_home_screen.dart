@@ -53,6 +53,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
   List<Map<String, dynamic>> _reviewQueue = [];
   String? _quizReviewHint;
   int _selectedStoryChunk = 0;
+  bool _subjectFetchStarted = false;
+  bool _redirectScheduled = false;
   late final AnimationController _burstCtrl;
 
   @override
@@ -109,6 +111,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
   }
 
   Future<void> _fetchSubjects() async {
+    _subjectFetchStarted = true;
     final auth = ref.read(kidAuthStateProvider);
     final c = _buildKidClient();
     final result = await c.query(QueryOptions(
@@ -122,11 +125,15 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
             .map((s) => Map<String, dynamic>.from(s as Map))
             .toList();
         _fetchedSubjects = true;
+        _subjectFetchStarted = false;
       });
       await _fetchDailySummary();
       await _fetchRewardProfile();
     } else {
-      setState(() => _fetchedSubjects = true);
+      setState(() {
+        _fetchedSubjects = true;
+        _subjectFetchStarted = false;
+      });
     }
   }
 
@@ -399,11 +406,25 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
     final auth = ref.watch(kidAuthStateProvider);
     final theme = Theme.of(context);
     if (!auth.isAuthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/kids'));
+      if (!_redirectScheduled) {
+        _redirectScheduled = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            context.go('/kids');
+          }
+        });
+      }
       return const Scaffold(body: Center(child: Text('Redirecting...')));
     }
+    _redirectScheduled = false;
     if (!_fetchedSubjects) {
-      _fetchSubjects();
+      if (!_subjectFetchStarted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_fetchedSubjects && !_subjectFetchStarted) {
+            _fetchSubjects();
+          }
+        });
+      }
       return Theme(
         data: KidsVisualTheme.overlayOn(theme),
         child: Container(

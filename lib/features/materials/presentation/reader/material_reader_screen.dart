@@ -228,7 +228,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             child: Center(child: CircularProgressIndicator()),
           );
         }
-        if (result.hasException) {
+        final rawMaterial = result.data?['material'];
+        if (result.hasException && rawMaterial is! Map) {
           return FutureBuilder<Map<String, dynamic>?>(
             future: _cache.loadMaterial(widget.slug),
             builder: (context, snapshot) {
@@ -288,8 +289,6 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             },
           );
         }
-
-        final rawMaterial = result.data?['material'];
         if (rawMaterial is! Map) {
           return const ReaderScaffold(
             title: 'Study mode',

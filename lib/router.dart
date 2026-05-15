@@ -75,6 +75,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       final profileComplete = auth.user?['profile']?['onboardingComplete'] == true;
+      if (location == '/splash') {
+        return profileComplete ? '/home' : '/setup';
+      }
       if (!profileComplete && location != '/setup') return '/setup';
 
       if (profileComplete && ['/login', '/register', '/onboarding'].contains(location)) {
