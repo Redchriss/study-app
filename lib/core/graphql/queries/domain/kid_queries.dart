@@ -56,7 +56,6 @@ mutation FetchKidLesson($subjectId: ID!, $standard: Int!, $topicId: ID) {
   fetchKidLesson(subjectId: $subjectId, standard: $standard, topicId: $topicId) {
     success errors
     lesson { id title bodyText quiz }
-    progress { lessonsCompleted quizzesTaken starsEarned }
   }
 }
 ''';

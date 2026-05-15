@@ -6,6 +6,7 @@ import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../widgets/ai_tutor_mode_bar.dart';
 
 class AiTutorScreen extends ConsumerStatefulWidget {
   const AiTutorScreen({super.key});
@@ -22,6 +23,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   bool _sending = false;
   bool _streaming = false;
   String _streamingText = '';
+  String _studyMode = 'coach';
   late final http.Client _httpClient;
   late final AnimationController _cursorCtrl;
   late final Animation<double> _cursorAnim;
@@ -54,9 +56,10 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     final text = _msgCtrl.text.trim();
     if (text.isEmpty) return;
     _msgCtrl.clear();
+    final preparedText = _applyStudyMode(text);
 
     setState(() {
-      _messages.add({'messageText': text, 'isUser': true, 'timestamp': DateTime.now().toIso8601String()});
+      _messages.add({'messageText': text, 'displayText': text, 'isUser': true, 'timestamp': DateTime.now().toIso8601String()});
       _sending = true;
       _streaming = true;
       _streamingText = '';
@@ -72,7 +75,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       request.headers['Content-Type'] = 'application/json';
       request.headers['Accept'] = 'text/event-stream';
       request.sink.add(utf8.encode(jsonEncode({
-        'message': text,
+        'message': preparedText,
         'session_id': _sessionId,
       })));
       request.sink.close();
@@ -104,6 +107,67 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         );
       }
     }
+  }
+
+  String _applyStudyMode(String text) {
+    final clean = text.trim();
+    switch (_studyMode) {
+      case 'quiz':
+        return 'Act as a quiz coach. Ask one question at a time based on this request, wait for my answer, then explain the answer simply.\n\nStudent request: $clean';
+      case 'plan':
+        return 'Act as a study planner. Turn this into a practical study plan with time blocks, order of work, and what to revise first.\n\nStudent request: $clean';
+      case 'revise':
+        return 'Act as a revision coach. Give concise memory hooks, key points, and a fast recap.\n\nStudent request: $clean';
+      default:
+        return 'Act as a patient tutor. Explain clearly, then check understanding with one short follow-up question.\n\nStudent request: $clean';
+    }
+  }
+
+  List<String> _suggestionsForMode() {
+    switch (_studyMode) {
+      case 'quiz':
+        return const [
+          'Quiz me on photosynthesis',
+          'Ask me 5 biology revision questions',
+          'Test me on algebra step by step',
+        ];
+      case 'plan':
+        return const [
+          'Make me a 30-minute revision plan',
+          'Plan my study for tomorrow',
+          'What should I study first for exams?',
+        ];
+      case 'revise':
+        return const [
+          'Give me a quick summary of respiration',
+          'Create memory hooks for acids and bases',
+          'Revise this topic fast',
+        ];
+      default:
+        return const [
+          'Explain fractions simply',
+          'Help me understand osmosis',
+          'Teach me this topic like a beginner',
+        ];
+    }
+  }
+
+  String _modeHint() {
+    switch (_studyMode) {
+      case 'quiz':
+        return 'The tutor will test you one question at a time.';
+      case 'plan':
+        return 'The tutor will organize what to study and in what order.';
+      case 'revise':
+        return 'The tutor will compress the topic into fast revision help.';
+      default:
+        return 'The tutor will explain first, then check understanding.';
+    }
+  }
+
+  Future<void> _sendSuggestion(String suggestion) async {
+    _msgCtrl.text = suggestion;
+    await _send();
   }
 
   void _handleEvent(String type, String data) {
@@ -174,12 +238,62 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
               Text('Powered by Gemini', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
             ]),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AiTutorModeBar(
+                  selectedMode: _studyMode,
+                  modes: const [
+                    ('coach', 'Coach', Icons.school_outlined),
+                    ('quiz', 'Quiz Me', Icons.quiz_outlined),
+                    ('revise', 'Revise', Icons.bolt_outlined),
+                    ('plan', 'Plan', Icons.event_note_outlined),
+                  ],
+                  onSelect: (mode) => setState(() => _studyMode = mode),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.brightness == Brightness.dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    _modeHint(),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: DesignTokens.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: _messages.isEmpty && !_streaming
               ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.smart_toy_outlined, size: 80, color: DesignTokens.primary.withValues(alpha: 0.3)),
                   const SizedBox(height: DesignTokens.spMd),
-                  const Text('Ask me anything about your subjects', style: TextStyle(color: DesignTokens.textSecondary)),
+                  const Text('Use a study mode, then start with one focused prompt', style: TextStyle(color: DesignTokens.textSecondary)),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: _suggestionsForMode().map((item) {
+                        return ActionChip(
+                          label: Text(item),
+                          onPressed: () => _sendSuggestion(item),
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ]))
               : ListView.builder(
                   controller: _scrollCtrl,
@@ -204,7 +318,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
                             bottomLeft: !isUser ? const Radius.circular(4) : null,
                           ),
                         ),
-                        child: Text(msg['messageText'] ?? '', style: TextStyle(color: isUser ? Colors.white : null, fontSize: 14)),
+                        child: Text((msg['displayText'] ?? msg['messageText'] ?? '').toString(), style: TextStyle(color: isUser ? Colors.white : null, fontSize: 14)),
                       ),
                     );
                   },
@@ -215,33 +329,53 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
           SafeArea(
             child: Container(
               padding: const EdgeInsets.all(DesignTokens.spSm),
-              child: Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _msgCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Type your question...',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusXl)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spSm - 2),
-                      isDense: true,
-                    ),
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sending ? null : _send(),
-                  ),
-                ),
-                const SizedBox(width: DesignTokens.spXs),
-                AnimatedPress(
-                  onTap: _sending ? null : _send,
-                  child: const SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
-                      child: Icon(Icons.send, color: Colors.white, size: 20),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 34,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _suggestionsForMode().length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (_, i) {
+                        final item = _suggestionsForMode()[i];
+                        return ActionChip(
+                          label: Text(item, style: const TextStyle(fontSize: 12)),
+                          onPressed: _sending ? null : () => _sendSuggestion(item),
+                        );
+                      },
                     ),
                   ),
-                ),
-              ]),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _msgCtrl,
+                        decoration: InputDecoration(
+                          hintText: 'Type your study request...',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusXl)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spSm - 2),
+                          isDense: true,
+                        ),
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _sending ? null : _send(),
+                      ),
+                    ),
+                    const SizedBox(width: DesignTokens.spXs),
+                    AnimatedPress(
+                      onTap: _sending ? null : _send,
+                      child: const SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
+                          child: Icon(Icons.send, color: Colors.white, size: 20),
+                        ),
+                      ),
+                    ),
+                  ]),
+                ],
+              ),
             ),
           ),
         ],

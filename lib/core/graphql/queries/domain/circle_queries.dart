@@ -18,7 +18,7 @@ query MyCircles {
 const String kCirclePosts = r'''
 query CirclePosts($slug: String!, $sort: String, $offset: Int) {
   circlePosts(circleSlug: $slug, sort: $sort, offset: $offset) {
-    id title slug body upvoteCount downvoteCount commentCount postType isSolved score
+    id title slug body upvoteCount downvoteCount commentCount postType isSolved isPinned score imageUrl
     author { username }
     createdAt
   }

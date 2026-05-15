@@ -9,6 +9,7 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../widgets/circle_post_card.dart';
 
 class CircleDetailScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -19,6 +20,8 @@ class CircleDetailScreen extends ConsumerStatefulWidget {
 
 class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
   String _sort = 'hot';
+  String _typeFilter = 'all';
+  bool _solvedOnly = false;
   final _titleCtrl = TextEditingController();
   final _bodyCtrl = TextEditingController();
   bool _showNewPost = false;
@@ -33,6 +36,22 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
 
   @override
   void dispose() { _titleCtrl.dispose(); _bodyCtrl.dispose(); super.dispose(); }
+
+  List<Map<String, dynamic>> _filterPosts(List rawPosts) {
+    return rawPosts
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .where((post) {
+          if (_typeFilter != 'all' && post['postType']?.toString() != _typeFilter) {
+            return false;
+          }
+          if (_solvedOnly && post['isSolved'] != true) {
+            return false;
+          }
+          return true;
+        })
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +89,60 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                 color: DesignTokens.primary.withValues(alpha: 0.04),
                 child: Text(circle['description'], style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
               ),
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFE9F4FF), Color(0xFFF7F1DE)],
+                ),
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          circle['isMember'] == true ? 'Study together' : 'Join this study circle',
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          circle['isMember'] == true
+                              ? 'Ask questions, share resources, and work through stuck points with your level.'
+                              : 'Become a member to ask questions and share revision resources.',
+                          style: const TextStyle(color: DesignTokens.textSecondary, height: 1.45),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.88),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '${circle['memberCount'] ?? 0}',
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                        ),
+                        const Text(
+                          'members',
+                          style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spXs),
               child: Row(children: [
@@ -92,6 +165,29 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                 ),
               ]),
             ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd),
+              child: Row(
+                children: [
+                  for (final filter in const [('all', 'All'), ('question', 'Questions'), ('resource', 'Resources'), ('discussion', 'Discussion')])
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(filter.$2),
+                        selected: _typeFilter == filter.$1,
+                        onSelected: (_) => setState(() => _typeFilter = filter.$1),
+                      ),
+                    ),
+                  FilterChip(
+                    label: const Text('Solved only'),
+                    selected: _solvedOnly,
+                    onSelected: (value) => setState(() => _solvedOnly = value),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
             if (_showNewPost)
               Container(
                 padding: const EdgeInsets.all(DesignTokens.spMd),
@@ -216,7 +312,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
       ),
       builder: (postResult, {fetchMore, refetch}) {
         if (postResult.isLoading) return const Center(child: CircularProgressIndicator());
-        final posts = (postResult.data?['circlePosts'] as List?) ?? [];
+        final posts = _filterPosts((postResult.data?['circlePosts'] as List?) ?? const []);
         if (posts.isEmpty) return const Center(child: Text('No posts yet', style: TextStyle(color: DesignTokens.textSecondary)));
         return RefreshIndicator(
           onRefresh: () async => refetch?.call(),
@@ -227,45 +323,9 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
               final p = posts[i];
               return Padding(
                 padding: const EdgeInsets.only(bottom: DesignTokens.spXs),
-                child: AnimatedPress(
+                child: CirclePostCard(
+                  post: p,
                   onTap: () => context.go('/circles/${widget.slug}/post/${p['slug']}'),
-                  child: Container(
-                    padding: const EdgeInsets.all(DesignTokens.spMd),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardTheme.color,
-                      borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-                      border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? DesignTokens.darkBorder : DesignTokens.border).withValues(alpha: 0.5)),
-                      boxShadow: DesignTokens.shadowSm(Theme.of(context).brightness == Brightness.dark),
-                    ),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Row(children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)),
-                          child: Text(p['postType'] ?? '', style: const TextStyle(fontSize: 10, color: DesignTokens.primary, fontWeight: FontWeight.w600)),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(p['author']?['username'] ?? '', style: const TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
-                      ]),
-                      const SizedBox(height: 6),
-                      Text(p['title'] ?? '', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                      if (p['imageUrl'] != null) ...[
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                          child: Image.network(p['imageUrl'], height: 160, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox()),
-                        ),
-                      ],
-                      const SizedBox(height: 8),
-                      Row(children: [
-                        const Icon(Icons.arrow_upward, size: 14, color: DesignTokens.textTertiary),
-                        Text('${p['score'] ?? 0}', style: const TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
-                        const SizedBox(width: 12),
-                        const Icon(Icons.chat_bubble_outline, size: 14, color: DesignTokens.textTertiary),
-                        Text('${p['commentCount'] ?? 0}', style: const TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
-                      ]),
-                    ]),
-                  ),
                 ),
               );
             },

@@ -11,7 +11,10 @@ import '../../kids_visual_theme.dart';
 import '../widgets/kids_daily_goal_ring.dart';
 import '../widgets/kids_lesson_step_bar.dart';
 import '../widgets/kids_playful_button.dart';
+import '../widgets/kids_progress_snapshot_card.dart';
+import '../widgets/kids_story_chunk_card.dart';
 import '../widgets/kids_subject_card.dart';
+import '../widgets/kids_topic_chip.dart';
 import 'kid_login_screen.dart';
 
 class KidsHomeScreen extends ConsumerStatefulWidget {
@@ -23,8 +26,10 @@ class KidsHomeScreen extends ConsumerStatefulWidget {
 class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTickerProviderStateMixin {
   final _tts = FlutterTts();
   Map<String, dynamic>? _selectedSubject;
+  Map<String, dynamic>? _selectedTopic;
   Map<String, dynamic>? _currentLesson;
   List<Map<String, dynamic>> _subjects = [];
+  List<Map<String, dynamic>> _topics = [];
   List<dynamic> _quiz = [];
   bool _inQuiz = false;
   int? _quizSelected;
@@ -37,6 +42,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
   bool _fetchedSubjects = false;
   bool _showCorrectBurst = false;
   Map<String, dynamic>? _dailySummary;
+  Map<String, dynamic>? _subjectProgress;
+  int _selectedStoryChunk = 0;
   late final AnimationController _burstCtrl;
 
   @override
@@ -107,6 +114,41 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
     }
   }
 
+  Future<void> _fetchTopics(String subjectId, int standard) async {
+    final c = _buildKidClient();
+    final result = await c.query(QueryOptions(
+      document: gql(kPrimaryTopics),
+      variables: {'subjectId': subjectId, 'standard': standard},
+      fetchPolicy: FetchPolicy.networkOnly,
+    ));
+    if (!mounted) return;
+    setState(() {
+      _topics = ((result.data?['primaryTopics'] as List?) ?? const [])
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+      if (_topics.isEmpty) {
+        _selectedTopic = null;
+      } else if (_selectedTopic == null || !_topics.any((topic) => topic['id'] == _selectedTopic?['id'])) {
+        _selectedTopic = _topics.first;
+      }
+    });
+  }
+
+  Future<void> _fetchSubjectProgress(String subjectId, int standard) async {
+    final c = _buildKidClient();
+    final result = await c.query(QueryOptions(
+      document: gql(kKidProgress),
+      variables: {'subjectId': subjectId, 'standard': standard},
+      fetchPolicy: FetchPolicy.networkOnly,
+    ));
+    if (!mounted) return;
+    final progress = result.data?['kidProgress'];
+    setState(() {
+      _subjectProgress = progress is Map ? Map<String, dynamic>.from(progress) : null;
+    });
+  }
+
   Future<void> _claimDailyChest() async {
     final c = _buildKidClient();
     final result = await c.mutate(MutationOptions(document: gql(kClaimKidDailyChest)));
@@ -166,6 +208,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
           _inQuiz = false;
           _quizAnswered = false;
           _quizSelected = null;
+          _selectedStoryChunk = 0;
           _loading = false;
         });
       } else {
@@ -173,8 +216,17 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errs.join(', '))));
       }
       await _fetchDailySummary();
+      await _fetchSubjectProgress(subjectId, standard);
     }
     setState(() => _loading = false);
+  }
+
+  List<String> _lessonChunks(String text) {
+    return text
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
   }
 
   void _startQuiz() {
@@ -382,8 +434,19 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                   accent: c,
                   icon: icon,
                   onTap: () {
-                    setState(() => _selectedSubject = Map<String, dynamic>.from(s));
-                    _fetchLesson(s['id'], auth.standard);
+                    final nextSubject = Map<String, dynamic>.from(s);
+                    setState(() {
+                      _selectedSubject = nextSubject;
+                      _selectedTopic = null;
+                      _topics = [];
+                      _subjectProgress = null;
+                    });
+                    final subjectId = nextSubject['id']?.toString();
+                    if (subjectId != null && subjectId.isNotEmpty) {
+                      _fetchTopics(subjectId, auth.standard);
+                      _fetchSubjectProgress(subjectId, auth.standard);
+                      _fetchLesson(subjectId, auth.standard);
+                    }
                   },
                 ),
               );
@@ -410,6 +473,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
       );
     }
     final text = _currentLesson!['bodyText'] as String? ?? '';
+    final chunks = _lessonChunks(text);
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -428,7 +492,13 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                         borderRadius: BorderRadius.circular(16),
                         onTap: () {
                           HapticFeedback.lightImpact();
-                          setState(() => _selectedSubject = null);
+                          setState(() {
+                            _selectedSubject = null;
+                            _selectedTopic = null;
+                            _currentLesson = null;
+                            _subjectProgress = null;
+                            _topics = [];
+                          });
                         },
                         child: const Padding(
                           padding: EdgeInsets.all(10),
@@ -448,27 +518,81 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                   ],
                 ),
                 const SizedBox(height: 14),
+                if (_topics.isNotEmpty) ...[
+                  SizedBox(
+                    height: 46,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _topics.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final topic = _topics[index];
+                        final selected = topic['id'] == _selectedTopic?['id'];
+                        return KidsTopicChip(
+                          label: topic['name']?.toString() ?? 'Topic',
+                          selected: selected,
+                          onTap: () {
+                            final subjectId = _selectedSubject?['id']?.toString();
+                            final topicId = topic['id']?.toString();
+                            if (subjectId == null || topicId == null) return;
+                            setState(() => _selectedTopic = topic);
+                            _fetchLesson(subjectId, auth.standard, topicId: topicId);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+                if (_subjectProgress != null) ...[
+                  KidsProgressSnapshotCard(
+                    lessonsCompleted: (_subjectProgress?['lessonsCompleted'] as num?)?.toInt() ?? 0,
+                    quizzesTaken: (_subjectProgress?['quizzesTaken'] as num?)?.toInt() ?? 0,
+                    quizzesCorrect: (_subjectProgress?['quizzesCorrect'] as num?)?.toInt() ?? 0,
+                    starsEarned: (_subjectProgress?['starsEarned'] as num?)?.toInt() ?? 0,
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 KidsLessonStepBar(inQuiz: _inQuiz),
                 const SizedBox(height: 18),
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
                     _KidsFloatingPanel(
-                      child: _inQuiz ? _buildQuizContent(Theme.of(context)) : _buildStoryPanel(text),
+                      child: _inQuiz ? _buildQuizContent(Theme.of(context)) : _buildStoryPanel(text, chunks),
                     ),
                     if (_showCorrectBurst) _CorrectBurstOverlay(controller: _burstCtrl),
                   ],
                 ),
                 const SizedBox(height: 16),
-                KidsPlayfulPrimaryButton(
-                  label: 'Next lesson',
-                  icon: Icons.auto_awesome,
-                  onTap: () {
-                    final subjectId = _selectedSubject?['id']?.toString();
-                    if (subjectId != null && subjectId.isNotEmpty) {
-                      _fetchLesson(subjectId, auth.standard);
-                    }
-                  },
+                Row(
+                  children: [
+                    Expanded(
+                      child: KidsPlayfulPrimaryButton(
+                        label: 'Next lesson',
+                        icon: Icons.auto_awesome,
+                        onTap: () {
+                          final subjectId = _selectedSubject?['id']?.toString();
+                          if (subjectId != null && subjectId.isNotEmpty) {
+                            _fetchLesson(
+                              subjectId,
+                              auth.standard,
+                              topicId: _selectedTopic?['id']?.toString(),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: KidsPlayfulSecondaryButton(
+                        icon: Icons.replay_rounded,
+                        label: 'Try quiz again',
+                        color: const Color(0xFF9B59B6),
+                        onTap: _quiz.isNotEmpty ? _startQuiz : null,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -478,7 +602,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
     );
   }
 
-  Widget _buildStoryPanel(String text) {
+  Widget _buildStoryPanel(String text, List<String> chunks) {
     return Column(
       children: [
         Container(
@@ -493,15 +617,39 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
         ),
         const SizedBox(height: 16),
         Text(
-          text,
+          _currentLesson?['title']?.toString() ?? 'Lesson',
           style: const TextStyle(
             fontSize: 20,
-            height: 1.55,
             fontWeight: FontWeight.w700,
             color: KidsVisualTheme.ink,
           ),
           textAlign: TextAlign.center,
         ),
+        if (_selectedTopic?['name'] != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            _selectedTopic!['name'].toString(),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: KidsVisualTheme.inkMuted,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+        const SizedBox(height: 16),
+        ...chunks.asMap().entries.map((entry) {
+          final index = entry.key;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: KidsStoryChunkCard(
+              index: index,
+              text: entry.value,
+              selected: _selectedStoryChunk == index,
+              onTap: () => setState(() => _selectedStoryChunk = index),
+            ),
+          );
+        }),
         const SizedBox(height: 20),
         Wrap(
           alignment: WrapAlignment.center,
@@ -517,7 +665,10 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                   _tts.stop();
                   setState(() => _isSpeaking = false);
                 } else {
-                  _speak(text);
+                  final playableText = chunks.isEmpty
+                      ? text
+                      : chunks[_selectedStoryChunk.clamp(0, chunks.length - 1)];
+                  _speak(playableText);
                 }
               },
             ),
