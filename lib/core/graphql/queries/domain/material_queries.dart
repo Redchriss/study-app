@@ -2,6 +2,7 @@ const String kMaterials = r'''
 query Materials($subjectId: ID, $search: String, $contentType: String, $limit: Int, $offset: Int) {
   materials(subjectId: $subjectId, search: $search, contentType: $contentType, limit: $limit, offset: $offset) {
     id title slug contentType description
+    educationLevel viewsCount isPremium isBookmarked aiSummary
     subject { id name }
     createdAt
   }

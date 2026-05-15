@@ -17,6 +17,7 @@ class UploadSuccessSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final canPreview = (result.slug ?? '').isNotEmpty;
     final isApproved = result.isApproved == true;
+    final dark = Theme.of(context).brightness == Brightness.dark;
 
     return SafeArea(
       child: Padding(
@@ -29,10 +30,12 @@ class UploadSuccessSheet extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFFF3E1A8), Color(0xFFCDEBE2)],
+                  colors: dark
+                      ? [DesignTokens.darkSurface, DesignTokens.darkSurfaceVariant]
+                      : const [Color(0xFFF3E1A8), Color(0xFFCDEBE2)],
                 ),
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -76,9 +79,9 @@ class UploadSuccessSheet extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8F7F1),
+                color: dark ? DesignTokens.darkSurfaceVariant : const Color(0xFFF8F7F1),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: DesignTokens.border),
+                border: Border.all(color: dark ? DesignTokens.darkBorder : DesignTokens.border),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

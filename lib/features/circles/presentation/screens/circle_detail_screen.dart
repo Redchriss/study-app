@@ -93,10 +93,12 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
               margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFFE9F4FF), Color(0xFFF7F1DE)],
+                  colors: dark
+                      ? [DesignTokens.darkSurface, DesignTokens.darkSurfaceVariant]
+                      : const [Color(0xFFE9F4FF), Color(0xFFF7F1DE)],
                 ),
                 borderRadius: BorderRadius.circular(22),
               ),

@@ -215,13 +215,16 @@ class _UploadsSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF5E8BF), Color(0xFFE0F0EB)],
+          colors: dark
+              ? [DesignTokens.darkSurface, DesignTokens.darkSurfaceVariant]
+              : const [Color(0xFFF5E8BF), Color(0xFFE0F0EB)],
         ),
         borderRadius: BorderRadius.circular(24),
       ),

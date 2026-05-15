@@ -64,7 +64,8 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
               (m['subject']?['name'] ?? '')
                   .toString()
                   .toLowerCase()
-                  .contains(q))
+                  .contains(q) ||
+              (m['description'] ?? '').toString().toLowerCase().contains(q))
           .toList();
     }
     return result;
@@ -128,7 +129,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         ),
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading && result.data == null) {
-            return _buildShimmer();
+            return _buildShimmer(dark);
           }
 
           final rawMaterials = (result.data?['materials'] as List?) ?? [];
@@ -167,7 +168,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
           }
 
           if (rawMaterials.isEmpty) {
-            return _buildEmptyState(context);
+            return _buildEmptyState(context, dark);
           }
 
           final materials = rawMaterials
@@ -190,32 +191,66 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, bool dark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 90,
-            height: 90,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
               color: DesignTokens.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.menu_book_outlined,
-                size: 44, color: DesignTokens.primary),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  top: 18,
+                  left: 18,
+                  child: Container(
+                    width: 28,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: DesignTokens.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 18,
+                  right: 18,
+                  child: Container(
+                    width: 28,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: DesignTokens.accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const Icon(Icons.menu_book_rounded,
+                    size: 40, color: DesignTokens.primary),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'No materials yet',
-            style:
-                TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: dark ? DesignTokens.darkTextPrimary : DesignTokens.textPrimary,
+            ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Be the first to upload study materials\nfor your classmates.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: DesignTokens.textSecondary),
+            style: TextStyle(
+              color: dark ? DesignTokens.darkTextSecondary : DesignTokens.textSecondary,
+            ),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
@@ -255,6 +290,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
               color: DesignTokens.warning,
               icon: Icons.offline_bolt_outlined,
               text: 'Showing cached materials while offline.',
+              dark: dark,
             ),
           ),
         if (_lowDataMode)
@@ -263,6 +299,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
               color: DesignTokens.info,
               icon: Icons.data_saver_on_outlined,
               text: 'Low-data mode on. Previews are lighter.',
+              dark: dark,
             ),
           ),
 
@@ -285,21 +322,32 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
           ),
         ),
 
-        // Results count
-        if (_searchQuery.isNotEmpty || _selectedType != 'all')
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: Text(
-                '${filtered.length} result${filtered.length == 1 ? '' : 's'}',
-                style: theme.textTheme.labelMedium
-                    ?.copyWith(color: DesignTokens.textSecondary),
-              ),
+        // Section header
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    (_searchQuery.isNotEmpty || _selectedType != 'all')
+                        ? '${filtered.length} result${filtered.length == 1 ? '' : 's'}'
+                        : '${materials.length} material${materials.length == 1 ? '' : 's'}',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: dark
+                          ? DesignTokens.darkTextSecondary
+                          : DesignTokens.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+        ),
 
         // Materials list
-        if (filtered.isEmpty && (_searchQuery.isNotEmpty || _selectedType != 'all'))
+        if (filtered.isEmpty &&
+            (_searchQuery.isNotEmpty || _selectedType != 'all'))
           SliverFillRemaining(
             child: Center(
               child: Column(
@@ -307,11 +355,19 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
                 children: [
                   Icon(Icons.search_off_rounded,
                       size: 64,
-                      color: DesignTokens.textTertiary.withValues(alpha: 0.5)),
+                      color: (dark
+                              ? DesignTokens.darkTextTertiary
+                              : DesignTokens.textTertiary)
+                          .withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
-                  const Text('No materials match your filter.',
-                      style:
-                          TextStyle(color: DesignTokens.textSecondary)),
+                  Text(
+                    'No materials match your filter.',
+                    style: TextStyle(
+                      color: dark
+                          ? DesignTokens.darkTextSecondary
+                          : DesignTokens.textSecondary,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => setState(() {
@@ -347,13 +403,13 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
     );
   }
 
-  Widget _buildShimmer() {
+  Widget _buildShimmer(bool dark) {
     return ListView.builder(
       padding: const EdgeInsets.all(DesignTokens.spMd),
       itemCount: 8,
-      itemBuilder: (_, __) => const Padding(
-        padding: EdgeInsets.only(bottom: DesignTokens.spSm),
-        child: ShimmerBox(height: 80, radius: DesignTokens.radiusLg),
+      itemBuilder: (_, __) => Padding(
+        padding: const EdgeInsets.only(bottom: DesignTokens.spSm),
+        child: ShimmerBox(height: 108, radius: DesignTokens.radiusLg),
       ),
     );
   }
@@ -376,10 +432,10 @@ class _TypeFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 48,
+      height: 52,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         itemCount: _types.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
@@ -409,10 +465,8 @@ class _ContinueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Padding(
-      padding:
-          const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
       child: AnimatedPress(
         onTap: onTap,
         child: Container(
@@ -471,12 +525,40 @@ class _ContinueCard extends StatelessWidget {
                       progress.subjectName.isEmpty
                           ? progress.progressLabel
                           : '${progress.subjectName} · ${progress.progressLabel}',
-                      style: const TextStyle(
-                          color: Colors.white60, fontSize: 11),
+                      style:
+                          const TextStyle(color: Colors.white60, fontSize: 11),
                     ),
                   ],
                 ),
               ),
+              // Progress arc
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress.completionRatio,
+                      strokeWidth: 3,
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                    Center(
+                      child: Text(
+                        '${(progress.completionRatio * 100).round()}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
               const Icon(Icons.arrow_forward_ios_rounded,
                   color: Colors.white60, size: 14),
             ],
@@ -502,108 +584,294 @@ class _MaterialCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = _subjectColor(material['subject']?['name'] ?? '');
+    final subjectName = (material['subject']?['name'] ?? '') as String;
     final type = (material['contentType'] ?? '').toString();
+    final typeColor = _typeColor(type);
+    final accentColor = _subjectColor(subjectName);
+    final description = (material['description'] ?? '').toString().trim();
+    final aiSummary = (material['aiSummary'] ?? '').toString().trim();
+    final snippet = description.isNotEmpty ? description : aiSummary;
+    final views = (material['viewsCount'] ?? 0) as int;
+    final isPremium = material['isPremium'] == true;
+    final isBookmarked = material['isBookmarked'] == true;
+    final level = _levelLabel((material['educationLevel'] ?? '').toString());
+
+    final surfaceColor = dark ? DesignTokens.darkSurface : DesignTokens.surface;
+    final borderColor = dark ? DesignTokens.darkBorder : DesignTokens.border;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: AnimatedPress(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: theme.cardTheme.color,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: (dark ? DesignTokens.darkBorder : DesignTokens.border)
-                  .withValues(alpha: 0.5),
-            ),
+            color: surfaceColor,
+            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+            border: Border.all(color: borderColor.withValues(alpha: 0.5)),
             boxShadow: DesignTokens.shadowSm(dark),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  _typeIcon(type),
-                  color: color,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      material['title'] ?? '',
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Left accent bar
+                  Container(
+                    width: 4,
+                    decoration: BoxDecoration(
+                      color: accentColor,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(DesignTokens.radiusLg),
+                        bottomLeft: Radius.circular(DesignTokens.radiusLg),
+                      ),
                     ),
-                    const SizedBox(height: 3),
-                    Row(
+                  ),
+
+                  // Icon column
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 14, 0, 14),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Text(
-                          material['subject']?['name'] ?? '',
-                          style: theme.textTheme.labelSmall
-                              ?.copyWith(color: DesignTokens.textTertiary),
-                        ),
-                        if (material['educationLevel'] != null) ...[
-                          const Text(' · ',
-                              style: TextStyle(
-                                  color: DesignTokens.textTertiary,
-                                  fontSize: 11)),
-                          Text(
-                            _levelLabel(
-                                material['educationLevel'].toString()),
-                            style: theme.textTheme.labelSmall
-                                ?.copyWith(color: DesignTokens.textTertiary),
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: typeColor.withValues(alpha: 0.1),
+                            borderRadius:
+                                BorderRadius.circular(DesignTokens.radiusMd),
                           ),
-                        ],
+                          child: Icon(
+                            _typeIcon(type),
+                            color: typeColor,
+                            size: 22,
+                          ),
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  type.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: color,
                   ),
-                ),
+
+                  const SizedBox(width: 12),
+
+                  // Main content
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title row
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  material['title'] ?? '',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: dark
+                                        ? DesignTokens.darkTextPrimary
+                                        : DesignTokens.textPrimary,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              if (isPremium)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: DesignTokens.warning
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: const Text(
+                                    'PRO',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: DesignTokens.warning,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+
+                          // Description snippet
+                          if (snippet.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              snippet,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: dark
+                                    ? DesignTokens.darkTextSecondary
+                                    : DesignTokens.textSecondary,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+
+                          const SizedBox(height: 8),
+
+                          // Meta row
+                          Row(
+                            children: [
+                              // Type badge
+                              _TypeBadge(type: type, color: typeColor),
+                              const SizedBox(width: 6),
+                              // Subject tag
+                              if (subjectName.isNotEmpty)
+                                _MetaChip(
+                                  label: subjectName,
+                                  color: accentColor,
+                                  dark: dark,
+                                ),
+                              const Spacer(),
+                              // Level + views
+                              if (level.isNotEmpty)
+                                Text(
+                                  level,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: dark
+                                        ? DesignTokens.darkTextTertiary
+                                        : DesignTokens.textTertiary,
+                                  ),
+                                ),
+                              if (views > 0) ...[
+                                Text(
+                                  ' · ',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: dark
+                                        ? DesignTokens.darkTextTertiary
+                                        : DesignTokens.textTertiary,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.visibility_outlined,
+                                  size: 11,
+                                  color: dark
+                                      ? DesignTokens.darkTextTertiary
+                                      : DesignTokens.textTertiary,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  _formatViews(views),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: dark
+                                        ? DesignTokens.darkTextTertiary
+                                        : DesignTokens.textTertiary,
+                                  ),
+                                ),
+                              ],
+                              if (isBookmarked) ...[
+                                const SizedBox(width: 6),
+                                Icon(
+                                  Icons.bookmark_rounded,
+                                  size: 14,
+                                  color: DesignTokens.primary
+                                      .withValues(alpha: 0.7),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       )
-          .animate(delay: Duration(milliseconds: 50 * (index % 10)))
+          .animate(delay: Duration(milliseconds: 40 * (index % 12)))
           .fadeIn()
-          .slideX(begin: 0.05),
+          .slideY(begin: 0.04),
     );
   }
 }
 
+// ── Type Badge ────────────────────────────────────────────────────────────────
+class _TypeBadge extends StatelessWidget {
+  final String type;
+  final Color color;
+  const _TypeBadge({required this.type, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_typeIcon(type), size: 10, color: color),
+          const SizedBox(width: 3),
+          Text(
+            type.toUpperCase(),
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: color,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Meta Chip ─────────────────────────────────────────────────────────────────
+class _MetaChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool dark;
+  const _MetaChip({required this.label, required this.color, required this.dark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Banner ────────────────────────────────────────────────────────────────────
 class _Banner extends StatelessWidget {
   final Color color;
   final IconData icon;
   final String text;
-  const _Banner({required this.color, required this.icon, required this.text});
+  final bool dark;
+  const _Banner(
+      {required this.color,
+      required this.icon,
+      required this.text,
+      required this.dark});
 
   @override
   Widget build(BuildContext context) {
@@ -620,15 +888,24 @@ class _Banner extends StatelessWidget {
           Icon(icon, color: color, size: 16),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(text,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: dark
+                    ? DesignTokens.darkTextPrimary
+                    : DesignTokens.textPrimary,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 Color _subjectColor(String name) {
   switch (name.toLowerCase()) {
@@ -644,6 +921,21 @@ Color _subjectColor(String name) {
     case 'social studies':
     case 'history':
       return DesignTokens.error;
+    default:
+      return DesignTokens.accent;
+  }
+}
+
+Color _typeColor(String type) {
+  switch (type.toLowerCase()) {
+    case 'pdf':
+      return const Color(0xFFE74C3C); // red
+    case 'video':
+      return const Color(0xFF9B59B6); // purple
+    case 'text':
+      return DesignTokens.primary; // blue
+    case 'image':
+      return DesignTokens.success; // green
     default:
       return DesignTokens.accent;
   }
@@ -670,7 +962,14 @@ String _levelLabel(String level) {
       return 'Primary';
     case 'tertiary':
       return 'Uni';
-    default:
+    case 'secondary':
       return 'Secondary';
+    default:
+      return '';
   }
+}
+
+String _formatViews(int views) {
+  if (views >= 1000) return '${(views / 1000).toStringAsFixed(1)}k';
+  return '$views';
 }

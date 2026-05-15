@@ -194,6 +194,7 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     if (widget.material.textPages.isEmpty) {
       return ReaderScaffold(
         title: widget.material.title,
@@ -236,12 +237,21 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
             onAskAi: widget.onAskAi == null ? null : () => widget.onAskAi!(_currentSelection()),
           ),
           child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFF7F0E1), Color(0xFFEEE4CF)],
-              ),
+            decoration: BoxDecoration(
+              gradient: dark
+                  ? LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        DesignTokens.darkBackground,
+                        DesignTokens.darkSurface,
+                      ],
+                    )
+                  : const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFFF7F0E1), Color(0xFFEEE4CF)],
+                    ),
             ),
             child: PageView.builder(
               controller: _pageController,
@@ -313,15 +323,19 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF8F2E3),
+                                color: dark
+                                    ? DesignTokens.darkSurfaceVariant
+                                    : const Color(0xFFF8F2E3),
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Tap a paragraph to highlight that exact section for notes, quiz, or AI help.',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: DesignTokens.textSecondary,
+                                  color: dark
+                                      ? DesignTokens.darkTextSecondary
+                                      : DesignTokens.textSecondary,
                                 ),
                               ),
                             ),
@@ -339,10 +353,18 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
                                       duration: const Duration(milliseconds: 180),
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: selected ? const Color(0xFFF3E6BE) : Colors.transparent,
+                                        color: selected
+                                            ? (dark
+                                                ? DesignTokens.primary.withValues(alpha: 0.18)
+                                                : const Color(0xFFF3E6BE))
+                                            : Colors.transparent,
                                         borderRadius: BorderRadius.circular(18),
                                         border: Border.all(
-                                          color: selected ? const Color(0xFFC28A2C) : Colors.transparent,
+                                          color: selected
+                                              ? (dark
+                                                  ? DesignTokens.primaryLight.withValues(alpha: 0.5)
+                                                  : const Color(0xFFC28A2C))
+                                              : Colors.transparent,
                                         ),
                                       ),
                                       child: Text(

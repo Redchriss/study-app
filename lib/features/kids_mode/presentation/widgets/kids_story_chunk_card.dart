@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/design_tokens.dart';
 import '../../kids_visual_theme.dart';
 
 class KidsStoryChunkCard extends StatelessWidget {
@@ -18,8 +19,12 @@ class KidsStoryChunkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = selected
+        ? const Color(0xFFFFF2C6)
+        : (dark ? DesignTokens.darkSurface : DesignTokens.surface);
     return Material(
-      color: selected ? const Color(0xFFFFF2C6) : Colors.white,
+      color: cardColor,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),

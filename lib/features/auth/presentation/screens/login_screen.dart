@@ -66,6 +66,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             right: 0,
             height: size.height * 0.38,
             child: Container(
+              clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -82,7 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   padding: const EdgeInsets.all(32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
                         'Yaza',
