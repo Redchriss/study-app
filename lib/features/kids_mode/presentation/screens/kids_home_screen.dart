@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/config/app_config.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../data/kid_graphql_client.dart';
 import '../../kids_visual_theme.dart';
 import '../widgets/kids_daily_goal_ring.dart';
 import '../widgets/kids_home_sections.dart';
@@ -48,6 +48,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
   Map<String, dynamic>? _subjectProgress;
   Map<String, dynamic>? _lessonState;
   Map<String, dynamic>? _roadmapSummary;
+  Map<String, dynamic>? _rewardProfile;
   List<Map<String, dynamic>> _topicRoadmap = [];
   List<Map<String, dynamic>> _reviewQueue = [];
   String? _quizReviewHint;
@@ -73,17 +74,10 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
     super.dispose();
   }
 
-  GraphQLClient? _kidClient;
-
   GraphQLClient _buildKidClient() {
     final auth = ref.read(kidAuthStateProvider);
-    if (_kidClient != null && auth.token == _kidClientToken) return _kidClient!;
-    final link = AuthLink(getToken: () async => auth.token == null ? null : 'Bearer ${auth.token}').concat(HttpLink(AppConfig.graphqlUrl));
-    _kidClientToken = auth.token;
-    _kidClient = GraphQLClient(cache: GraphQLCache(), link: link);
-    return _kidClient!;
+    return KidGraphqlClient.fromToken(auth.token);
   }
-  String? _kidClientToken;
 
   Future<void> _fetchDailySummary() async {
     final auth = ref.read(kidAuthStateProvider);
@@ -99,6 +93,19 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
         if (ts != null) _stars = ts;
       });
     }
+  }
+
+  Future<void> _fetchRewardProfile() async {
+    final auth = ref.read(kidAuthStateProvider);
+    if (!auth.isAuthenticated) return;
+    final result = await _buildKidClient().query(
+      QueryOptions(document: gql(kKidRewardProfile), fetchPolicy: FetchPolicy.networkOnly),
+    );
+    if (!mounted) return;
+    final profile = result.data?['kidRewardProfile'];
+    setState(() {
+      _rewardProfile = profile is Map ? Map<String, dynamic>.from(profile) : null;
+    });
   }
 
   Future<void> _fetchSubjects() async {
@@ -117,6 +124,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
         _fetchedSubjects = true;
       });
       await _fetchDailySummary();
+      await _fetchRewardProfile();
     } else {
       setState(() => _fetchedSubjects = true);
     }
@@ -184,6 +192,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
           .map((item) => Map<String, dynamic>.from(item))
           .toList();
     });
+    await _fetchRewardProfile();
   }
 
   Future<void> _claimDailyChest() async {
@@ -303,6 +312,9 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
       _stars = (payload?['starsEarned'] as num?)?.toInt() ?? _stars;
       _streak = (payload?['streak'] as num?)?.toInt() ?? _streak;
       _quizReviewHint = payload?['nextReviewLabel']?.toString();
+      if (payload?['rewardProfile'] is Map) {
+        _rewardProfile = Map<String, dynamic>.from(payload!['rewardProfile'] as Map);
+      }
       if (_lessonState != null) {
         _lessonState = {
           ..._lessonState!,
@@ -325,6 +337,19 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
       HapticFeedback.selectionClick();
       _speak('Nice try! The right answer is highlighted.');
     }
+    final newBadges = ((payload?['newBadges'] as List?) ?? const [])
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+    if (mounted && newBadges.isNotEmpty) {
+      final latestBadge = newBadges.first['title']?.toString() ?? 'New badge';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Badge unlocked: $latestBadge'),
+          backgroundColor: DesignTokens.success,
+        ),
+      );
+    }
     await _fetchDailySummary();
     final subjectId = _selectedSubject?['id']?.toString();
     if (subjectId != null) {
@@ -344,6 +369,29 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
     if (subjectId == null) return;
     setState(() => _selectedTopic = match);
     _fetchLesson(subjectId, auth.standard, topicId: topicId);
+  }
+
+  Future<void> _openJourney(KidAuthState auth) async {
+    final subjectId = _selectedSubject?['id']?.toString();
+    if (subjectId == null || subjectId.isEmpty) return;
+    final result = await context.push(
+      '/kids/journey',
+      extra: {
+        'subjectId': subjectId,
+        'subjectName': _selectedSubject?['name']?.toString() ?? 'Journey',
+        'standard': auth.standard,
+      },
+    );
+    if (!mounted) return;
+    if (result is Map) {
+      final topicId = result['topicId']?.toString();
+      if (topicId != null && topicId.isNotEmpty) {
+        _openRoadmapTopicById(topicId, auth);
+        return;
+      }
+    }
+    await _fetchRewardProfile();
+    await _fetchRoadmap(subjectId, auth.standard);
   }
 
   @override
@@ -631,6 +679,42 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                     untouchedCount: (_roadmapSummary?['untouchedCount'] as num?)?.toInt() ?? 0,
                     onReviewTap: () => _openRoadmapTopicById(_roadmapSummary?['reviewTopicId']?.toString(), auth),
                     onNextTap: () => _openRoadmapTopicById(_roadmapSummary?['nextTopicId']?.toString(), auth),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+                if (_rewardProfile != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Level ${(_rewardProfile?['level'] as num?)?.toInt() ?? 1} journey',
+                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: KidsVisualTheme.ink),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${(_rewardProfile?['xp'] as num?)?.toInt() ?? 0} xp · ${(_rewardProfile?['coins'] as num?)?.toInt() ?? 0} coins',
+                                style: const TextStyle(fontWeight: FontWeight.w700, color: KidsVisualTheme.inkMuted),
+                              ),
+                            ],
+                          ),
+                        ),
+                        KidsPlayfulSecondaryButton(
+                          icon: Icons.map_rounded,
+                          label: 'Journey',
+                          color: KidsVisualTheme.pathBlue,
+                          onTap: () => _openJourney(auth),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 14),
                 ],

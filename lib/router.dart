@@ -34,7 +34,9 @@ import '../features/account/presentation/screens/past_paper_library_screen.dart'
 import '../features/account/presentation/screens/past_paper_detail_screen.dart';
 import '../features/account/presentation/screens/quiz_share_screen.dart';
 import '../features/kids_mode/presentation/screens/kids_home_screen.dart';
+import '../features/kids_mode/presentation/screens/kids_journey_screen.dart';
 import '../features/kids_mode/presentation/screens/kid_login_screen.dart';
+import '../features/kids_mode/presentation/screens/parent_kids_progress_screen.dart';
 import '../features/profile/presentation/screens/about_screen.dart';
 import 'shell.dart';
 
@@ -90,6 +92,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Kids Mode (separate shell)
       GoRoute(path: '/kids', builder: (_, __) => const KidLoginScreen()),
       GoRoute(path: '/kids/learn', builder: (_, __) => const KidsHomeScreen()),
+      GoRoute(
+        path: '/kids/journey',
+        builder: (_, state) {
+          final extra = state.extra;
+          final data = extra is Map ? Map<String, dynamic>.from(extra) : const <String, dynamic>{};
+          return KidsJourneyScreen(
+            subjectId: data['subjectId']?.toString() ?? '',
+            subjectName: data['subjectName']?.toString() ?? 'Journey',
+            standard: (data['standard'] as num?)?.toInt() ?? 1,
+          );
+        },
+      ),
+      GoRoute(path: '/kids/progress', builder: (_, __) => const ParentKidsProgressScreen()),
 
       // Main shell with bottom nav
       ShellRoute(

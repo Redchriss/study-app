@@ -73,6 +73,38 @@ const String kAnswerKidQuiz = r'''
 mutation AnswerKidQuiz($lessonId: ID!, $selectedIndex: Int!) {
   answerKidQuiz(lessonId: $lessonId, selectedIndex: $selectedIndex) {
     success correct starsEarned streak masteryLevel nextReviewLabel errors
+    rewardProfile {
+      xp
+      level
+      coins
+      equippedCompanion
+      unlockedCompanions
+      progressToNextLevel
+      nextLevelXp
+      availableCompanions {
+        code
+        title
+        description
+        accent
+        unlockLevel
+        unlocked
+        equipped
+      }
+      recentBadges {
+        code
+        title
+        description
+        iconKey
+        earnedAt
+      }
+    }
+    newBadges {
+      code
+      title
+      description
+      iconKey
+      earnedAt
+    }
   }
 }
 ''';
@@ -111,6 +143,32 @@ query KidSubjectRoadmap($subjectId: ID!, $standard: Int!) {
         isMastered
       }
     }
+    worlds {
+      worldId
+      title
+      subtitle
+      topicCount
+      masteredCount
+      readyReviewCount
+      inProgressCount
+      unlocked
+      completed
+      topics {
+        topicId
+        topicName
+        topicSlug
+        lessonAvailable
+        state {
+          masteryLevel
+          quizAttempts
+          quizCorrect
+          readyForReview
+          statusLabel
+          nextReviewLabel
+          isMastered
+        }
+      }
+    }
   }
 }
 ''';
@@ -128,6 +186,96 @@ query KidReviewQueue($limit: Int) {
       statusLabel
       nextReviewLabel
       isMastered
+    }
+  }
+}
+''';
+
+const String kKidRewardProfile = r'''
+query KidRewardProfile {
+  kidRewardProfile {
+    xp
+    level
+    coins
+    equippedCompanion
+    unlockedCompanions
+    progressToNextLevel
+    nextLevelXp
+    availableCompanions {
+      code
+      title
+      description
+      accent
+      unlockLevel
+      unlocked
+      equipped
+    }
+    recentBadges {
+      code
+      title
+      description
+      iconKey
+      earnedAt
+    }
+  }
+}
+''';
+
+const String kEquipKidCompanion = r'''
+mutation EquipKidCompanion($code: String!) {
+  equipKidCompanion(code: $code) {
+    success
+    errors
+    rewardProfile {
+      xp
+      level
+      coins
+      equippedCompanion
+      unlockedCompanions
+      progressToNextLevel
+      nextLevelXp
+      availableCompanions {
+        code
+        title
+        description
+        accent
+        unlockLevel
+        unlocked
+        equipped
+      }
+      recentBadges {
+        code
+        title
+        description
+        iconKey
+        earnedAt
+      }
+    }
+  }
+}
+''';
+
+const String kParentKidOverview = r'''
+query ParentKidOverview {
+  parentKidOverview {
+    childId
+    childName
+    standard
+    educationTrack
+    streak
+    totalStars
+    readyReviewCount
+    masteredCount
+    currentLevel
+    xp
+    strongestSubject
+    supportTip
+    recentBadges {
+      code
+      title
+      description
+      iconKey
+      earnedAt
     }
   }
 }
