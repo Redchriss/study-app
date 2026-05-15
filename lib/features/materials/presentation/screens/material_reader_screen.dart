@@ -86,6 +86,365 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     } catch (_) {}
   }
 
+  Future<void> _saveAnnotation({
+    required String materialSlug,
+    required int unitIndex,
+    required String anchorLabel,
+    required String selectedText,
+  }) async {
+    final noteCtrl = TextEditingController();
+    String color = 'amber';
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Save Note', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  Text(
+                    selectedText.trim().isEmpty ? anchorLabel : selectedText,
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: DesignTokens.textSecondary, height: 1.5),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final entry in const [('amber', Color(0xFFEEC66D)), ('mint', Color(0xFF62C7A5)), ('sky', Color(0xFF6FA8FF))])
+                        ChoiceChip(
+                          label: Text(entry.$1),
+                          selected: color == entry.$1,
+                          onSelected: (_) => setModalState(() => color = entry.$1),
+                          selectedColor: entry.$2.withValues(alpha: 0.22),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: noteCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Your note',
+                      hintText: 'Add a memory hook, definition, or reminder.',
+                    ),
+                    maxLines: 4,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Save Annotation'),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+    if (saved != true) return;
+
+    try {
+      final client = GraphQLProvider.of(context).value;
+      final result = await client.mutate(
+        MutationOptions(
+          document: gql(kSaveMaterialAnnotation),
+          variables: {
+            'materialSlug': materialSlug,
+            'unitIndex': unitIndex,
+            'anchorLabel': anchorLabel,
+            'selectedText': selectedText,
+            'noteText': noteCtrl.text.trim(),
+            'color': color,
+          },
+        ),
+      );
+      if (!mounted) return;
+      if (result.hasException || result.data?['saveMaterialAnnotation']?['success'] != true) {
+        final message = result.exception?.graphqlErrors.firstOrNull?.message ??
+            (result.data?['saveMaterialAnnotation']?['errors'] as List?)?.firstOrNull?.toString() ??
+            'Could not save annotation.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
+        );
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Annotation saved'), backgroundColor: DesignTokens.success),
+      );
+    } finally {
+      noteCtrl.dispose();
+    }
+  }
+
+  Future<void> _showAnnotationsSheet({
+    required String materialSlug,
+    required List<Map<String, dynamic>> annotations,
+    required VoidCallback refetch,
+  }) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.92,
+          builder: (context, controller) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Saved Notes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 12),
+                  if (annotations.isEmpty)
+                    const Expanded(
+                      child: Center(
+                        child: Text('No annotations yet. Save notes while reading to build your revision trail.'),
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: ListView.separated(
+                        controller: controller,
+                        itemCount: annotations.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final annotation = annotations[index];
+                          return Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: DesignTokens.border),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 10,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: _annotationColor(annotation['color']?.toString()),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        annotation['anchorLabel']?.toString().isNotEmpty == true
+                                            ? annotation['anchorLabel'].toString()
+                                            : 'Section ${((annotation['unitIndex'] as num?)?.toInt() ?? 0) + 1}',
+                                        style: const TextStyle(fontWeight: FontWeight.w700),
+                                      ),
+                                      if ((annotation['selectedText']?.toString() ?? '').isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          annotation['selectedText'].toString(),
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(color: DesignTokens.textSecondary, height: 1.4),
+                                        ),
+                                      ],
+                                      if ((annotation['noteText']?.toString() ?? '').isNotEmpty) ...[
+                                        const SizedBox(height: 6),
+                                        Text(annotation['noteText'].toString()),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () async {
+                                    final client = GraphQLProvider.of(context).value;
+                                    await client.mutate(
+                                      MutationOptions(
+                                        document: gql(kDeleteMaterialAnnotation),
+                                        variables: {'annotationId': annotation['id']},
+                                      ),
+                                    );
+                                    if (mounted) {
+                                      Navigator.of(context).pop();
+                                      refetch();
+                                      _showAnnotationsSheet(
+                                        materialSlug: materialSlug,
+                                        annotations: annotations.where((item) => item['id'] != annotation['id']).toList(),
+                                        refetch: refetch,
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(Icons.delete_outline),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _askReaderAi({
+    required String materialId,
+    required String sectionText,
+    required String materialTitle,
+    required String anchorLabel,
+  }) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Ask AI About This Section', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 12),
+                for (final item in const [
+                  ('explain', 'Explain this section', Icons.lightbulb_outline),
+                  ('summary', 'Summarize this section', Icons.summarize_outlined),
+                  ('quiz', 'Quiz me from this section', Icons.quiz_outlined),
+                ])
+                  ListTile(
+                    leading: Icon(item.$3),
+                    title: Text(item.$2),
+                    onTap: () => Navigator.of(context).pop(item.$1),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (action == null) return;
+
+    final prompt = switch (action) {
+      'summary' => 'Summarize this study section into short revision bullets.',
+      'quiz' => 'Create 3 quick revision questions from this study section, then give the answers.',
+      _ => 'Explain this study section clearly in simple language and point out what to remember.',
+    };
+    final message = '$prompt\n\nMaterial: $materialTitle\nAnchor: $anchorLabel\n\nCurrent section:\n---\n${sectionText.trim().isEmpty ? 'Use the material context available for this section.' : sectionText.trim()}\n---';
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final client = GraphQLProvider.of(context).value;
+      final sessionResult = await client.mutate(
+        MutationOptions(
+          document: gql(kCreateReaderChatSession),
+          variables: {'materialId': materialId},
+        ),
+      );
+      final sessionId = sessionResult.data?['createChatSession']?['session']?['id']?.toString();
+      if (sessionId == null || sessionId.isEmpty) {
+        if (mounted) Navigator.of(context).pop();
+        return;
+      }
+      final response = await client.mutate(
+        MutationOptions(
+          document: gql(kSendReaderAiMessage),
+          variables: {
+            'sessionId': sessionId,
+            'content': message,
+            'materialId': materialId,
+          },
+        ),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      final reply = response.data?['sendMessage']?['message']?['messageText']?.toString();
+      final error = response.data?['sendMessage']?['error']?.toString();
+      if (response.hasException || reply == null || reply.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              response.exception?.graphqlErrors.firstOrNull?.message ?? error ?? 'AI could not answer from this section right now.',
+            ),
+            backgroundColor: DesignTokens.error,
+          ),
+        );
+        return;
+      }
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.72,
+            maxChildSize: 0.94,
+            minChildSize: 0.42,
+            builder: (context, controller) {
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: ListView(
+                  controller: controller,
+                  children: [
+                    const Text('Section AI Reply', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 8),
+                    Text(anchorLabel, style: const TextStyle(color: DesignTokens.textSecondary)),
+                    const SizedBox(height: 16),
+                    Text(reply, style: const TextStyle(height: 1.55)),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } catch (_) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('AI could not answer from this section right now.'),
+            backgroundColor: DesignTokens.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Color _annotationColor(String? color) {
+    switch (color) {
+      case 'mint':
+        return const Color(0xFF62C7A5);
+      case 'sky':
+        return const Color(0xFF6FA8FF);
+      default:
+        return const Color(0xFFEEC66D);
+    }
+  }
+
   bool _isPdfMaterial(Map<String, dynamic> material) {
     final contentType = (material['contentType'] as String? ?? '').toLowerCase();
     final fileUrl = material['fileUrl'] as String? ?? '';
@@ -199,6 +558,22 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         final subjectName = material['subject']?['name'] as String? ?? '';
         final contentType = (material['contentType'] as String? ?? '').toLowerCase();
         final serverProgress = material['myProgress'] as Map<String, dynamic>?;
+        final materialId = material['id']?.toString() ?? '';
+        final annotations = ((material['myAnnotations'] as List?) ?? const [])
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+        final sectionPages = _buildTextPages(material['contentText'] as String? ?? '');
+        final readerActions = <Widget>[
+          IconButton(
+            icon: const Icon(Icons.sticky_note_2_outlined),
+            onPressed: () => _showAnnotationsSheet(
+              materialSlug: widget.slug,
+              annotations: annotations,
+              refetch: () => refetch?.call(),
+            ),
+          ),
+        ];
         if (_isPdfMaterial(material)) {
           final fileUrl = material['fileUrl'] as String?;
           if (fileUrl == null || fileUrl.isEmpty) {
@@ -214,10 +589,29 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             contentType: contentType,
             fileUrl: fileUrl,
             initialUnit: (serverProgress?['currentUnit'] as num?)?.toInt(),
+            sectionPages: sectionPages,
             loadSavedPage: _loadSavedPage,
             savePage: _savePage,
             cachePdf: _cachePdf,
             trackProgress: _trackProgress,
+            appBarActions: readerActions,
+            onSaveNote: (unitIndex, anchorLabel, selectedText) async {
+              await _saveAnnotation(
+                materialSlug: widget.slug,
+                unitIndex: unitIndex,
+                anchorLabel: anchorLabel,
+                selectedText: selectedText,
+              );
+              refetch?.call();
+            },
+            onAskAi: materialId.isEmpty
+                ? null
+                : (unitIndex, anchorLabel, selectedText) => _askReaderAi(
+                      materialId: materialId,
+                      sectionText: selectedText,
+                      materialTitle: title,
+                      anchorLabel: anchorLabel,
+                    ),
           );
         }
 
@@ -232,6 +626,24 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             loadSavedPage: _loadSavedPage,
             savePage: _savePage,
             trackProgress: _trackProgress,
+            appBarActions: readerActions,
+            onSaveNote: (unitIndex, anchorLabel, selectedText) async {
+              await _saveAnnotation(
+                materialSlug: widget.slug,
+                unitIndex: unitIndex,
+                anchorLabel: anchorLabel,
+                selectedText: selectedText,
+              );
+              refetch?.call();
+            },
+            onAskAi: materialId.isEmpty
+                ? null
+                : (unitIndex, anchorLabel, selectedText) => _askReaderAi(
+                      materialId: materialId,
+                      sectionText: selectedText,
+                      materialTitle: title,
+                      anchorLabel: anchorLabel,
+                    ),
           );
         }
 
@@ -244,6 +656,25 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             youtubeEmbedUrl: material['youtubeEmbedUrl'] as String? ?? '',
             trackProgress: _trackProgress,
             resolveVideoId: _videoIdFromUrl,
+            appBarActions: readerActions,
+            sectionText: sectionPages.isEmpty ? (material['contentText'] as String? ?? '') : sectionPages.first,
+            onSaveNote: (unitIndex, anchorLabel, selectedText) async {
+              await _saveAnnotation(
+                materialSlug: widget.slug,
+                unitIndex: unitIndex,
+                anchorLabel: anchorLabel,
+                selectedText: selectedText,
+              );
+              refetch?.call();
+            },
+            onAskAi: materialId.isEmpty
+                ? null
+                : (unitIndex, anchorLabel, selectedText) => _askReaderAi(
+                      materialId: materialId,
+                      sectionText: selectedText,
+                      materialTitle: title,
+                      anchorLabel: anchorLabel,
+                    ),
           );
         }
 
@@ -255,6 +686,25 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             contentType: contentType,
             imageUrl: material['fileUrl'] as String? ?? '',
             trackProgress: _trackProgress,
+            appBarActions: readerActions,
+            sectionText: sectionPages.isEmpty ? (material['contentText'] as String? ?? '') : sectionPages.first,
+            onSaveNote: (unitIndex, anchorLabel, selectedText) async {
+              await _saveAnnotation(
+                materialSlug: widget.slug,
+                unitIndex: unitIndex,
+                anchorLabel: anchorLabel,
+                selectedText: selectedText,
+              );
+              refetch?.call();
+            },
+            onAskAi: materialId.isEmpty
+                ? null
+                : (unitIndex, anchorLabel, selectedText) => _askReaderAi(
+                      materialId: materialId,
+                      sectionText: selectedText,
+                      materialTitle: title,
+                      anchorLabel: anchorLabel,
+                    ),
           );
         }
 
@@ -284,10 +734,14 @@ class _PdfMaterialReader extends StatefulWidget {
     required this.contentType,
     required this.fileUrl,
     required this.initialUnit,
+    required this.sectionPages,
     required this.loadSavedPage,
     required this.savePage,
     required this.cachePdf,
     required this.trackProgress,
+    required this.appBarActions,
+    required this.onSaveNote,
+    required this.onAskAi,
   });
 
   final String slug;
@@ -296,6 +750,7 @@ class _PdfMaterialReader extends StatefulWidget {
   final String contentType;
   final String fileUrl;
   final int? initialUnit;
+  final List<String> sectionPages;
   final Future<int> Function(String slug, {bool textMode}) loadSavedPage;
   final Future<void> Function(String slug, int page, {bool textMode}) savePage;
   final Future<String?> Function(String url, String slug) cachePdf;
@@ -308,6 +763,9 @@ class _PdfMaterialReader extends StatefulWidget {
     required int totalUnits,
     String? lastPositionLabel,
   }) trackProgress;
+  final List<Widget> appBarActions;
+  final Future<void> Function(int unitIndex, String anchorLabel, String selectedText) onSaveNote;
+  final Future<void> Function(int unitIndex, String anchorLabel, String selectedText)? onAskAi;
 
   @override
   State<_PdfMaterialReader> createState() => _PdfMaterialReaderState();
@@ -354,6 +812,21 @@ class _PdfMaterialReaderState extends State<_PdfMaterialReader> {
           title: widget.title,
           trailing: _PageBadge(
             label: _pageCount == 0 ? 'Loading...' : 'Page ${_currentPage + 1} / $_pageCount',
+          ),
+          actions: widget.appBarActions,
+          bottomBar: _ReaderActionBar(
+            onNote: () => widget.onSaveNote(
+              _currentPage,
+              'Page ${_currentPage + 1}',
+              widget.sectionPages.length > _currentPage ? widget.sectionPages[_currentPage] : '',
+            ),
+            onAskAi: widget.onAskAi == null
+                ? null
+                : () => widget.onAskAi!(
+                      _currentPage,
+                      'Page ${_currentPage + 1}',
+                      widget.sectionPages.length > _currentPage ? widget.sectionPages[_currentPage] : '',
+                    ),
           ),
           child: Container(
             color: Colors.black,
@@ -414,6 +887,9 @@ class _TextMaterialReader extends StatefulWidget {
     required this.loadSavedPage,
     required this.savePage,
     required this.trackProgress,
+    required this.appBarActions,
+    required this.onSaveNote,
+    required this.onAskAi,
   });
 
   final String slug;
@@ -433,6 +909,9 @@ class _TextMaterialReader extends StatefulWidget {
     required int totalUnits,
     String? lastPositionLabel,
   }) trackProgress;
+  final List<Widget> appBarActions;
+  final Future<void> Function(int unitIndex, String anchorLabel, String selectedText) onSaveNote;
+  final Future<void> Function(int unitIndex, String anchorLabel, String selectedText)? onAskAi;
 
   @override
   State<_TextMaterialReader> createState() => _TextMaterialReaderState();
@@ -484,6 +963,21 @@ class _TextMaterialReaderState extends State<_TextMaterialReader> {
         return _ReaderScaffold(
           title: widget.title,
           trailing: _PageBadge(label: 'Page ${_currentPage + 1} / ${widget.pages.length}'),
+          actions: widget.appBarActions,
+          bottomBar: _ReaderActionBar(
+            onNote: () => widget.onSaveNote(
+              _currentPage,
+              'Page ${_currentPage + 1}',
+              widget.pages[_currentPage],
+            ),
+            onAskAi: widget.onAskAi == null
+                ? null
+                : () => widget.onAskAi!(
+                      _currentPage,
+                      'Page ${_currentPage + 1}',
+                      widget.pages[_currentPage],
+                    ),
+          ),
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -603,6 +1097,10 @@ class _VideoMaterialReader extends StatefulWidget {
     required this.youtubeEmbedUrl,
     required this.trackProgress,
     required this.resolveVideoId,
+    required this.appBarActions,
+    required this.sectionText,
+    required this.onSaveNote,
+    required this.onAskAi,
   });
 
   final String slug;
@@ -620,6 +1118,10 @@ class _VideoMaterialReader extends StatefulWidget {
     String? lastPositionLabel,
   }) trackProgress;
   final String? Function(String url) resolveVideoId;
+  final List<Widget> appBarActions;
+  final String sectionText;
+  final Future<void> Function(int unitIndex, String anchorLabel, String selectedText) onSaveNote;
+  final Future<void> Function(int unitIndex, String anchorLabel, String selectedText)? onAskAi;
 
   @override
   State<_VideoMaterialReader> createState() => _VideoMaterialReaderState();
@@ -670,6 +1172,11 @@ class _VideoMaterialReaderState extends State<_VideoMaterialReader> {
     return _ReaderScaffold(
       title: widget.title,
       trailing: const _PageBadge(label: 'Video lesson'),
+      actions: widget.appBarActions,
+      bottomBar: _ReaderActionBar(
+        onNote: () => widget.onSaveNote(0, 'Video lesson', widget.sectionText),
+        onAskAi: widget.onAskAi == null ? null : () => widget.onAskAi!(0, 'Video lesson', widget.sectionText),
+      ),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -705,6 +1212,10 @@ class _ImageMaterialReader extends StatefulWidget {
     required this.contentType,
     required this.imageUrl,
     required this.trackProgress,
+    required this.appBarActions,
+    required this.sectionText,
+    required this.onSaveNote,
+    required this.onAskAi,
   });
 
   final String slug;
@@ -721,6 +1232,10 @@ class _ImageMaterialReader extends StatefulWidget {
     required int totalUnits,
     String? lastPositionLabel,
   }) trackProgress;
+  final List<Widget> appBarActions;
+  final String sectionText;
+  final Future<void> Function(int unitIndex, String anchorLabel, String selectedText) onSaveNote;
+  final Future<void> Function(int unitIndex, String anchorLabel, String selectedText)? onAskAi;
 
   @override
   State<_ImageMaterialReader> createState() => _ImageMaterialReaderState();
@@ -746,6 +1261,11 @@ class _ImageMaterialReaderState extends State<_ImageMaterialReader> {
     return _ReaderScaffold(
       title: widget.title,
       trailing: const _PageBadge(label: 'Image material'),
+      actions: widget.appBarActions,
+      bottomBar: _ReaderActionBar(
+        onNote: () => widget.onSaveNote(0, 'Image material', widget.sectionText),
+        onAskAi: widget.onAskAi == null ? null : () => widget.onAskAi!(0, 'Image material', widget.sectionText),
+      ),
       child: Container(
         color: const Color(0xFF101114),
         child: Column(
@@ -798,11 +1318,15 @@ class _ReaderScaffold extends StatelessWidget {
     required this.title,
     required this.child,
     this.trailing,
+    this.actions = const [],
+    this.bottomBar,
   });
 
   final String title;
   final Widget child;
   final Widget? trailing;
+  final List<Widget> actions;
+  final Widget? bottomBar;
 
   @override
   Widget build(BuildContext context) {
@@ -813,13 +1337,26 @@ class _ReaderScaffold extends StatelessWidget {
         foregroundColor: Colors.white,
         title: Text(title, overflow: TextOverflow.ellipsis),
         actions: [
-          if (trailing != null) Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(child: trailing),
-          ),
+          ...actions,
+          if (trailing != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Center(child: trailing),
+            ),
         ],
       ),
-      body: child,
+      body: Stack(
+        children: [
+          Positioned.fill(child: child),
+          if (bottomBar != null)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 16,
+              child: bottomBar!,
+            ),
+        ],
+      ),
     );
   }
 }
@@ -844,6 +1381,49 @@ class _PageBadge extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w700,
         ),
+      ),
+    );
+  }
+}
+
+class _ReaderActionBar extends StatelessWidget {
+  const _ReaderActionBar({
+    required this.onNote,
+    this.onAskAi,
+  });
+
+  final VoidCallback onNote;
+  final VoidCallback? onAskAi;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: onNote,
+              icon: const Icon(Icons.edit_note_rounded),
+              label: const Text('Save Note'),
+            ),
+          ),
+          if (onAskAi != null) ...[
+            const SizedBox(width: 10),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: onAskAi,
+                icon: const Icon(Icons.auto_awesome),
+                label: const Text('Ask AI'),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

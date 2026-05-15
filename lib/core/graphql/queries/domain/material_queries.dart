@@ -41,6 +41,15 @@ query Material($slug: String!) {
       lastPositionLabel
       lastOpenedAt
     }
+    myAnnotations {
+      id
+      unitIndex
+      anchorLabel
+      selectedText
+      noteText
+      color
+      updatedAt
+    }
     subject { id name }
     createdAt
   }
@@ -137,6 +146,67 @@ mutation TrackMaterialProgress($materialSlug: String!, $currentUnit: Int!, $tota
       lastPositionLabel
       lastOpenedAt
     }
+  }
+}
+''';
+
+const String kSaveMaterialAnnotation = r'''
+mutation SaveMaterialAnnotation(
+  $materialSlug: String!
+  $unitIndex: Int!
+  $anchorLabel: String
+  $selectedText: String
+  $noteText: String
+  $color: String
+) {
+  saveMaterialAnnotation(
+    materialSlug: $materialSlug
+    unitIndex: $unitIndex
+    anchorLabel: $anchorLabel
+    selectedText: $selectedText
+    noteText: $noteText
+    color: $color
+  ) {
+    success
+    errors
+    annotation {
+      id
+      unitIndex
+      anchorLabel
+      selectedText
+      noteText
+      color
+      updatedAt
+    }
+  }
+}
+''';
+
+const String kDeleteMaterialAnnotation = r'''
+mutation DeleteMaterialAnnotation($annotationId: ID!) {
+  deleteMaterialAnnotation(annotationId: $annotationId) {
+    success
+    errors
+  }
+}
+''';
+
+const String kCreateReaderChatSession = r'''
+mutation CreateReaderChatSession($materialId: ID) {
+  createChatSession(materialId: $materialId) {
+    session { id title }
+  }
+}
+''';
+
+const String kSendReaderAiMessage = r'''
+mutation SendReaderAiMessage($sessionId: ID!, $content: String!, $materialId: ID) {
+  sendMessage(sessionId: $sessionId, content: $content, materialId: $materialId) {
+    success
+    error
+    message { id messageText timestamp }
+    creditsCost
+    creditsRemaining
   }
 }
 ''';
