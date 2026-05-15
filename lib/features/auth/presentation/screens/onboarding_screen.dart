@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/services/app_preferences_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -9,8 +10,11 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  final _preferences = AppPreferencesService();
   final _controller = PageController();
   int _page = 0;
+  String? _preferredLevel;
+  String _preferredGoal = 'read';
 
   final _pages = const [
     _OnboardingPage(
@@ -80,8 +84,61 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: const Text('Next'),
                     )
                   else ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: DesignTokens.surfaceVariant,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Who are you?', style: TextStyle(fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: const [
+                              ('primary', 'Primary'),
+                              ('secondary', 'Secondary'),
+                              ('tertiary', 'College / University'),
+                            ].map((item) {
+                              return ChoiceChip(
+                                label: Text(item.$2),
+                                selected: _preferredLevel == item.$1,
+                                onSelected: (_) => setState(() => _preferredLevel = item.$1),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text('What do you want first?', style: TextStyle(fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: const [
+                              ('read', 'Open materials'),
+                              ('quiz', 'Practice quizzes'),
+                              ('ai', 'Use AI tutor'),
+                            ].map((item) {
+                              return ChoiceChip(
+                                label: Text(item.$2),
+                                selected: _preferredGoal == item.$1,
+                                onSelected: (_) => setState(() => _preferredGoal = item.$1),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => context.go('/register'),
+                      onPressed: () async {
+                        final router = GoRouter.of(context);
+                        await _preferences.setPreferredLevel(_preferredLevel);
+                        await _preferences.setPreferredGoal(_preferredGoal);
+                        router.go('/register');
+                      },
                       child: const Text('Get Started'),
                     ),
                     const SizedBox(height: 12),

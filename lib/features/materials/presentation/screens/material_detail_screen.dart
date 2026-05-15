@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/services/app_preferences_service.dart';
+import '../../../../core/services/material_cache_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/services/download_service.dart';
@@ -18,9 +20,25 @@ class MaterialDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
+  final _preferences = AppPreferencesService();
+  final _cache = MaterialCacheService();
   bool _bookmarking = false;
   String? _aiTaskLoading;
   YoutubePlayerController? _ytCtrl;
+  bool _lowDataMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final lowDataMode = await _preferences.isLowDataMode();
+    if (mounted) {
+      setState(() => _lowDataMode = lowDataMode);
+    }
+  }
 
   @override
   void dispose() {
@@ -95,11 +113,40 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Query(
-      options: QueryOptions(document: gql(kMaterial), variables: {'slug': widget.slug}),
+      options: QueryOptions(
+        document: gql(kMaterial),
+        variables: {'slug': widget.slug},
+        fetchPolicy: FetchPolicy.cacheAndNetwork,
+      ),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        final m = result.data?['material'];
-        if (m == null) return const Scaffold(body: Center(child: Text('Material not found.')));
+        if (result.isLoading && result.data == null) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        final live = result.data?['material'];
+        if (live is Map) {
+          _cache.saveMaterial(widget.slug, Map<String, dynamic>.from(live));
+        }
+        if (result.hasException && live == null) {
+          return FutureBuilder<Map<String, dynamic>?>(
+            future: _cache.loadMaterial(widget.slug),
+            builder: (context, snapshot) {
+              final cached = snapshot.data;
+              if (cached == null) {
+                return const Scaffold(body: Center(child: Text('Material not found.')));
+              }
+              return _buildBody(theme, cached, refetch, offline: true);
+            },
+          );
+        }
+        if (live is! Map) {
+          return const Scaffold(body: Center(child: Text('Material not found.')));
+        }
+        return _buildBody(theme, Map<String, dynamic>.from(live), refetch);
+      },
+    );
+  }
+
+  Widget _buildBody(ThemeData theme, Map<String, dynamic> m, dynamic refetch, {bool offline = false}) {
         final materialId = m['id'] as String? ?? '';
         final isBookmarked = m['isBookmarked'] == true;
         final supportsStudyMode = _supportsStudyMode(m);
@@ -119,6 +166,28 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(DesignTokens.spMd),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              if (offline)
+                Container(
+                  margin: const EdgeInsets.only(bottom: DesignTokens.spMd),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: DesignTokens.warning.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: DesignTokens.warning.withValues(alpha: 0.2)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.offline_bolt_outlined, color: DesignTokens.warning, size: 18),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Showing cached material details while you are offline.',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
                   Container(
@@ -187,30 +256,46 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
                 const SizedBox(height: DesignTokens.spMd),
               ],
 
-              if (m['youtubeEmbedUrl'] != null)
+              if (m['youtubeEmbedUrl'] != null && !_lowDataMode)
                 _YoutubeInlinePlayer(
                   url: m['youtubeEmbedUrl'] as String? ?? '',
                   onControllerReady: (ctrl) {
                     _ytCtrl?.close();
                     _ytCtrl = ctrl;
                   },
+                )
+              else if (m['youtubeEmbedUrl'] != null)
+                GlassCard(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.data_saver_on_outlined, color: DesignTokens.info),
+                      const SizedBox(width: DesignTokens.spSm),
+                      Expanded(
+                        child: Text(
+                          'Video preview is hidden in low-data mode. Open Study now when you are ready.',
+                          style: theme.textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
               if (m['fileUrl'] != null) ...[
                 const SizedBox(height: DesignTokens.spSm),
                 AnimatedPress(
                   onTap: () async {
+                    final messenger = ScaffoldMessenger.of(context);
                     final url = m['fileUrl'] as String?;
                     final name = m['title'] as String? ?? 'download';
                     if (url == null) return;
                     final fname = '${name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_')}.pdf';
                     final path = await DownloadService.downloadFile(url, fname);
-                    if (path != null && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                    if (path != null && mounted) {
+                      messenger.showSnackBar(
                         const SnackBar(content: Text('Saved to Downloads/Yaza/'), backgroundColor: DesignTokens.success),
                       );
-                    } else if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                    } else if (mounted) {
+                      messenger.showSnackBar(
                         const SnackBar(content: Text('Download failed. Try again.'), backgroundColor: DesignTokens.error),
                       );
                     }
@@ -264,9 +349,7 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
               ],
             ]),
           ),
-      );
-      },
-    );
+        );
   }
 }
 

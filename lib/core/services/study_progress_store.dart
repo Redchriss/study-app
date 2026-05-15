@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'retention_service.dart';
+
 class StudyMaterialProgress {
   const StudyMaterialProgress({
     required this.slug,
@@ -112,5 +114,6 @@ class StudyProgressStore {
       updatedAtEpochMs: DateTime.now().millisecondsSinceEpoch,
     );
     await prefs.setString(_recentMaterialKey, jsonEncode(progress.toJson()));
+    await RetentionService().refreshStudyReminder();
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import '../theme/design_tokens.dart';
+import '../services/app_preferences_service.dart';
 import '../services/connectivity_service.dart';
 
 class OfflineBanner extends StatefulWidget {
@@ -14,13 +15,16 @@ class OfflineBanner extends StatefulWidget {
 }
 
 class _OfflineBannerState extends State<OfflineBanner> {
+  final _preferences = AppPreferencesService();
   bool _isOffline = false;
+  bool _lowDataMode = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
   @override
   void initState() {
     super.initState();
     _checkConnectivity();
+    _loadPreferences();
     _connectivitySub = ConnectivityService.onConnectivityChanged.listen((_) {
       _checkConnectivity();
     });
@@ -39,6 +43,13 @@ class _OfflineBannerState extends State<OfflineBanner> {
     }
   }
 
+  Future<void> _loadPreferences() async {
+    final lowDataMode = await _preferences.isLowDataMode();
+    if (mounted) {
+      setState(() => _lowDataMode = lowDataMode);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Use Stack, not Column+Expanded: wrapping MaterialApp.router in Expanded can
@@ -47,29 +58,35 @@ class _OfflineBannerState extends State<OfflineBanner> {
       fit: StackFit.expand,
       children: [
         widget.child,
-        if (_isOffline)
-          const Positioned(
+        if (_isOffline || _lowDataMode)
+          Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: Material(
               elevation: 2,
-              color: DesignTokens.warning,
+              color: _isOffline ? DesignTokens.warning : DesignTokens.info,
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: DesignTokens.spMd,
                     vertical: DesignTokens.spSm,
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.wifi_off, color: Colors.white, size: 16),
-                      SizedBox(width: DesignTokens.spSm),
+                      Icon(
+                        _isOffline ? Icons.wifi_off : Icons.data_saver_on_outlined,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: DesignTokens.spSm),
                       Expanded(
                         child: Text(
-                          'You\'re offline. Some features may not work.',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          _isOffline
+                              ? 'You\'re offline. Cached study materials remain available.'
+                              : 'Low-data mode is on. Heavy previews are reduced to save bandwidth.',
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
                         ),
                       ),
                     ],

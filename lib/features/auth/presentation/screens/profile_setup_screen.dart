@@ -5,6 +5,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../account/presentation/widgets/education_pickers.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/services/app_preferences_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
@@ -18,6 +19,7 @@ class ProfileSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
+  final _preferences = AppPreferencesService();
   int _step = 1;
   String? _level;
   int? _standard;
@@ -31,6 +33,21 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   String? _primarySchoolName;
   String? _secondarySchoolId;
   String? _secondarySchoolName;
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrapPreferences();
+  }
+
+  Future<void> _bootstrapPreferences() async {
+    final preferredLevel = await _preferences.preferredLevel();
+    if (!mounted || preferredLevel == null) return;
+    setState(() {
+      _level = preferredLevel;
+      _step = 2;
+    });
+  }
 
   int get _totalSteps {
     if (_level == null) return 4;
@@ -71,7 +88,18 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       }
       await ref.read(authProvider.notifier).refreshUser();
       if (!mounted) return;
-      context.go('/home');
+      final preferredGoal = await _preferences.preferredGoal();
+      if (!mounted) return;
+      switch (preferredGoal) {
+        case 'quiz':
+          context.go('/quizzes');
+          break;
+        case 'ai':
+          context.go('/ai-tutor');
+          break;
+        default:
+          context.go('/materials');
+      }
     }
   }
 

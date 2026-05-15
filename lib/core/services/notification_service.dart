@@ -22,6 +22,9 @@ class NotificationService {
     );
 
     await _notificationsPlugin.initialize(initializationSettings);
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
   }
 
   static Future<void> showNotification({
@@ -57,5 +60,32 @@ class NotificationService {
 
   static Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
+  }
+
+  static Future<void> scheduleDailyReminder({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    const android = AndroidNotificationDetails(
+      'yaza_study_reminders',
+      'Study reminders',
+      channelDescription: 'Daily reminders to come back and study on Yaza',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const ios = DarwinNotificationDetails();
+    const details = NotificationDetails(android: android, iOS: ios);
+
+    await _notificationsPlugin.periodicallyShow(
+      id,
+      title,
+      body,
+      RepeatInterval.daily,
+      details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: payload,
+    );
   }
 }

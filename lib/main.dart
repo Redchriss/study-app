@@ -9,6 +9,7 @@ import 'core/theme/design_tokens.dart';
 import 'core/config/app_config.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/retention_service.dart';
 import 'core/widgets/offline_banner.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'router.dart';
@@ -55,6 +56,8 @@ Future<void> _runApp() async {
     debugPrint('NotificationService init failed: $e');
     await Sentry.captureException(e, stackTrace: st);
   }
+  await RetentionService().markAppOpened();
+  await RetentionService().refreshStudyReminder();
 
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('theme_mode');

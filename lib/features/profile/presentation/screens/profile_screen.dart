@@ -5,6 +5,8 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/services/app_preferences_service.dart';
+import '../../../../core/services/retention_service.dart';
 import '../../../../main.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -14,6 +16,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final preferences = AppPreferencesService();
 
     return Query(
       options: QueryOptions(document: gql(kMe)),
@@ -91,6 +94,33 @@ class ProfileScreen extends ConsumerWidget {
                 _MenuButton(icon: Icons.bookmark_outline, label: 'Bookmarks', onTap: () => context.go('/bookmarks')),
                 _MenuButton(icon: Icons.info_outline, label: 'About Yaza', onTap: () => context.go('/about')),
                 const Divider(height: DesignTokens.spMd),
+                _AsyncPreferenceSwitch(
+                  loadValue: preferences.isLowDataMode,
+                  onChanged: (value) async {
+                    await preferences.setLowDataMode(value);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(value ? 'Low-data mode enabled.' : 'Low-data mode disabled.')),
+                      );
+                    }
+                  },
+                  title: 'Low-data mode',
+                  subtitle: 'Reduce heavy previews and lighten study screens on weak networks.',
+                ),
+                _AsyncPreferenceSwitch(
+                  loadValue: preferences.studyRemindersEnabled,
+                  onChanged: (value) async {
+                    await preferences.setStudyRemindersEnabled(value);
+                    await RetentionService().refreshStudyReminder();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(value ? 'Study reminders enabled.' : 'Study reminders disabled.')),
+                      );
+                    }
+                  },
+                  title: 'Study reminders',
+                  subtitle: 'Get a daily nudge to come back and keep your study streak alive.',
+                ),
                 _MenuButton(
                   icon: ref.watch(themeModeProvider) == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
                   label: ref.watch(themeModeProvider) == ThemeMode.dark ? 'Light Mode' : 'Dark Mode',
@@ -170,6 +200,59 @@ class _ProfileRow extends StatelessWidget {
           Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
+    );
+  }
+}
+
+class _AsyncPreferenceSwitch extends StatefulWidget {
+  const _AsyncPreferenceSwitch({
+    required this.loadValue,
+    required this.onChanged,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final Future<bool> Function() loadValue;
+  final Future<void> Function(bool value) onChanged;
+  final String title;
+  final String subtitle;
+
+  @override
+  State<_AsyncPreferenceSwitch> createState() => _AsyncPreferenceSwitchState();
+}
+
+class _AsyncPreferenceSwitchState extends State<_AsyncPreferenceSwitch> {
+  bool? _value;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.loadValue().then((value) {
+      if (mounted) {
+        setState(() => _value = value);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile.adaptive(
+      value: _value ?? false,
+      onChanged: _saving || _value == null
+          ? null
+          : (value) async {
+              setState(() {
+                _value = value;
+                _saving = true;
+              });
+              await widget.onChanged(value);
+              if (mounted) {
+                setState(() => _saving = false);
+              }
+            },
+      title: Text(widget.title),
+      subtitle: Text(widget.subtitle),
     );
   }
 }

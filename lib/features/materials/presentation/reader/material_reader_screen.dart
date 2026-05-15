@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/services/material_cache_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import 'material_content_readers.dart';
 import 'material_reader_helpers.dart';
@@ -21,6 +22,7 @@ class MaterialReaderScreen extends StatefulWidget {
 
 class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
   final _service = MaterialReaderService();
+  final _cache = MaterialCacheService();
   var _aiActionBusy = false;
 
   Future<void> _saveAnnotation(ReaderStudySelection selection, VoidCallback? refetch) async {
@@ -213,32 +215,77 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Query(
       options: QueryOptions(
         document: gql(kMaterial),
         variables: {'slug': widget.slug},
-        fetchPolicy: FetchPolicy.networkOnly,
+        fetchPolicy: FetchPolicy.cacheAndNetwork,
       ),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) {
+        if (result.isLoading && result.data == null) {
           return const ReaderScaffold(
             title: 'Study mode',
             child: Center(child: CircularProgressIndicator()),
           );
         }
         if (result.hasException) {
-          return ReaderScaffold(
-            title: 'Study mode',
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not open this material.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
+          return FutureBuilder<Map<String, dynamic>?>(
+            future: _cache.loadMaterial(widget.slug),
+            builder: (context, snapshot) {
+              final cached = snapshot.data;
+              if (cached == null) {
+                return ReaderScaffold(
+                  title: 'Study mode',
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not open this material.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return Stack(
+                children: [
+                  _buildReaderForMaterial(
+                    ReaderMaterialData.fromMap(widget.slug, cached),
+                    refetch,
+                  ),
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    right: 16,
+                    child: IgnorePointer(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: DesignTokens.warning.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.offline_bolt_outlined, color: Colors.white, size: 18),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'You are studying from cached material data.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         }
 
@@ -249,9 +296,15 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             child: Center(child: Text('Material not found.')),
           );
         }
-
+        _cache.saveMaterial(widget.slug, Map<String, dynamic>.from(rawMaterial));
         final material = ReaderMaterialData.fromMap(widget.slug, Map<String, dynamic>.from(rawMaterial));
+        return _buildReaderForMaterial(material, refetch);
+      },
+    );
+  }
 
+  Widget _buildReaderForMaterial(ReaderMaterialData material, VoidCallback? refetch) {
+        final theme = Theme.of(context);
         if (material.isPdf) {
           if (material.fileUrl.isEmpty) {
             return ReaderScaffold(
@@ -319,7 +372,5 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             ),
           ),
         );
-      },
-    );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/services/retention_service.dart';
 import '../../../../core/services/study_progress_store.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -15,6 +16,7 @@ class DashboardScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     final progressStore = StudyProgressStore();
+    final retention = RetentionService();
 
     return Query(
       options: QueryOptions(document: gql(kDashboard)),
@@ -49,6 +51,9 @@ class DashboardScreen extends ConsumerWidget {
             .where((item) => item.trim().isNotEmpty)
             .cast<String>()
             .toList();
+        if (weakestTopics.isNotEmpty) {
+          retention.refreshStudyReminder(weakTopic: weakestTopics.first);
+        }
         final strongestTopics = ((snap?['strongestTopics'] as List?) ?? const [])
             .map((item) => item is Map ? (item['name']?.toString() ?? '') : item.toString())
             .where((item) => item.trim().isNotEmpty)
