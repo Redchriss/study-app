@@ -52,6 +52,40 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     await prefs.setInt(key, page);
   }
 
+  Future<void> _trackProgress({
+    required String slug,
+    required String title,
+    required String subjectName,
+    required String contentType,
+    required int currentUnit,
+    required int totalUnits,
+    String? lastPositionLabel,
+  }) async {
+    await _progressStore.saveMaterial(
+      slug: slug,
+      title: title,
+      subjectName: subjectName,
+      contentType: contentType,
+      currentUnit: currentUnit,
+      totalUnits: totalUnits,
+    );
+
+    try {
+      final client = GraphQLProvider.of(context).value;
+      await client.mutate(
+        MutationOptions(
+          document: gql(kTrackMaterialProgress),
+          variables: {
+            'materialSlug': slug,
+            'currentUnit': currentUnit,
+            'totalUnits': totalUnits,
+            'lastPositionLabel': lastPositionLabel,
+          },
+        ),
+      );
+    } catch (_) {}
+  }
+
   bool _isPdfMaterial(Map<String, dynamic> material) {
     final contentType = (material['contentType'] as String? ?? '').toLowerCase();
     final fileUrl = material['fileUrl'] as String? ?? '';
@@ -164,6 +198,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         final title = material['title'] as String? ?? 'Study mode';
         final subjectName = material['subject']?['name'] as String? ?? '';
         final contentType = (material['contentType'] as String? ?? '').toLowerCase();
+        final serverProgress = material['myProgress'] as Map<String, dynamic>?;
         if (_isPdfMaterial(material)) {
           final fileUrl = material['fileUrl'] as String?;
           if (fileUrl == null || fileUrl.isEmpty) {
@@ -178,10 +213,11 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             subjectName: subjectName,
             contentType: contentType,
             fileUrl: fileUrl,
+            initialUnit: (serverProgress?['currentUnit'] as num?)?.toInt(),
             loadSavedPage: _loadSavedPage,
             savePage: _savePage,
             cachePdf: _cachePdf,
-            progressStore: _progressStore,
+            trackProgress: _trackProgress,
           );
         }
 
@@ -192,9 +228,10 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             pages: _buildTextPages(material['contentText'] as String? ?? ''),
             subjectName: subjectName,
             contentType: contentType,
+            initialUnit: (serverProgress?['currentUnit'] as num?)?.toInt(),
             loadSavedPage: _loadSavedPage,
             savePage: _savePage,
-            progressStore: _progressStore,
+            trackProgress: _trackProgress,
           );
         }
 
@@ -205,7 +242,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             subjectName: subjectName,
             contentType: contentType,
             youtubeEmbedUrl: material['youtubeEmbedUrl'] as String? ?? '',
-            progressStore: _progressStore,
+            trackProgress: _trackProgress,
             resolveVideoId: _videoIdFromUrl,
           );
         }
@@ -217,7 +254,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             subjectName: subjectName,
             contentType: contentType,
             imageUrl: material['fileUrl'] as String? ?? '',
-            progressStore: _progressStore,
+            trackProgress: _trackProgress,
           );
         }
 
@@ -246,10 +283,11 @@ class _PdfMaterialReader extends StatefulWidget {
     required this.subjectName,
     required this.contentType,
     required this.fileUrl,
+    required this.initialUnit,
     required this.loadSavedPage,
     required this.savePage,
     required this.cachePdf,
-    required this.progressStore,
+    required this.trackProgress,
   });
 
   final String slug;
@@ -257,10 +295,19 @@ class _PdfMaterialReader extends StatefulWidget {
   final String subjectName;
   final String contentType;
   final String fileUrl;
+  final int? initialUnit;
   final Future<int> Function(String slug, {bool textMode}) loadSavedPage;
   final Future<void> Function(String slug, int page, {bool textMode}) savePage;
   final Future<String?> Function(String url, String slug) cachePdf;
-  final StudyProgressStore progressStore;
+  final Future<void> Function({
+    required String slug,
+    required String title,
+    required String subjectName,
+    required String contentType,
+    required int currentUnit,
+    required int totalUnits,
+    String? lastPositionLabel,
+  }) trackProgress;
 
   @override
   State<_PdfMaterialReader> createState() => _PdfMaterialReaderState();
@@ -276,7 +323,7 @@ class _PdfMaterialReaderState extends State<_PdfMaterialReader> {
     super.initState();
     _documentFuture = () async {
       final filePath = await widget.cachePdf(widget.fileUrl, widget.slug);
-      final savedPage = await widget.loadSavedPage(widget.slug);
+      final savedPage = widget.initialUnit ?? await widget.loadSavedPage(widget.slug);
       return (filePath, savedPage);
     }();
   }
@@ -333,13 +380,14 @@ class _PdfMaterialReaderState extends State<_PdfMaterialReader> {
                   _pageCount = total ?? _pageCount;
                 });
                 widget.savePage(widget.slug, nextPage);
-                widget.progressStore.saveMaterial(
+                widget.trackProgress(
                   slug: widget.slug,
                   title: widget.title,
                   subjectName: widget.subjectName,
                   contentType: widget.contentType,
                   currentUnit: nextPage,
                   totalUnits: total ?? _pageCount,
+                  lastPositionLabel: 'Page ${nextPage + 1} of ${total ?? _pageCount}',
                 );
               },
               onError: (error) {
@@ -362,9 +410,10 @@ class _TextMaterialReader extends StatefulWidget {
     required this.pages,
     required this.subjectName,
     required this.contentType,
+    required this.initialUnit,
     required this.loadSavedPage,
     required this.savePage,
-    required this.progressStore,
+    required this.trackProgress,
   });
 
   final String slug;
@@ -372,9 +421,18 @@ class _TextMaterialReader extends StatefulWidget {
   final List<String> pages;
   final String subjectName;
   final String contentType;
+  final int? initialUnit;
   final Future<int> Function(String slug, {bool textMode}) loadSavedPage;
   final Future<void> Function(String slug, int page, {bool textMode}) savePage;
-  final StudyProgressStore progressStore;
+  final Future<void> Function({
+    required String slug,
+    required String title,
+    required String subjectName,
+    required String contentType,
+    required int currentUnit,
+    required int totalUnits,
+    String? lastPositionLabel,
+  }) trackProgress;
 
   @override
   State<_TextMaterialReader> createState() => _TextMaterialReaderState();
@@ -388,7 +446,9 @@ class _TextMaterialReaderState extends State<_TextMaterialReader> {
   @override
   void initState() {
     super.initState();
-    _savedPageFuture = widget.loadSavedPage(widget.slug, textMode: true);
+    _savedPageFuture = widget.initialUnit != null
+        ? Future<int>.value(widget.initialUnit)
+        : widget.loadSavedPage(widget.slug, textMode: true);
   }
 
   @override
@@ -438,13 +498,14 @@ class _TextMaterialReaderState extends State<_TextMaterialReader> {
               onPageChanged: (page) {
                 setState(() => _currentPage = page);
                 widget.savePage(widget.slug, page, textMode: true);
-                widget.progressStore.saveMaterial(
+                widget.trackProgress(
                   slug: widget.slug,
                   title: widget.title,
                   subjectName: widget.subjectName,
                   contentType: widget.contentType,
                   currentUnit: page,
                   totalUnits: widget.pages.length,
+                  lastPositionLabel: 'Page ${page + 1} of ${widget.pages.length}',
                 );
               },
               itemBuilder: (context, index) {
@@ -540,7 +601,7 @@ class _VideoMaterialReader extends StatefulWidget {
     required this.subjectName,
     required this.contentType,
     required this.youtubeEmbedUrl,
-    required this.progressStore,
+    required this.trackProgress,
     required this.resolveVideoId,
   });
 
@@ -549,7 +610,15 @@ class _VideoMaterialReader extends StatefulWidget {
   final String subjectName;
   final String contentType;
   final String youtubeEmbedUrl;
-  final StudyProgressStore progressStore;
+  final Future<void> Function({
+    required String slug,
+    required String title,
+    required String subjectName,
+    required String contentType,
+    required int currentUnit,
+    required int totalUnits,
+    String? lastPositionLabel,
+  }) trackProgress;
   final String? Function(String url) resolveVideoId;
 
   @override
@@ -571,13 +640,14 @@ class _VideoMaterialReaderState extends State<_VideoMaterialReader> {
           strictRelatedVideos: true,
         ),
       )..loadVideoById(videoId: videoId);
-      widget.progressStore.saveMaterial(
+      widget.trackProgress(
         slug: widget.slug,
         title: widget.title,
         subjectName: widget.subjectName,
         contentType: widget.contentType,
         currentUnit: 0,
         totalUnits: 1,
+        lastPositionLabel: 'Continue watching',
       );
     }
   }
@@ -634,7 +704,7 @@ class _ImageMaterialReader extends StatefulWidget {
     required this.subjectName,
     required this.contentType,
     required this.imageUrl,
-    required this.progressStore,
+    required this.trackProgress,
   });
 
   final String slug;
@@ -642,7 +712,15 @@ class _ImageMaterialReader extends StatefulWidget {
   final String subjectName;
   final String contentType;
   final String imageUrl;
-  final StudyProgressStore progressStore;
+  final Future<void> Function({
+    required String slug,
+    required String title,
+    required String subjectName,
+    required String contentType,
+    required int currentUnit,
+    required int totalUnits,
+    String? lastPositionLabel,
+  }) trackProgress;
 
   @override
   State<_ImageMaterialReader> createState() => _ImageMaterialReaderState();
@@ -652,13 +730,14 @@ class _ImageMaterialReaderState extends State<_ImageMaterialReader> {
   @override
   void initState() {
     super.initState();
-    widget.progressStore.saveMaterial(
+    widget.trackProgress(
       slug: widget.slug,
       title: widget.title,
       subjectName: widget.subjectName,
       contentType: widget.contentType,
       currentUnit: 0,
       totalUnits: 1,
+      lastPositionLabel: 'Continue studying',
     );
   }
 

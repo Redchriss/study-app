@@ -28,6 +28,11 @@ class MaterialsScreen extends StatelessWidget {
             return _buildShimmer();
           }
           final materials = (result.data?['materials'] as List?) ?? [];
+          final latestMaterialProgress = StudyMaterialProgress.fromGraphQL(
+            result.data?['latestMaterialProgress'] is Map
+                ? Map<String, dynamic>.from(result.data!['latestMaterialProgress'] as Map)
+                : null,
+          );
           if (materials.isEmpty) {
             return const EmptyState(icon: Icons.menu_book_outlined, title: 'No materials yet');
           }
@@ -37,7 +42,9 @@ class MaterialsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(DesignTokens.spMd),
               children: [
                 FutureBuilder<StudyMaterialProgress?>(
-                  future: progressStore.loadLastMaterial(),
+                  future: latestMaterialProgress != null
+                      ? Future<StudyMaterialProgress?>.value(latestMaterialProgress)
+                      : progressStore.loadLastMaterial(),
                   builder: (context, snapshot) {
                     final saved = snapshot.data;
                     if (saved == null) return const SizedBox.shrink();

@@ -44,6 +44,23 @@ class StudyMaterialProgress {
         'updatedAtEpochMs': updatedAtEpochMs,
       };
 
+  static StudyMaterialProgress? fromGraphQL(Map<String, dynamic>? progress) {
+    final material = progress?['material'] as Map<String, dynamic>?;
+    if (progress == null || material == null) return null;
+    final slug = material['slug']?.toString() ?? '';
+    final title = material['title']?.toString() ?? '';
+    if (slug.isEmpty || title.isEmpty) return null;
+    return StudyMaterialProgress(
+      slug: slug,
+      title: title,
+      subjectName: material['subject']?['name']?.toString() ?? '',
+      contentType: material['contentType']?.toString() ?? '',
+      currentUnit: (progress['currentUnit'] as num?)?.toInt() ?? 0,
+      totalUnits: (progress['totalUnits'] as num?)?.toInt() ?? 0,
+      updatedAtEpochMs: DateTime.tryParse(progress['lastOpenedAt']?.toString() ?? '')?.millisecondsSinceEpoch ?? 0,
+    );
+  }
+
   static StudyMaterialProgress? fromJson(Map<String, dynamic> json) {
     final slug = json['slug']?.toString() ?? '';
     final title = json['title']?.toString() ?? '';

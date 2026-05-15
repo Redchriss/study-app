@@ -5,6 +5,19 @@ query Materials($subjectId: ID, $search: String, $contentType: String, $limit: I
     subject { id name }
     createdAt
   }
+  latestMaterialProgress {
+    currentUnit
+    totalUnits
+    progressPercent
+    lastPositionLabel
+    lastOpenedAt
+    material {
+      slug
+      title
+      contentType
+      subject { name }
+    }
+  }
 }
 ''';
 
@@ -21,6 +34,13 @@ query Material($slug: String!) {
     aiSummary
     isPremium
     isBookmarked
+    myProgress {
+      currentUnit
+      totalUnits
+      progressPercent
+      lastPositionLabel
+      lastOpenedAt
+    }
     subject { id name }
     createdAt
   }
@@ -96,6 +116,27 @@ mutation DeleteMyMaterial($slug: String!) {
   deleteMyMaterial(slug: $slug) {
     success
     errors
+  }
+}
+''';
+
+const String kTrackMaterialProgress = r'''
+mutation TrackMaterialProgress($materialSlug: String!, $currentUnit: Int!, $totalUnits: Int!, $lastPositionLabel: String) {
+  trackMaterialProgress(
+    materialSlug: $materialSlug
+    currentUnit: $currentUnit
+    totalUnits: $totalUnits
+    lastPositionLabel: $lastPositionLabel
+  ) {
+    success
+    errors
+    progress {
+      currentUnit
+      totalUnits
+      progressPercent
+      lastPositionLabel
+      lastOpenedAt
+    }
   }
 }
 ''';

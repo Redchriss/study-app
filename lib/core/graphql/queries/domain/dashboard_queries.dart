@@ -27,6 +27,20 @@ query Dashboard {
     thumbnailUrl
     subject { name }
   }
+  latestMaterialProgress {
+    currentUnit
+    totalUnits
+    progressPercent
+    lastPositionLabel
+    lastOpenedAt
+    material {
+      id
+      slug
+      title
+      contentType
+      subject { name }
+    }
+  }
   recentQuizAttempts(limit: 3) {
     id
     quiz { title }

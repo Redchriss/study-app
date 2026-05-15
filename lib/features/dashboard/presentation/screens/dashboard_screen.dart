@@ -35,7 +35,11 @@ class DashboardScreen extends ConsumerWidget {
         final me = result.data?['me'];
         final profile = me?['profile'];
         final recentMaterials = (result.data?['recentMaterials'] as List?) ?? [];
-      
+        final latestMaterialProgress = StudyMaterialProgress.fromGraphQL(
+          result.data?['latestMaterialProgress'] is Map
+              ? Map<String, dynamic>.from(result.data!['latestMaterialProgress'] as Map)
+              : null,
+        );
         final snap = result.data?['progressSnapshot'];
         final circles = (result.data?['myCircles'] as List?) ?? [];
         final name = me?['username'] as String? ?? 'Student';
@@ -116,103 +120,21 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
 
-                SliverToBoxAdapter(
-                  child: FutureBuilder<StudyMaterialProgress?>(
-                    future: progressStore.loadLastMaterial(),
-                    builder: (context, snapshot) {
-                      final saved = snapshot.data;
-                      if (saved == null) return const SizedBox.shrink();
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          DesignTokens.spMd,
-                          0,
-                          DesignTokens.spMd,
-                          DesignTokens.spLg,
-                        ),
-                        child: AnimatedPress(
-                          onTap: () => context.push('/materials/${saved.slug}/read'),
-                          child: Container(
-                            padding: const EdgeInsets.all(DesignTokens.spMd),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [Color(0xFF123B62), Color(0xFF0E2236)],
-                              ),
-                              borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-                              boxShadow: DesignTokens.shadowMd(dark),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 52,
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Icon(
-                                    _materialIcon(saved.contentType),
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(width: DesignTokens.spMd),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Continue Studying',
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0.3,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        saved.title,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: theme.textTheme.titleMedium?.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        saved.subjectName.isEmpty ? saved.progressLabel : '${saved.subjectName} • ${saved.progressLabel}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(999),
-                                        child: LinearProgressIndicator(
-                                          minHeight: 6,
-                                          value: saved.completionRatio <= 0 ? 0.08 : saved.completionRatio,
-                                          backgroundColor: Colors.white.withValues(alpha: 0.12),
-                                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFEEC66D)),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: DesignTokens.spSm),
-                                const Icon(Icons.chevron_right, color: Colors.white70),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                if (latestMaterialProgress != null)
+                  SliverToBoxAdapter(
+                    child: _ContinueStudyCard(progress: latestMaterialProgress),
+                  )
+                else
+                  SliverToBoxAdapter(
+                    child: FutureBuilder<StudyMaterialProgress?>(
+                      future: progressStore.loadLastMaterial(),
+                      builder: (context, snapshot) {
+                        final saved = snapshot.data;
+                        if (saved == null) return const SizedBox.shrink();
+                        return _ContinueStudyCard(progress: saved);
+                      },
+                    ),
                   ),
-                ),
 
                 // ── Bento Grid ────────────────────────────────────────
                 SliverToBoxAdapter(
@@ -513,6 +435,106 @@ IconData _materialIcon(String type) {
       return Icons.menu_book_rounded;
     default:
       return Icons.description_rounded;
+  }
+}
+
+class _ContinueStudyCard extends StatelessWidget {
+  const _ContinueStudyCard({required this.progress});
+
+  final StudyMaterialProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DesignTokens.spMd,
+        0,
+        DesignTokens.spMd,
+        DesignTokens.spLg,
+      ),
+      child: AnimatedPress(
+        onTap: () => context.push('/materials/${progress.slug}/read'),
+        child: Container(
+          padding: const EdgeInsets.all(DesignTokens.spMd),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF123B62), Color(0xFF0E2236)],
+            ),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+            boxShadow: DesignTokens.shadowMd(dark),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  _materialIcon(progress.contentType),
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: DesignTokens.spMd),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Continue Studying',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      progress.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      progress.subjectName.isEmpty ? progress.progressLabel : '${progress.subjectName} • ${progress.progressLabel}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        minHeight: 6,
+                        value: progress.completionRatio <= 0 ? 0.08 : progress.completionRatio,
+                        backgroundColor: Colors.white.withValues(alpha: 0.12),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFEEC66D)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: DesignTokens.spSm),
+              const Icon(Icons.chevron_right, color: Colors.white70),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
