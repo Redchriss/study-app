@@ -80,6 +80,45 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
 
   bool get _supportsOptionalFile => _contentType == 'text';
 
+  String get _levelLabel {
+    switch (ref.read(authProvider).user?['profile']?['educationLevel']?.toString() ?? 'secondary') {
+      case 'primary': return 'Primary';
+      case 'tertiary': return 'Tertiary / University';
+      default: return 'Secondary';
+    }
+  }
+
+  String get _titlePlaceholder {
+    final level = ref.read(authProvider).user?['profile']?['educationLevel']?.toString() ?? 'secondary';
+    switch (_contentType) {
+      case 'pdf':
+        if (level == 'primary') return 'e.g. Standard 7 Maths – Fractions';
+        if (level == 'tertiary') return 'e.g. UNIMA Physics 201 – Thermodynamics Notes';
+        return 'e.g. Form 3 Biology – Respiration';
+      case 'image':
+        if (level == 'primary') return 'e.g. Diagram – Water Cycle';
+        if (level == 'tertiary') return 'e.g. Anatomy Diagram – Digestive System';
+        return 'e.g. MSCE Geography – Rainfall Map';
+      case 'video':
+        if (level == 'primary') return 'e.g. English Lesson – Parts of Speech';
+        if (level == 'tertiary') return 'e.g. Organic Chemistry – Alkene Reactions';
+        return 'e.g. MSCE Mathematics – Differentiation';
+      case 'text':
+        if (level == 'primary') return 'e.g. Science Summary – Living Things';
+        if (level == 'tertiary') return 'e.g. Law Notes – Constitutional Law';
+        return 'e.g. History Notes – Colonial Malawi';
+      default:
+        return 'e.g. Form 3 Biology Notes – Respiration';
+    }
+  }
+
+  String get _descPlaceholder {
+    final level = ref.read(authProvider).user?['profile']?['educationLevel']?.toString() ?? 'secondary';
+    if (level == 'primary') return 'What topic does this cover? What standard is it for?';
+    if (level == 'tertiary') return 'What course, year, and topics are covered in this material?';
+    return 'What form and subject is this for? What topics does it cover?';
+  }
+
   String get _primaryHint {
     switch (_contentType) {
       case 'pdf':
@@ -259,13 +298,13 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
                     style: theme.textTheme.bodyMedium?.copyWith(color: DesignTokens.textSecondary),
                   ),
                   const SizedBox(height: DesignTokens.spMd),
-                  const Row(
+                  Row(
                     children: [
-                      _UploadPill(label: 'AI-ready first'),
+                      const _UploadPill(label: 'AI-ready first'),
                       SizedBox(width: DesignTokens.spSm),
-                      _UploadPill(label: 'Mobile-friendly'),
+                      const _UploadPill(label: 'Mobile-friendly'),
                       SizedBox(width: DesignTokens.spSm),
-                      _UploadPill(label: 'Review before publish'),
+                      _UploadPill(label: _levelLabel),
                     ],
                   ),
                 ],
@@ -309,14 +348,7 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
             GlassCard(
               child: Column(
                 children: [
-                  TextField(
-                    controller: _titleCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Title',
-                      hintText: 'e.g. Form 3 Biology Notes - Respiration',
-                    ),
-                    textInputAction: TextInputAction.next,
-                  ),
+                  TextField(\n                    controller: _titleCtrl,\n                    decoration: InputDecoration(\n                      labelText: 'Title',\n                      hintText: _titlePlaceholder,\n                    ),\n                    textInputAction: TextInputAction.next,\n                  ),
                   const SizedBox(height: DesignTokens.spMd),
                   if (_loadingSubjects)
                     const ShimmerBox(height: 56, radius: DesignTokens.radiusMd)
@@ -336,15 +368,7 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
                       onChanged: (value) => setState(() => _subjectId = value),
                     ),
                   const SizedBox(height: DesignTokens.spMd),
-                  TextField(
-                    controller: _descCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Description',
-                      hintText: 'What should students expect from this material?',
-                    ),
-                    maxLines: 3,
-                    textInputAction: TextInputAction.next,
-                  ),
+                  TextField(\n                    controller: _descCtrl,\n                    decoration: InputDecoration(\n                      labelText: 'Description',\n                      hintText: _descPlaceholder,\n                    ),\n                    maxLines: 3,\n                    textInputAction: TextInputAction.next,\n                  ),
                 ],
               ),
             ),

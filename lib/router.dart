@@ -132,7 +132,6 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          GoRoute(path: '/scanner', builder: (_, __) => const ScannerScreen()),
           GoRoute(path: '/circles', builder: (_, __) => const CirclesScreen(),
             routes: [
               GoRoute(
@@ -155,6 +154,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Full-screen routes (no bottom nav)
+      GoRoute(path: '/scanner', builder: (_, __) => const ScannerScreen()),
       GoRoute(
         path: '/quiz/:slug',
         builder: (_, state) => QuizTakeScreen(slug: state.pathParameters['slug']!),

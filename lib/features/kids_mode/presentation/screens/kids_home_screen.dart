@@ -12,13 +12,9 @@ import '../../kids_visual_theme.dart';
 import '../widgets/kids_daily_goal_ring.dart';
 import '../widgets/kids_home_sections.dart';
 import '../widgets/kids_lesson_step_bar.dart';
-import '../widgets/kids_mission_board.dart';
-import '../widgets/kids_playful_button.dart';
-import '../widgets/kids_progress_snapshot_card.dart';
-import '../widgets/kids_story_chunk_card.dart';
 import '../widgets/kids_subject_card.dart';
-import '../widgets/kids_topic_roadmap_card.dart';
 import '../widgets/kids_topic_chip.dart';
+import '../widgets/kids_visual_lesson.dart';
 import 'kid_login_screen.dart';
 
 class KidsHomeScreen extends ConsumerStatefulWidget {
@@ -36,9 +32,6 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
   List<Map<String, dynamic>> _topics = [];
   List<dynamic> _quiz = [];
   bool _inQuiz = false;
-  int? _quizSelected;
-  bool _quizAnswered = false;
-  int _quizCorrectIndex = 0;
   bool _isSpeaking = false;
   bool _loading = false;
   int _stars = 0;
@@ -261,8 +254,6 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
           _lessonState = data['state'] is Map ? Map<String, dynamic>.from(data['state'] as Map) : null;
           _quiz = (_currentLesson?['quiz'] as List?)?.cast<Map<String, dynamic>>() ?? [];
           _inQuiz = false;
-          _quizAnswered = false;
-          _quizSelected = null;
           _quizReviewHint = null;
           _selectedStoryChunk = 0;
           _loading = false;
@@ -278,29 +269,31 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
     setState(() => _loading = false);
   }
 
-  List<String> _lessonChunks(String text) {
-    return text
-        .split('\n')
-        .map((line) => line.trim())
-        .where((line) => line.isNotEmpty)
-        .toList();
-  }
+  /// Called when the multi-quiz panel completes. Reports the result of the first
+  /// quiz question to the backend (which drives stars/streak/mastery). If the
+  /// learner got any correct we submit the correct index; otherwise we submit -1
+  /// so the backend registers an attempt without a correct answer.
+  Future<void> _onQuizComplete({required int correct, required int total}) async {
+    if (_currentLesson == null) return;
+    // Determine which index to send: use correct index from q[0] if ≥ 1 correct,
+    // or a deliberately wrong index (99) if none correct.
+    final firstQ = _quiz.isNotEmpty ? (_quiz[0] as Map<String, dynamic>?) : null;
+    final correctIdx = (firstQ?['correct'] as num?)?.toInt() ?? 0;
+    final selectedIdx = correct > 0 ? correctIdx : 99; // 99 → always wrong
+    await _answerQuiz(selectedIdx);
 
-  void _startQuiz() {
-    if (_quiz.isEmpty) return;
-    final q = _quiz[0];
-    setState(() {
-      _quizCorrectIndex = q['correct'] as int? ?? 0;
-      _inQuiz = true;
-      _quizAnswered = false;
-      _quizSelected = null;
-    });
-    HapticFeedback.mediumImpact();
-    _speak(q['question'] as String? ?? '');
+    // Celebration burst when ≥ 80 %
+    if (correct / (total > 0 ? total : 1) >= 0.8 && mounted) {
+      HapticFeedback.heavyImpact();
+      _burstCtrl.forward(from: 0);
+      setState(() => _showCorrectBurst = true);
+      await Future.delayed(const Duration(milliseconds: 900));
+      if (mounted) setState(() => _showCorrectBurst = false);
+    }
   }
 
   Future<void> _answerQuiz(int idx) async {
-    if (_quizAnswered || _currentLesson == null) return;
+    if (_currentLesson == null) return;
     final c = _buildKidClient();
     final result = await c.mutate(MutationOptions(
       document: gql(kAnswerKidQuiz),
@@ -315,8 +308,6 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
     }
     if (!mounted) return;
     setState(() {
-      _quizSelected = idx;
-      _quizAnswered = true;
       _stars = (payload?['starsEarned'] as num?)?.toInt() ?? _stars;
       _streak = (payload?['streak'] as num?)?.toInt() ?? _streak;
       _quizReviewHint = payload?['nextReviewLabel']?.toString();
@@ -334,17 +325,6 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
         };
       }
     });
-    if (correct) {
-      HapticFeedback.heavyImpact();
-      _burstCtrl.forward(from: 0);
-      setState(() => _showCorrectBurst = true);
-      await Future.delayed(const Duration(milliseconds: 850));
-      if (mounted) setState(() => _showCorrectBurst = false);
-      _speak('Correct! Well done!');
-    } else {
-      HapticFeedback.selectionClick();
-      _speak('Nice try! The right answer is highlighted.');
-    }
     final newBadges = ((payload?['newBadges'] as List?) ?? const [])
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
@@ -622,8 +602,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
         ),
       );
     }
-    final text = _currentLesson!['bodyText'] as String? ?? '';
-    final chunks = _lessonChunks(text);
+    final subjectId = _selectedSubject?['id']?.toString() ?? '';
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -633,6 +612,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // ── Header row ──────────────────────────────────────────────
                 Row(
                   children: [
                     Material(
@@ -668,6 +648,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                   ],
                 ),
                 const SizedBox(height: 14),
+
+                // ── Topic chips ──────────────────────────────────────────────
                 if (_topics.isNotEmpty) ...[
                   SizedBox(
                     height: 46,
@@ -682,9 +664,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                           label: topic['name']?.toString() ?? 'Topic',
                           selected: selected,
                           onTap: () {
-                            final subjectId = _selectedSubject?['id']?.toString();
                             final topicId = topic['id']?.toString();
-                            if (subjectId == null || topicId == null) return;
+                            if (subjectId.isEmpty || topicId == null) return;
                             setState(() => _selectedTopic = topic);
                             _fetchLesson(subjectId, auth.standard, topicId: topicId);
                           },
@@ -694,335 +675,97 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                   ),
                   const SizedBox(height: 14),
                 ],
-                if (_subjectProgress != null) ...[
-                  KidsProgressSnapshotCard(
-                    lessonsCompleted: (_subjectProgress?['lessonsCompleted'] as num?)?.toInt() ?? 0,
-                    quizzesTaken: (_subjectProgress?['quizzesTaken'] as num?)?.toInt() ?? 0,
-                    quizzesCorrect: (_subjectProgress?['quizzesCorrect'] as num?)?.toInt() ?? 0,
-                    starsEarned: (_subjectProgress?['starsEarned'] as num?)?.toInt() ?? 0,
-                  ),
-                  const SizedBox(height: 14),
-                ],
-                if (_roadmapSummary != null) ...[
-                  KidsMissionBoard(
-                    readyReviewCount: (_roadmapSummary?['readyReviewCount'] as num?)?.toInt() ?? 0,
-                    masteredCount: (_roadmapSummary?['masteredCount'] as num?)?.toInt() ?? 0,
-                    inProgressCount: (_roadmapSummary?['inProgressCount'] as num?)?.toInt() ?? 0,
-                    untouchedCount: (_roadmapSummary?['untouchedCount'] as num?)?.toInt() ?? 0,
-                    onReviewTap: () => _openRoadmapTopicById(_roadmapSummary?['reviewTopicId']?.toString(), auth),
-                    onNextTap: () => _openRoadmapTopicById(_roadmapSummary?['nextTopicId']?.toString(), auth),
-                  ),
-                  const SizedBox(height: 14),
-                ],
-                if (_rewardProfile != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Level ${(_rewardProfile?['level'] as num?)?.toInt() ?? 1} journey',
-                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: KidsVisualTheme.ink),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${(_rewardProfile?['xp'] as num?)?.toInt() ?? 0} xp · ${(_rewardProfile?['coins'] as num?)?.toInt() ?? 0} coins',
-                                style: const TextStyle(fontWeight: FontWeight.w700, color: KidsVisualTheme.inkMuted),
-                              ),
-                            ],
-                          ),
-                        ),
-                        KidsPlayfulSecondaryButton(
-                          icon: Icons.map_rounded,
-                          label: 'Journey',
-                          color: KidsVisualTheme.pathBlue,
-                          onTap: () => _openJourney(auth),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                ],
-                if (_reviewQueue.isNotEmpty) ...[
-                  KidsReviewQueue(reviewQueue: _reviewQueue, onTapTopic: (topicId) => _openRoadmapTopicById(topicId, auth)),
-                  const SizedBox(height: 14),
-                ],
-                if (_topicRoadmap.isNotEmpty) ...[
-                  SizedBox(
-                    height: 138,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _topicRoadmap.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
-                      itemBuilder: (context, index) {
-                        final item = _topicRoadmap[index];
-                        final state = item['state'] is Map ? Map<String, dynamic>.from(item['state'] as Map) : null;
-                        return KidsTopicRoadmapCard(
-                          title: item['topicName']?.toString() ?? 'Topic',
-                          statusLabel: state?['statusLabel']?.toString() ?? 'Start here',
-                          masteryLevel: (state?['masteryLevel'] as num?)?.toInt() ?? 0,
-                          selected: item['topicId']?.toString() == _selectedTopic?['id']?.toString(),
-                          readyForReview: state?['readyForReview'] == true,
-                          isMastered: state?['isMastered'] == true,
-                          nextReviewLabel: state?['nextReviewLabel']?.toString(),
-                          onTap: () => _openRoadmapTopicById(item['topicId']?.toString(), auth),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                ],
+
+                // ── Sidebar cards (progress, mission, reward, review, roadmap) ─
+                KidsLessonSidebarCards(
+                  subjectProgress: _subjectProgress,
+                  roadmapSummary: _roadmapSummary,
+                  rewardProfile: _rewardProfile,
+                  reviewQueue: _reviewQueue,
+                  topicRoadmap: _topicRoadmap,
+                  selectedTopicId: _selectedTopic?['id']?.toString(),
+                  onReviewTap: () => _openRoadmapTopicById(_roadmapSummary?['reviewTopicId']?.toString(), auth),
+                  onNextTap: () => _openRoadmapTopicById(_roadmapSummary?['nextTopicId']?.toString(), auth),
+                  onJourneyTap: () => _openJourney(auth),
+                  onTapTopic: (topicId) => _openRoadmapTopicById(topicId, auth),
+                  onTopicRoadmapTap: (topicId) => _openRoadmapTopicById(topicId, auth),
+                ),
+
+                // ── Step bar ────────────────────────────────────────────────
                 KidsLessonStepBar(inQuiz: _inQuiz),
                 const SizedBox(height: 18),
+
+                // ── Main lesson / quiz panel ─────────────────────────────────
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
                     KidsFloatingPanel(
-                      child: _inQuiz ? _buildQuizContent(Theme.of(context)) : _buildStoryPanel(text, chunks),
+                      child: AnimatedSwitcher(
+                        duration: DesignTokens.durNormal,
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        child: _inQuiz
+                            ? KidsMultiQuizPanel(
+                                key: ValueKey('quiz_${_currentLesson?['id']}'),
+                                lesson: _currentLesson!,
+                                onComplete: ({required int correct, required int total}) {
+                                  _onQuizComplete(correct: correct, total: total);
+                                },
+                                onBack: () => setState(() => _inQuiz = false),
+                              )
+                            : KidsVisualLessonPanel(
+                                key: ValueKey('lesson_${_currentLesson?['id']}'),
+                                lesson: _currentLesson!,
+                                isSpeaking: _isSpeaking,
+                                selectedChunk: _selectedStoryChunk,
+                                onChunkTap: (i) => setState(() => _selectedStoryChunk = i),
+                                onListenTap: () {
+                                  if (_isSpeaking) {
+                                    _tts.stop();
+                                    setState(() => _isSpeaking = false);
+                                  } else {
+                                    final bodyText = _currentLesson?['bodyText'] as String? ?? '';
+                                    _speak(bodyText);
+                                  }
+                                },
+                                onStartQuiz: _quiz.isNotEmpty
+                                    ? () => setState(() => _inQuiz = true)
+                                    : () {},
+                                onNextLesson: () {
+                                  if (subjectId.isNotEmpty) {
+                                    _fetchLesson(
+                                      subjectId,
+                                      auth.standard,
+                                      topicId: _selectedTopic?['id']?.toString(),
+                                    );
+                                  }
+                                },
+                              ),
+                      ),
                     ),
                     if (_showCorrectBurst) CorrectBurstOverlay(controller: _burstCtrl),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: KidsPlayfulPrimaryButton(
-                        label: 'Next lesson',
-                        icon: Icons.auto_awesome,
-                        onTap: () {
-                          final subjectId = _selectedSubject?['id']?.toString();
-                          if (subjectId != null && subjectId.isNotEmpty) {
-                            _fetchLesson(
-                              subjectId,
-                              auth.standard,
-                              topicId: _selectedTopic?['id']?.toString(),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: KidsPlayfulSecondaryButton(
-                        icon: Icons.replay_rounded,
-                        label: 'Try quiz again',
-                        color: const Color(0xFF9B59B6),
-                        onTap: _quiz.isNotEmpty ? _startQuiz : null,
-                      ),
-                    ),
-                  ],
-                ),
+
+                // ── Mastery hint (shown below panel in lesson mode) ──────────
+                if (!_inQuiz && (_lessonState != null || _quizReviewHint != null)) ...[
+                  const SizedBox(height: 14),
+                  KidsMasteryHint(
+                    masteryLevel: (_lessonState?['masteryLevel'] as num?)?.toInt() ?? 0,
+                    reviewHint: _quizReviewHint ?? _lessonState?['nextReviewLabel']?.toString(),
+                  ),
+                ],
+
+                // ── Streak chip ──────────────────────────────────────────────
+                if (!_inQuiz && _streak > 0) ...[
+                  const SizedBox(height: 14),
+                  KidsStreakChip(streak: _streak, quizMode: true),
+                ],
               ],
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildStoryPanel(String text, List<String> chunks) {
-    return Column(
-      children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            gradient: KidsVisualTheme.ctaGradient,
-            shape: BoxShape.circle,
-            boxShadow: KidsVisualTheme.chunkyShadow(const Color(0xFF2A8F4A), dy: 3),
-          ),
-          child: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 36),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          _currentLesson?['title']?.toString() ?? 'Lesson',
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: KidsVisualTheme.ink,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        if (_selectedTopic?['name'] != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            _selectedTopic!['name'].toString(),
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: KidsVisualTheme.inkMuted,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-        const SizedBox(height: 16),
-        ...chunks.asMap().entries.map((entry) {
-          final index = entry.key;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: KidsStoryChunkCard(
-              index: index,
-              text: entry.value,
-              selected: _selectedStoryChunk == index,
-              onTap: () => setState(() => _selectedStoryChunk = index),
-            ),
-          );
-        }),
-        const SizedBox(height: 20),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            KidsPlayfulSecondaryButton(
-              icon: _isSpeaking ? Icons.stop_rounded : Icons.volume_up_rounded,
-              label: _isSpeaking ? 'Stop' : 'Listen',
-              color: KidsVisualTheme.pathBlue,
-              onTap: () {
-                if (_isSpeaking) {
-                  _tts.stop();
-                  setState(() => _isSpeaking = false);
-                } else {
-                  final playableText = chunks.isEmpty
-                      ? text
-                      : chunks[_selectedStoryChunk.clamp(0, chunks.length - 1)];
-                  _speak(playableText);
-                }
-              },
-            ),
-            KidsPlayfulSecondaryButton(
-              icon: Icons.quiz_rounded,
-              label: 'Quiz time!',
-              color: const Color(0xFF9B59B6),
-              onTap: _quiz.isNotEmpty ? _startQuiz : null,
-            ),
-          ],
-        ),
-        if (_streak > 0) ...[
-          const SizedBox(height: 16),
-          KidsStreakChip(streak: _streak, quizMode: true),
-        ],
-        if (_lessonState != null || _quizReviewHint != null) ...[
-          const SizedBox(height: 16),
-          KidsMasteryHint(
-            masteryLevel: (_lessonState?['masteryLevel'] as num?)?.toInt() ?? 0,
-            reviewHint: _quizReviewHint ?? _lessonState?['nextReviewLabel']?.toString(),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildQuizContent(ThemeData theme) {
-    if (_quiz.isEmpty) return const SizedBox();
-    final q = _quiz[0];
-    final question = q['question'] as String? ?? '';
-    final options = (q['options'] as List?)?.cast<String>() ?? [];
-    return Column(
-      children: [
-        Material(
-          color: KidsVisualTheme.sunGold.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(18),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () => _speak(question),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      question,
-                      style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: KidsVisualTheme.ink),
-                    ),
-                  ),
-                  const Icon(Icons.volume_up_rounded, color: KidsVisualTheme.pathBlue, size: 26),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        ...options.asMap().entries.map((e) {
-          final idx = e.key;
-          final opt = e.value;
-          Color bg = Colors.white;
-          Color fg = KidsVisualTheme.ink;
-          double borderW = 2;
-          Color borderC = KidsVisualTheme.ink.withValues(alpha: 0.08);
-          if (_quizAnswered) {
-            if (idx == _quizCorrectIndex) {
-              bg = DesignTokens.success;
-              fg = Colors.white;
-              borderC = DesignTokens.success;
-            } else if (idx == _quizSelected) {
-              bg = DesignTokens.error;
-              fg = Colors.white;
-              borderC = DesignTokens.error;
-            }
-          }
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Material(
-              color: bg,
-              borderRadius: BorderRadius.circular(16),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: _quizAnswered ? null : () => _answerQuiz(idx),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: borderC, width: borderW),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: _quizAnswered && idx == _quizCorrectIndex ? 0.25 : 0.95),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            String.fromCharCode(65 + idx),
-                            style: TextStyle(fontWeight: FontWeight.w900, color: fg, fontSize: 16),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(opt, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: fg))),
-                      if (_quizAnswered && idx == _quizCorrectIndex)
-                        const Icon(Icons.check_circle_rounded, color: Colors.white, size: 26),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        }),
-        if (_quizAnswered) ...[
-          const SizedBox(height: 8),
-          KidsPlayfulPrimaryButton(
-            label: 'Back to story',
-            onTap: () => setState(() {
-              _inQuiz = false;
-              _quizAnswered = false;
-              _quizSelected = null;
-            }),
-          ),
-        ],
-      ],
     );
   }
 }

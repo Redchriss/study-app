@@ -46,7 +46,7 @@ query PrimaryTopics($subjectId: ID!, $standard: Int!) {
 const String kKidLesson = r'''
 query KidLesson($subjectId: ID!, $standard: Int!, $topicId: ID) {
   kidLesson(subjectId: $subjectId, standard: $standard, topicId: $topicId) {
-    id title bodyText quiz language
+    id title bodyText quiz chunks language
   }
 }
 ''';
@@ -55,7 +55,7 @@ const String kFetchKidLesson = r'''
 mutation FetchKidLesson($subjectId: ID!, $standard: Int!, $topicId: ID) {
   fetchKidLesson(subjectId: $subjectId, standard: $standard, topicId: $topicId) {
     success errors
-    lesson { id title bodyText quiz }
+    lesson { id title bodyText quiz chunks }
     state {
       lessonsOpened
       quizAttempts

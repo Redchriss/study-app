@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -44,6 +47,14 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   late final AnimationController _cursorCtrl;
   late final Animation<double> _cursorAnim;
 
+  static const _modes = [
+    ('coach', 'Coach', Icons.school_rounded),
+    ('quiz', 'Quiz Me', Icons.quiz_rounded),
+    ('revise', 'Revise', Icons.bolt_rounded),
+    ('memorize', 'Memorize', Icons.psychology_alt_rounded),
+    ('plan', 'Plan', Icons.event_note_rounded),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -66,17 +77,20 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     super.dispose();
   }
 
-  Future<String?> _getToken() async {
-    return SecureStorage.getToken();
-  }
+  Future<String?> _getToken() async => SecureStorage.getToken();
 
-  Future<void> _send() async {
-    final text = _msgCtrl.text.trim();
-    if (text.isEmpty) return;
-    _msgCtrl.clear();
+  Future<void> _send([String? overrideText]) async {
+    final text = (overrideText ?? _msgCtrl.text).trim();
+    if (text.isEmpty || _sending) return;
+    if (overrideText == null) _msgCtrl.clear();
 
     setState(() {
-      _messages.add({'messageText': text, 'displayText': text, 'isUser': true, 'timestamp': DateTime.now().toIso8601String()});
+      _messages.add({
+        'messageText': text,
+        'displayText': text,
+        'isUser': true,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
       _sending = true;
       _streaming = true;
       _streamingText = '';
@@ -84,10 +98,17 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     _scrollDown();
 
     final token = await _getToken();
-    if (token == null) { setState(() { _sending = false; _streaming = false; }); return; }
+    if (token == null) {
+      setState(() {
+        _sending = false;
+        _streaming = false;
+      });
+      return;
+    }
 
     try {
-      final request = http.StreamedRequest('POST', Uri.parse('${AppConfig.apiUrl}/ai/stream/'));
+      final request = http.StreamedRequest(
+          'POST', Uri.parse('${AppConfig.apiUrl}/ai/stream/'));
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'application/json';
       request.headers['Accept'] = 'text/event-stream';
@@ -132,38 +153,50 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         _streaming = false;
       });
       if (partialText.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tutor response ended unexpectedly. Please try again.'),
-            backgroundColor: DesignTokens.error,
-          ),
-        );
+        _showError('Tutor response ended unexpectedly. Please try again.');
       } else {
         _loadTutorSnapshot();
         _scrollDown();
       }
     } catch (e) {
       if (mounted) {
-        setState(() { _sending = false; _streaming = false; });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Connection lost: $e'), backgroundColor: DesignTokens.error),
-        );
+        setState(() {
+          _sending = false;
+          _streaming = false;
+        });
+        _showError('Connection lost. Please try again.');
       }
     }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: DesignTokens.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   Future<void> _loadLearningProfile() async {
     try {
       final client = ref.read(graphqlClientProvider);
       final result = await client.query(
-        QueryOptions(document: gql(kLearningProfile), fetchPolicy: FetchPolicy.networkOnly),
+        QueryOptions(
+            document: gql(kLearningProfile),
+            fetchPolicy: FetchPolicy.networkOnly),
       );
-      final profile = result.data?['learningProfile'] as Map<String, dynamic>?;
+      final profile =
+          result.data?['learningProfile'] as Map<String, dynamic>?;
       if (!mounted) return;
       setState(() {
-        _learningStyle = profile?['learningStyle']?.toString().trim().isNotEmpty == true
-            ? profile!['learningStyle'].toString()
-            : 'mixed';
+        _learningStyle =
+            profile?['learningStyle']?.toString().trim().isNotEmpty == true
+                ? profile!['learningStyle'].toString()
+                : 'mixed';
         _prefersExamples = profile?['prefersExamples'] as bool? ?? true;
         _prefersStepByStep = profile?['prefersStepByStep'] as bool? ?? true;
         _detailLevel = profile?['detailLevel'] as int? ?? 2;
@@ -179,9 +212,12 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     try {
       final client = ref.read(graphqlClientProvider);
       final result = await client.query(
-        QueryOptions(document: gql(kTutorSnapshot), fetchPolicy: FetchPolicy.networkOnly),
+        QueryOptions(
+            document: gql(kTutorSnapshot),
+            fetchPolicy: FetchPolicy.networkOnly),
       );
-      final snapshot = result.data?['tutorSnapshot'] as Map<String, dynamic>?;
+      final snapshot =
+          result.data?['tutorSnapshot'] as Map<String, dynamic>?;
       if (!mounted) return;
       setState(() {
         _topicStates = ((snapshot?['topicStates'] as List?) ?? const [])
@@ -211,16 +247,20 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         document: gql(kCreateAdaptiveStudyPlan),
         variables: {
           'goal': _msgCtrl.text.trim().isEmpty ? null : _msgCtrl.text.trim(),
-          'subjectName': _topicStates.isNotEmpty ? _topicStates.first['subjectName']?.toString() : null,
+          'subjectName': _topicStates.isNotEmpty
+              ? _topicStates.first['subjectName']?.toString()
+              : null,
           'studyMode': _studyMode,
         },
       ),
     );
-    final payload = result.data?['createAdaptiveStudyPlan'] as Map<String, dynamic>?;
+    final payload =
+        result.data?['createAdaptiveStudyPlan'] as Map<String, dynamic>?;
     if (!mounted) return;
     if (payload?['success'] == true && payload?['plan'] is Map) {
       setState(() {
-        _activePlan = Map<String, dynamic>.from(payload!['plan'] as Map);
+        _activePlan =
+            Map<String, dynamic>.from(payload!['plan'] as Map);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Adaptive study plan updated.')),
@@ -228,10 +268,10 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       await _loadTutorSnapshot();
       return;
     }
-    final errors = (payload?['errors'] as List?)?.map((item) => item.toString()).join(', ');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(errors?.isNotEmpty == true ? errors! : 'Could not build a study plan.')),
-    );
+    final errors = (payload?['errors'] as List?)
+        ?.map((item) => item.toString())
+        .join(', ');
+    _showError(errors?.isNotEmpty == true ? errors! : 'Could not build a plan.');
   }
 
   Future<void> _saveLearningProfile({
@@ -254,17 +294,17 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
           },
         ),
       );
-      final payload = result.data?['updateLearningProfile'] as Map<String, dynamic>?;
-      final errors = (payload?['errors'] as List?)?.whereType<String>().toList() ?? const <String>[];
+      final payload =
+          result.data?['updateLearningProfile'] as Map<String, dynamic>?;
+      final errors = (payload?['errors'] as List?)
+              ?.whereType<String>()
+              .toList() ??
+          const <String>[];
       if (result.hasException || payload?['success'] != true) {
         final message = errors.firstOrNull ??
             result.exception?.graphqlErrors.firstOrNull?.message ??
-            'Could not save tutor preferences.';
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
-          );
-        }
+            'Could not save preferences.';
+        if (mounted) _showError(message);
         return;
       }
       if (!mounted) return;
@@ -278,9 +318,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         const SnackBar(content: Text('Tutor preferences updated.')),
       );
     } finally {
-      if (mounted) {
-        setState(() => _profileSaving = false);
-      }
+      if (mounted) setState(() => _profileSaving = false);
     }
   }
 
@@ -308,76 +346,66 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   List<String> _suggestionsForMode() {
     switch (_studyMode) {
       case 'quiz':
-        return const [
+        return [
           'Quiz me on photosynthesis',
-          'Ask me 5 biology revision questions',
-          'Test me on algebra step by step',
+          'Test me on Form 2 algebra',
+          'Ask 5 MSCE revision questions',
         ];
       case 'plan':
-        return const [
-          'Make me a 30-minute revision plan',
-          'Plan my study for tomorrow',
+        return [
+          'Plan my revision for tomorrow',
+          'Make a 30-minute study session',
           'What should I study first for exams?',
         ];
       case 'memorize':
-        return const [
+        return [
           'Help me memorize the parts of the heart',
           'Give me a mnemonic for acids and bases',
-          'Turn this topic into fast recall cues',
+          'Memory hooks for respiration steps',
         ];
       case 'revise':
-        return const [
-          'Give me a quick summary of respiration',
-          'Create memory hooks for acids and bases',
+        return [
+          'Quick summary of respiration',
+          'Key points for photosynthesis',
           'Revise this topic fast',
         ];
       default:
-        return const [
+        return [
           'Explain fractions simply',
           'Help me understand osmosis',
-          'Teach me this topic like a beginner',
+          'What is Newton\'s 3rd law?',
         ];
+    }
+  }
+
+  String _modePlaceholder() {
+    switch (_studyMode) {
+      case 'quiz':
+        return 'Ask me a quiz question...';
+      case 'plan':
+        return 'Tell me your goal to plan...';
+      case 'memorize':
+        return 'What do you need to memorize?';
+      case 'revise':
+        return 'What topic to revise?';
+      default:
+        return 'Ask anything about your studies...';
     }
   }
 
   String _modeHint() {
     switch (_studyMode) {
       case 'quiz':
-        return 'The tutor will test you one question at a time.';
+        return 'I\'ll test you one question at a time.';
       case 'plan':
-        return 'The tutor will organize what to study and in what order.';
+        return 'I\'ll organize what to study and when.';
       case 'memorize':
-        return 'The tutor will build mnemonics, memory hooks, and active recall prompts.';
+        return 'I\'ll build mnemonics and memory hooks.';
       case 'revise':
-        return 'The tutor will compress the topic into fast revision help.';
+        return 'I\'ll compress topics into fast revision.';
       default:
-        return 'The tutor will explain first, then check understanding.';
+        return 'I\'ll explain, then check your understanding.';
     }
-  }
-
-  String _detailLabel() {
-    switch (_detailLevel) {
-      case 1:
-        return 'Short';
-      case 3:
-        return 'Deep';
-      default:
-        return 'Balanced';
-    }
-  }
-
-  List<String> _profilePills() {
-    return <String>[
-      _learningStyle[0].toUpperCase() + _learningStyle.substring(1),
-      _detailLabel(),
-      if (_prefersStepByStep) 'Step by step',
-      if (_prefersExamples) 'Examples',
-    ];
-  }
-
-  Future<void> _sendSuggestion(String suggestion) async {
-    _msgCtrl.text = suggestion;
-    await _send();
   }
 
   void _handleEvent(String type, String data) {
@@ -391,7 +419,11 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
           break;
         case 'done':
           setState(() {
-            _messages.add({'messageText': _streamingText, 'isUser': false, 'timestamp': DateTime.now().toIso8601String()});
+            _messages.add({
+              'messageText': _streamingText,
+              'isUser': false,
+              'timestamp': DateTime.now().toIso8601String(),
+            });
             _streamingText = '';
             _sending = false;
             _streaming = false;
@@ -400,15 +432,17 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
           _scrollDown();
           break;
         case 'meta':
-          if (payload['session_id'] != null) _sessionId = payload['session_id'].toString();
+          if (payload['session_id'] != null) {
+            _sessionId = payload['session_id'].toString();
+          }
           break;
         case 'error':
-          setState(() { _sending = false; _streaming = false; _streamingText = ''; });
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(payload['message'] ?? 'Error'), backgroundColor: DesignTokens.error),
-            );
-          }
+          setState(() {
+            _sending = false;
+            _streaming = false;
+            _streamingText = '';
+          });
+          _showError(payload['message'] ?? 'Something went wrong.');
           break;
       }
     } catch (_) {
@@ -417,10 +451,13 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   }
 
   void _scrollDown() {
-    Future.delayed(const Duration(milliseconds: 50), () {
+    Future.delayed(const Duration(milliseconds: 60), () {
       if (mounted && _scrollCtrl.hasClients) {
-        _scrollCtrl.animateTo(_scrollCtrl.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
@@ -429,307 +466,770 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('AI Tutor', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)],
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.auto_awesome_rounded,
+                  color: Colors.white, size: 16),
+            ),
+            const SizedBox(width: 8),
+            Text('AI Tutor',
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+          ],
+        ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.tune, size: 20),
+            icon: const Icon(Icons.tune_rounded, size: 22),
             tooltip: 'Tutor preferences',
             onPressed: _openPreferences,
           ),
           if (_messages.isNotEmpty)
-            IconButton(icon: const Icon(Icons.refresh, size: 20),
-              onPressed: () => setState(() { _sessionId = null; _messages.clear(); })),
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded, size: 22),
+              tooltip: 'New conversation',
+              onPressed: () => showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Start new conversation?'),
+                  content: const Text(
+                      'This will clear your current chat history.'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Cancel')),
+                    FilledButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        setState(() {
+                          _sessionId = null;
+                          _messages.clear();
+                        });
+                      },
+                      child: const Text('Clear'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
       body: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spXs),
-            color: DesignTokens.primary.withValues(alpha: 0.05),
-            child: const Row(children: [
-              Icon(Icons.auto_awesome, size: 14, color: DesignTokens.primary),
-              SizedBox(width: 6),
-              Text('Powered by Gemini', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
-            ]),
+          // Mode bar
+          _ModeSection(
+            studyMode: _studyMode,
+            modes: _modes,
+            modeHint: _modeHint(),
+            profileLoading: _profileLoading,
+            learningStyle: _learningStyle,
+            detailLevel: _detailLevel,
+            prefersExamples: _prefersExamples,
+            prefersStepByStep: _prefersStepByStep,
+            snapshotLoading: _snapshotLoading,
+            topicStates: _topicStates,
+            memories: _memories,
+            activePlan: _activePlan,
+            reviewCount: _reviewCount,
+            onModeSelect: (m) => setState(() => _studyMode = m),
+            onGeneratePlan: _createAdaptivePlan,
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AiTutorModeBar(
-                  selectedMode: _studyMode,
-                  modes: const [
-                    ('coach', 'Coach', Icons.school_outlined),
-                    ('quiz', 'Quiz Me', Icons.quiz_outlined),
-                    ('revise', 'Revise', Icons.bolt_outlined),
-                    ('memorize', 'Memorize', Icons.psychology_alt_outlined),
-                    ('plan', 'Plan', Icons.event_note_outlined),
-                  ],
-                  onSelect: (mode) => setState(() => _studyMode = mode),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.brightness == Brightness.dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    _modeHint(),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: DesignTokens.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if (_profileLoading)
-                      const Chip(
-                        avatar: SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        label: Text('Loading tutor profile'),
-                      )
-                    else
-                      ..._profilePills().map((item) => Chip(label: Text(item))),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                if (_snapshotLoading)
-                  const LinearProgressIndicator(minHeight: 3)
-                else
-                  AiTutorSnapshotCards(
-                    reviewCount: _reviewCount,
-                    topicStates: _topicStates,
-                    memories: _memories,
-                    planSummary: _activePlan?['planSummary']?.toString(),
-                    onGeneratePlan: _createAdaptivePlan,
-                  ),
-              ],
-            ),
-          ),
+
+          // Chat area
           Expanded(
             child: _messages.isEmpty && !_streaming
-              ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.smart_toy_outlined, size: 80, color: DesignTokens.primary.withValues(alpha: 0.3)),
-                  const SizedBox(height: DesignTokens.spMd),
-                  const Text('Use a study mode, then start with one focused prompt', style: TextStyle(color: DesignTokens.textSecondary)),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: _suggestionsForMode().map((item) {
-                        return ActionChip(
-                          label: Text(item),
-                          onPressed: () => _sendSuggestion(item),
+                ? _EmptyState(
+                    studyMode: _studyMode,
+                    suggestions: _suggestionsForMode(),
+                    onSuggestion: (s) => _send(s),
+                  )
+                : ListView.builder(
+                    controller: _scrollCtrl,
+                    padding: const EdgeInsets.fromLTRB(
+                        16, 8, 16, 16),
+                    itemCount: _messages.length + (_streaming ? 1 : 0),
+                    itemBuilder: (_, i) {
+                      if (_streaming && i == _messages.length) {
+                        return _AiBubble(
+                          text: _streamingText,
+                          streaming: true,
+                          cursorAnim: _cursorAnim,
+                          dark: dark,
                         );
-                      }).toList(),
-                    ),
+                      }
+                      final msg = _messages[i];
+                      final isUser = msg['isUser'] == true;
+                      return isUser
+                          ? _UserBubble(
+                              text: (msg['displayText'] ??
+                                      msg['messageText'] ??
+                                      '')
+                                  .toString(),
+                            )
+                          : _AiBubble(
+                              text: (msg['messageText'] ?? '').toString(),
+                              streaming: false,
+                              cursorAnim: _cursorAnim,
+                              dark: dark,
+                            );
+                    },
                   ),
-                ]))
-              : ListView.builder(
-                  controller: _scrollCtrl,
-                  padding: const EdgeInsets.all(DesignTokens.spMd),
-                  itemCount: _messages.length + (_streaming ? 1 : 0),
-                  itemBuilder: (_, i) {
-                    if (_streaming && i == _messages.length) {
-                      return _buildAiMessage(_streamingText, true, dark);
-                    }
-                    final msg = _messages[i];
-                    final isUser = msg['isUser'] == true;
-                    return Align(
-                      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
-                        margin: const EdgeInsets.only(bottom: DesignTokens.spXs),
-                        padding: const EdgeInsets.all(DesignTokens.spMd),
-                        decoration: BoxDecoration(
-                          color: isUser ? DesignTokens.primary : (dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant),
-                          borderRadius: BorderRadius.circular(DesignTokens.radiusLg).copyWith(
-                            bottomRight: isUser ? const Radius.circular(4) : null,
-                            bottomLeft: !isUser ? const Radius.circular(4) : null,
-                          ),
-                        ),
-                        child: Text((msg['displayText'] ?? msg['messageText'] ?? '').toString(), style: TextStyle(color: isUser ? Colors.white : null, fontSize: 14)),
-                      ),
-                    );
-                  },
-                ),
           ),
-          if (_sending && !_streaming)
-            _buildTypingIndicator(),
-          SafeArea(
-            child: Container(
-              padding: const EdgeInsets.all(DesignTokens.spSm),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 34,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _suggestionsForMode().length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (_, i) {
-                        final item = _suggestionsForMode()[i];
-                        return ActionChip(
-                          label: Text(item, style: const TextStyle(fontSize: 12)),
-                          onPressed: _sending ? null : () => _sendSuggestion(item),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _msgCtrl,
-                        decoration: InputDecoration(
-                          hintText: 'Type your study request...',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusXl)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spSm - 2),
-                          isDense: true,
-                        ),
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _sending ? null : _send(),
-                      ),
-                    ),
-                    const SizedBox(width: DesignTokens.spXs),
-                    AnimatedPress(
-                      onTap: _sending ? null : _send,
-                      child: const SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(color: DesignTokens.primary, shape: BoxShape.circle),
-                          child: Icon(Icons.send, color: Colors.white, size: 20),
-                        ),
-                      ),
-                    ),
-                  ]),
-                ],
-              ),
-            ),
+
+          // Typing indicator
+          if (_sending && !_streaming) _TypingIndicator(),
+
+          // Input bar
+          _InputBar(
+            ctrl: _msgCtrl,
+            sending: _sending,
+            placeholder: _modePlaceholder(),
+            suggestions: _suggestionsForMode(),
+            onSend: _send,
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildAiMessage(String text, bool streaming, bool dark) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
-        margin: const EdgeInsets.only(bottom: DesignTokens.spXs),
-        padding: const EdgeInsets.all(DesignTokens.spMd),
-        decoration: BoxDecoration(
-          color: dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
-          borderRadius: BorderRadius.circular(DesignTokens.radiusLg).copyWith(
-            bottomLeft: const Radius.circular(4),
+// ── Mode Section ─────────────────────────────────────────────────────────────
+class _ModeSection extends StatelessWidget {
+  final String studyMode;
+  final List<(String, String, IconData)> modes;
+  final String modeHint;
+  final bool profileLoading;
+  final String learningStyle;
+  final int detailLevel;
+  final bool prefersExamples;
+  final bool prefersStepByStep;
+  final bool snapshotLoading;
+  final List<Map<String, dynamic>> topicStates;
+  final List<Map<String, dynamic>> memories;
+  final Map<String, dynamic>? activePlan;
+  final int reviewCount;
+  final ValueChanged<String> onModeSelect;
+  final VoidCallback onGeneratePlan;
+
+  const _ModeSection({
+    required this.studyMode,
+    required this.modes,
+    required this.modeHint,
+    required this.profileLoading,
+    required this.learningStyle,
+    required this.detailLevel,
+    required this.prefersExamples,
+    required this.prefersStepByStep,
+    required this.snapshotLoading,
+    required this.topicStates,
+    required this.memories,
+    required this.activePlan,
+    required this.reviewCount,
+    required this.onModeSelect,
+    required this.onGeneratePlan,
+  });
+
+  String get _detailLabel {
+    switch (detailLevel) {
+      case 1:
+        return 'Short';
+      case 3:
+        return 'Deep';
+      default:
+        return 'Balanced';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+
+    return Container(
+      color: dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
+      child: Column(
+        children: [
+          // Mode bar
+          AiTutorModeBar(
+            selectedMode: studyMode,
+            modes: modes,
+            onSelect: onModeSelect,
           ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(text, style: const TextStyle(fontSize: 14)),
-            ),
-            if (streaming)
-              Padding(
-                padding: const EdgeInsets.only(left: 2),
-                child: FadeTransition(
-                  opacity: _cursorAnim,
-                  child: Container(
-                    width: 8, height: 16,
-                    color: DesignTokens.primary,
+          // Mode hint
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF7C4DFF),
+                    shape: BoxShape.circle,
                   ),
                 ),
+                const SizedBox(width: 6),
+                Text(
+                  modeHint,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: DesignTokens.textSecondary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Profile pills row
+          if (!profileLoading)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _ProfilePill(
+                        label:
+                            '${learningStyle[0].toUpperCase()}${learningStyle.substring(1)}'),
+                    const SizedBox(width: 6),
+                    _ProfilePill(label: _detailLabel),
+                    if (prefersStepByStep) ...[
+                      const SizedBox(width: 6),
+                      const _ProfilePill(label: 'Step-by-step'),
+                    ],
+                    if (prefersExamples) ...[
+                      const SizedBox(width: 6),
+                      const _ProfilePill(label: 'Examples'),
+                    ],
+                  ],
+                ),
               ),
+            ),
+          // Snapshot cards
+          if (!snapshotLoading)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+              child: AiTutorSnapshotCards(
+                reviewCount: reviewCount,
+                topicStates: topicStates,
+                memories: memories,
+                planSummary: activePlan?['planSummary']?.toString(),
+                onGeneratePlan: onGeneratePlan,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfilePill extends StatelessWidget {
+  final String label;
+  const _ProfilePill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFF7C4DFF).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+            color: const Color(0xFF7C4DFF).withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF7C4DFF),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────────────────────────
+class _EmptyState extends StatelessWidget {
+  final String studyMode;
+  final List<String> suggestions;
+  final ValueChanged<String> onSuggestion;
+
+  const _EmptyState({
+    required this.studyMode,
+    required this.suggestions,
+    required this.onSuggestion,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF7C4DFF).withValues(alpha: 0.15),
+                    const Color(0xFF1B6CA8).withValues(alpha: 0.15),
+                  ],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                size: 38,
+                color: Color(0xFF7C4DFF),
+              ),
+            ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+            const SizedBox(height: 20),
+            const Text(
+              'What do you want to learn?',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+              textAlign: TextAlign.center,
+            ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.2),
+            const SizedBox(height: 8),
+            const Text(
+              'Tap a suggestion or type your own question.',
+              style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13),
+              textAlign: TextAlign.center,
+            ).animate(delay: 200.ms).fadeIn(),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: suggestions.map((s) {
+                return ActionChip(
+                  label: Text(s),
+                  onPressed: () => onSuggestion(s),
+                  avatar: const Icon(Icons.lightbulb_outline_rounded, size: 16),
+                ).animate(delay: 300.ms).fadeIn().scale(begin: const Offset(0.9, 0.9));
+              }).toList(),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildTypingIndicator() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+// ── User Bubble ───────────────────────────────────────────────────────────────
+class _UserBubble extends StatelessWidget {
+  final String text;
+  const _UserBubble({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+        margin: const EdgeInsets.only(bottom: 10, left: 48),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1B6CA8), Color(0xFF7C4DFF)],
+          ),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+            bottomLeft: Radius.circular(18),
+            bottomRight: Radius.circular(4),
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+      ),
+    ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.1);
+  }
+}
+
+// ── AI Bubble ─────────────────────────────────────────────────────────────────
+class _AiBubble extends StatelessWidget {
+  final String text;
+  final bool streaming;
+  final Animation<double> cursorAnim;
+  final bool dark;
+
+  const _AiBubble({
+    required this.text,
+    required this.streaming,
+    required this.cursorAnim,
+    required this.dark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.centerLeft,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _dot(0),
-          const SizedBox(width: 4),
-          _dot(200),
-          const SizedBox(width: 4),
-          _dot(400),
-          const SizedBox(width: 6),
-          const Text('Thinking', style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+          // AI avatar
+          Container(
+            width: 30,
+            height: 30,
+            margin: const EdgeInsets.only(right: 8, top: 2),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.auto_awesome_rounded,
+                color: Colors.white, size: 14),
+          ),
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.78),
+              margin: const EdgeInsets.only(bottom: 10, right: 48),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: dark
+                    ? DesignTokens.darkSurfaceVariant
+                    : DesignTokens.surfaceVariant,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(18),
+                  bottomLeft: Radius.circular(18),
+                  bottomRight: Radius.circular(18),
+                ),
+              ),
+              child: text.isEmpty && streaming
+                  ? const SizedBox(
+                      width: 40,
+                      child: LinearProgressIndicator(minHeight: 2),
+                    )
+                  : Stack(
+                      children: [
+                        MarkdownBody(
+                          data: text,
+                          styleSheet: MarkdownStyleSheet(
+                            p: const TextStyle(fontSize: 14, height: 1.55),
+                            code: TextStyle(
+                              fontSize: 13,
+                              fontFamily: 'monospace',
+                              backgroundColor:
+                                  dark ? Colors.black26 : const Color(0xFFEEF0F2),
+                            ),
+                            codeblockDecoration: BoxDecoration(
+                              color: dark
+                                  ? const Color(0xFF161B22)
+                                  : const Color(0xFFEEF0F2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                        if (streaming)
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: FadeTransition(
+                              opacity: cursorAnim,
+                              child: Container(
+                                width: 8,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF7C4DFF),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+            ),
+          ),
+          // Copy button (for completed messages)
+          if (!streaming && text.isNotEmpty)
+            IconButton(
+              iconSize: 16,
+              icon: const Icon(Icons.copy_rounded),
+              color: DesignTokens.textTertiary,
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: text));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Copied to clipboard'),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 200.ms).slideX(begin: -0.05);
+  }
+}
+
+// ── Typing Indicator ──────────────────────────────────────────────────────────
+class _TypingIndicator extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.auto_awesome_rounded,
+                color: Colors.white, size: 14),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: DesignTokens.surfaceVariant,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(18),
+                bottomLeft: Radius.circular(18),
+                bottomRight: Radius.circular(18),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _BouncingDot(delay: 0),
+                const SizedBox(width: 4),
+                _BouncingDot(delay: 200),
+                const SizedBox(width: 4),
+                _BouncingDot(delay: 400),
+                const SizedBox(width: 8),
+                const Text(
+                  'Thinking...',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: DesignTokens.textSecondary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
-
-  Widget _dot(int delay) {
-    return delay == 0
-        ? const _Dot(0)
-        : _Dot(delay);
-  }
 }
 
-class _Dot extends StatefulWidget {
+class _BouncingDot extends StatefulWidget {
   final int delay;
-  const _Dot(this.delay);
+  const _BouncingDot({required this.delay});
+
   @override
-  State<_Dot> createState() => _DotState();
+  State<_BouncingDot> createState() => _BouncingDotState();
 }
 
-class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
+class _BouncingDotState extends State<_BouncingDot>
+    with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _anim;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
-    _anim = Tween<double>(begin: 0.3, end: 1.0).animate(
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200));
+    _anim = Tween<double>(begin: 0, end: -6).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
     Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) {
-        _ctrl.repeat(reverse: true);
-      }
+      if (mounted) _ctrl.repeat(reverse: true);
     });
   }
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _anim,
-      child: Container(
-        width: 8, height: 8,
-        decoration: const BoxDecoration(
-          color: DesignTokens.primary,
-          shape: BoxShape.circle,
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) => Transform.translate(
+        offset: Offset(0, _anim.value),
+        child: Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: const Color(0xFF7C4DFF).withValues(alpha: 0.6),
+            shape: BoxShape.circle,
+          ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Input Bar ─────────────────────────────────────────────────────────────────
+class _InputBar extends StatelessWidget {
+  final TextEditingController ctrl;
+  final bool sending;
+  final String placeholder;
+  final List<String> suggestions;
+  final void Function([String?]) onSend;
+
+  const _InputBar({
+    required this.ctrl,
+    required this.sending,
+    required this.placeholder,
+    required this.suggestions,
+    required this.onSend,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+
+    return SafeArea(
+      top: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Suggestions row
+          SizedBox(
+            height: 36,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: suggestions.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              itemBuilder: (_, i) {
+                final s = suggestions[i];
+                return ActionChip(
+                  label: Text(s, style: const TextStyle(fontSize: 11)),
+                  onPressed: sending ? null : () => onSend(s),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
+              border: Border(
+                top: BorderSide(
+                  color: dark ? DesignTokens.darkBorder : DesignTokens.border,
+                  width: 0.5,
+                ),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    child: TextField(
+                      controller: ctrl,
+                      maxLines: null,
+                      decoration: InputDecoration(
+                        hintText: placeholder,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: dark
+                            ? DesignTokens.darkSurfaceVariant
+                            : DesignTokens.surfaceVariant,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        isDense: true,
+                      ),
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) =>
+                          sending ? null : onSend(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                AnimatedPress(
+                  onTap: sending ? null : () => onSend(),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      gradient: sending
+                          ? null
+                          : const LinearGradient(
+                              colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)],
+                            ),
+                      color: sending
+                          ? DesignTokens.textTertiary.withValues(alpha: 0.3)
+                          : null,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: sending
+                        ? const Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+                        : const Icon(Icons.send_rounded,
+                            color: Colors.white, size: 20),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
