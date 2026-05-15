@@ -1,12 +1,16 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/ai_tutor_mode_bar.dart';
+import '../widgets/ai_tutor_preferences_sheet.dart';
 
 class AiTutorScreen extends ConsumerStatefulWidget {
   const AiTutorScreen({super.key});
@@ -24,6 +28,12 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   bool _streaming = false;
   String _streamingText = '';
   String _studyMode = 'coach';
+  String _learningStyle = 'mixed';
+  bool _prefersExamples = true;
+  bool _prefersStepByStep = true;
+  int _detailLevel = 2;
+  bool _profileLoading = true;
+  bool _profileSaving = false;
   late final http.Client _httpClient;
   late final AnimationController _cursorCtrl;
   late final Animation<double> _cursorAnim;
@@ -37,6 +47,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       duration: const Duration(milliseconds: 600),
     )..repeat(reverse: true);
     _cursorAnim = Tween<double>(begin: 0, end: 1).animate(_cursorCtrl);
+    _loadLearningProfile();
   }
 
   @override
@@ -56,7 +67,6 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     final text = _msgCtrl.text.trim();
     if (text.isEmpty) return;
     _msgCtrl.clear();
-    final preparedText = _applyStudyMode(text);
 
     setState(() {
       _messages.add({'messageText': text, 'displayText': text, 'isUser': true, 'timestamp': DateTime.now().toIso8601String()});
@@ -75,8 +85,9 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       request.headers['Content-Type'] = 'application/json';
       request.headers['Accept'] = 'text/event-stream';
       request.sink.add(utf8.encode(jsonEncode({
-        'message': preparedText,
+        'message': text,
         'session_id': _sessionId,
+        'study_mode': _studyMode,
       })));
       request.sink.close();
       final response = await _httpClient.send(request);
@@ -109,18 +120,98 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     }
   }
 
-  String _applyStudyMode(String text) {
-    final clean = text.trim();
-    switch (_studyMode) {
-      case 'quiz':
-        return 'Act as a quiz coach. Ask one question at a time based on this request, wait for my answer, then explain the answer simply.\n\nStudent request: $clean';
-      case 'plan':
-        return 'Act as a study planner. Turn this into a practical study plan with time blocks, order of work, and what to revise first.\n\nStudent request: $clean';
-      case 'revise':
-        return 'Act as a revision coach. Give concise memory hooks, key points, and a fast recap.\n\nStudent request: $clean';
-      default:
-        return 'Act as a patient tutor. Explain clearly, then check understanding with one short follow-up question.\n\nStudent request: $clean';
+  Future<void> _loadLearningProfile() async {
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.query(
+        QueryOptions(document: gql(kLearningProfile), fetchPolicy: FetchPolicy.networkOnly),
+      );
+      final profile = result.data?['learningProfile'] as Map<String, dynamic>?;
+      if (!mounted) return;
+      setState(() {
+        _learningStyle = profile?['learningStyle']?.toString().trim().isNotEmpty == true
+            ? profile!['learningStyle'].toString()
+            : 'mixed';
+        _prefersExamples = profile?['prefersExamples'] as bool? ?? true;
+        _prefersStepByStep = profile?['prefersStepByStep'] as bool? ?? true;
+        _detailLevel = profile?['detailLevel'] as int? ?? 2;
+        _profileLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _profileLoading = false);
     }
+  }
+
+  Future<void> _saveLearningProfile({
+    required String learningStyle,
+    required bool prefersExamples,
+    required bool prefersStepByStep,
+    required int detailLevel,
+  }) async {
+    setState(() => _profileSaving = true);
+    final client = ref.read(graphqlClientProvider);
+    try {
+      final result = await client.mutate(
+        MutationOptions(
+          document: gql(kUpdateLearningProfile),
+          variables: {
+            'learningStyle': learningStyle,
+            'prefersExamples': prefersExamples,
+            'prefersStepByStep': prefersStepByStep,
+            'detailLevel': detailLevel,
+          },
+        ),
+      );
+      final payload = result.data?['updateLearningProfile'] as Map<String, dynamic>?;
+      final errors = (payload?['errors'] as List?)?.whereType<String>().toList() ?? const <String>[];
+      if (result.hasException || payload?['success'] != true) {
+        final message = errors.firstOrNull ??
+            result.exception?.graphqlErrors.firstOrNull?.message ??
+            'Could not save tutor preferences.';
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
+          );
+        }
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _learningStyle = learningStyle;
+        _prefersExamples = prefersExamples;
+        _prefersStepByStep = prefersStepByStep;
+        _detailLevel = detailLevel;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tutor preferences updated.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _profileSaving = false);
+      }
+    }
+  }
+
+  Future<void> _openPreferences() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: AiTutorPreferencesSheet(
+          initialLearningStyle: _learningStyle,
+          initialPrefersExamples: _prefersExamples,
+          initialPrefersStepByStep: _prefersStepByStep,
+          initialDetailLevel: _detailLevel,
+          saving: _profileSaving,
+          onSave: _saveLearningProfile,
+        ),
+      ),
+    );
   }
 
   List<String> _suggestionsForMode() {
@@ -163,6 +254,26 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       default:
         return 'The tutor will explain first, then check understanding.';
     }
+  }
+
+  String _detailLabel() {
+    switch (_detailLevel) {
+      case 1:
+        return 'Short';
+      case 3:
+        return 'Deep';
+      default:
+        return 'Balanced';
+    }
+  }
+
+  List<String> _profilePills() {
+    return <String>[
+      _learningStyle[0].toUpperCase() + _learningStyle.substring(1),
+      _detailLabel(),
+      if (_prefersStepByStep) 'Step by step',
+      if (_prefersExamples) 'Examples',
+    ];
   }
 
   Future<void> _sendSuggestion(String suggestion) async {
@@ -222,6 +333,11 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         title: Text('AI Tutor', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.tune, size: 20),
+            tooltip: 'Tutor preferences',
+            onPressed: _openPreferences,
+          ),
           if (_messages.isNotEmpty)
             IconButton(icon: const Icon(Icons.refresh, size: 20),
               onPressed: () => setState(() { _sessionId = null; _messages.clear(); })),
@@ -269,6 +385,24 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (_profileLoading)
+                      const Chip(
+                        avatar: SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        label: Text('Loading tutor profile'),
+                      )
+                    else
+                      ..._profilePills().map((item) => Chip(label: Text(item))),
+                  ],
                 ),
               ],
             ),

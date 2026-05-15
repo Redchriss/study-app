@@ -1,16 +1,24 @@
 const String kCreateChatSession = r'''
-mutation CreateChatSession($subjectId: ID) {
-  createChatSession(subjectId: $subjectId) {
+mutation CreateChatSession($materialId: ID) {
+  createChatSession(materialId: $materialId) {
     session { id title }
   }
 }
 ''';
 
 const String kSendMessage = r'''
-mutation SendMessage($sessionId: ID!, $message: String!) {
-  sendMessage(sessionId: $sessionId, message: $message) {
+mutation SendMessage($sessionId: ID!, $content: String!, $materialId: ID, $studyMode: String) {
+  sendMessage(
+    sessionId: $sessionId
+    content: $content
+    materialId: $materialId
+    studyMode: $studyMode
+  ) {
+    success
+    error
     message { id messageText isUser timestamp }
-    reply { id messageText timestamp }
+    creditsCost
+    creditsRemaining
   }
 }
 ''';
