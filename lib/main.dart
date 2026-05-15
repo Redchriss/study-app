@@ -50,12 +50,27 @@ Future<void> _runApp() async {
   // Initialize environment configuration
   await AppConfig.init();
 
-  final prefs = await SharedPreferences.getInstance();
-  final saved = prefs.getString('theme_mode');
-  final initialTheme = saved == 'dark' ? ThemeMode.dark : saved == 'light' ? ThemeMode.light : ThemeMode.system;
+  ThemeMode initialTheme = ThemeMode.system;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('theme_mode');
+    initialTheme = saved == 'dark'
+        ? ThemeMode.dark
+        : saved == 'light'
+            ? ThemeMode.light
+            : ThemeMode.system;
+  } catch (e, st) {
+    debugPrint('Theme preference init failed: $e');
+    await Sentry.captureException(e, stackTrace: st);
+  }
 
-  await Hive.initFlutter();
-  await HiveStore.openBox(HiveStore.defaultBoxName);
+  try {
+    await Hive.initFlutter();
+    await HiveStore.openBox(HiveStore.defaultBoxName);
+  } catch (e, st) {
+    debugPrint('Hive init failed, falling back to in-memory cache: $e');
+    await Sentry.captureException(e, stackTrace: st);
+  }
 
   runApp(ProviderScope(overrides: [
     themeModeProvider.overrideWith((ref) => initialTheme),

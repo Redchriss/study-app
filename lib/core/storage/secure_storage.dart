@@ -24,16 +24,16 @@ class SecureStorage {
   static Future<String?> getToken() async {
     try {
       return await _storage.read(key: _tokenKey);
-    } catch (e) {
-      throw Exception('Failed to read token: $e');
+    } catch (_) {
+      return null;
     }
   }
 
   static Future<String?> getRefreshToken() async {
     try {
       return await _storage.read(key: _refreshKey);
-    } catch (e) {
-      throw Exception('Failed to read refresh token: $e');
+    } catch (_) {
+      return null;
     }
   }
 
@@ -41,8 +41,8 @@ class SecureStorage {
     try {
       await _storage.delete(key: _tokenKey);
       await _storage.delete(key: _refreshKey);
-    } catch (e) {
-      throw Exception('Failed to clear tokens: $e');
+    } catch (_) {
+      // If secure storage is unavailable or corrupted, treat it as already cleared.
     }
   }
 

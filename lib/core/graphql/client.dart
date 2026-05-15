@@ -2,6 +2,14 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../config/app_config.dart';
 import '../storage/secure_storage.dart';
 
+GraphQLCache _buildGraphQLCache() {
+  try {
+    return GraphQLCache(store: HiveStore());
+  } catch (_) {
+    return GraphQLCache();
+  }
+}
+
 GraphQLClient buildGraphQLClient() {
   final authLink = AuthLink(
     getToken: () async {
@@ -18,7 +26,7 @@ GraphQLClient buildGraphQLClient() {
 
   return GraphQLClient(
     link: link,
-    cache: GraphQLCache(store: HiveStore()),
+    cache: _buildGraphQLCache(),
     defaultPolicies: DefaultPolicies(
       query: Policies(
         fetch: FetchPolicy.networkOnly,
