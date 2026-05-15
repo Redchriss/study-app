@@ -32,8 +32,16 @@ query Material($slug: String!) {
     youtubeEmbedUrl
     fileUrl
     aiSummary
+    aiFlashcardsJson
     isPremium
     isBookmarked
+    aiTasks {
+      taskType
+      status
+      statusLabel
+      isActive
+      errorMessage
+    }
     myProgress {
       currentUnit
       totalUnits

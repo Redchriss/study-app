@@ -1,13 +1,14 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/material_upload_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../widgets/upload_success_sheet.dart';
 
 class UploadMaterialScreen extends ConsumerStatefulWidget {
   const UploadMaterialScreen({super.key});
@@ -178,14 +179,20 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
       SnackBar(
         content: Text(result.message ?? 'Material submitted for review'),
         backgroundColor: DesignTokens.success,
-        action: SnackBarAction(
-          label: 'My uploads',
-          textColor: Colors.white,
-          onPressed: () => context.push('/my-uploads'),
-        ),
       ),
     );
-    context.pop();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => UploadSuccessSheet(result: result),
+    );
+    if (mounted) {
+      _titleCtrl.clear();
+      _descCtrl.clear();
+      _textCtrl.clear();
+      _youtubeCtrl.clear();
+      setState(() => _selectedFile = null);
+    }
   }
 
   @override
@@ -200,7 +207,7 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final types = const [
+    const types = [
       ('pdf', 'PDF', Icons.picture_as_pdf_rounded, Color(0xFFC8583D)),
       ('text', 'Notes', Icons.menu_book_rounded, Color(0xFF1F6A52)),
       ('image', 'Image', Icons.image_rounded, Color(0xFF7A4D9E)),
@@ -237,8 +244,8 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
                     style: theme.textTheme.bodyMedium?.copyWith(color: DesignTokens.textSecondary),
                   ),
                   const SizedBox(height: DesignTokens.spMd),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       _UploadPill(label: 'AI-ready first'),
                       SizedBox(width: DesignTokens.spSm),
                       _UploadPill(label: 'Mobile-friendly'),

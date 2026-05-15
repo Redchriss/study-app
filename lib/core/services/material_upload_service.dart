@@ -12,12 +12,22 @@ class MaterialUploadResult {
     this.message,
     this.errors = const <String>[],
     this.slug,
+    this.aiReadiness,
+    this.isApproved,
+    this.title,
+    this.contentType,
+    this.subjectName,
   });
 
   final bool success;
   final String? message;
   final List<String> errors;
   final String? slug;
+  final String? aiReadiness;
+  final bool? isApproved;
+  final String? title;
+  final String? contentType;
+  final String? subjectName;
 }
 
 class MaterialUploadService {
@@ -83,6 +93,11 @@ class MaterialUploadService {
         success: true,
         message: decoded['message']?.toString(),
         slug: (decoded['material'] as Map?)?['slug']?.toString(),
+        aiReadiness: decoded['aiReadiness']?.toString(),
+        isApproved: (decoded['material'] as Map?)?['isApproved'] == true,
+        title: (decoded['material'] as Map?)?['title']?.toString(),
+        contentType: (decoded['material'] as Map?)?['contentType']?.toString(),
+        subjectName: (decoded['material'] as Map?)?['subjectName']?.toString(),
       );
     } catch (_) {
       return const MaterialUploadResult(

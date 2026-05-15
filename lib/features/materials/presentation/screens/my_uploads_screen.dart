@@ -140,10 +140,20 @@ class MyUploadsScreen extends ConsumerWidget {
             onRefresh: () async => refetch?.call(),
             child: ListView.separated(
               padding: const EdgeInsets.all(DesignTokens.spMd),
-              itemCount: items.length,
+              itemCount: items.length + 1,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (_, i) {
-                final m = items[i] as Map<String, dynamic>;
+                if (i == 0) {
+                  final liveCount = items.where((item) => (item as Map<String, dynamic>)['isApproved'] == true).length;
+                  final pendingCount = items.length - liveCount;
+                  return _UploadsSummaryCard(
+                    totalCount: items.length,
+                    liveCount: liveCount,
+                    pendingCount: pendingCount,
+                  );
+                }
+
+                final m = items[i - 1] as Map<String, dynamic>;
                 final slug = m['slug'] as String? ?? '';
                 final title = m['title'] as String? ?? '';
                 final subject = m['subject']?['name'] as String? ?? '';
@@ -187,6 +197,89 @@ class MyUploadsScreen extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _UploadsSummaryCard extends StatelessWidget {
+  const _UploadsSummaryCard({
+    required this.totalCount,
+    required this.liveCount,
+    required this.pendingCount,
+  });
+
+  final int totalCount;
+  final int liveCount;
+  final int pendingCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF5E8BF), Color(0xFFE0F0EB)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your material pipeline',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Keep your library growing. Live materials can already help students, while pending ones are waiting for review.',
+            style: TextStyle(color: DesignTokens.textSecondary, height: 1.5),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(child: _UploadsMetric(label: 'Total', value: '$totalCount')),
+              const SizedBox(width: 10),
+              Expanded(child: _UploadsMetric(label: 'Live', value: '$liveCount')),
+              const SizedBox(width: 10),
+              Expanded(child: _UploadsMetric(label: 'Pending', value: '$pendingCount')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UploadsMetric extends StatelessWidget {
+  const _UploadsMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(color: DesignTokens.textSecondary, fontWeight: FontWeight.w700),
+          ),
+        ],
       ),
     );
   }
