@@ -7,9 +7,8 @@
 -keep class io.flutter.plugins.**  { *; }
 -keep class io.flutter.plugin.editing.** { *; }
 
-# Dart core
--keep class dart:** { *; }
--keep class com.dart.** { *; }
+# There are no Java/Kotlin classes under a `dart:` namespace.
+# The previous keep rule used invalid R8 syntax and broke release builds.
 
 # Firebase
 -keep class com.google.firebase.** { *; }
