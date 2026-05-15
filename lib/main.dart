@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -48,17 +50,6 @@ Future<void> _runApp() async {
   // Initialize environment configuration
   await AppConfig.init();
 
-  // Initialize Firebase Analytics if enabled
-  await AnalyticsService.initialize();
-  try {
-    await NotificationService.initialize();
-  } catch (e, st) {
-    debugPrint('NotificationService init failed: $e');
-    await Sentry.captureException(e, stackTrace: st);
-  }
-  await RetentionService().markAppOpened();
-  await RetentionService().refreshStudyReminder();
-
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('theme_mode');
   final initialTheme = saved == 'dark' ? ThemeMode.dark : saved == 'light' ? ThemeMode.light : ThemeMode.system;
@@ -69,6 +60,32 @@ Future<void> _runApp() async {
   runApp(ProviderScope(overrides: [
     themeModeProvider.overrideWith((ref) => initialTheme),
   ], child: const StudyApp()));
+
+  unawaited(_initializePostLaunchServices());
+}
+
+Future<void> _initializePostLaunchServices() async {
+  try {
+    await AnalyticsService.initialize();
+  } catch (e, st) {
+    debugPrint('AnalyticsService init failed: $e');
+    await Sentry.captureException(e, stackTrace: st);
+  }
+
+  try {
+    await NotificationService.initialize();
+  } catch (e, st) {
+    debugPrint('NotificationService init failed: $e');
+    await Sentry.captureException(e, stackTrace: st);
+  }
+
+  try {
+    await RetentionService().markAppOpened();
+    await RetentionService().refreshStudyReminder();
+  } catch (e, st) {
+    debugPrint('RetentionService init failed: $e');
+    await Sentry.captureException(e, stackTrace: st);
+  }
 }
 
 class StudyApp extends ConsumerWidget {
