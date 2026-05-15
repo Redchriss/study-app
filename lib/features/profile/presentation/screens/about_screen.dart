@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
@@ -15,9 +18,9 @@ class AboutScreen extends StatelessWidget {
       backgroundColor: dark ? DesignTokens.darkBackground : DesignTokens.background,
       body: CustomScrollView(
         slivers: [
-          // ── Hero SliverAppBar ────────────────────────────────────────
+          // ── Hero SliverAppBar ─────────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 220,
+            expandedHeight: 230,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
@@ -32,14 +35,16 @@ class AboutScreen extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // App icon
                       Container(
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            width: 2,
+                          ),
                         ),
                         child: const Icon(Icons.school_rounded, color: Colors.white, size: 42),
                       ),
@@ -55,11 +60,7 @@ class AboutScreen extends StatelessWidget {
                       ),
                       const Text(
                         'AI Study Companion for Malawi',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white70,
-                        ),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white70),
                       ),
                     ],
                   ),
@@ -98,17 +99,66 @@ class AboutScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 28),
 
-                // ── Founder card ─────────────────────────────────────────
-                const _SectionLabel('Meet the Founder'),
+                // ── Team ─────────────────────────────────────────────────
+                const _SectionLabel('Meet the Team'),
                 const SizedBox(height: 10),
-                _FounderCard(dark: dark),
-                const SizedBox(height: 10),
+                Query(
+                  options: QueryOptions(
+                    document: gql(kTeamMembers),
+                    fetchPolicy: FetchPolicy.cacheAndNetwork,
+                  ),
+                  builder: (result, {fetchMore, refetch}) {
+                    final members = (result.data?['teamMembers'] as List?) ?? [];
 
-                // ── Co-founder card ──────────────────────────────────────
-                _CoFounderCard(dark: dark),
+                    if (result.isLoading && members.isEmpty) {
+                      // Skeleton shimmer while loading
+                      return Column(
+                        children: List.generate(
+                          2,
+                          (i) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: ShimmerBox(height: 120, radius: DesignTokens.radiusXl),
+                          ),
+                        ),
+                      );
+                    }
+
+                    if (members.isEmpty) {
+                      // Fallback to hardcoded when backend has no data yet
+                      return const _StaticTeamSection();
+                    }
+
+                    return Column(
+                      children: members.asMap().entries.map((e) {
+                        final m = e.value as Map<String, dynamic>;
+                        final isFirst = e.key == 0;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: isFirst
+                              ? _FounderCard(
+                                  name: m['name'] as String? ?? '',
+                                  role: m['role'] as String? ?? '',
+                                  bio: m['bio'] as String? ?? '',
+                                  photoUrl: m['photoUrl'] as String?,
+                                  twitter: m['twitter'] as String? ?? '',
+                                  linkedin: m['linkedin'] as String? ?? '',
+                                  dark: dark,
+                                ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0)
+                              : _TeamMemberCard(
+                                  name: m['name'] as String? ?? '',
+                                  role: m['role'] as String? ?? '',
+                                  bio: m['bio'] as String? ?? '',
+                                  photoUrl: m['photoUrl'] as String?,
+                                  dark: dark,
+                                ).animate(delay: (e.key * 80).ms).fadeIn(duration: 350.ms),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
                 const SizedBox(height: 28),
 
-                // ── Mission ──────────────────────────────────────────────
+                // ── Mission ───────────────────────────────────────────────
                 const _SectionLabel('Our Mission'),
                 const SizedBox(height: 10),
                 GlassCard(
@@ -144,57 +194,46 @@ class AboutScreen extends StatelessWidget {
                         'student — regardless of their school, location, or background. '
                         'We use AI to deliver personalised tutoring, exam prep, and study '
                         'materials that actually match how students in Malawi learn.',
-                        style: TextStyle(
-                          color: DesignTokens.textSecondary,
-                          height: 1.65,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: DesignTokens.textSecondary, height: 1.65, fontSize: 14),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
 
-                // ── What Yaza does ───────────────────────────────────────
+                // ── Features ──────────────────────────────────────────────
                 const _SectionLabel('What Yaza Does'),
                 const SizedBox(height: 10),
                 const GlassCard(
                   child: Column(
                     children: [
-                      _FeatureRow(Icons.psychology_rounded, DesignTokens.primary,
-                          'AI Tutor', 'Chat with an AI tutor that explains concepts in plain language.'),
-                      _FeatureRow(Icons.document_scanner_rounded, DesignTokens.accent,
-                          'Smart Scanner', 'Snap a photo of any question and get step-by-step solutions.'),
-                      _FeatureRow(Icons.quiz_rounded, Color(0xFF8E44AD),
-                          'Practice Quizzes', 'Adaptive quizzes that focus on your weak spots.'),
-                      _FeatureRow(Icons.child_friendly_rounded, Color(0xFFF39C12),
-                          'Kids Mode', 'Illustrated visual lessons and fun quizzes for younger learners.'),
-                      _FeatureRow(Icons.group_rounded, DesignTokens.secondary,
-                          'Study Circles', 'Collaborate and study together with classmates.'),
+                      _FeatureRow(Icons.psychology_rounded, DesignTokens.primary, 'AI Tutor',
+                          'Chat with an AI tutor that explains concepts in plain language.'),
+                      _FeatureRow(Icons.document_scanner_rounded, DesignTokens.accent, 'Smart Scanner',
+                          'Snap a photo of any question and get step-by-step solutions.'),
+                      _FeatureRow(Icons.quiz_rounded, Color(0xFF8E44AD), 'Practice Quizzes',
+                          'Adaptive quizzes that focus on your weak spots.'),
+                      _FeatureRow(Icons.child_friendly_rounded, Color(0xFFF39C12), 'Kids Mode',
+                          'Illustrated visual lessons and fun quizzes for younger learners.'),
+                      _FeatureRow(Icons.group_rounded, DesignTokens.secondary, 'Study Circles',
+                          'Collaborate and study together with classmates.'),
                     ],
                   ),
                 ),
                 const SizedBox(height: 28),
 
-                // ── Footer ───────────────────────────────────────────────
+                // ── Footer ────────────────────────────────────────────────
                 const Center(
                   child: Column(
                     children: [
                       Text(
                         'Made with \u2764\ufe0f in Malawi',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                          color: DesignTokens.textSecondary,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: DesignTokens.textSecondary),
                       ),
                       SizedBox(height: 6),
                       Text(
                         '\u00a9 2025 Yaza. All rights reserved.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: DesignTokens.textTertiary,
-                        ),
+                        style: TextStyle(fontSize: 12, color: DesignTokens.textTertiary),
                       ),
                     ],
                   ),
@@ -208,29 +247,63 @@ class AboutScreen extends StatelessWidget {
   }
 }
 
-// ── Section label ──────────────────────────────────────────────────────────────
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  const _SectionLabel(this.text);
+// ── Static fallback (used before backend has data) ─────────────────────────────
+class _StaticTeamSection extends StatelessWidget {
+  const _StaticTeamSection();
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text.toUpperCase(),
-      style: const TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 1.2,
-        color: DesignTokens.textTertiary,
-      ),
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      children: [
+        _FounderCard(
+          name: 'Redson Ngwira',
+          role: 'Founder & Developer',
+          bio: 'Building Yaza to help every Malawian student access quality education '
+              'through AI — from MSCE revision to early childhood learning.',
+          photoUrl: null,
+          twitter: 'RedsonNgwira',
+          linkedin: '',
+          dark: dark,
+        ),
+        const SizedBox(height: 10),
+        _TeamMemberCard(
+          name: 'Yankho Mtewa',
+          role: 'Co-Founder',
+          bio: 'Working to make education accessible and affordable for all Malawians.',
+          photoUrl: null,
+          dark: dark,
+        ),
+      ],
     );
   }
 }
 
 // ── Founder hero card ──────────────────────────────────────────────────────────
 class _FounderCard extends StatelessWidget {
+  final String name;
+  final String role;
+  final String bio;
+  final String? photoUrl;
+  final String twitter;
+  final String linkedin;
   final bool dark;
-  const _FounderCard({required this.dark});
+
+  const _FounderCard({
+    required this.name,
+    required this.role,
+    required this.bio,
+    required this.photoUrl,
+    required this.twitter,
+    required this.linkedin,
+    required this.dark,
+  });
+
+  String get _initials {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    return name.isNotEmpty ? name[0].toUpperCase() : '?';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -257,7 +330,7 @@ class _FounderCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                // Large avatar
+                // Avatar — photo if available, else initials
                 Container(
                   width: 72,
                   height: 72,
@@ -265,47 +338,48 @@ class _FounderCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2.5),
+                    image: photoUrl != null && photoUrl!.isNotEmpty
+                        ? DecorationImage(image: NetworkImage(photoUrl!), fit: BoxFit.cover)
+                        : null,
                   ),
-                  child: const Center(
-                    child: Text(
-                      'RN',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
+                  child: photoUrl == null || photoUrl!.isEmpty
+                      ? Center(
+                          child: Text(
+                            _initials,
+                            style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Redson Ngwira',
-                        style: TextStyle(
+                      Text(
+                        name,
+                        style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                           letterSpacing: -0.3,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 5),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Text(
-                          'Founder & Developer',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
+                        child: Text(
+                          role,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
                         ),
                       ),
                     ],
@@ -314,32 +388,41 @@ class _FounderCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            const Text(
-              'Building Yaza to help every Malawian student access '
-              'quality education through AI — from MSCE revision to '
-              'early childhood learning.',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 13,
-                height: 1.55,
+            Text(
+              bio,
+              style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.55),
+            ),
+            if (twitter.isNotEmpty || linkedin.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (twitter.isNotEmpty)
+                    _SocialButton(
+                      label: '@$twitter',
+                      icon: Icons.alternate_email,
+                      onTap: () async {
+                        final uri = Uri.parse('https://twitter.com/$twitter');
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                    ),
+                  if (linkedin.isNotEmpty)
+                    _SocialButton(
+                      label: 'LinkedIn',
+                      icon: Icons.link_rounded,
+                      onTap: () async {
+                        final uri = Uri.parse(linkedin);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                    ),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            // Social links
-            Row(
-              children: [
-                _SocialButton(
-                  label: '@RedsonNgwira',
-                  icon: Icons.alternate_email,
-                  onTap: () async {
-                    final uri = Uri.parse('https://twitter.com/RedsonNgwira');
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                ),
-              ],
-            ),
+            ],
           ],
         ),
       ),
@@ -347,10 +430,27 @@ class _FounderCard extends StatelessWidget {
   }
 }
 
-// ── Co-founder card ────────────────────────────────────────────────────────────
-class _CoFounderCard extends StatelessWidget {
+// ── Generic team member card ───────────────────────────────────────────────────
+class _TeamMemberCard extends StatelessWidget {
+  final String name;
+  final String role;
+  final String bio;
+  final String? photoUrl;
   final bool dark;
-  const _CoFounderCard({required this.dark});
+
+  const _TeamMemberCard({
+    required this.name,
+    required this.role,
+    required this.bio,
+    required this.photoUrl,
+    required this.dark,
+  });
+
+  String get _initials {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    return name.isNotEmpty ? name[0].toUpperCase() : '?';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -359,9 +459,7 @@ class _CoFounderCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-        border: Border.all(
-          color: dark ? DesignTokens.darkBorder : DesignTokens.border,
-        ),
+        border: Border.all(color: dark ? DesignTokens.darkBorder : DesignTokens.border),
       ),
       child: Row(
         children: [
@@ -371,17 +469,18 @@ class _CoFounderCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: DesignTokens.accent.withValues(alpha: 0.12),
               shape: BoxShape.circle,
+              image: photoUrl != null && photoUrl!.isNotEmpty
+                  ? DecorationImage(image: NetworkImage(photoUrl!), fit: BoxFit.cover)
+                  : null,
             ),
-            child: const Center(
-              child: Text(
-                'YM',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: DesignTokens.accent,
-                ),
-              ),
-            ),
+            child: photoUrl == null || photoUrl!.isEmpty
+                ? Center(
+                    child: Text(
+                      _initials,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: DesignTokens.accent),
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -389,7 +488,7 @@ class _CoFounderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Yankho Mtewa',
+                  name,
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
@@ -397,27 +496,40 @@ class _CoFounderCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                const Text(
-                  'Co-Founder',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: DesignTokens.accent,
-                  ),
+                Text(
+                  role,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: DesignTokens.accent),
                 ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Working to make education accessible and affordable for all Malawians.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: DesignTokens.textSecondary,
-                    height: 1.4,
+                if (bio.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    bio,
+                    style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary, height: 1.4),
                   ),
-                ),
+                ],
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Section label ──────────────────────────────────────────────────────────────
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.2,
+        color: DesignTokens.textTertiary,
       ),
     );
   }
@@ -453,23 +565,11 @@ class _FeatureRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: DesignTokens.textPrimary,
-                  ),
-                ),
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: DesignTokens.textPrimary)),
                 const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: DesignTokens.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
+                Text(description,
+                    style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary, height: 1.4)),
               ],
             ),
           ),
@@ -485,11 +585,7 @@ class _SocialButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _SocialButton({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
+  const _SocialButton({required this.label, required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -507,14 +603,8 @@ class _SocialButton extends StatelessWidget {
           children: [
             Icon(icon, color: Colors.white, size: 16),
             const SizedBox(width: 6),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            Text(label,
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
           ],
         ),
       ),

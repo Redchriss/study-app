@@ -12,3 +12,4 @@ export 'domain/payment_queries.dart';
 export 'domain/kid_queries.dart';
 export 'domain/education_queries.dart';
 export 'domain/account_queries.dart';
+export 'domain/site_queries.dart';

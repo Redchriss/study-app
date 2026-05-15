@@ -226,11 +226,24 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ).animate(delay: 180.ms).fadeIn().slideY(begin: 0.04, end: 0),
 
-                      // ── About ────────────────────────────────────────────
-                      const SizedBox(height: 16),
-                      GlassCard(
-                        child: _NavRow(icon: Icons.info_outline, label: 'About Yaza', onTap: () => context.go('/about')),
-                      ).animate(delay: 200.ms).fadeIn(),
+                       // ── Legal & About ────────────────────────────────────
+                       const SizedBox(height: 16),
+                       GlassCard(
+                         child: Column(
+                           children: [
+                             _NavRow(icon: Icons.info_outline, label: 'About Yaza', onTap: () => context.go('/about')),
+                             _Divider(),
+                             _NavRow(icon: Icons.gavel_outlined, label: 'Terms of Service', onTap: () => context.push('/legal/terms')),
+                             _Divider(),
+                             _NavRow(icon: Icons.privacy_tip_outlined, label: 'Privacy Policy', onTap: () => context.push('/legal/privacy')),
+                             _Divider(),
+                             _NavRow(icon: Icons.help_outline_rounded, label: 'FAQ', onTap: () => context.push('/legal/faq')),
+                             _Divider(),
+                             _NavRow(icon: Icons.support_agent_outlined, label: 'Support & Contact', onTap: () => context.push('/legal/support')),
+                           ],
+                         ),
+                       ).animate(delay: 200.ms).fadeIn(),
+
 
                       // ── Sign out ─────────────────────────────────────────
                       const SizedBox(height: 20),
