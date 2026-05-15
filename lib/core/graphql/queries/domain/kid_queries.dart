@@ -56,6 +56,15 @@ mutation FetchKidLesson($subjectId: ID!, $standard: Int!, $topicId: ID) {
   fetchKidLesson(subjectId: $subjectId, standard: $standard, topicId: $topicId) {
     success errors
     lesson { id title bodyText quiz }
+    state {
+      lessonsOpened
+      quizAttempts
+      quizCorrect
+      masteryLevel
+      readyForReview
+      statusLabel
+      nextReviewLabel
+    }
   }
 }
 ''';
@@ -63,7 +72,7 @@ mutation FetchKidLesson($subjectId: ID!, $standard: Int!, $topicId: ID) {
 const String kAnswerKidQuiz = r'''
 mutation AnswerKidQuiz($lessonId: ID!, $selectedIndex: Int!) {
   answerKidQuiz(lessonId: $lessonId, selectedIndex: $selectedIndex) {
-    success correct starsEarned streak errors
+    success correct starsEarned streak masteryLevel nextReviewLabel errors
   }
 }
 ''';
@@ -72,6 +81,54 @@ const String kKidProgress = r'''
 query KidProgress($subjectId: ID!, $standard: Int!) {
   kidProgress(subjectId: $subjectId, standard: $standard) {
     lessonsCompleted quizzesTaken quizzesCorrect starsEarned
+  }
+}
+''';
+
+const String kKidSubjectRoadmap = r'''
+query KidSubjectRoadmap($subjectId: ID!, $standard: Int!) {
+  kidSubjectRoadmap(subjectId: $subjectId, standard: $standard) {
+    summary {
+      readyReviewCount
+      masteredCount
+      inProgressCount
+      untouchedCount
+      nextTopicId
+      reviewTopicId
+    }
+    topics {
+      topicId
+      topicName
+      topicSlug
+      lessonAvailable
+      state {
+        masteryLevel
+        quizAttempts
+        quizCorrect
+        readyForReview
+        statusLabel
+        nextReviewLabel
+        isMastered
+      }
+    }
+  }
+}
+''';
+
+const String kKidReviewQueue = r'''
+query KidReviewQueue($limit: Int) {
+  kidReviewQueue(limit: $limit) {
+    topicId
+    topicName
+    topicSlug
+    lessonAvailable
+    state {
+      masteryLevel
+      readyForReview
+      statusLabel
+      nextReviewLabel
+      isMastered
+    }
   }
 }
 ''';

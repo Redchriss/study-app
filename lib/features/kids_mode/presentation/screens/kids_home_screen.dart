@@ -9,11 +9,14 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../kids_visual_theme.dart';
 import '../widgets/kids_daily_goal_ring.dart';
+import '../widgets/kids_home_sections.dart';
 import '../widgets/kids_lesson_step_bar.dart';
+import '../widgets/kids_mission_board.dart';
 import '../widgets/kids_playful_button.dart';
 import '../widgets/kids_progress_snapshot_card.dart';
 import '../widgets/kids_story_chunk_card.dart';
 import '../widgets/kids_subject_card.dart';
+import '../widgets/kids_topic_roadmap_card.dart';
 import '../widgets/kids_topic_chip.dart';
 import 'kid_login_screen.dart';
 
@@ -43,6 +46,11 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
   bool _showCorrectBurst = false;
   Map<String, dynamic>? _dailySummary;
   Map<String, dynamic>? _subjectProgress;
+  Map<String, dynamic>? _lessonState;
+  Map<String, dynamic>? _roadmapSummary;
+  List<Map<String, dynamic>> _topicRoadmap = [];
+  List<Map<String, dynamic>> _reviewQueue = [];
+  String? _quizReviewHint;
   int _selectedStoryChunk = 0;
   late final AnimationController _burstCtrl;
 
@@ -149,6 +157,35 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
     });
   }
 
+  Future<void> _fetchRoadmap(String subjectId, int standard) async {
+    final c = _buildKidClient();
+    final roadmapResult = await c.query(QueryOptions(
+      document: gql(kKidSubjectRoadmap),
+      variables: {'subjectId': subjectId, 'standard': standard},
+      fetchPolicy: FetchPolicy.networkOnly,
+    ));
+    final reviewResult = await c.query(QueryOptions(
+      document: gql(kKidReviewQueue),
+      variables: const {'limit': 4},
+      fetchPolicy: FetchPolicy.networkOnly,
+    ));
+    if (!mounted) return;
+    final roadmap = roadmapResult.data?['kidSubjectRoadmap'];
+    setState(() {
+      _roadmapSummary = roadmap is Map && roadmap['summary'] is Map
+          ? Map<String, dynamic>.from(roadmap['summary'] as Map)
+          : null;
+      _topicRoadmap = ((roadmap is Map ? roadmap['topics'] : null) as List? ?? const [])
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+      _reviewQueue = ((reviewResult.data?['kidReviewQueue'] as List?) ?? const [])
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    });
+  }
+
   Future<void> _claimDailyChest() async {
     final c = _buildKidClient();
     final result = await c.mutate(MutationOptions(document: gql(kClaimKidDailyChest)));
@@ -204,10 +241,12 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
       if (data['success'] == true) {
         setState(() {
           _currentLesson = data['lesson'];
+          _lessonState = data['state'] is Map ? Map<String, dynamic>.from(data['state'] as Map) : null;
           _quiz = (_currentLesson?['quiz'] as List?)?.cast<Map<String, dynamic>>() ?? [];
           _inQuiz = false;
           _quizAnswered = false;
           _quizSelected = null;
+          _quizReviewHint = null;
           _selectedStoryChunk = 0;
           _loading = false;
         });
@@ -217,6 +256,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
       }
       await _fetchDailySummary();
       await _fetchSubjectProgress(subjectId, standard);
+      await _fetchRoadmap(subjectId, standard);
     }
     setState(() => _loading = false);
   }
@@ -262,6 +302,17 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
       _quizAnswered = true;
       _stars = (payload?['starsEarned'] as num?)?.toInt() ?? _stars;
       _streak = (payload?['streak'] as num?)?.toInt() ?? _streak;
+      _quizReviewHint = payload?['nextReviewLabel']?.toString();
+      if (_lessonState != null) {
+        _lessonState = {
+          ..._lessonState!,
+          'masteryLevel': (payload?['masteryLevel'] as num?)?.toInt() ?? _lessonState!['masteryLevel'],
+          'nextReviewLabel': payload?['nextReviewLabel']?.toString(),
+          'quizAttempts': ((_lessonState!['quizAttempts'] as num?)?.toInt() ?? 0) + 1,
+          'quizCorrect': ((_lessonState!['quizCorrect'] as num?)?.toInt() ?? 0) + (correct ? 1 : 0),
+          'lastResultCorrect': correct,
+        };
+      }
     });
     if (correct) {
       HapticFeedback.heavyImpact();
@@ -275,6 +326,24 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
       _speak('Nice try! The right answer is highlighted.');
     }
     await _fetchDailySummary();
+    final subjectId = _selectedSubject?['id']?.toString();
+    if (subjectId != null) {
+      await _fetchRoadmap(subjectId, ref.read(kidAuthStateProvider).standard);
+      await _fetchSubjectProgress(subjectId, ref.read(kidAuthStateProvider).standard);
+    }
+  }
+
+  void _openRoadmapTopicById(String? topicId, KidAuthState auth) {
+    if (topicId == null || topicId.isEmpty) return;
+    final match = _topics.cast<Map<String, dynamic>?>().firstWhere(
+          (topic) => topic?['id']?.toString() == topicId,
+          orElse: () => null,
+        );
+    if (match == null) return;
+    final subjectId = _selectedSubject?['id']?.toString();
+    if (subjectId == null) return;
+    setState(() => _selectedTopic = match);
+    _fetchLesson(subjectId, auth.standard, topicId: topicId);
   }
 
   @override
@@ -378,7 +447,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _KidsHeroCard(
+          KidsHeroCard(
             childName: auth.childName,
             standard: auth.standard,
             educationTrack: auth.educationTrack,
@@ -421,7 +490,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
           ),
           const SizedBox(height: 16),
           if (_subjects.isEmpty)
-            _KidsEmptySubjects()
+            const KidsEmptySubjects()
           else
             ..._subjects.map((s) {
               final name = s['name'] as String? ?? '';
@@ -445,6 +514,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                     if (subjectId != null && subjectId.isNotEmpty) {
                       _fetchTopics(subjectId, auth.standard);
                       _fetchSubjectProgress(subjectId, auth.standard);
+                      _fetchRoadmap(subjectId, auth.standard);
                       _fetchLesson(subjectId, auth.standard);
                     }
                   },
@@ -553,15 +623,55 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                   ),
                   const SizedBox(height: 14),
                 ],
+                if (_roadmapSummary != null) ...[
+                  KidsMissionBoard(
+                    readyReviewCount: (_roadmapSummary?['readyReviewCount'] as num?)?.toInt() ?? 0,
+                    masteredCount: (_roadmapSummary?['masteredCount'] as num?)?.toInt() ?? 0,
+                    inProgressCount: (_roadmapSummary?['inProgressCount'] as num?)?.toInt() ?? 0,
+                    untouchedCount: (_roadmapSummary?['untouchedCount'] as num?)?.toInt() ?? 0,
+                    onReviewTap: () => _openRoadmapTopicById(_roadmapSummary?['reviewTopicId']?.toString(), auth),
+                    onNextTap: () => _openRoadmapTopicById(_roadmapSummary?['nextTopicId']?.toString(), auth),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+                if (_reviewQueue.isNotEmpty) ...[
+                  KidsReviewQueue(reviewQueue: _reviewQueue, onTapTopic: (topicId) => _openRoadmapTopicById(topicId, auth)),
+                  const SizedBox(height: 14),
+                ],
+                if (_topicRoadmap.isNotEmpty) ...[
+                  SizedBox(
+                    height: 138,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _topicRoadmap.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      itemBuilder: (context, index) {
+                        final item = _topicRoadmap[index];
+                        final state = item['state'] is Map ? Map<String, dynamic>.from(item['state'] as Map) : null;
+                        return KidsTopicRoadmapCard(
+                          title: item['topicName']?.toString() ?? 'Topic',
+                          statusLabel: state?['statusLabel']?.toString() ?? 'Start here',
+                          masteryLevel: (state?['masteryLevel'] as num?)?.toInt() ?? 0,
+                          selected: item['topicId']?.toString() == _selectedTopic?['id']?.toString(),
+                          readyForReview: state?['readyForReview'] == true,
+                          isMastered: state?['isMastered'] == true,
+                          nextReviewLabel: state?['nextReviewLabel']?.toString(),
+                          onTap: () => _openRoadmapTopicById(item['topicId']?.toString(), auth),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 KidsLessonStepBar(inQuiz: _inQuiz),
                 const SizedBox(height: 18),
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    _KidsFloatingPanel(
+                    KidsFloatingPanel(
                       child: _inQuiz ? _buildQuizContent(Theme.of(context)) : _buildStoryPanel(text, chunks),
                     ),
-                    if (_showCorrectBurst) _CorrectBurstOverlay(controller: _burstCtrl),
+                    if (_showCorrectBurst) CorrectBurstOverlay(controller: _burstCtrl),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -682,7 +792,14 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
         ),
         if (_streak > 0) ...[
           const SizedBox(height: 16),
-          _StreakChip(streak: _streak, quizMode: true),
+          KidsStreakChip(streak: _streak, quizMode: true),
+        ],
+        if (_lessonState != null || _quizReviewHint != null) ...[
+          const SizedBox(height: 16),
+          KidsMasteryHint(
+            masteryLevel: (_lessonState?['masteryLevel'] as num?)?.toInt() ?? 0,
+            reviewHint: _quizReviewHint ?? _lessonState?['nextReviewLabel']?.toString(),
+          ),
         ],
       ],
     );
@@ -790,276 +907,6 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
           ),
         ],
       ],
-    );
-  }
-}
-
-class _KidsHeroCard extends StatelessWidget {
-  const _KidsHeroCard({
-    required this.childName,
-    required this.standard,
-    required this.educationTrack,
-    required this.summary,
-    required this.quizHotStreak,
-    required this.stars,
-    required this.onStarsTap,
-  });
-
-  final String childName;
-  final int standard;
-  final String educationTrack;
-  final Map<String, dynamic>? summary;
-  final int quizHotStreak;
-  final int stars;
-  final VoidCallback onStarsTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final act = (summary?['activitiesToday'] as num?)?.toInt() ?? 0;
-    final goal = (summary?['dailyGoal'] as num?)?.toInt() ?? 3;
-    final cal = (summary?['calendarStreak'] as num?)?.toInt() ?? 0;
-    final trackLabel = educationTrack == 'ecd' ? 'Early childhood' : 'Primary';
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(color: KidsVisualTheme.pathBlue.withValues(alpha: 0.18), blurRadius: 0, offset: const Offset(0, 6)),
-          ...DesignTokens.shadowSm(Theme.of(context).brightness == Brightness.dark),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hi, $childName!',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: KidsVisualTheme.ink,
-                            letterSpacing: -0.5,
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '$trackLabel · Standard $standard',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: KidsVisualTheme.inkMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (summary != null) ...[
-                KidsDailyGoalRing(activities: act, goal: goal, size: 76, stroke: 8),
-                const SizedBox(width: 12),
-              ],
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Material(
-                    color: KidsVisualTheme.sunGold.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(20),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: onStarsTap,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        child: Row(
-                          children: [
-                            Icon(Icons.star_rounded, color: KidsVisualTheme.sunGold.shade700, size: 26),
-                            const SizedBox(width: 4),
-                            Text(
-                              '$stars',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18,
-                                color: KidsVisualTheme.sunGold.shade800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          if (cal > 0 || quizHotStreak > 0) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (cal > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: KidsVisualTheme.pathBlue.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.wb_sunny_rounded, color: KidsVisualTheme.pathBlue, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          '$cal learning days in a row',
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: KidsVisualTheme.ink),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (quizHotStreak > 0)
-                  _StreakChip(streak: quizHotStreak, compact: true, quizMode: true),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-extension _KidsColorShades on Color {
-  Color get shade700 => Color.alphaBlend(withValues(alpha: 0.85), Colors.black);
-  Color get shade800 => Color.alphaBlend(withValues(alpha: 0.75), Colors.black);
-}
-
-class _StreakChip extends StatelessWidget {
-  const _StreakChip({required this.streak, this.compact = false, this.quizMode = false});
-
-  final int streak;
-  final bool compact;
-  final bool quizMode;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: compact ? 6 : 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [DesignTokens.warning, DesignTokens.warning.withValues(alpha: 0.85)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: DesignTokens.warning.withValues(alpha: 0.35), offset: const Offset(0, 3), blurRadius: 0)],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.local_fire_department_rounded, color: Colors.white.withValues(alpha: 0.95), size: compact ? 18 : 22),
-          const SizedBox(width: 6),
-          Text(
-            quizMode ? '$streak quiz streak' : '$streak day streak',
-            style: TextStyle(
-              fontSize: compact ? 12 : 14,
-              fontWeight: FontWeight.w900,
-              color: Colors.white.withValues(alpha: 0.98),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _KidsEmptySubjects extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: const Column(
-        children: [
-          Icon(Icons.cloud_off_rounded, size: 48, color: KidsVisualTheme.inkMuted),
-          SizedBox(height: 12),
-          Text(
-            'Subjects could not load. Check your connection and pull to refresh from the parent app.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.w600, color: KidsVisualTheme.inkMuted, height: 1.4),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _KidsFloatingPanel extends StatelessWidget {
-  const _KidsFloatingPanel({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(color: KidsVisualTheme.pathBlue.withValues(alpha: 0.12), offset: const Offset(0, 8), blurRadius: 24),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
-
-class _CorrectBurstOverlay extends StatelessWidget {
-  const _CorrectBurstOverlay({required this.controller});
-
-  final AnimationController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      top: -8,
-      left: 0,
-      right: 0,
-      child: IgnorePointer(
-        child: AnimatedBuilder(
-          animation: controller,
-          builder: (context, _) {
-            final t = Curves.easeOut.transform(controller.value);
-            return Opacity(
-              opacity: 1.0 - t,
-              child: Transform.scale(
-                scale: 0.85 + 0.35 * t,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (i) {
-                    final rot = (i - 2) * 0.15 * (1 - t);
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Transform.rotate(
-                        angle: rot,
-                        child: Icon(Icons.star_rounded, size: 32 + 12 * t, color: KidsVisualTheme.sunGold),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
     );
   }
 }
