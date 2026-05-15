@@ -22,6 +22,7 @@ final themeModeProvider = StateProvider<ThemeMode>((ref) {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppConfig.init();
 
   // Initialize Sentry if DSN is configured
   if (AppConfig.sentryDsn.isNotEmpty) {
@@ -46,9 +47,6 @@ Future<void> _runApp() async {
     debugPrint('Stack trace: ${details.stack}');
     Sentry.captureException(details.exception, stackTrace: details.stack);
   };
-
-  // Initialize environment configuration
-  await AppConfig.init();
 
   ThemeMode initialTheme = ThemeMode.system;
   try {
