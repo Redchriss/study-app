@@ -33,6 +33,12 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   String? _error;
   GraphQLClient? _client;
 
+  @override
+  void initState() {
+    super.initState();
+    _restoreSavedSession();
+  }
+
   GraphQLClient _buildClient({String? token}) {
     final t = token ?? _parentToken;
     if (_client != null && token == null) return _client!;
@@ -45,7 +51,58 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
     return client;
   }
 
-  void _logoutParent() {
+  Future<void> _restoreSavedSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final kidToken = prefs.getString('kid_token');
+    final kidName = prefs.getString('kid_child_name');
+    final kidStandard = prefs.getInt('kid_standard');
+    final kidTrack = prefs.getString('kid_education_track');
+
+    if (!mounted) return;
+    if (kidToken != null &&
+        kidToken.isNotEmpty &&
+        kidName != null &&
+        kidName.isNotEmpty &&
+        kidStandard != null) {
+      ref.read(kidTokenProvider.notifier).state = kidToken;
+      ref.read(kidAuthStateProvider.notifier).state = KidAuthState(
+        isAuthenticated: true,
+        childName: kidName,
+        standard: kidStandard,
+        educationTrack: (kidTrack == null || kidTrack.isEmpty) ? 'primary' : kidTrack,
+        token: kidToken,
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.go('/kids/learn');
+        }
+      });
+      return;
+    }
+
+    final parentToken = prefs.getString('parent_token');
+    if (parentToken != null && parentToken.isNotEmpty) {
+      setState(() {
+        _parentToken = parentToken;
+        _parentLoading = true;
+        _error = null;
+        _client = null;
+      });
+      await _fetchChildren();
+    }
+  }
+
+  Future<void> _logoutParent() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('parent_token');
+    await prefs.remove('kid_token');
+    await prefs.remove('kid_child_name');
+    await prefs.remove('kid_standard');
+    await prefs.remove('kid_education_track');
+    if (!mounted) return;
+    ref.read(kidTokenProvider.notifier).state = null;
+    ref.read(kidProfileProvider.notifier).state = null;
+    ref.read(kidAuthStateProvider.notifier).state = const KidAuthState();
     setState(() {
       _parentToken = null;
       _children = null;
@@ -127,10 +184,13 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
           ));
           final data = result.data?['kidLogin'];
           if (data?['success'] == true) {
+            final child = data['child'] as Map<String, dynamic>?;
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('kid_token', data['token']);
+            await prefs.setString('kid_child_name', child?['childName'] as String? ?? kid['childName'] as String? ?? '');
+            await prefs.setInt('kid_standard', (child?['standard'] as num?)?.toInt() ?? kid['standard'] as int? ?? 1);
+            await prefs.setString('kid_education_track', child?['childEducationTrack'] as String? ?? 'primary');
             ref.read(kidTokenProvider.notifier).state = data['token'];
-            final child = data['child'] as Map<String, dynamic>?;
             ref.read(kidProfileProvider.notifier).state = Map<String, dynamic>.from(kid);
             ref.read(kidAuthStateProvider.notifier).state = KidAuthState(
               isAuthenticated: true,

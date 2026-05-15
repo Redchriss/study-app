@@ -117,6 +117,31 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
           }
         }
       }
+      if (!mounted || !_streaming) return;
+      final partialText = _streamingText.trim();
+      setState(() {
+        if (partialText.isNotEmpty) {
+          _messages.add({
+            'messageText': partialText,
+            'isUser': false,
+            'timestamp': DateTime.now().toIso8601String(),
+          });
+        }
+        _streamingText = '';
+        _sending = false;
+        _streaming = false;
+      });
+      if (partialText.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tutor response ended unexpectedly. Please try again.'),
+            backgroundColor: DesignTokens.error,
+          ),
+        );
+      } else {
+        _loadTutorSnapshot();
+        _scrollDown();
+      }
     } catch (e) {
       if (mounted) {
         setState(() { _sending = false; _streaming = false; });
@@ -356,6 +381,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   }
 
   void _handleEvent(String type, String data) {
+    if (!mounted) return;
     try {
       final payload = jsonDecode(data) as Map<String, dynamic>;
       switch (type) {
@@ -392,7 +418,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
 
   void _scrollDown() {
     Future.delayed(const Duration(milliseconds: 50), () {
-      if (_scrollCtrl.hasClients) {
+      if (mounted && _scrollCtrl.hasClients) {
         _scrollCtrl.animateTo(_scrollCtrl.position.maxScrollExtent,
             duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
       }
@@ -684,7 +710,11 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
     _anim = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
-    Future.delayed(Duration(milliseconds: widget.delay), () => _ctrl.repeat(reverse: true));
+    Future.delayed(Duration(milliseconds: widget.delay), () {
+      if (mounted) {
+        _ctrl.repeat(reverse: true);
+      }
+    });
   }
 
   @override

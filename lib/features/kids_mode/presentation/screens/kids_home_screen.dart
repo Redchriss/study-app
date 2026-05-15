@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../data/kid_graphql_client.dart';
@@ -470,8 +471,18 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
                     borderRadius: BorderRadius.circular(20),
                     onTap: () {
                       HapticFeedback.lightImpact();
-                      ref.read(kidAuthStateProvider.notifier).state = const KidAuthState();
-                      context.go('/kids');
+                      SharedPreferences.getInstance().then((prefs) async {
+                        await prefs.remove('kid_token');
+                        await prefs.remove('kid_child_name');
+                        await prefs.remove('kid_standard');
+                        await prefs.remove('kid_education_track');
+                        ref.read(kidTokenProvider.notifier).state = null;
+                        ref.read(kidProfileProvider.notifier).state = null;
+                        ref.read(kidAuthStateProvider.notifier).state = const KidAuthState();
+                        if (context.mounted) {
+                          context.go('/kids');
+                        }
+                      });
                     },
                     child: const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
