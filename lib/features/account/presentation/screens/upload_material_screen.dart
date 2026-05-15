@@ -39,13 +39,28 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
   }
 
   Future<void> _loadSubjects() async {
+    final auth = ref.read(authProvider);
+    final educationLevel = auth.user?['profile']?['educationLevel']?.toString();
+
+    if (educationLevel == null || educationLevel.isEmpty) {
+      setState(() {
+        _loadingSubjects = false;
+        _subjectLoadError = 'Complete your profile education level before uploading materials.';
+      });
+      return;
+    }
+
     setState(() {
       _loadingSubjects = true;
       _subjectLoadError = null;
     });
     final client = ref.read(graphqlClientProvider);
     final result = await client.query(
-      QueryOptions(document: gql(kSubjects), fetchPolicy: FetchPolicy.cacheFirst),
+      QueryOptions(
+        document: gql(kSubjects),
+        variables: {'educationLevel': educationLevel},
+        fetchPolicy: FetchPolicy.cacheFirst,
+      ),
     );
     if (!mounted) return;
     if (result.hasException) {
