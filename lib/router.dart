@@ -60,13 +60,14 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final auth = ref.read(authProvider);
       final location = state.matchedLocation;
+      final isKidsRoute = location == '/kids' || location.startsWith('/kids/');
 
       if (auth.isLoading) {
-        return location == '/splash' ? null : '/splash';
+        return location == '/splash' || isKidsRoute ? null : '/splash';
       }
 
       if (!auth.isAuthenticated) {
-        if (['/login', '/register', '/onboarding'].contains(location)) {
+        if (['/login', '/register', '/onboarding'].contains(location) || isKidsRoute) {
           return null;
         }
         if (location == '/splash') return '/onboarding';

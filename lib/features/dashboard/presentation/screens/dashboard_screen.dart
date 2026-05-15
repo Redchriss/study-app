@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,15 +11,50 @@ import '../../../../core/services/study_progress_store.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  final StudyProgressStore _progressStore = StudyProgressStore();
+  final RetentionService _retention = RetentionService();
+  late Future<QueryResult> _adaptivePlanFuture;
+  String? _lastReminderTopic;
+
+  @override
+  void initState() {
+    super.initState();
+    _adaptivePlanFuture = _loadAdaptiveStudyPlan();
+  }
+
+  Future<QueryResult> _loadAdaptiveStudyPlan() {
+    return ref.read(graphqlClientProvider).query(
+      QueryOptions(document: gql(kAdaptiveStudyPlan), fetchPolicy: FetchPolicy.networkOnly),
+    );
+  }
+
+  Future<void> _refreshDashboard(Refetch? refetch) async {
+    refetch?.call();
+    setState(() {
+      _adaptivePlanFuture = _loadAdaptiveStudyPlan();
+    });
+  }
+
+  void _scheduleWeakTopicReminder(List<String> weakestTopics) {
+    if (weakestTopics.isEmpty) return;
+    final nextTopic = weakestTopics.first;
+    if (_lastReminderTopic == nextTopic) return;
+    _lastReminderTopic = nextTopic;
+    unawaited(_retention.refreshStudyReminder(weakTopic: nextTopic));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-    final progressStore = StudyProgressStore();
-    final retention = RetentionService();
 
     return Query(
       options: QueryOptions(document: gql(kDashboard)),
@@ -52,9 +89,7 @@ class DashboardScreen extends ConsumerWidget {
             .where((item) => item.trim().isNotEmpty)
             .cast<String>()
             .toList();
-        if (weakestTopics.isNotEmpty) {
-          retention.refreshStudyReminder(weakTopic: weakestTopics.first);
-        }
+        _scheduleWeakTopicReminder(weakestTopics);
         final strongestTopics = ((snap?['strongestTopics'] as List?) ?? const [])
             .map((item) => item is Map ? (item['name']?.toString() ?? '') : item.toString())
             .where((item) => item.trim().isNotEmpty)
@@ -71,7 +106,7 @@ class DashboardScreen extends ConsumerWidget {
 
         return Scaffold(
           body: RefreshIndicator(
-            onRefresh: () async => refetch?.call(),
+            onRefresh: () => _refreshDashboard(refetch),
             child: CustomScrollView(
               slivers: [
                 // ── App Bar ──────────────────────────────────────────
@@ -152,7 +187,7 @@ class DashboardScreen extends ConsumerWidget {
                 else
                   SliverToBoxAdapter(
                     child: FutureBuilder<StudyMaterialProgress?>(
-                      future: progressStore.loadLastMaterial(),
+                      future: _progressStore.loadLastMaterial(),
                       builder: (context, snapshot) {
                         final saved = snapshot.data;
                         if (saved == null) return const SizedBox.shrink();
@@ -171,9 +206,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 SliverToBoxAdapter(
                   child: FutureBuilder<QueryResult>(
-                    future: ref.read(graphqlClientProvider).query(
-                      QueryOptions(document: gql(kAdaptiveStudyPlan), fetchPolicy: FetchPolicy.networkOnly),
-                    ),
+                    future: _adaptivePlanFuture,
                     builder: (context, snapshot) {
                       final plan = snapshot.data?.data?['adaptiveStudyPlan'];
                       if (plan is! Map) return const SizedBox.shrink();
