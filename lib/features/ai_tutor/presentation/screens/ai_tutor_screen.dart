@@ -11,6 +11,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/ai_tutor_mode_bar.dart';
 import '../widgets/ai_tutor_preferences_sheet.dart';
+import '../widgets/ai_tutor_snapshot_cards.dart';
 
 class AiTutorScreen extends ConsumerStatefulWidget {
   const AiTutorScreen({super.key});
@@ -34,6 +35,11 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   int _detailLevel = 2;
   bool _profileLoading = true;
   bool _profileSaving = false;
+  bool _snapshotLoading = true;
+  List<Map<String, dynamic>> _topicStates = [];
+  List<Map<String, dynamic>> _memories = [];
+  Map<String, dynamic>? _activePlan;
+  int _reviewCount = 0;
   late final http.Client _httpClient;
   late final AnimationController _cursorCtrl;
   late final Animation<double> _cursorAnim;
@@ -48,6 +54,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     )..repeat(reverse: true);
     _cursorAnim = Tween<double>(begin: 0, end: 1).animate(_cursorCtrl);
     _loadLearningProfile();
+    _loadTutorSnapshot();
   }
 
   @override
@@ -141,6 +148,65 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       if (!mounted) return;
       setState(() => _profileLoading = false);
     }
+  }
+
+  Future<void> _loadTutorSnapshot() async {
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.query(
+        QueryOptions(document: gql(kTutorSnapshot), fetchPolicy: FetchPolicy.networkOnly),
+      );
+      final snapshot = result.data?['tutorSnapshot'] as Map<String, dynamic>?;
+      if (!mounted) return;
+      setState(() {
+        _topicStates = ((snapshot?['topicStates'] as List?) ?? const [])
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+        _memories = ((snapshot?['memories'] as List?) ?? const [])
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+        _activePlan = snapshot?['latestPlan'] is Map
+            ? Map<String, dynamic>.from(snapshot!['latestPlan'] as Map)
+            : null;
+        _reviewCount = (snapshot?['reviewCount'] as num?)?.toInt() ?? 0;
+        _snapshotLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _snapshotLoading = false);
+    }
+  }
+
+  Future<void> _createAdaptivePlan() async {
+    final client = ref.read(graphqlClientProvider);
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(kCreateAdaptiveStudyPlan),
+        variables: {
+          'goal': _msgCtrl.text.trim().isEmpty ? null : _msgCtrl.text.trim(),
+          'subjectName': _topicStates.isNotEmpty ? _topicStates.first['subjectName']?.toString() : null,
+          'studyMode': _studyMode,
+        },
+      ),
+    );
+    final payload = result.data?['createAdaptiveStudyPlan'] as Map<String, dynamic>?;
+    if (!mounted) return;
+    if (payload?['success'] == true && payload?['plan'] is Map) {
+      setState(() {
+        _activePlan = Map<String, dynamic>.from(payload!['plan'] as Map);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Adaptive study plan updated.')),
+      );
+      await _loadTutorSnapshot();
+      return;
+    }
+    final errors = (payload?['errors'] as List?)?.map((item) => item.toString()).join(', ');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(errors?.isNotEmpty == true ? errors! : 'Could not build a study plan.')),
+    );
   }
 
   Future<void> _saveLearningProfile({
@@ -304,6 +370,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
             _sending = false;
             _streaming = false;
           });
+          _loadTutorSnapshot();
           _scrollDown();
           break;
         case 'meta':
@@ -413,6 +480,17 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
                       ..._profilePills().map((item) => Chip(label: Text(item))),
                   ],
                 ),
+                const SizedBox(height: 10),
+                if (_snapshotLoading)
+                  const LinearProgressIndicator(minHeight: 3)
+                else
+                  AiTutorSnapshotCards(
+                    reviewCount: _reviewCount,
+                    topicStates: _topicStates,
+                    memories: _memories,
+                    planSummary: _activePlan?['planSummary']?.toString(),
+                    onGeneratePlan: _createAdaptivePlan,
+                  ),
               ],
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/retention_service.dart';
 import '../../../../core/services/study_progress_store.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -166,6 +167,64 @@ class DashboardScreen extends ConsumerWidget {
                     strongestTopics: strongestTopics,
                     strugglingTopics: strugglingTopics,
                     masteredTopics: masteredTopics,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: FutureBuilder<QueryResult>(
+                    future: ref.read(graphqlClientProvider).query(
+                      QueryOptions(document: gql(kAdaptiveStudyPlan), fetchPolicy: FetchPolicy.networkOnly),
+                    ),
+                    builder: (context, snapshot) {
+                      final plan = snapshot.data?.data?['adaptiveStudyPlan'];
+                      if (plan is! Map) return const SizedBox.shrink();
+                      final tasks = ((plan['tasksJson'] as List?) ?? const []).whereType<Map>().toList();
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(DesignTokens.spMd, 0, DesignTokens.spMd, DesignTokens.spLg),
+                        child: GlassCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Adaptive Study Plan',
+                                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                              ),
+                              const SizedBox(height: DesignTokens.spXs),
+                              Text(
+                                plan['planSummary']?.toString() ?? '',
+                                style: theme.textTheme.bodyMedium?.copyWith(color: DesignTokens.textSecondary),
+                              ),
+                              if (tasks.isNotEmpty) ...[
+                                const SizedBox(height: DesignTokens.spSm),
+                                ...tasks.take(3).map((task) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(Icons.chevron_right_rounded, size: 18, color: DesignTokens.primary),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          '${task['title'] ?? 'Task'}${task['reason'] != null ? ' - ${task['reason']}' : ''}',
+                                          style: const TextStyle(fontSize: 13),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )),
+                              ],
+                              const SizedBox(height: DesignTokens.spSm),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: FilledButton.tonal(
+                                  onPressed: () => context.go('/ai-tutor'),
+                                  child: const Text('Open AI Tutor'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
 

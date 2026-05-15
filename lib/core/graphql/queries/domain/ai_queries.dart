@@ -30,3 +30,80 @@ query ChatMessages($sessionId: ID!) {
   }
 }
 ''';
+
+const String kTutorSnapshot = r'''
+query TutorSnapshot {
+  tutorSnapshot {
+    learnerContext
+    reviewCount
+    topicStates {
+      topicName
+      topicSlug
+      subjectName
+      masteryScore
+      confidenceScore
+      timesPracticed
+      timesStruggled
+      lastMode
+      lastOutcome
+      nextReviewOn
+      statusLabel
+    }
+    memories {
+      memoryType
+      title
+      body
+      topicSlug
+      subjectName
+      importance
+    }
+    latestPlan {
+      id
+      title
+      goal
+      studyMode
+      subjectName
+      planSummary
+      tasksJson
+      active
+      updatedAt
+    }
+  }
+}
+''';
+
+const String kAdaptiveStudyPlan = r'''
+query AdaptiveStudyPlan {
+  adaptiveStudyPlan {
+    id
+    title
+    goal
+    studyMode
+    subjectName
+    planSummary
+    tasksJson
+    active
+    updatedAt
+  }
+}
+''';
+
+const String kCreateAdaptiveStudyPlan = r'''
+mutation CreateAdaptiveStudyPlan($goal: String, $subjectName: String, $studyMode: String) {
+  createAdaptiveStudyPlan(goal: $goal, subjectName: $subjectName, studyMode: $studyMode) {
+    success
+    errors
+    plan {
+      id
+      title
+      goal
+      studyMode
+      subjectName
+      planSummary
+      tasksJson
+      active
+      updatedAt
+    }
+  }
+}
+''';
