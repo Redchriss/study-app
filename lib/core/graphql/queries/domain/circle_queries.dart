@@ -62,7 +62,10 @@ query PostComments($postId: ID!) {
 
 const String kJoinCircle = r'''
 mutation JoinCircle($slug: String!) {
-  joinCircle(slug: $slug) { success errors }
+  joinCircle(circleSlug: $slug) {
+    success
+    circle { id name slug memberCount isMember isFavorite educationLevel }
+  }
 }
 ''';
 

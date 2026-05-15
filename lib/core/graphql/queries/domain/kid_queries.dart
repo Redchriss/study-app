@@ -1,6 +1,6 @@
 const String kPrimarySubjects = r'''
 query PrimarySubjects($standard: Int, $educationTrack: String) {
-  primarySubjects(standard: $standard, educationTrack: $educationTrack) { id name slug }
+  primarySubjects(standard: $standard, educationTrack: $educationTrack) { id name }
 }
 ''';
 
