@@ -228,6 +228,12 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
           'Plan my study for tomorrow',
           'What should I study first for exams?',
         ];
+      case 'memorize':
+        return const [
+          'Help me memorize the parts of the heart',
+          'Give me a mnemonic for acids and bases',
+          'Turn this topic into fast recall cues',
+        ];
       case 'revise':
         return const [
           'Give me a quick summary of respiration',
@@ -249,6 +255,8 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         return 'The tutor will test you one question at a time.';
       case 'plan':
         return 'The tutor will organize what to study and in what order.';
+      case 'memorize':
+        return 'The tutor will build mnemonics, memory hooks, and active recall prompts.';
       case 'revise':
         return 'The tutor will compress the topic into fast revision help.';
       default:
@@ -365,6 +373,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
                     ('coach', 'Coach', Icons.school_outlined),
                     ('quiz', 'Quiz Me', Icons.quiz_outlined),
                     ('revise', 'Revise', Icons.bolt_outlined),
+                    ('memorize', 'Memorize', Icons.psychology_alt_outlined),
                     ('plan', 'Plan', Icons.event_note_outlined),
                   ],
                   onSelect: (mode) => setState(() => _studyMode = mode),

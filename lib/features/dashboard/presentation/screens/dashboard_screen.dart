@@ -42,7 +42,26 @@ class DashboardScreen extends ConsumerWidget {
         );
         final snap = result.data?['progressSnapshot'];
         final circles = (result.data?['myCircles'] as List?) ?? [];
+        final learningProfile = result.data?['learningProfile'] as Map<String, dynamic>?;
         final name = me?['username'] as String? ?? 'Student';
+        final weakestTopics = ((snap?['weakestTopics'] as List?) ?? const [])
+            .map((item) => item is Map ? (item['name']?.toString() ?? '') : item.toString())
+            .where((item) => item.trim().isNotEmpty)
+            .cast<String>()
+            .toList();
+        final strongestTopics = ((snap?['strongestTopics'] as List?) ?? const [])
+            .map((item) => item is Map ? (item['name']?.toString() ?? '') : item.toString())
+            .where((item) => item.trim().isNotEmpty)
+            .cast<String>()
+            .toList();
+        final strugglingTopics = ((learningProfile?['topicsStruggling'] as List?) ?? const [])
+            .map((item) => item.toString())
+            .where((item) => item.trim().isNotEmpty)
+            .toList();
+        final masteredTopics = ((learningProfile?['topicsMastered'] as List?) ?? const [])
+            .map((item) => item.toString())
+            .where((item) => item.trim().isNotEmpty)
+            .toList();
 
         return Scaffold(
           body: RefreshIndicator(
@@ -135,6 +154,15 @@ class DashboardScreen extends ConsumerWidget {
                       },
                     ),
                   ),
+
+                SliverToBoxAdapter(
+                  child: _FocusCoachCard(
+                    weakestTopics: weakestTopics,
+                    strongestTopics: strongestTopics,
+                    strugglingTopics: strugglingTopics,
+                    masteredTopics: masteredTopics,
+                  ),
+                ),
 
                 // ── Bento Grid ────────────────────────────────────────
                 SliverToBoxAdapter(
@@ -305,7 +333,7 @@ class DashboardScreen extends ConsumerWidget {
                                     ),
                                   ],
                                 ),
-                                if ((snap?['strongestTopics'] as List?)?.isNotEmpty == true) ...[
+                                if (strongestTopics.isNotEmpty) ...[
                                   const Divider(height: DesignTokens.spXl),
                                   Row(
                                     children: [
@@ -314,7 +342,7 @@ class DashboardScreen extends ConsumerWidget {
                                       Text('Strong: ', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                                       Expanded(
                                         child: Text(
-                                          (snap?['strongestTopics'] as List).take(2).join(', '),
+                                          strongestTopics.take(2).join(', '),
                                           style: theme.textTheme.bodyMedium?.copyWith(color: DesignTokens.textSecondary),
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -322,7 +350,7 @@ class DashboardScreen extends ConsumerWidget {
                                     ],
                                   ),
                                 ],
-                                if ((snap?['weakestTopics'] as List?)?.isNotEmpty == true) ...[
+                                if (weakestTopics.isNotEmpty) ...[
                                   const Divider(height: DesignTokens.spXs),
                                   const Divider(height: DesignTokens.spXl),
                                   Row(
@@ -332,7 +360,7 @@ class DashboardScreen extends ConsumerWidget {
                                       Text('Focus on: ', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                                       Expanded(
                                         child: Text(
-                                          (snap?['weakestTopics'] as List).take(2).join(', '),
+                                          weakestTopics.take(2).join(', '),
                                           style: theme.textTheme.bodyMedium?.copyWith(color: DesignTokens.textSecondary),
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -559,6 +587,168 @@ class _StatChip extends StatelessWidget {
           Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
         ],
       ),
+    );
+  }
+}
+
+class _FocusCoachCard extends StatelessWidget {
+  const _FocusCoachCard({
+    required this.weakestTopics,
+    required this.strongestTopics,
+    required this.strugglingTopics,
+    required this.masteredTopics,
+  });
+
+  final List<String> weakestTopics;
+  final List<String> strongestTopics;
+  final List<String> strugglingTopics;
+  final List<String> masteredTopics;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final focusTopic = (weakestTopics.isNotEmpty ? weakestTopics : strugglingTopics).firstOrNull;
+    final confidenceTopic = (masteredTopics.isNotEmpty ? masteredTopics : strongestTopics).firstOrNull;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DesignTokens.spMd,
+        0,
+        DesignTokens.spMd,
+        DesignTokens.spLg,
+      ),
+      child: GlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: DesignTokens.info.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.psychology_alt_outlined,
+                    color: DesignTokens.info,
+                  ),
+                ),
+                const SizedBox(width: DesignTokens.spSm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AI Memory Coach',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        focusTopic != null
+                            ? 'Use AI to memorise and revise your weakest areas faster.'
+                            : 'Use AI to revise, memorise, and plan your next study session.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: DesignTokens.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: DesignTokens.spMd),
+            if (focusTopic != null) ...[
+              _CoachLine(
+                icon: Icons.flag_outlined,
+                color: DesignTokens.warning,
+                title: 'Focus next',
+                text: focusTopic,
+              ),
+              const SizedBox(height: DesignTokens.spSm),
+            ],
+            if (confidenceTopic != null) ...[
+              _CoachLine(
+                icon: Icons.workspace_premium_outlined,
+                color: DesignTokens.success,
+                title: 'You are stronger in',
+                text: confidenceTopic,
+              ),
+              const SizedBox(height: DesignTokens.spSm),
+            ],
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ActionChip(
+                  avatar: const Icon(Icons.psychology_alt_outlined, size: 18),
+                  label: Text(
+                    focusTopic == null
+                        ? 'Open memory coach'
+                        : 'Memorize $focusTopic',
+                  ),
+                  onPressed: () => context.go('/ai-tutor'),
+                ),
+                ActionChip(
+                  avatar: const Icon(Icons.quiz_outlined, size: 18),
+                  label: Text(
+                    focusTopic == null
+                        ? 'Quiz me with AI'
+                        : 'Quiz $focusTopic',
+                  ),
+                  onPressed: () => context.go('/ai-tutor'),
+                ),
+                ActionChip(
+                  avatar: const Icon(Icons.event_note_outlined, size: 18),
+                  label: const Text('Plan tonight\'s revision'),
+                  onPressed: () => context.go('/ai-tutor'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CoachLine extends StatelessWidget {
+  const _CoachLine({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.text,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: DesignTokens.spXs),
+        Text(
+          '$title: ',
+          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: DesignTokens.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -68,6 +68,11 @@ query Dashboard {
   }
   learningProfile {
     learningStyle
+    prefersExamples
+    prefersStepByStep
+    detailLevel
+    topicsMastered
+    topicsStruggling
   }
   myCircles {
     id
