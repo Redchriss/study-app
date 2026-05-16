@@ -34,12 +34,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     ),
     _OnboardingData(
       title: 'Built for\nMalawi',
-      subtitle: 'PSLCE, JCE, MSCE — we know your\nsyllabus inside out.',
+      subtitle: 'From PSLCE to MSCE, plus UNIMA,\nMUBAS, MUST, and LUANAR.',
       gradient: [Color(0xFF1F6A52), Color(0xFF0D3B2E)],
       accentColor: Color(0xFF69F0AE),
       icon: Icons.flag_rounded,
-      stat: '3',
-      statLabel: 'national exams covered',
+      stat: '100%',
+      statLabel: 'aligned to your syllabus',
     ),
     _OnboardingData(
       title: 'Scan. Solve.\nLearn.',
@@ -51,13 +51,22 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       statLabel: 'papers you can solve',
     ),
     _OnboardingData(
+      title: 'Kids Mode\nIncluded',
+      subtitle: 'A safe, gamified learning space.\nAI generates storybook lessons for children.',
+      gradient: [Color(0xFFD84315), Color(0xFF8B0000)],
+      accentColor: Color(0xFFFFAB91),
+      icon: Icons.child_care_rounded,
+      stat: 'Safe',
+      statLabel: 'PIN-protected environment',
+    ),
+    _OnboardingData(
       title: 'Get Started\nfor Free',
       subtitle: 'No credit card needed.\n3 free AI credits on signup.',
-      gradient: [Color(0xFFB5451B), Color(0xFF6A200A)],
+      gradient: [Color(0xFFE65100), Color(0xFF3E2723)],
       accentColor: Color(0xFFFFCC80),
       icon: Icons.bolt_rounded,
       stat: '3',
-      statLabel: 'free AI credits on signup',
+      statLabel: 'free AI credits to try',
     ),
   ];
 
