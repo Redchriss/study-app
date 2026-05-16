@@ -392,7 +392,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
                     material: m,
                     dark: dark,
                     index: i,
-                    onTap: () => context.go('/materials/${m['slug']}'),
+                    onTap: () => context.push('/materials/${m['slug']}'),
                   );
                 },
                 childCount: filtered.length,

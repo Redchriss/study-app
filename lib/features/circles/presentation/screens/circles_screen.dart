@@ -106,7 +106,7 @@ class CirclesScreen extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: AnimatedPress(
-                    onTap: () => context.go('/circles/${c['slug']}'),
+                    onTap: () => context.push('/circles/${c['slug']}'),
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(

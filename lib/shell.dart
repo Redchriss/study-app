@@ -47,8 +47,6 @@ class MainShell extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
 
     return PopScope(
-      // Allow pop only when NOT on a root tab (i.e. there is a sub-route to go back to).
-      // On a root tab, pressing back shows an "exit?" dialog instead of killing the app.
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
@@ -57,7 +55,14 @@ class MainShell extends StatelessWidget {
           router.pop();
           return;
         }
-        // On a root tab — ask before exit
+        
+        // If we are not on the home tab, go to home tab instead of exiting
+        if (currentIndex != 0) {
+          context.go('/home');
+          return;
+        }
+
+        // On the home tab — ask before exit
         final shouldExit = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(

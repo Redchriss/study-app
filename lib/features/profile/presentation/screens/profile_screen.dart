@@ -99,13 +99,13 @@ class ProfileScreen extends ConsumerWidget {
                       GlassCard(
                         child: Column(
                           children: [
-                            _NavRow(icon: Icons.edit_outlined, label: 'Edit Profile', onTap: () => context.go('/edit-profile')),
+                            _NavRow(icon: Icons.edit_outlined, label: 'Edit Profile', onTap: () => context.push('/edit-profile')),
                             _Divider(),
-                            _NavRow(icon: Icons.auto_awesome_outlined, label: 'Plans & Credits', onTap: () => context.go('/upgrade')),
+                            _NavRow(icon: Icons.auto_awesome_outlined, label: 'Plans & Credits', onTap: () => context.push('/upgrade')),
                             _Divider(),
-                            _NavRow(icon: Icons.emoji_events_outlined, label: 'Leaderboard', onTap: () => context.go('/leaderboard')),
+                            _NavRow(icon: Icons.emoji_events_outlined, label: 'Leaderboard', onTap: () => context.push('/leaderboard')),
                             _Divider(),
-                            _NavRow(icon: Icons.history_outlined, label: 'Study History', onTap: () => context.go('/history')),
+                            _NavRow(icon: Icons.history_outlined, label: 'Study History', onTap: () => context.push('/history')),
                           ],
                         ),
                       ).animate(delay: 60.ms).fadeIn().slideY(begin: 0.04, end: 0),
@@ -117,15 +117,15 @@ class ProfileScreen extends ConsumerWidget {
                       GlassCard(
                         child: Column(
                           children: [
-                            _NavRow(icon: Icons.upload_file_outlined, label: 'Upload Material', onTap: () => context.go('/upload-material')),
+                            _NavRow(icon: Icons.upload_file_outlined, label: 'Upload Material', onTap: () => context.push('/upload-material')),
                             _Divider(),
                             _NavRow(icon: Icons.folder_special_outlined, label: 'My Uploads', onTap: () => context.push('/my-uploads')),
                             _Divider(),
-                            _NavRow(icon: Icons.article_outlined, label: 'Past Papers', onTap: () => context.go('/past-papers')),
+                            _NavRow(icon: Icons.article_outlined, label: 'Past Papers', onTap: () => context.push('/past-papers')),
                             _Divider(),
-                            _NavRow(icon: Icons.library_books_outlined, label: 'Paper Library', onTap: () => context.go('/paper-library')),
+                            _NavRow(icon: Icons.library_books_outlined, label: 'Paper Library', onTap: () => context.push('/paper-library')),
                             _Divider(),
-                            _NavRow(icon: Icons.bookmark_outline, label: 'Bookmarks', onTap: () => context.go('/bookmarks')),
+                            _NavRow(icon: Icons.bookmark_outline, label: 'Bookmarks', onTap: () => context.push('/bookmarks')),
                           ],
                         ),
                       ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.04, end: 0),
@@ -231,7 +231,7 @@ class ProfileScreen extends ConsumerWidget {
                        GlassCard(
                          child: Column(
                            children: [
-                             _NavRow(icon: Icons.info_outline, label: 'About Yaza', onTap: () => context.go('/about')),
+                             _NavRow(icon: Icons.info_outline, label: 'About Yaza', onTap: () => context.push('/about')),
                              _Divider(),
                              _NavRow(icon: Icons.gavel_outlined, label: 'Terms of Service', onTap: () => context.push('/legal/terms')),
                              _Divider(),

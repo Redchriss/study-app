@@ -590,19 +590,31 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> with SingleTick
     if (_loading) {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     }
+    final subjectId = _selectedSubject?['id']?.toString() ?? '';
     if (_currentLesson == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(
-            'No lesson yet — tap Next to try again',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.95), fontSize: 16, fontWeight: FontWeight.w600),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'No lesson available for this topic yet.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.95), fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () => _fetchLesson(subjectId, auth.standard, topicId: _selectedTopic?['id']?.toString() ?? _selectedTopic?['topicId']?.toString()),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Ask AI to generate'),
+                style: FilledButton.styleFrom(backgroundColor: KidsVisualTheme.pathBlue),
+              ),
+            ],
           ),
         ),
       );
     }
-    final subjectId = _selectedSubject?['id']?.toString() ?? '';
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(

@@ -72,8 +72,17 @@ class _KidsVisualLessonPanelState extends State<KidsVisualLessonPanel> {
 
   void _parseChunks() {
     final raw = widget.lesson['chunks'];
-    if (raw is List && raw.isNotEmpty) {
-      _chunks = raw.map(_parseChunk).toList();
+    List? rawList;
+    if (raw is List) {
+      rawList = raw;
+    } else if (raw is String && raw.trim().startsWith('[')) {
+      try {
+        rawList = jsonDecode(raw) as List?;
+      } catch (_) {}
+    }
+    
+    if (rawList != null && rawList.isNotEmpty) {
+      _chunks = rawList.map(_parseChunk).toList();
     } else {
       // Fallback: split bodyText into chunks
       final body = widget.lesson['bodyText'] as String? ?? '';

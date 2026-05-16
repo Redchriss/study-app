@@ -398,7 +398,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
                 padding: const EdgeInsets.only(bottom: DesignTokens.spXs),
                 child: CirclePostCard(
                   post: p,
-                  onTap: () => context.go('/circles/${widget.slug}/post/${p['slug']}'),
+                  onTap: () => context.push('/circles/${widget.slug}/post/${p['slug']}'),
                 ),
               );
             },
