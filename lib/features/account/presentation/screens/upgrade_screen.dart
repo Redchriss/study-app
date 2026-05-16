@@ -55,10 +55,10 @@ class UpgradeScreen extends ConsumerWidget {
               ],
               const SizedBox(height: DesignTokens.spMd),
               Text('Top up credits', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               ...pkgs.map((p) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: GlassCard(child: _PackageTile(p, ref)),
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _PackageTile(p, ref),
               )),
             ],
           );
@@ -106,19 +106,124 @@ class _PackageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        width: 48, height: 48,
-        decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-        child: Icon(p['purchaseType'] == 'subscription' ? Icons.auto_awesome : Icons.add_circle, color: DesignTokens.primary),
-      ),
-      title: Text(p['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text('${p['credits']} credits', style: const TextStyle(fontSize: 12)),
-      trailing: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Text('MK ${(p['amount'] as num?)?.toStringAsFixed(0) ?? '0'}', style: const TextStyle(fontWeight: FontWeight.w700, color: DesignTokens.primary)),
-        if (p['badge'] != null) Text(p['badge'], style: const TextStyle(fontSize: 10, color: DesignTokens.warning)),
-      ]),
+    final isSub = p['purchaseType'] == 'subscription';
+    final amountStr = (p['amount'] as num?)?.toStringAsFixed(0) ?? '0';
+    
+    return AnimatedPress(
       onTap: () => _purchase(context),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: isSub 
+              ? const LinearGradient(
+                  colors: [Color(0xFF6B48FF), Color(0xFF1B6CA8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSub ? null : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(20),
+          border: isSub ? null : Border.all(color: DesignTokens.primary.withValues(alpha: 0.2)),
+          boxShadow: isSub 
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF6B48FF).withValues(alpha: 0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  )
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: isSub 
+                    ? Colors.white.withValues(alpha: 0.2) 
+                    : DesignTokens.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                isSub ? Icons.auto_awesome_rounded : Icons.add_circle_outline_rounded, 
+                color: isSub ? Colors.white : DesignTokens.primary,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        p['name'] ?? '', 
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: isSub ? Colors.white : DesignTokens.textPrimary,
+                        )
+                      ),
+                      if (p['badge'] != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: DesignTokens.warning,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            p['badge'], 
+                            style: const TextStyle(
+                              fontSize: 10, 
+                              fontWeight: FontWeight.w900, 
+                              color: Colors.black,
+                            )
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${p['credits']} credits', 
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isSub ? Colors.white.withValues(alpha: 0.8) : DesignTokens.textSecondary,
+                    )
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  'MK $amountStr', 
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900, 
+                    color: isSub ? Colors.white : DesignTokens.primary,
+                  )
+                ),
+                if (isSub)
+                  Text(
+                    '/ month',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.7),
+                    )
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

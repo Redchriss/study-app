@@ -9,6 +9,8 @@ class HistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -40,14 +42,65 @@ class HistoryScreen extends ConsumerWidget {
                 final items = (result.data?['paymentHistory'] as List?) ?? [];
                 if (items.isEmpty) return const Center(child: Text('No transactions yet', style: TextStyle(color: DesignTokens.textTertiary)));
                 return ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   itemCount: items.length,
                   itemBuilder: (_, i) {
                     final t = items[i];
                     final amount = (t['amount'] as num?)?.toStringAsFixed(0) ?? '0';
-                    return ListTile(
-                      title: Text(t['description'] ?? 'Payment', style: const TextStyle(fontSize: 14)),
-                      subtitle: Text(t['createdAt'] ?? '', style: const TextStyle(fontSize: 11)),
-                      trailing: Text('MK $amount', style: TextStyle(fontWeight: FontWeight.w700, color: t['status'] == 'completed' ? DesignTokens.success : DesignTokens.textSecondary)),
+                    final isCompleted = t['status'] == 'completed';
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: dark ? DesignTokens.darkSurface : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: DesignTokens.shadowSm(dark),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: isCompleted 
+                                  ? DesignTokens.success.withValues(alpha: 0.1) 
+                                  : DesignTokens.warning.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              isCompleted ? Icons.check_circle_rounded : Icons.pending_rounded,
+                              color: isCompleted ? DesignTokens.success : DesignTokens.warning,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  t['description'] ?? 'Payment', 
+                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  t['createdAt'] ?? '', 
+                                  style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500)
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'MK $amount', 
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800, 
+                              color: isCompleted ? DesignTokens.success : DesignTokens.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 );
@@ -71,21 +124,65 @@ class HistoryScreen extends ConsumerWidget {
                 final items = (result.data?['creditLedger'] as List?) ?? [];
                 if (items.isEmpty) return const Center(child: Text('No activity yet', style: TextStyle(color: DesignTokens.textTertiary)));
                 return ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   itemCount: items.length,
                   itemBuilder: (_, i) {
                     final e = items[i];
-                    return ListTile(
-                      leading: Container(
-                        width: 40, height: 40,
-                        decoration: BoxDecoration(
-                          color: (e['delta'] ?? 0) > 0 ? DesignTokens.success.withValues(alpha: 0.1) : DesignTokens.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon((e['delta'] ?? 0) > 0 ? Icons.add : Icons.remove, color: (e['delta'] ?? 0) > 0 ? DesignTokens.success : DesignTokens.error, size: 20),
+                    final delta = (e['delta'] as num?)?.toInt() ?? 0;
+                    final isPositive = delta > 0;
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: dark ? DesignTokens.darkSurface : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: DesignTokens.shadowSm(dark),
                       ),
-                      title: Text(e['description'] ?? e['entryType'] ?? '', style: const TextStyle(fontSize: 14)),
-                      subtitle: Text(e['createdAt'] ?? '', style: const TextStyle(fontSize: 11)),
-                      trailing: Text('${e['delta'] ?? 0}', style: TextStyle(fontWeight: FontWeight.w700, color: (e['delta'] ?? 0) > 0 ? DesignTokens.success : DesignTokens.error)),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: isPositive 
+                                  ? DesignTokens.success.withValues(alpha: 0.1) 
+                                  : const Color(0xFFE87E5E).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              isPositive ? Icons.add_rounded : Icons.auto_awesome_rounded, 
+                              color: isPositive ? DesignTokens.success : const Color(0xFFE87E5E), 
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  e['description'] ?? e['entryType'] ?? '', 
+                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  e['createdAt'] ?? '', 
+                                  style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            '${isPositive ? '+' : ''}$delta', 
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900, 
+                              color: isPositive ? DesignTokens.success : const Color(0xFFE87E5E),
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 );

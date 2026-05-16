@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/education_pickers.dart';
 
@@ -194,6 +195,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
     final user = ref.watch(authProvider).user;
     final prof = user?['profile'];
     final level = _educationLevel ?? (prof is Map<String, dynamic> ? prof['educationLevel'] as String? : null);
@@ -201,178 +203,335 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('Edit profile', style: theme.textTheme.titleLarge)),
       body: ListView(
-        padding: const EdgeInsets.all(DesignTokens.spMd),
+        padding: const EdgeInsets.all(DesignTokens.spLg),
         children: [
           Center(
             child: Stack(
               children: [
-                CircleAvatar(
-                  radius: 48,
-                  backgroundColor: DesignTokens.primary,
-                  child: Text(
-                    user?['username']?.toString().substring(0, 1).toUpperCase() ?? '?',
-                    style: const TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.w700),
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: DesignTokens.primary.withValues(alpha: 0.2),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      )
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 56,
+                    backgroundColor: DesignTokens.primary,
+                    child: Text(
+                      user?['username']?.toString().substring(0, 1).toUpperCase() ?? '?',
+                      style: const TextStyle(fontSize: 40, color: Colors.white, fontWeight: FontWeight.w800),
+                    ),
                   ),
                 ),
                 Positioned(
                   bottom: 0,
                   right: 0,
                   child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(shape: BoxShape.circle, color: DesignTokens.primary),
-                    child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle, 
+                      color: dark ? DesignTokens.darkSurface : Colors.white,
+                      boxShadow: DesignTokens.shadowSm(dark),
+                    ),
+                    child: const Icon(Icons.camera_alt_rounded, size: 20, color: DesignTokens.primary),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          Text('Personal', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _firstNameCtrl,
-            decoration: const InputDecoration(labelText: 'First name'),
-            textInputAction: TextInputAction.next,
-          ),
+          const SizedBox(height: 32),
+          Text('Personal details', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 16),
-          TextField(
-            controller: _lastNameCtrl,
-            decoration: const InputDecoration(labelText: 'Last name'),
-            textInputAction: TextInputAction.next,
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: dark ? DesignTokens.darkSurface : Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: DesignTokens.shadowSm(dark),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildModernTextField(
+                  controller: _firstNameCtrl,
+                  label: 'First name',
+                  dark: dark,
+                  action: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                _buildModernTextField(
+                  controller: _lastNameCtrl,
+                  label: 'Last name',
+                  dark: dark,
+                  action: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                _buildModernTextField(
+                  controller: _emailCtrl,
+                  label: 'Email',
+                  dark: dark,
+                  keyboard: TextInputType.emailAddress,
+                  action: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                _buildModernTextField(
+                  controller: _phoneCtrl,
+                  label: 'Phone number',
+                  dark: dark,
+                  keyboard: TextInputType.phone,
+                  action: TextInputAction.done,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _emailCtrl,
-            decoration: const InputDecoration(labelText: 'Email'),
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _phoneCtrl,
-            decoration: const InputDecoration(labelText: 'Phone'),
-            keyboardType: TextInputType.phone,
-            textInputAction: TextInputAction.done,
-          ),
-          const SizedBox(height: 28),
-          Text('School & studies', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 32),
+          Text('School & studies', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           Text(
             'Search universities (public/private), pick a programme, or set your school — same as setup. Kids: Profile → Kids mode.',
-            style: theme.textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary),
+            style: theme.textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary, height: 1.4),
           ),
           const SizedBox(height: 16),
           if (level == null || level.isEmpty)
-            const Text(
-              'Complete onboarding first to set your education level.',
-              style: TextStyle(color: DesignTokens.textSecondary),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: DesignTokens.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Text(
+                'Complete onboarding first to set your education level.',
+                style: TextStyle(color: DesignTokens.warning, fontWeight: FontWeight.w600),
+              ),
             )
-          else ...[
-            InputDecorator(
-              decoration: const InputDecoration(labelText: 'Your level', border: OutlineInputBorder()),
-              child: Text(
-                level == 'primary'
-                    ? 'Primary'
-                    : level == 'secondary'
-                        ? 'Secondary'
-                        : 'University / college',
-                style: const TextStyle(fontWeight: FontWeight.w600),
+          else
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: dark ? DesignTokens.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: DesignTokens.shadowSm(dark),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Your level', style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 4),
+                        Text(
+                          level == 'primary'
+                              ? 'Primary'
+                              : level == 'secondary'
+                                  ? 'Secondary'
+                                  : 'University / college',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (level == 'primary') ...[
+                    _buildModernDropdown<int>(
+                      key: ValueKey('std_${_standard ?? 0}'),
+                      label: 'Standard',
+                      value: _standard,
+                      items: List.generate(8, (i) => DropdownMenuItem(value: i + 1, child: Text('Standard ${i + 1}'))),
+                      onChanged: (v) => setState(() => _standard = v),
+                      dark: dark,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildModernDropdown<String>(
+                      key: ValueKey('term_${_term ?? 'x'}'),
+                      label: 'Term',
+                      value: _term != null && ['1', '2', '3'].contains(_term) ? _term : null,
+                      items: const [
+                        DropdownMenuItem(value: '1', child: Text('Term 1')),
+                        DropdownMenuItem(value: '2', child: Text('Term 2')),
+                        DropdownMenuItem(value: '3', child: Text('Term 3')),
+                      ],
+                      onChanged: (v) => setState(() => _term = v),
+                      dark: dark,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildModernListTile(
+                      title: 'Primary school',
+                      subtitle: _primarySchoolName ?? 'Not set — tap to search',
+                      icon: Icons.school_rounded,
+                      dark: dark,
+                      onTap: () => _openSchoolPicker(true),
+                    ),
+                  ],
+                  if (level == 'secondary') ...[
+                    _buildModernDropdown<int>(
+                      key: ValueKey('form_${_form ?? 0}'),
+                      label: 'Form',
+                      value: _form,
+                      items: List.generate(4, (i) => DropdownMenuItem(value: i + 1, child: Text('Form ${i + 1}'))),
+                      onChanged: (v) => setState(() => _form = v),
+                      dark: dark,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildModernDropdown<String>(
+                      key: ValueKey('term_${_term ?? 'x'}'),
+                      label: 'Term',
+                      value: _term != null && ['1', '2', '3'].contains(_term) ? _term : null,
+                      items: const [
+                        DropdownMenuItem(value: '1', child: Text('Term 1')),
+                        DropdownMenuItem(value: '2', child: Text('Term 2')),
+                        DropdownMenuItem(value: '3', child: Text('Term 3')),
+                      ],
+                      onChanged: (v) => setState(() => _term = v),
+                      dark: dark,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildModernListTile(
+                      title: 'Secondary school',
+                      subtitle: _secondarySchoolName ?? 'Not set — tap to search',
+                      icon: Icons.school_rounded,
+                      dark: dark,
+                      onTap: () => _openSchoolPicker(false),
+                    ),
+                  ],
+                  if (level == 'tertiary') ...[
+                    _buildModernListTile(
+                      title: 'Institution',
+                      subtitle: _universityName ?? 'Not set — tap to search',
+                      icon: Icons.account_balance_rounded,
+                      dark: dark,
+                      onTap: _openUniversityPicker,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildModernListTile(
+                      title: 'Programme',
+                      subtitle: _programName ?? 'Not set — tap to choose',
+                      icon: Icons.menu_book_rounded,
+                      dark: dark,
+                      onTap: _openProgramPicker,
+                    ),
+                  ],
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            if (level == 'primary') ...[
-              DropdownButtonFormField<int>(
-                key: ValueKey('std_${_standard ?? 0}'),
-                decoration: const InputDecoration(labelText: 'Standard', border: OutlineInputBorder()),
-                initialValue: _standard,
-                items: List.generate(
-                  8,
-                  (i) => DropdownMenuItem(value: i + 1, child: Text('Standard ${i + 1}')),
-                ),
-                onChanged: (v) => setState(() => _standard = v),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                key: ValueKey('term_${_term ?? 'x'}'),
-                decoration: const InputDecoration(labelText: 'Term', border: OutlineInputBorder()),
-                initialValue: _term != null && ['1', '2', '3'].contains(_term) ? _term : null,
-                items: const [
-                  DropdownMenuItem(value: '1', child: Text('Term 1')),
-                  DropdownMenuItem(value: '2', child: Text('Term 2')),
-                  DropdownMenuItem(value: '3', child: Text('Term 3')),
-                ],
-                onChanged: (v) => setState(() => _term = v),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Primary school'),
-                subtitle: Text(_primarySchoolName ?? 'Not set — tap to search'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _openSchoolPicker(true),
-              ),
-            ],
-            if (level == 'secondary') ...[
-              DropdownButtonFormField<int>(
-                key: ValueKey('form_${_form ?? 0}'),
-                decoration: const InputDecoration(labelText: 'Form', border: OutlineInputBorder()),
-                initialValue: _form,
-                items: List.generate(
-                  4,
-                  (i) => DropdownMenuItem(value: i + 1, child: Text('Form ${i + 1}')),
-                ),
-                onChanged: (v) => setState(() => _form = v),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                key: ValueKey('term_${_term ?? 'x'}'),
-                decoration: const InputDecoration(labelText: 'Term', border: OutlineInputBorder()),
-                initialValue: _term != null && ['1', '2', '3'].contains(_term) ? _term : null,
-                items: const [
-                  DropdownMenuItem(value: '1', child: Text('Term 1')),
-                  DropdownMenuItem(value: '2', child: Text('Term 2')),
-                  DropdownMenuItem(value: '3', child: Text('Term 3')),
-                ],
-                onChanged: (v) => setState(() => _term = v),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Secondary school'),
-                subtitle: Text(_secondarySchoolName ?? 'Not set — tap to search'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _openSchoolPicker(false),
-              ),
-            ],
-            if (level == 'tertiary') ...[
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Institution'),
-                subtitle: Text(_universityName ?? 'Not set — tap to search'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: _openUniversityPicker,
-              ),
-              const SizedBox(height: 8),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Programme'),
-                subtitle: Text(_programName ?? 'Not set — tap to choose'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: _openProgramPicker,
-              ),
-            ],
-          ],
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
+            height: 56,
             child: ElevatedButton(
               onPressed: _saving ? null : _save,
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
               child: _saving
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Save changes'),
+                  : const Text('Save changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             ),
           ),
+          const SizedBox(height: 48),
         ],
+      ),
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required bool dark,
+    TextInputType? keyboard,
+    TextInputAction? action,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboard,
+      textInputAction: action,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernDropdown<T>({
+    required Key key,
+    required String label,
+    required T? value,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
+    required bool dark,
+  }) {
+    return DropdownButtonFormField<T>(
+      key: key,
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernListTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+    required bool dark,
+  }) {
+    return AnimatedPress(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: DesignTokens.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: DesignTokens.primary, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: DesignTokens.textSecondary),
+          ],
+        ),
       ),
     );
   }
