@@ -348,7 +348,14 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
             GlassCard(
               child: Column(
                 children: [
-                  TextField(\n                    controller: _titleCtrl,\n                    decoration: InputDecoration(\n                      labelText: 'Title',\n                      hintText: _titlePlaceholder,\n                    ),\n                    textInputAction: TextInputAction.next,\n                  ),
+                  TextField(
+                    controller: _titleCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Title',
+                      hintText: _titlePlaceholder,
+                    ),
+                    textInputAction: TextInputAction.next,
+                  ),
                   const SizedBox(height: DesignTokens.spMd),
                   if (_loadingSubjects)
                     const ShimmerBox(height: 56, radius: DesignTokens.radiusMd)
@@ -368,7 +375,15 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
                       onChanged: (value) => setState(() => _subjectId = value),
                     ),
                   const SizedBox(height: DesignTokens.spMd),
-                  TextField(\n                    controller: _descCtrl,\n                    decoration: InputDecoration(\n                      labelText: 'Description',\n                      hintText: _descPlaceholder,\n                    ),\n                    maxLines: 3,\n                    textInputAction: TextInputAction.next,\n                  ),
+                  TextField(
+                    controller: _descCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                      hintText: _descPlaceholder,
+                    ),
+                    maxLines: 3,
+                    textInputAction: TextInputAction.next,
+                  ),
                 ],
               ),
             ),
