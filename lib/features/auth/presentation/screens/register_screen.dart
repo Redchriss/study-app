@@ -12,17 +12,25 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _pageController = PageController();
+  int _currentPage = 0;
+  
+  final _formKey0 = GlobalKey<FormState>();
+  final _formKey1 = GlobalKey<FormState>();
+  final _formKey2 = GlobalKey<FormState>();
+
   final _usernameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+  
   bool _obscure = true;
   bool _loading = false;
 
   @override
   void dispose() {
+    _pageController.dispose();
     _usernameCtrl.dispose();
     _emailCtrl.dispose();
     _phoneCtrl.dispose();
@@ -31,8 +39,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  void _nextPage() {
+    FocusScope.of(context).unfocus();
+    if (_currentPage == 0 && !_formKey0.currentState!.validate()) return;
+    if (_currentPage == 1 && !_formKey1.currentState!.validate()) return;
+    
+    if (_currentPage < 2) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+      );
+      setState(() => _currentPage++);
+    } else {
+      _submit();
+    }
+  }
+
+  void _prevPage() {
+    FocusScope.of(context).unfocus();
+    if (_currentPage > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+      );
+      setState(() => _currentPage--);
+    } else {
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/login');
+      }
+    }
+  }
+
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey2.currentState!.validate()) return;
     if (_passwordCtrl.text != _confirmCtrl.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -53,6 +94,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
     if (mounted) setState(() => _loading = false);
     if (!mounted) return;
+    
     if (ok) {
       context.go('/setup');
     } else {
@@ -71,256 +113,311 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
+    final dark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Top gradient
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: size.height * 0.30,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF1F6A52), Color(0xFF0D3B2E)],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _prevPage();
+      },
+      child: Scaffold(
+        backgroundColor: dark ? DesignTokens.darkSurface : Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: _prevPage,
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(3, (index) {
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                height: 6,
+                width: _currentPage == index ? 24 : 12,
+                decoration: BoxDecoration(
+                  color: _currentPage >= index ? DesignTokens.primary : DesignTokens.primary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(3),
                 ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(40),
-                  bottomRight: Radius.circular(40),
+              );
+            }),
+          ),
+          centerTitle: true,
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildStep1(dark),
+                    _buildStep2(dark),
+                    _buildStep3(dark),
+                  ],
                 ),
               ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(32, 20, 32, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                            onPressed: () => context.go('/onboarding'),
-                          ),
-                          const Text(
-                            'Yaza',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: FilledButton(
+                    onPressed: _loading ? null : _nextPage,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: DesignTokens.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Create\naccount',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          height: 1.1,
-                          letterSpacing: -1.2,
-                        ),
-                      ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.3),
-                      Text(
-                        'Join thousands of Malawian students',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 14,
-                        ),
-                      ).animate(delay: 200.ms).fadeIn(),
-                    ],
+                      elevation: 0,
+                    ),
+                    child: _loading
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _currentPage == 2 ? 'Create Account' : 'Continue',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                              ),
+                              if (_currentPage < 2) ...[
+                                const SizedBox(width: 8),
+                                const Icon(Icons.arrow_forward_rounded, size: 20),
+                              ],
+                            ],
+                          ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
 
-          // Form card
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  SizedBox(height: size.height * 0.22),
-                  Container(
-                    margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: theme.cardTheme.color ?? theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 30,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Your details',
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ).animate(delay: 200.ms).fadeIn(),
-                          const SizedBox(height: 20),
-                          TextFormField(
-                            controller: _usernameCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Username',
-                              prefixIcon: Icon(Icons.person_outline_rounded),
-                              hintText: 'e.g. john_banda',
-                            ),
-                            textInputAction: TextInputAction.next,
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) return 'Username is required';
-                              if (v.trim().length < 3) return 'At least 3 characters';
-                              if (v.trim().contains(' ')) return 'No spaces allowed';
-                              return null;
-                            },
-                          ).animate(delay: 250.ms).fadeIn().slideY(begin: 0.15),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _emailCtrl,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              prefixIcon: Icon(Icons.email_outlined),
-                              hintText: 'your@email.com',
-                            ),
-                            textInputAction: TextInputAction.next,
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) return 'Email is required';
-                              if (!v.contains('@') || !v.contains('.')) return 'Enter a valid email';
-                              return null;
-                            },
-                          ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.15),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _phoneCtrl,
-                            keyboardType: TextInputType.phone,
-                            decoration: const InputDecoration(
-                              labelText: 'Phone (optional)',
-                              prefixIcon: Icon(Icons.phone_outlined),
-                              hintText: '+265 ...',
-                            ),
-                            textInputAction: TextInputAction.next,
-                          ).animate(delay: 320.ms).fadeIn().slideY(begin: 0.15),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _passwordCtrl,
-                            obscureText: _obscure,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock_outline_rounded),
-                              hintText: 'Min. 8 characters',
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscure
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                ),
-                                onPressed: () =>
-                                    setState(() => _obscure = !_obscure),
-                              ),
-                            ),
-                            textInputAction: TextInputAction.next,
-                            validator: (v) {
-                              if (v == null || v.isEmpty) return 'Password is required';
-                              if (v.length < 8) return 'Min 8 characters';
-                              return null;
-                            },
-                          ).animate(delay: 340.ms).fadeIn().slideY(begin: 0.15),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _confirmCtrl,
-                            obscureText: _obscure,
-                            decoration: const InputDecoration(
-                              labelText: 'Confirm Password',
-                              prefixIcon: Icon(Icons.lock_reset_rounded),
-                            ),
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => _submit(),
-                            validator: (v) {
-                              if (v == null || v.isEmpty) return 'Please confirm password';
-                              if (v != _passwordCtrl.text) return 'Passwords do not match';
-                              return null;
-                            },
-                          ).animate(delay: 360.ms).fadeIn().slideY(begin: 0.15),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 54,
-                            child: ElevatedButton(
-                              onPressed: _loading ? null : _submit,
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                              ),
-                              child: _loading
-                                  ? const SizedBox(
-                                      height: 22,
-                                      width: 22,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2.5,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Create Account',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                            ),
-                          ).animate(delay: 400.ms).fadeIn(),
-                          const SizedBox(height: 16),
-                          Center(
-                            child: TextButton(
-                              onPressed: () => context.go('/login'),
-                              child: RichText(
-                                text: TextSpan(
-                                  style: theme.textTheme.bodyMedium,
-                                  children: [
-                                    const TextSpan(
-                                      text: 'Already have an account? ',
-                                      style: TextStyle(
-                                        color: DesignTokens.textSecondary,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: 'Log in',
-                                      style: TextStyle(
-                                        color: theme.colorScheme.primary,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ).animate(delay: 450.ms).fadeIn(),
-                        ],
-                      ),
-                    ),
-                  ).animate(delay: 150.ms).fadeIn().slideY(begin: 0.15),
-                ],
+  Widget _buildStep1(bool dark) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Form(
+        key: _formKey0,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: DesignTokens.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-            ),
-          ),
-        ],
+              child: const Icon(Icons.person_outline_rounded, size: 40, color: DesignTokens.primary),
+            ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+            const SizedBox(height: 24),
+            Text(
+              'What should we\ncall you?',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    height: 1.2,
+                    letterSpacing: -0.5,
+                  ),
+            ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
+            const SizedBox(height: 12),
+            Text(
+              'Your unique username on Yaza.',
+              style: TextStyle(fontSize: 15, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500),
+            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+            const SizedBox(height: 40),
+            TextFormField(
+              controller: _usernameCtrl,
+              autofocus: true,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                labelText: 'Username',
+                prefixIcon: const Icon(Icons.alternate_email_rounded),
+                hintText: 'e.g. kondwani265',
+                filled: true,
+                fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              ),
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _nextPage(),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Username is required';
+                if (v.trim().length < 3) return 'At least 3 characters';
+                if (v.trim().contains(' ')) return 'No spaces allowed';
+                return null;
+              },
+            ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStep2(bool dark) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Form(
+        key: _formKey1,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: DesignTokens.success.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.mark_email_unread_rounded, size: 40, color: DesignTokens.success),
+            ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+            const SizedBox(height: 24),
+            Text(
+              'How can we\nreach you?',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    height: 1.2,
+                    letterSpacing: -0.5,
+                  ),
+            ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
+            const SizedBox(height: 12),
+            Text(
+              'We need this to secure your account and recover your password if you forget it.',
+              style: TextStyle(fontSize: 15, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500, height: 1.4),
+            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+            const SizedBox(height: 40),
+            TextFormField(
+              controller: _emailCtrl,
+              autofocus: true,
+              keyboardType: TextInputType.emailAddress,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                labelText: 'Email address',
+                prefixIcon: const Icon(Icons.email_outlined),
+                hintText: 'your@email.com',
+                filled: true,
+                fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              ),
+              textInputAction: TextInputAction.next,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Email is required';
+                if (!v.contains('@') || !v.contains('.')) return 'Enter a valid email';
+                return null;
+              },
+            ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _phoneCtrl,
+              keyboardType: TextInputType.phone,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                labelText: 'Phone number (optional)',
+                prefixIcon: const Icon(Icons.phone_outlined),
+                hintText: '+265 ...',
+                filled: true,
+                fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              ),
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _nextPage(),
+            ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStep3(bool dark) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Form(
+        key: _formKey2,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6B48FF).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.lock_person_rounded, size: 40, color: Color(0xFF6B48FF)),
+            ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+            const SizedBox(height: 24),
+            Text(
+              'Secure your\naccount',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    height: 1.2,
+                    letterSpacing: -0.5,
+                  ),
+            ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
+            const SizedBox(height: 12),
+            Text(
+              'Create a strong password to keep your study progress safe.',
+              style: TextStyle(fontSize: 15, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500, height: 1.4),
+            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+            const SizedBox(height: 40),
+            TextFormField(
+              controller: _passwordCtrl,
+              autofocus: true,
+              obscureText: _obscure,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                labelText: 'Password',
+                prefixIcon: const Icon(Icons.lock_outline_rounded),
+                hintText: 'Min. 8 characters',
+                filled: true,
+                fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                  onPressed: () => setState(() => _obscure = !_obscure),
+                ),
+              ),
+              textInputAction: TextInputAction.next,
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Password is required';
+                if (v.length < 8) return 'Password must be at least 8 characters';
+                return null;
+              },
+            ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _confirmCtrl,
+              obscureText: _obscure,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                labelText: 'Confirm Password',
+                prefixIcon: const Icon(Icons.lock_reset_rounded),
+                filled: true,
+                fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              ),
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _submit(),
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Please confirm password';
+                if (v != _passwordCtrl.text) return 'Passwords do not match';
+                return null;
+              },
+            ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
+          ],
+        ),
       ),
     );
   }
