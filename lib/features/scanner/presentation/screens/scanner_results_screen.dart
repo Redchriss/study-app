@@ -80,7 +80,7 @@ class ScannerResultsScreen extends StatelessWidget {
 
             // Solution cards
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+              padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).padding.bottom + 32),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => _SolutionCard(
