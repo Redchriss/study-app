@@ -133,6 +133,7 @@ class MainShell extends StatelessWidget {
             ),
           ),
         ),
+        ), // Container
       ), // Scaffold
     ); // PopScope
   }

@@ -28,7 +28,9 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   bool _creatingKid = false;
   int? _newKidStandard;
   String _newKidEducationTrack = 'primary';
+  String _newKidAvatar = '🦊';
   List<dynamic>? _children;
+  Map<String, String> _avatars = {};
   String? _parentToken;
   String? _error;
   GraphQLClient? _client;
@@ -141,8 +143,18 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
     final client = _buildClient();
     final result = await client.query(QueryOptions(document: gql(kMyChildren)));
     if (!mounted) return;
+    
+    final prefs = await SharedPreferences.getInstance();
+    final Map<String, String> avs = {};
+    final childrenList = (result.data?['myChildren'] as List?) ?? [];
+    for (final kid in childrenList) {
+      final id = kid['id'].toString();
+      avs[id] = prefs.getString('kid_avatar_$id') ?? '';
+    }
+
     setState(() {
-      _children = (result.data?['myChildren'] as List?) ?? [];
+      _children = childrenList;
+      _avatars = avs;
       _parentLoading = false;
     });
   }
@@ -163,8 +175,15 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
     if (!mounted) return;
     setState(() => _creatingKid = false);
     if (result.data?['createChildProfile']?['success'] == true) {
+      final childId = result.data?['createChildProfile']?['child']?['id']?.toString();
+      if (childId != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('kid_avatar_$childId', _newKidAvatar);
+      }
+      
       _nameCtrl.clear();
       _kidPinCtrl.clear();
+      _newKidAvatar = '🦊';
       await _fetchChildren();
     }
   }
@@ -434,6 +453,8 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
                       itemBuilder: (_, i) {
                         final kid = _children![i] as Map<String, dynamic>;
                         final name = kid['childName'] as String? ?? 'Learner';
+                        final kidId = kid['id']?.toString() ?? '';
+                        final avatar = _avatars[kidId] ?? '';
                         final letter = name.isNotEmpty ? name[0].toUpperCase() : '?';
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -460,10 +481,10 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
                                       ),
                                       child: Center(
                                         child: Text(
-                                          letter,
-                                          style: const TextStyle(
+                                          avatar.isNotEmpty ? avatar : letter,
+                                          style: TextStyle(
                                             color: Colors.white,
-                                            fontSize: 24,
+                                            fontSize: avatar.isNotEmpty ? 32 : 24,
                                             fontWeight: FontWeight.w900,
                                           ),
                                         ),
@@ -511,71 +532,181 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   }
 
   void _showCreateKidDialog() {
-    showDialog(
+    _newKidAvatar = '🦊';
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Text('Add a learner'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: _nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Child\'s name', isDense: true),
-                  textCapitalization: TextCapitalization.words,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _newKidEducationTrack,
-                  decoration: const InputDecoration(
-                    labelText: 'Learning track',
-                    helperText: 'ECD uses infant-friendly subjects; progress is kept separate',
-                    isDense: true,
+        builder: (ctx, setDState) => Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'primary', child: Text('Primary (Std 1–8)')),
-                    DropdownMenuItem(value: 'ecd', child: Text('Early childhood (pre–Std 1)')),
-                  ],
-                  onChanged: (v) => setDState(() => _newKidEducationTrack = v ?? 'primary'),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  initialValue: _newKidStandard,
-                  decoration: const InputDecoration(labelText: 'Standard', isDense: true),
-                  items: List.generate(
-                    8,
-                    (i) => DropdownMenuItem(value: i + 1, child: Text('Standard ${i + 1}')),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Create Learner',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: KidsVisualTheme.ink,
+                      letterSpacing: -0.5,
+                    ),
                   ),
-                  onChanged: (v) => setDState(() => _newKidStandard = v),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _kidPinCtrl,
-                  decoration: const InputDecoration(
-                    labelText: '4-digit PIN',
-                    helperText: 'Your child uses this to sign in',
-                    isDense: true,
+                  const SizedBox(height: 24),
+                  
+                  // Avatar Picker
+                  const Text(
+                    'Pick an avatar',
+                    style: TextStyle(fontWeight: FontWeight.w800, color: KidsVisualTheme.ink),
                   ),
-                  keyboardType: TextInputType.number,
-                  maxLength: 4,
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 64,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      clipBehavior: Clip.none,
+                      children: ['🦊', '🐰', '🐯', '🐧', '🐻', '🐸', '🐶', '🐱', '🐼', '🦁', '🐨']
+                          .map((a) => GestureDetector(
+                                onTap: () => setDState(() => _newKidAvatar = a),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 150),
+                                  margin: const EdgeInsets.only(right: 12),
+                                  width: 64,
+                                  decoration: BoxDecoration(
+                                    color: _newKidAvatar == a ? KidsVisualTheme.trailGreen : Colors.grey.shade100,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: _newKidAvatar == a ? KidsVisualTheme.trailGreen : Colors.transparent,
+                                      width: 2,
+                                    ),
+                                    boxShadow: _newKidAvatar == a
+                                        ? KidsVisualTheme.chunkyShadow(KidsVisualTheme.trailGreen, dy: 3)
+                                        : null,
+                                  ),
+                                  child: Center(
+                                    child: Text(a, style: const TextStyle(fontSize: 32)),
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  TextField(
+                    controller: _nameCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Child\'s name',
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          initialValue: _newKidEducationTrack,
+                          decoration: InputDecoration(
+                            labelText: 'Track',
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'primary', child: Text('Primary')),
+                            DropdownMenuItem(value: 'ecd', child: Text('ECD (Infant)')),
+                          ],
+                          onChanged: (v) => setDState(() => _newKidEducationTrack = v ?? 'primary'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<int>(
+                          initialValue: _newKidStandard ?? 1,
+                          decoration: InputDecoration(
+                            labelText: 'Standard',
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          items: List.generate(
+                            8,
+                            (i) => DropdownMenuItem(value: i + 1, child: Text('Std ${i + 1}')),
+                          ),
+                          onChanged: (v) => setDState(() => _newKidStandard = v),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  TextField(
+                    controller: _kidPinCtrl,
+                    decoration: InputDecoration(
+                      labelText: '4-digit PIN',
+                      helperText: 'Your child uses this to sign in',
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  KidsPlayfulPrimaryButton(
+                    label: _creatingKid ? 'Saving...' : 'Add Learner',
+                    onTap: _creatingKid
+                        ? null
+                        : () {
+                            if (_nameCtrl.text.trim().isEmpty || _kidPinCtrl.text.length != 4) return;
+                            _newKidStandard ??= 1;
+                            Navigator.pop(ctx);
+                            _createKid();
+                          },
+                  ),
+                ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            FilledButton(
-              onPressed: _creatingKid
-                  ? null
-                  : () {
-                      Navigator.pop(ctx);
-                      _createKid();
-                    },
-              child: const Text('Save'),
-            ),
-          ],
         ),
       ),
     );

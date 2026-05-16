@@ -64,8 +64,10 @@ class ScannerScreen extends ConsumerStatefulWidget {
 class _ScannerScreenState extends ConsumerState<ScannerScreen>
     with SingleTickerProviderStateMixin {
   File? _capturedImage;
-  String _educationLevel = 'secondary';
-  String _subject = '';
+  String? _educationLevel;
+  String? _subject;
+  List? _subjects;
+  bool _loadingSubjects = false;
   String _examType = '';
   String _year = '';
   bool _solving = false;
@@ -85,6 +87,47 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     );
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_educationLevel == null) {
+      final auth = ref.read(authProvider);
+      _educationLevel = auth.user?['profile']?['educationLevel']?.toString() ?? 'secondary';
+      _loadSubjects();
+    }
+  }
+
+  Future<void> _loadSubjects() async {
+    final level = _educationLevel ?? 'secondary';
+    setState(() {
+      _loadingSubjects = true;
+      _subject = null; // reset subject on level change
+    });
+    
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.query(
+        QueryOptions(
+          document: gql(kSubjects),
+          variables: {'educationLevel': level},
+          fetchPolicy: FetchPolicy.cacheFirst,
+        ),
+      );
+      if (!mounted) return;
+      if (result.hasException) {
+        setState(() => _loadingSubjects = false);
+        return;
+      }
+      setState(() {
+        _subjects = (result.data?['subjects'] as List?) ?? [];
+        _loadingSubjects = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingSubjects = false);
+    }
+  }
+
 
   @override
   void dispose() {
@@ -136,8 +179,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         variables: {
           'imageBase64': b64,
           'fileName': _capturedImage!.path.split('/').last,
-          'subject': _subject.trim(),
-          'educationLevel': _educationLevel,
+          'subject': _subject?.trim() ?? '',
+          'educationLevel': _educationLevel ?? 'secondary',
           'examType': _examType.trim(),
           'year': int.tryParse(_year),
         },
@@ -183,12 +226,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       data: (ctrl) => _capturedImage != null
           ? _PreviewSheet(
               image: _capturedImage!,
-              educationLevel: _educationLevel,
+              educationLevel: _educationLevel ?? 'secondary',
               subject: _subject,
+              subjects: _subjects,
+              loadingSubjects: _loadingSubjects,
               examType: _examType,
               year: _year,
               solving: _solving,
-              onLevelChanged: (v) => setState(() => _educationLevel = v),
+              onLevelChanged: (v) {
+                setState(() => _educationLevel = v);
+                _loadSubjects();
+              },
               onSubjectChanged: (v) => _subject = v,
               onExamChanged: (v) => _examType = v,
               onYearChanged: (v) => _year = v,
@@ -449,10 +497,14 @@ class _CornerPainter extends CustomPainter {
 // ─── Preview + form sheet ─────────────────────────────────────────────────────
 class _PreviewSheet extends StatelessWidget {
   final File image;
-  final String educationLevel, subject, examType, year;
+  final String educationLevel;
+  final String? subject;
+  final List? subjects;
+  final bool loadingSubjects;
+  final String examType, year;
   final bool solving;
   final void Function(String) onLevelChanged;
-  final void Function(String) onSubjectChanged;
+  final void Function(String?) onSubjectChanged;
   final void Function(String) onExamChanged;
   final void Function(String) onYearChanged;
   final VoidCallback onRetake, onSubmit;
@@ -461,6 +513,8 @@ class _PreviewSheet extends StatelessWidget {
     required this.image,
     required this.educationLevel,
     required this.subject,
+    required this.subjects,
+    required this.loadingSubjects,
     required this.examType,
     required this.year,
     required this.solving,
@@ -559,15 +613,30 @@ class _PreviewSheet extends StatelessWidget {
                     const SizedBox(height: 16),
 
                     // Subject
-                    TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Subject',
-                        hintText: _subjectHint(educationLevel),
-                        prefixIcon: const Icon(Icons.book_outlined, size: 20),
+                    if (loadingSubjects)
+                      const SizedBox(
+                        height: 56,
+                        child: Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    else
+                      DropdownButtonFormField<String>(
+                        key: ValueKey('scanner_subject_${subjects?.length}_$subject'),
+                        value: subject,
+                        decoration: InputDecoration(
+                          labelText: 'Subject',
+                          hintText: _subjectHint(educationLevel),
+                          prefixIcon: const Icon(Icons.book_outlined, size: 20),
+                        ),
+                        items: (subjects ?? [])
+                            .map((s) => DropdownMenuItem<String>(
+                                  value: s['name']?.toString(), // use name instead of ID since mutation expects string
+                                  child: Text(s['name']?.toString() ?? ''),
+                                ))
+                            .toList(),
+                        onChanged: onSubjectChanged,
                       ),
-                      onChanged: onSubjectChanged,
-                      textInputAction: TextInputAction.next,
-                    ),
                     const SizedBox(height: 12),
 
                     // Exam type + year row
