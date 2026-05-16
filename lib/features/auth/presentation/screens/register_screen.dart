@@ -163,6 +163,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     child: Form(
                       key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -181,8 +182,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               hintText: 'e.g. john_banda',
                             ),
                             textInputAction: TextInputAction.next,
-                            validator: (v) =>
-                                v!.length < 3 ? 'At least 3 characters' : null,
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) return 'Username is required';
+                              if (v.trim().length < 3) return 'At least 3 characters';
+                              if (v.trim().contains(' ')) return 'No spaces allowed';
+                              return null;
+                            },
                           ).animate(delay: 250.ms).fadeIn().slideY(begin: 0.15),
                           const SizedBox(height: 14),
                           TextFormField(
@@ -194,8 +199,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               hintText: 'your@email.com',
                             ),
                             textInputAction: TextInputAction.next,
-                            validator: (v) =>
-                                !v!.contains('@') ? 'Enter a valid email' : null,
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) return 'Email is required';
+                              if (!v.contains('@') || !v.contains('.')) return 'Enter a valid email';
+                              return null;
+                            },
                           ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.15),
                           const SizedBox(height: 14),
                           TextFormField(
@@ -227,21 +235,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                             ),
                             textInputAction: TextInputAction.next,
-                            validator: (v) =>
-                                v!.length < 8 ? 'At least 8 characters' : null,
+                            validator: (v) {
+                              if (v == null || v.isEmpty) return 'Password is required';
+                              if (v.length < 8) return 'Min 8 characters';
+                              return null;
+                            },
                           ).animate(delay: 340.ms).fadeIn().slideY(begin: 0.15),
                           const SizedBox(height: 14),
                           TextFormField(
                             controller: _confirmCtrl,
                             obscureText: _obscure,
                             decoration: const InputDecoration(
-                              labelText: 'Confirm password',
-                              prefixIcon: Icon(Icons.lock_outline_rounded),
+                              labelText: 'Confirm Password',
+                              prefixIcon: Icon(Icons.lock_reset_rounded),
                             ),
                             textInputAction: TextInputAction.done,
                             onFieldSubmitted: (_) => _submit(),
-                            validator: (v) =>
-                                v!.isEmpty ? 'Confirm your password' : null,
+                            validator: (v) {
+                              if (v == null || v.isEmpty) return 'Please confirm password';
+                              if (v != _passwordCtrl.text) return 'Passwords do not match';
+                              return null;
+                            },
                           ).animate(delay: 360.ms).fadeIn().slideY(begin: 0.15),
                           const SizedBox(height: 24),
                           SizedBox(

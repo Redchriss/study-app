@@ -96,57 +96,59 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 500),
-        child: Stack(
-          key: ValueKey(_page),
-          children: [
-            // Animated gradient background
-            AnimatedBuilder(
-              animation: _bgAnim,
-              builder: (_, __) => Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment(
-                      math.cos(_bgAnim.value * math.pi) * 0.3,
-                      -1,
-                    ),
-                    end: Alignment(
-                      math.sin(_bgAnim.value * math.pi) * 0.3,
-                      1,
-                    ),
-                    colors: data.gradient,
+      body: Stack(
+        children: [
+          // Animated gradient background
+          AnimatedBuilder(
+            animation: _bgAnim,
+            builder: (_, __) => AnimatedContainer(
+              duration: const Duration(milliseconds: 500),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment(
+                    math.cos(_bgAnim.value * math.pi) * 0.3,
+                    -1,
                   ),
+                  end: Alignment(
+                    math.sin(_bgAnim.value * math.pi) * 0.3,
+                    1,
+                  ),
+                  colors: data.gradient,
                 ),
               ),
             ),
-            // Decorative circles
-            Positioned(
-              top: -size.width * 0.3,
-              right: -size.width * 0.2,
-              child: Container(
-                width: size.width * 0.8,
-                height: size.width * 0.8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: data.accentColor.withValues(alpha: 0.08),
-                ),
+          ),
+          // Decorative circles
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 500),
+            top: -size.width * 0.3,
+            right: -size.width * 0.2,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 500),
+              width: size.width * 0.8,
+              height: size.width * 0.8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: data.accentColor.withValues(alpha: 0.08),
               ),
             ),
-            Positioned(
-              bottom: -size.width * 0.4,
-              left: -size.width * 0.2,
-              child: Container(
-                width: size.width,
-                height: size.width,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.04),
-                ),
+          ),
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 500),
+            bottom: -size.width * 0.4,
+            left: -size.width * 0.2,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 500),
+              width: size.width,
+              height: size.width,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: data.accentColor.withValues(alpha: 0.08),
               ),
             ),
-            // Content
-            SafeArea(
+          ),
+          // Content
+          SafeArea(
               child: Column(
                 children: [
                   Padding(
@@ -234,7 +236,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
           ],
         ),
-      ),
     );
   }
 }
