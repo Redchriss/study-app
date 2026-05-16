@@ -29,8 +29,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       gradient: [Color(0xFF1B6CA8), Color(0xFF0E3D6E)],
       accentColor: Color(0xFF4FC3F7),
       icon: Icons.auto_awesome_rounded,
-      stat: '50,000+',
-      statLabel: 'students already learning',
+      stat: '24/7',
+      statLabel: 'instant AI tutoring',
     ),
     _OnboardingData(
       title: 'Built for\nMalawi',
@@ -39,7 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       accentColor: Color(0xFF69F0AE),
       icon: Icons.flag_rounded,
       stat: '3',
-      statLabel: 'exams fully covered',
+      statLabel: 'national exams covered',
     ),
     _OnboardingData(
       title: 'Scan. Solve.\nLearn.',
