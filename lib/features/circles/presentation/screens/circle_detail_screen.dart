@@ -192,54 +192,125 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
             const SizedBox(height: 8),
             if (_showNewPost)
               Container(
-                padding: const EdgeInsets.all(DesignTokens.spMd),
-                color: dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
-                child: Column(children: [
-                  TextField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Title', isDense: true)),
-                  const SizedBox(height: 8),
-                  TextField(controller: _bodyCtrl, decoration: const InputDecoration(labelText: 'Body', isDense: true), maxLines: 3),
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    if (_postImage != null)
-                      Stack(children: [
-                        Image.file(_postImage!, height: 60, width: 60, fit: BoxFit.cover),
-                        Positioned(right: 0, top: 0, child: GestureDetector(
-                          onTap: () => setState(() => _postImage = null),
-                          child: Container(
-                            decoration: const BoxDecoration(color: DesignTokens.error, shape: BoxShape.circle),
-                            child: const Icon(Icons.close, size: 16, color: Colors.white),
-                          ),
-                        )),
-                      ])
-                    else
-                      GestureDetector(
-                        onTap: () async {
-                          final x = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1024);
-                          if (x != null) setState(() => _postImage = File(x.path));
-                        },
-                        child: Container(
-                          width: 60, height: 60,
-                          decoration: BoxDecoration(color: DesignTokens.surfaceVariant, borderRadius: BorderRadius.circular(12)),
-                          child: const Icon(Icons.image, color: DesignTokens.textSecondary),
-                        ),
-                      ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        key: ValueKey(_postType),
-                        initialValue: _postType,
-                        decoration: const InputDecoration(labelText: 'Type', isDense: true),
-                        items: 'discussion|question|resource'
-                            .split('|')
-                            .map((t) => DropdownMenuItem(value: t, child: Text(t[0].toUpperCase() + t.substring(1))))
-                            .toList(),
-                        onChanged: (v) => setState(() => _postType = v ?? 'discussion'),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: dark ? DesignTokens.darkSurface : Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: DesignTokens.primary.withValues(alpha: 0.2)),
+                  boxShadow: DesignTokens.shadowSm(dark),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('Create new post', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _titleCtrl, 
+                      decoration: InputDecoration(
+                        labelText: 'Title', 
+                        filled: true,
+                        fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(onPressed: () => _createPost(refetch), child: const Text('Post')),
-                  ]),
-                ]),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _bodyCtrl, 
+                      decoration: InputDecoration(
+                        labelText: 'Body', 
+                        filled: true,
+                        fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      ),
+                      maxLines: 4,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        if (_postImage != null)
+                          Stack(children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(_postImage!, height: 64, width: 64, fit: BoxFit.cover),
+                            ),
+                            Positioned(
+                              right: -4, 
+                              top: -4, 
+                              child: GestureDetector(
+                                onTap: () => setState(() => _postImage = null),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(color: DesignTokens.error, shape: BoxShape.circle),
+                                  child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ])
+                        else
+                          AnimatedPress(
+                            onTap: () async {
+                              final x = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1024);
+                              if (x != null) setState(() => _postImage = File(x.path));
+                            },
+                            child: Container(
+                              width: 64, height: 64,
+                              decoration: BoxDecoration(
+                                color: DesignTokens.primary.withValues(alpha: 0.1), 
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(Icons.add_photo_alternate_rounded, color: DesignTokens.primary, size: 28),
+                            ),
+                          ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            value: _postType,
+                            decoration: InputDecoration(
+                              labelText: 'Post Type',
+                              filled: true,
+                              fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 'discussion', child: Text('Discussion')),
+                              DropdownMenuItem(value: 'question', child: Text('Question')),
+                              DropdownMenuItem(value: 'resource', child: Text('Resource')),
+                            ],
+                            onChanged: (v) => setState(() => _postType = v ?? 'discussion'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => setState(() {
+                            _showNewPost = false;
+                            _titleCtrl.clear();
+                            _bodyCtrl.clear();
+                            _postImage = null;
+                          }),
+                          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: _posting ? null : () => _submitPost(refetch),
+                          style: FilledButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          ),
+                          child: _posting 
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : const Text('Post', style: TextStyle(fontWeight: FontWeight.w700)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             Expanded(child: _buildPostsList(circle['slug'], refetch)),
           ]),
@@ -248,7 +319,7 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
     );
   }
 
-  Future<void> _createPost(dynamic refetch) async {
+  Future<void> _submitPost(dynamic refetch) async {
     if (_titleCtrl.text.trim().isEmpty || _posting) return;
     setState(() => _posting = true);
     try {
