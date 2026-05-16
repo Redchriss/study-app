@@ -235,6 +235,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   Widget _buildLevelStep() {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       children: [
@@ -261,31 +262,37 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
-        _LevelCard(
-          icon: Icons.child_care,
+        const SizedBox(height: 24),
+        _VisualLevelCard(
+          icon: Icons.child_care_rounded,
           title: 'Primary school',
           subtitle: 'Standards 1–8 · PSLCE path',
+          color: const Color(0xFFE87E5E),
+          dark: dark,
           onTap: () => setState(() {
             _level = 'primary';
             _step = 2;
           }),
         ),
-        const SizedBox(height: 12),
-        _LevelCard(
-          icon: Icons.school,
+        const SizedBox(height: 16),
+        _VisualLevelCard(
+          icon: Icons.menu_book_rounded,
           title: 'Secondary school',
           subtitle: 'Forms 1–4 · JCE & MSCE',
+          color: const Color(0xFF389E75),
+          dark: dark,
           onTap: () => setState(() {
             _level = 'secondary';
             _step = 2;
           }),
         ),
-        const SizedBox(height: 12),
-        _LevelCard(
-          icon: Icons.account_balance,
+        const SizedBox(height: 16),
+        _VisualLevelCard(
+          icon: Icons.account_balance_rounded,
           title: 'University / college',
           subtitle: 'UNIMA, MUBAS, MUST, TTCs, private colleges…',
+          color: const Color(0xFF5A6BB2),
+          dark: dark,
           onTap: () => setState(() {
             _level = 'tertiary';
             _step = 2;
@@ -296,6 +303,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   Widget _buildStandardStep() {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -304,24 +312,24 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           Text('Which Standard?', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text('Materials and topics follow primary progression (Std 1–8).', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           Expanded(
             child: GridView.count(
-              crossAxisCount: 4,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.3,
               children: List.generate(
                 8,
-                (i) => ElevatedButton(
-                  onPressed: () => setState(() {
+                (i) => _NumberCard(
+                  number: i + 1,
+                  label: 'Standard',
+                  color: const Color(0xFFE87E5E),
+                  dark: dark,
+                  onTap: () => setState(() {
                     _standard = i + 1;
                     _step = 3;
                   }),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(0, 0),
-                    padding: const EdgeInsets.all(8),
-                  ),
-                  child: Text('Std ${i + 1}', style: const TextStyle(fontSize: 13)),
                 ),
               ),
             ),
@@ -332,29 +340,40 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   Widget _buildFormStep() {
-    return ListView(
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
       padding: const EdgeInsets.all(24),
-      children: [
-        Text('Which Form?', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
-        Text('Form 1–2: junior secondary · Form 3–4: senior / MSCE focus.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary)),
-        const SizedBox(height: 20),
-        ...List.generate(
-          4,
-          (i) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _LevelCard(
-              icon: Icons.class_,
-              title: 'Form ${i + 1}',
-              subtitle: i < 2 ? 'Junior secondary' : 'Senior secondary',
-              onTap: () => setState(() {
-                _form = i + 1;
-                _step = 3;
-              }),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Which Form?', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          Text('Form 1–2: junior secondary · Form 3–4: senior / MSCE focus.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary)),
+          const SizedBox(height: 24),
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.3,
+              children: List.generate(
+                4,
+                (i) => _NumberCard(
+                  number: i + 1,
+                  label: 'Form',
+                  color: const Color(0xFF389E75),
+                  dark: dark,
+                  subtitle: i < 2 ? 'JCE' : 'MSCE',
+                  onTap: () => setState(() {
+                    _form = i + 1;
+                    _step = 3;
+                  }),
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -520,42 +539,57 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   Widget _buildTermStep() {
-    return ListView(
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
       padding: const EdgeInsets.all(24),
-      children: [
-        Text('Which term?', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
-        Text('Used for seasonal materials where relevant.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary)),
-        const SizedBox(height: 20),
-        ...['1', '2', '3'].map(
-          (t) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _LevelCard(
-              icon: Icons.calendar_today,
-              title: 'Term $t',
-              subtitle: '',
-              onTap: () {
-                setState(() => _term = t);
-                _saveAndFinish();
-              },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Which term?', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          Text('Used for seasonal materials where relevant.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary)),
+          const SizedBox(height: 24),
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.3,
+              children: List.generate(
+                3,
+                (i) => _NumberCard(
+                  number: i + 1,
+                  label: 'Term',
+                  color: const Color(0xFF6A8EAE),
+                  dark: dark,
+                  onTap: () {
+                    setState(() => _term = (i + 1).toString());
+                    _saveAndFinish();
+                  },
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _LevelCard extends StatelessWidget {
+class _VisualLevelCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final Color color;
+  final bool dark;
   final VoidCallback onTap;
 
-  const _LevelCard({
+  const _VisualLevelCard({
     required this.icon,
     required this.title,
     required this.subtitle,
+    required this.color,
+    required this.dark,
     required this.onTap,
   });
 
@@ -564,35 +598,126 @@ class _LevelCard extends StatelessWidget {
     return AnimatedPress(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          border: Border.all(color: DesignTokens.primary.withValues(alpha: 0.2)),
-          borderRadius: BorderRadius.circular(16),
+          color: dark ? DesignTokens.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
-                color: DesignTokens.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [color.withValues(alpha: 0.8), color],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                ],
               ),
-              child: Icon(icon, color: DesignTokens.primary),
+              child: Icon(icon, color: Colors.white, size: 28),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  if (subtitle.isNotEmpty)
-                    Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary)),
+                  Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: DesignTokens.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
                 ],
               ),
             ),
             const Icon(Icons.chevron_right, color: DesignTokens.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NumberCard extends StatelessWidget {
+  final int number;
+  final String label;
+  final String? subtitle;
+  final Color color;
+  final bool dark;
+  final VoidCallback onTap;
+
+  const _NumberCard({
+    required this.number,
+    required this.label,
+    this.subtitle,
+    required this.color,
+    required this.dark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPress(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: dark ? DesignTokens.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              number.toString(),
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.w900,
+                color: color,
+                height: 1.1,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: DesignTokens.textSecondary,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                    ),
+              ),
+            ],
           ],
         ),
       ),
