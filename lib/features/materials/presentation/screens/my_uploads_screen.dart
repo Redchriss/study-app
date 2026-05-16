@@ -5,6 +5,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/graphql_options.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Lists materials uploaded by the current user (including pending review),
@@ -159,38 +160,97 @@ class MyUploadsScreen extends ConsumerWidget {
                 final subject = m['subject']?['name'] as String? ?? '';
                 final type = (m['contentType'] as String? ?? '').toUpperCase();
                 final approved = m['isApproved'] == true;
-                return Card(
-                  child: ListTile(
-                    title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
-                    subtitle: Text(
-                      [if (subject.isNotEmpty) subject, if (type.isNotEmpty) type].join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                final dark = Theme.of(context).brightness == Brightness.dark;
+                
+                return AnimatedPress(
+                  onTap: slug.isEmpty ? null : () => context.push('/materials/$slug'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: dark ? DesignTokens.darkSurface : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: DesignTokens.primary.withValues(alpha: 0.15)),
+                      boxShadow: DesignTokens.shadowSm(dark),
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Chip(
-                          label: Text(
-                            approved ? 'Live' : 'Pending',
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: approved 
+                                ? DesignTokens.success.withValues(alpha: 0.1) 
+                                : DesignTokens.warning.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: approved
-                              ? DesignTokens.success.withValues(alpha: 0.15)
-                              : DesignTokens.warning.withValues(alpha: 0.2),
-                          side: BorderSide.none,
-                          padding: EdgeInsets.zero,
+                          child: Icon(
+                            approved ? Icons.cloud_done_rounded : Icons.pending_actions_rounded,
+                            color: approved ? DesignTokens.success : DesignTokens.warning,
+                            size: 24,
+                          ),
                         ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title, 
+                                maxLines: 2, 
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  if (subject.isNotEmpty) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: dark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.shade100,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        subject,
+                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: DesignTokens.textSecondary),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  if (type.isNotEmpty) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: DesignTokens.primary.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        type,
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: DesignTokens.primary),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         if (!approved)
                           IconButton(
-                            icon: const Icon(Icons.delete_outline, color: DesignTokens.error),
+                            icon: const Icon(Icons.delete_outline_rounded, color: DesignTokens.error),
                             tooltip: 'Delete pending upload',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
                             onPressed: slug.isEmpty ? null : () => _deletePending(context, ref, slug, title, () => refetch?.call()),
+                          )
+                        else
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8.0),
+                            child: Icon(Icons.chevron_right_rounded, color: DesignTokens.textTertiary),
                           ),
                       ],
                     ),
-                    onTap: slug.isEmpty ? null : () => context.push('/materials/$slug'),
                   ),
                 );
               },
