@@ -34,7 +34,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     ),
     _OnboardingData(
       title: 'Built for\nMalawi',
-      subtitle: 'From PSLCE to MSCE, plus UNIMA,\nMUBAS, MUST, and LUANAR.',
+      subtitle: 'From PSLCE to MSCE, plus public & private\nuniversities and all TTCs.',
       gradient: [Color(0xFF1F6A52), Color(0xFF0D3B2E)],
       accentColor: Color(0xFF69F0AE),
       icon: Icons.flag_rounded,
