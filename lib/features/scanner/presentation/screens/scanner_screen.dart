@@ -160,7 +160,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with TickerProvid
     final dark = theme.brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Magic Scanner', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('AI Paper Solver', style: TextStyle(fontWeight: FontWeight.w800)),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -177,7 +177,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with TickerProvid
               ),
               const SizedBox(height: 12),
               Text(
-                'Point your camera at a question, or upload a photo/screenshot from your gallery.',
+                'Point your camera at a single question or upload a full past paper page. Our AI will break it down and solve it.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: DesignTokens.textSecondary, fontSize: 15, height: 1.4),
               ),
@@ -203,10 +203,26 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with TickerProvid
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
-                          child: const Icon(Icons.camera_alt_rounded, size: 56, color: Colors.black87),
+                          child: const Icon(Icons.document_scanner_rounded, size: 56, color: Colors.black87),
                         ),
                         const SizedBox(height: 16),
-                        const Text('Scan with Camera', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.black87)),
+                        const Text('Snap to Solve', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.black87)),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black87,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.auto_awesome, color: Color(0xFFFFD54F), size: 12),
+                              SizedBox(width: 4),
+                              Text('AI POWERED', style: TextStyle(color: Color(0xFFFFD54F), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -232,7 +248,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with TickerProvid
                           child: const Icon(Icons.photo_library_rounded, size: 56, color: DesignTokens.primary),
                         ),
                         const SizedBox(height: 16),
-                        Text('Upload from Gallery', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: dark ? Colors.white : Colors.black87)),
+                        Text('Upload to Solve', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: dark ? Colors.white : Colors.black87)),
                       ],
                     ),
                   ),
@@ -270,7 +286,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with TickerProvid
                       children: [
                         Icon(Icons.auto_awesome_rounded, color: Color(0xFFFFC107), size: 16),
                         SizedBox(width: 8),
-                        Text('Magic Scanner', style: TextStyle(color: Color(0xFFFFC107), fontWeight: FontWeight.w800)),
+                        Text('AI Paper Solver', style: TextStyle(color: Color(0xFFFFC107), fontWeight: FontWeight.w800)),
                       ],
                     ),
                   ),
@@ -310,7 +326,22 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with TickerProvid
                         Center(
                           child: FractionallySizedBox(
                             widthFactor: 0.8, heightFactor: 0.6,
-                            child: CustomPaint(painter: _CornerPainter()),
+                            child: Stack(
+                              children: [
+                                Positioned.fill(child: CustomPaint(painter: _CornerPainter())),
+                                const Center(
+                                  child: Text(
+                                    'Aim at a question to solve',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],

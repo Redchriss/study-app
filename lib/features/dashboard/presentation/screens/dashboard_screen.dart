@@ -137,7 +137,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     credits: credits,
                     dark: dark,
                     onNotification: () => context.go('/notifications'),
-                    onAiTutor: () => context.go('/ai-tutor'),
+                    onAiTutor: () => context.push('/ai-tutor'),
                   ),
                 ),
 
@@ -233,7 +233,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       child: SectionHeader(
                         title: 'Recent Materials',
                         actionLabel: 'See all',
-                        onAction: () => context.go('/materials'),
+                        onAction: () => context.push('/materials'),
                       ),
                     ),
                   ),
@@ -253,7 +253,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             material: m,
                             dark: dark,
                             onTap: () =>
-                                context.go('/materials/${m['slug']}'),
+                                context.push('/materials/${m['slug']}'),
                           );
                         },
                       ),
@@ -598,52 +598,52 @@ class _QuickActionsGrid extends StatelessWidget {
         children: [
           _ActionTile(
             icon: Icons.document_scanner_rounded,
-            label: 'Scan',
+            label: 'Solve Paper',
             color: const Color(0xFF2EC4B6),
-            onTap: () => context.go('/scanner'),
+            onTap: () => context.push('/scanner'),
           ),
           _ActionTile(
             icon: Icons.menu_book_rounded,
             label: 'Study',
             color: DesignTokens.primary,
-            onTap: () => context.go('/materials'),
+            onTap: () => context.push('/materials'),
           ),
           _ActionTile(
             icon: Icons.quiz_rounded,
             label: 'Quiz',
             color: DesignTokens.secondary,
-            onTap: () => context.go('/quizzes'),
+            onTap: () => context.push('/quizzes'),
           ),
           _ActionTile(
             icon: Icons.auto_awesome_rounded,
             label: 'AI',
             color: const Color(0xFF7C4DFF),
-            onTap: () => context.go('/ai-tutor'),
+            onTap: () => context.push('/ai-tutor'),
           ),
           _ActionTile(
             icon: Icons.groups_rounded,
             label: 'Circles',
             color: const Color(0xFFE91E63),
-            onTap: () => context.go('/circles'),
+            onTap: () => context.push('/circles'),
             badge: circlesCount > 0 ? circlesCount.toString() : null,
           ),
           _ActionTile(
             icon: Icons.article_rounded,
             label: 'Papers',
             color: const Color(0xFFF39C12),
-            onTap: () => context.go('/paper-library'),
+            onTap: () => context.push('/paper-library'),
           ),
           _ActionTile(
             icon: Icons.upload_file_rounded,
             label: 'Upload',
             color: const Color(0xFF1F6A52),
-            onTap: () => context.go('/upload-material'),
+            onTap: () => context.push('/upload-material'),
           ),
           _ActionTile(
             icon: Icons.emoji_events_rounded,
             label: 'Rank',
             color: const Color(0xFFFF6B35),
-            onTap: () => context.go('/leaderboard'),
+            onTap: () => context.push('/leaderboard'),
           ),
         ],
       );
@@ -961,7 +961,7 @@ class _FocusCoachCard extends StatelessWidget {
                     label: focusTopic == null
                         ? 'Open coach'
                         : 'Memorize $focusTopic',
-                    onTap: () => context.go('/ai-tutor'),
+                    onTap: () => context.push('/ai-tutor'),
                   ),
                   const SizedBox(width: 8),
                   _CoachChip(
@@ -969,13 +969,13 @@ class _FocusCoachCard extends StatelessWidget {
                     label: focusTopic == null
                         ? 'Quiz me'
                         : 'Quiz on $focusTopic',
-                    onTap: () => context.go('/ai-tutor'),
+                    onTap: () => context.push('/ai-tutor'),
                   ),
                   const SizedBox(width: 8),
                   _CoachChip(
                     icon: Icons.event_note_outlined,
                     label: 'Plan tonight',
-                    onTap: () => context.go('/ai-tutor'),
+                    onTap: () => context.push('/ai-tutor'),
                   ),
                 ],
               ),
@@ -1121,7 +1121,7 @@ class _AdaptivePlanCard extends StatelessWidget {
             ],
             const SizedBox(height: 12),
             FilledButton.tonal(
-              onPressed: () => context.go('/ai-tutor'),
+              onPressed: () => context.push('/ai-tutor'),
               child: const Text('Open AI Tutor'),
             ),
           ],
