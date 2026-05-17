@@ -1,8 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -10,11 +7,12 @@ import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../widgets/ai_tutor_mode_bar.dart';
 import '../widgets/ai_tutor_preferences_sheet.dart';
-import '../widgets/ai_tutor_snapshot_cards.dart';
+import '../widgets/ai_tutor_header.dart';
+import '../widgets/ai_tutor_bubbles.dart';
+import '../widgets/ai_tutor_empty_state.dart';
+import '../widgets/ai_tutor_input_bar.dart';
 
 class AiTutorScreen extends ConsumerStatefulWidget {
   const AiTutorScreen({super.key});
@@ -39,7 +37,6 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   bool _showInsights = false;
 
   void _toggleInsights() => setState(() => _showInsights = !_showInsights);
-  bool _profileLoading = true;
   bool _profileSaving = false;
   bool _snapshotLoading = true;
   List<Map<String, dynamic>> _topicStates = [];
@@ -204,11 +201,9 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         _prefersExamples = profile?['prefersExamples'] as bool? ?? true;
         _prefersStepByStep = profile?['prefersStepByStep'] as bool? ?? true;
         _detailLevel = profile?['detailLevel'] as int? ?? 2;
-        _profileLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _profileLoading = false);
     }
   }
 
@@ -633,16 +628,10 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       ),
       body: Column(
         children: [
-          // Mode bar + compact insights toggle
-          _CompactHeader(
+          AiTutorHeader(
             studyMode: _studyMode,
             modes: _modes,
             modeHint: _modeHint(),
-            profileLoading: _profileLoading,
-            learningStyle: _learningStyle,
-            detailLevel: _detailLevel,
-            prefersExamples: _prefersExamples,
-            prefersStepByStep: _prefersStepByStep,
             snapshotLoading: _snapshotLoading,
             topicStates: _topicStates,
             memories: _memories,
@@ -657,8 +646,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
           // Chat area
           Expanded(
             child: _messages.isEmpty && !_streaming
-                ? _EmptyState(
-                    studyMode: _studyMode,
+                ? AiTutorEmptyState(
                     suggestions: _suggestionsForMode(),
                     onSuggestion: (s) => _send(s),
                   )
@@ -668,7 +656,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
                     itemCount: _messages.length + (_streaming ? 1 : 0),
                     itemBuilder: (_, i) {
                       if (_streaming && i == _messages.length) {
-                        return _AiBubble(
+                        return AiAssistantBubble(
                           text: _streamingText,
                           streaming: true,
                           cursorAnim: _cursorAnim,
@@ -678,10 +666,8 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
                       final msg = _messages[i];
                       final isUser = msg['isUser'] == true;
                       return isUser
-                          ? _UserBubble(
-                              text: (msg['displayText'] ?? msg['messageText'] ?? '').toString(),
-                            )
-                          : _AiBubble(
+                          ? AiUserBubble(text: (msg['displayText'] ?? msg['messageText'] ?? '').toString())
+                          : AiAssistantBubble(
                               text: (msg['messageText'] ?? '').toString(),
                               streaming: false,
                               cursorAnim: _cursorAnim,
@@ -691,633 +677,14 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
                   ),
           ),
 
-          // Typing indicator
-          if (_sending && !_streaming) _TypingIndicator(),
+          if (_sending && !_streaming) const AiTypingIndicator(),
 
-          // Input bar — hide quick suggestions mid-conversation
-          _InputBar(
+          AiTutorInputBar(
             ctrl: _msgCtrl,
             sending: _sending,
             placeholder: _modePlaceholder(),
             suggestions: _messages.isEmpty ? _suggestionsForMode() : const [],
             onSend: _send,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Compact Header (replaces _ModeSection) ───────────────────────────────────
-class _CompactHeader extends StatelessWidget {
-  final String studyMode;
-  final List<(String, String, IconData)> modes;
-  final String modeHint;
-  final bool profileLoading;
-  final String learningStyle;
-  final int detailLevel;
-  final bool prefersExamples;
-  final bool prefersStepByStep;
-  final bool snapshotLoading;
-  final List<Map<String, dynamic>> topicStates;
-  final List<Map<String, dynamic>> memories;
-  final Map<String, dynamic>? activePlan;
-  final int reviewCount;
-  final bool showInsights;
-  final ValueChanged<String> onModeSelect;
-  final VoidCallback onGeneratePlan;
-  final VoidCallback onToggleInsights;
-
-  const _CompactHeader({
-    required this.studyMode,
-    required this.modes,
-    required this.modeHint,
-    required this.profileLoading,
-    required this.learningStyle,
-    required this.detailLevel,
-    required this.prefersExamples,
-    required this.prefersStepByStep,
-    required this.snapshotLoading,
-    required this.topicStates,
-    required this.memories,
-    required this.activePlan,
-    required this.reviewCount,
-    required this.showInsights,
-    required this.onModeSelect,
-    required this.onGeneratePlan,
-    required this.onToggleInsights,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
-    final bg = dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant;
-
-    return Container(
-      color: bg,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Mode bar + insights toggle on same row
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: AiTutorModeBar(
-                    selectedMode: studyMode,
-                    modes: modes,
-                    onSelect: onModeSelect,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                // Insights toggle chip
-                GestureDetector(
-                  onTap: onToggleInsights,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: showInsights
-                          ? const Color(0xFF7C4DFF).withValues(alpha: 0.15)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: showInsights
-                            ? const Color(0xFF7C4DFF)
-                            : DesignTokens.textTertiary.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.psychology_rounded,
-                          size: 16,
-                          color: showInsights ? const Color(0xFF7C4DFF) : DesignTokens.textSecondary,
-                        ),
-                        if (reviewCount > 0) ...[
-                          const SizedBox(width: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: DesignTokens.warning,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              '$reviewCount',
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Mode hint
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 4, 14, 6),
-            child: Row(
-              children: [
-                Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color(0xFF7C4DFF), shape: BoxShape.circle)),
-                const SizedBox(width: 6),
-                Text(modeHint, style: theme.textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary, fontStyle: FontStyle.italic)),
-              ],
-            ),
-          ),
-          // Collapsible insights panel
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            child: showInsights && !snapshotLoading
-                ? Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-                    child: AiTutorSnapshotCards(
-                      reviewCount: reviewCount,
-                      topicStates: topicStates,
-                      memories: memories,
-                      planSummary: activePlan?['planSummary']?.toString(),
-                      onGeneratePlan: onGeneratePlan,
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Empty State ───────────────────────────────────────────────────────────────
-class _EmptyState extends StatelessWidget {
-  final String studyMode;
-  final List<String> suggestions;
-  final ValueChanged<String> onSuggestion;
-
-  const _EmptyState({
-    required this.studyMode,
-    required this.suggestions,
-    required this.onSuggestion,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF7C4DFF).withValues(alpha: 0.15),
-                    const Color(0xFF1B6CA8).withValues(alpha: 0.15),
-                  ],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.auto_awesome_rounded,
-                size: 38,
-                color: Color(0xFF7C4DFF),
-              ),
-            ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
-            const SizedBox(height: 20),
-            const Text(
-              'What do you want to learn?',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-              textAlign: TextAlign.center,
-            ).animate(delay: 100.ms).fadeIn().slideY(begin: 0.2),
-            const SizedBox(height: 8),
-            const Text(
-              'Tap a suggestion or type your own question.',
-              style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13),
-              textAlign: TextAlign.center,
-            ).animate(delay: 200.ms).fadeIn(),
-            const SizedBox(height: 24),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: suggestions.map((s) {
-                return ActionChip(
-                  label: Text(s),
-                  onPressed: () => onSuggestion(s),
-                  avatar: const Icon(Icons.lightbulb_outline_rounded, size: 16),
-                ).animate(delay: 300.ms).fadeIn().scale(begin: const Offset(0.9, 0.9));
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── User Bubble ───────────────────────────────────────────────────────────────
-class _UserBubble extends StatelessWidget {
-  final String text;
-  const _UserBubble({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Container(
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-        margin: const EdgeInsets.only(bottom: 10, left: 48),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF1B6CA8), Color(0xFF7C4DFF)],
-          ),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(18),
-            bottomLeft: Radius.circular(18),
-            bottomRight: Radius.circular(4),
-          ),
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            height: 1.5,
-          ),
-        ),
-      ),
-    ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.1);
-  }
-}
-
-// ── AI Bubble ─────────────────────────────────────────────────────────────────
-class _AiBubble extends StatelessWidget {
-  final String text;
-  final bool streaming;
-  final Animation<double> cursorAnim;
-  final bool dark;
-
-  const _AiBubble({
-    required this.text,
-    required this.streaming,
-    required this.cursorAnim,
-    required this.dark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // AI avatar
-          Container(
-            width: 30,
-            height: 30,
-            margin: const EdgeInsets.only(right: 8, top: 2),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)],
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.auto_awesome_rounded,
-                color: Colors.white, size: 14),
-          ),
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.78),
-              margin: const EdgeInsets.only(bottom: 10, right: 48),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: dark
-                    ? DesignTokens.darkSurfaceVariant
-                    : DesignTokens.surfaceVariant,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(18),
-                  bottomLeft: Radius.circular(18),
-                  bottomRight: Radius.circular(18),
-                ),
-              ),
-              child: text.isEmpty && streaming
-                  ? const SizedBox(
-                      width: 40,
-                      child: LinearProgressIndicator(minHeight: 2),
-                    )
-                  : Stack(
-                      children: [
-                        MarkdownBody(
-                          data: text,
-                          styleSheet: MarkdownStyleSheet(
-                            p: const TextStyle(fontSize: 14, height: 1.55),
-                            code: TextStyle(
-                              fontSize: 13,
-                              fontFamily: 'monospace',
-                              backgroundColor:
-                                  dark ? Colors.black26 : const Color(0xFFEEF0F2),
-                            ),
-                            codeblockDecoration: BoxDecoration(
-                              color: dark
-                                  ? const Color(0xFF161B22)
-                                  : const Color(0xFFEEF0F2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                        if (streaming)
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: FadeTransition(
-                              opacity: cursorAnim,
-                              child: Container(
-                                width: 8,
-                                height: 16,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF7C4DFF),
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-            ),
-          ),
-          // Copy button (for completed messages)
-          if (!streaming && text.isNotEmpty)
-            IconButton(
-              iconSize: 16,
-              icon: const Icon(Icons.copy_rounded),
-              color: DesignTokens.textTertiary,
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: text));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Copied to clipboard'),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 200.ms).slideX(begin: -0.05);
-  }
-}
-
-// ── Typing Indicator ──────────────────────────────────────────────────────────
-class _TypingIndicator extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)],
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.auto_awesome_rounded,
-                color: Colors.white, size: 14),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: DesignTokens.surfaceVariant,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(18),
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _BouncingDot(delay: 0),
-                const SizedBox(width: 4),
-                _BouncingDot(delay: 200),
-                const SizedBox(width: 4),
-                _BouncingDot(delay: 400),
-                const SizedBox(width: 8),
-                const Text(
-                  'Thinking...',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: DesignTokens.textSecondary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BouncingDot extends StatefulWidget {
-  final int delay;
-  const _BouncingDot({required this.delay});
-
-  @override
-  State<_BouncingDot> createState() => _BouncingDotState();
-}
-
-class _BouncingDotState extends State<_BouncingDot>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200));
-    _anim = Tween<double>(begin: 0, end: -6).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _ctrl.repeat(reverse: true);
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, __) => Transform.translate(
-        offset: Offset(0, _anim.value),
-        child: Container(
-          width: 7,
-          height: 7,
-          decoration: BoxDecoration(
-            color: const Color(0xFF7C4DFF).withValues(alpha: 0.6),
-            shape: BoxShape.circle,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Input Bar ─────────────────────────────────────────────────────────────────
-class _InputBar extends StatelessWidget {
-  final TextEditingController ctrl;
-  final bool sending;
-  final String placeholder;
-  final List<String> suggestions;
-  final void Function([String?]) onSend;
-
-  const _InputBar({
-    required this.ctrl,
-    required this.sending,
-    required this.placeholder,
-    required this.suggestions,
-    required this.onSend,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
-
-    return SafeArea(
-      top: false,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Suggestions row
-          SizedBox(
-            height: 36,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: suggestions.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 6),
-              itemBuilder: (_, i) {
-                final s = suggestions[i];
-                return ActionChip(
-                  label: Text(s, style: const TextStyle(fontSize: 11)),
-                  onPressed: sending ? null : () => onSend(s),
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
-              border: Border(
-                top: BorderSide(
-                  color: dark ? DesignTokens.darkBorder : DesignTokens.border,
-                  width: 0.5,
-                ),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 120),
-                    child: TextField(
-                      controller: ctrl,
-                      maxLines: null,
-                      decoration: InputDecoration(
-                        hintText: placeholder,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: dark
-                            ? DesignTokens.darkSurfaceVariant
-                            : DesignTokens.surfaceVariant,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        isDense: true,
-                      ),
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) =>
-                          sending ? null : onSend(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                AnimatedPress(
-                  onTap: sending ? null : () => onSend(),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      gradient: sending
-                          ? null
-                          : const LinearGradient(
-                              colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)],
-                            ),
-                      color: sending
-                          ? DesignTokens.textTertiary.withValues(alpha: 0.3)
-                          : null,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: sending
-                        ? const Center(
-                            child: SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            ),
-                          )
-                        : const Icon(Icons.send_rounded,
-                            color: Colors.white, size: 20),
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),
