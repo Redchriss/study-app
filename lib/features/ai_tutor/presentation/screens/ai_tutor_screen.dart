@@ -36,6 +36,9 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   bool _prefersExamples = true;
   bool _prefersStepByStep = true;
   int _detailLevel = 2;
+  bool _showInsights = false;
+
+  void _toggleInsights() => setState(() => _showInsights = !_showInsights);
   bool _profileLoading = true;
   bool _profileSaving = false;
   bool _snapshotLoading = true;
@@ -43,6 +46,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   List<Map<String, dynamic>> _memories = [];
   Map<String, dynamic>? _activePlan;
   int _reviewCount = 0;
+  List<Map<String, dynamic>> _chatHistory = [];
   late final http.Client _httpClient;
   late final AnimationController _cursorCtrl;
   late final Animation<double> _cursorAnim;
@@ -238,6 +242,101 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       if (!mounted) return;
       setState(() => _snapshotLoading = false);
     }
+  }
+
+  Future<void> _loadChatHistory() async {
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.query(QueryOptions(
+        document: gql(kChatSessions),
+        fetchPolicy: FetchPolicy.networkOnly,
+      ));
+      if (!mounted) return;
+      final sessions = (result.data?['chatSessions'] as List?) ?? [];
+      setState(() {
+        _chatHistory = sessions.whereType<Map>().map((s) => Map<String, dynamic>.from(s)).toList();
+      });
+    } catch (_) {}
+  }
+
+  void _openHistory() async {
+    await _loadChatHistory();
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        maxChildSize: 0.9,
+        minChildSize: 0.3,
+        expand: false,
+        builder: (_, scrollCtrl) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.history_rounded, size: 20),
+                  const SizedBox(width: 8),
+                  Text('Chat History', style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: _chatHistory.isEmpty
+                  ? const Center(child: Text('No past sessions yet.', style: TextStyle(color: DesignTokens.textSecondary)))
+                  : ListView.builder(
+                      controller: scrollCtrl,
+                      itemCount: _chatHistory.length,
+                      itemBuilder: (_, i) {
+                        final s = _chatHistory[i];
+                        final updatedAt = s['updatedAt']?.toString() ?? '';
+                        final dateLabel = updatedAt.length >= 10 ? updatedAt.substring(0, 10) : updatedAt;
+                        return ListTile(
+                          leading: Container(
+                            width: 36, height: 36,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white, size: 16),
+                          ),
+                          title: Text(s['title']?.toString() ?? 'Chat', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          subtitle: Text(dateLabel, style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
+                          onTap: () async {
+                            Navigator.pop(ctx);
+                            await _restoreSession(s['id'].toString());
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _restoreSession(String sessionId) async {
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.query(QueryOptions(
+        document: gql(kChatMessages),
+        variables: {'sessionId': sessionId},
+        fetchPolicy: FetchPolicy.networkOnly,
+      ));
+      if (!mounted) return;
+      final msgs = (result.data?['chatMessages'] as List?) ?? [];
+      setState(() {
+        _sessionId = sessionId;
+        _messages.clear();
+        for (final m in msgs) {
+          if (m is Map) _messages.add(Map<String, dynamic>.from(m));
+        }
+      });
+      _scrollDown();
+    } catch (_) {}
   }
 
   Future<void> _createAdaptivePlan() async {
@@ -493,6 +592,11 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.history_rounded, size: 22),
+            tooltip: 'Chat history',
+            onPressed: _openHistory,
+          ),
+          IconButton(
             icon: const Icon(Icons.tune_rounded, size: 22),
             tooltip: 'Tutor preferences',
             onPressed: _openPreferences,
@@ -529,8 +633,8 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       ),
       body: Column(
         children: [
-          // Mode bar
-          _ModeSection(
+          // Mode bar + compact insights toggle
+          _CompactHeader(
             studyMode: _studyMode,
             modes: _modes,
             modeHint: _modeHint(),
@@ -544,8 +648,10 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
             memories: _memories,
             activePlan: _activePlan,
             reviewCount: _reviewCount,
+            showInsights: _showInsights,
             onModeSelect: (m) => setState(() => _studyMode = m),
             onGeneratePlan: _createAdaptivePlan,
+            onToggleInsights: _toggleInsights,
           ),
 
           // Chat area
@@ -558,8 +664,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
                   )
                 : ListView.builder(
                     controller: _scrollCtrl,
-                    padding: const EdgeInsets.fromLTRB(
-                        16, 8, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     itemCount: _messages.length + (_streaming ? 1 : 0),
                     itemBuilder: (_, i) {
                       if (_streaming && i == _messages.length) {
@@ -574,10 +679,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
                       final isUser = msg['isUser'] == true;
                       return isUser
                           ? _UserBubble(
-                              text: (msg['displayText'] ??
-                                      msg['messageText'] ??
-                                      '')
-                                  .toString(),
+                              text: (msg['displayText'] ?? msg['messageText'] ?? '').toString(),
                             )
                           : _AiBubble(
                               text: (msg['messageText'] ?? '').toString(),
@@ -592,12 +694,12 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
           // Typing indicator
           if (_sending && !_streaming) _TypingIndicator(),
 
-          // Input bar
+          // Input bar — hide quick suggestions mid-conversation
           _InputBar(
             ctrl: _msgCtrl,
             sending: _sending,
             placeholder: _modePlaceholder(),
-            suggestions: _suggestionsForMode(),
+            suggestions: _messages.isEmpty ? _suggestionsForMode() : const [],
             onSend: _send,
           ),
         ],
@@ -606,8 +708,8 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   }
 }
 
-// ── Mode Section ─────────────────────────────────────────────────────────────
-class _ModeSection extends StatelessWidget {
+// ── Compact Header (replaces _ModeSection) ───────────────────────────────────
+class _CompactHeader extends StatelessWidget {
   final String studyMode;
   final List<(String, String, IconData)> modes;
   final String modeHint;
@@ -621,10 +723,12 @@ class _ModeSection extends StatelessWidget {
   final List<Map<String, dynamic>> memories;
   final Map<String, dynamic>? activePlan;
   final int reviewCount;
+  final bool showInsights;
   final ValueChanged<String> onModeSelect;
   final VoidCallback onGeneratePlan;
+  final VoidCallback onToggleInsights;
 
-  const _ModeSection({
+  const _CompactHeader({
     required this.studyMode,
     required this.modes,
     required this.modeHint,
@@ -638,124 +742,111 @@ class _ModeSection extends StatelessWidget {
     required this.memories,
     required this.activePlan,
     required this.reviewCount,
+    required this.showInsights,
     required this.onModeSelect,
     required this.onGeneratePlan,
+    required this.onToggleInsights,
   });
-
-  String get _detailLabel {
-    switch (detailLevel) {
-      case 1:
-        return 'Short';
-      case 3:
-        return 'Deep';
-      default:
-        return 'Balanced';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
+    final bg = dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant;
 
     return Container(
-      color: dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
+      color: bg,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Mode bar
-          AiTutorModeBar(
-            selectedMode: studyMode,
-            modes: modes,
-            onSelect: onModeSelect,
-          ),
-          // Mode hint
+          // Mode bar + insights toggle on same row
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
             child: Row(
               children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF7C4DFF),
-                    shape: BoxShape.circle,
+                Expanded(
+                  child: AiTutorModeBar(
+                    selectedMode: studyMode,
+                    modes: modes,
+                    onSelect: onModeSelect,
                   ),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  modeHint,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: DesignTokens.textSecondary,
-                    fontStyle: FontStyle.italic,
+                const SizedBox(width: 4),
+                // Insights toggle chip
+                GestureDetector(
+                  onTap: onToggleInsights,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: showInsights
+                          ? const Color(0xFF7C4DFF).withValues(alpha: 0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: showInsights
+                            ? const Color(0xFF7C4DFF)
+                            : DesignTokens.textTertiary.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.psychology_rounded,
+                          size: 16,
+                          color: showInsights ? const Color(0xFF7C4DFF) : DesignTokens.textSecondary,
+                        ),
+                        if (reviewCount > 0) ...[
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: DesignTokens.warning,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              '$reviewCount',
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          // Profile pills row
-          if (!profileLoading)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _ProfilePill(
-                        label:
-                            '${learningStyle[0].toUpperCase()}${learningStyle.substring(1)}'),
-                    const SizedBox(width: 6),
-                    _ProfilePill(label: _detailLabel),
-                    if (prefersStepByStep) ...[
-                      const SizedBox(width: 6),
-                      const _ProfilePill(label: 'Step-by-step'),
-                    ],
-                    if (prefersExamples) ...[
-                      const SizedBox(width: 6),
-                      const _ProfilePill(label: 'Examples'),
-                    ],
-                  ],
-                ),
-              ),
+          // Mode hint
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 4, 14, 6),
+            child: Row(
+              children: [
+                Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color(0xFF7C4DFF), shape: BoxShape.circle)),
+                const SizedBox(width: 6),
+                Text(modeHint, style: theme.textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary, fontStyle: FontStyle.italic)),
+              ],
             ),
-          // Snapshot cards
-          if (!snapshotLoading)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-              child: AiTutorSnapshotCards(
-                reviewCount: reviewCount,
-                topicStates: topicStates,
-                memories: memories,
-                planSummary: activePlan?['planSummary']?.toString(),
-                onGeneratePlan: onGeneratePlan,
-              ),
-            ),
+          ),
+          // Collapsible insights panel
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            child: showInsights && !snapshotLoading
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                    child: AiTutorSnapshotCards(
+                      reviewCount: reviewCount,
+                      topicStates: topicStates,
+                      memories: memories,
+                      planSummary: activePlan?['planSummary']?.toString(),
+                      onGeneratePlan: onGeneratePlan,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
         ],
-      ),
-    );
-  }
-}
-
-class _ProfilePill extends StatelessWidget {
-  final String label;
-  const _ProfilePill({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: const Color(0xFF7C4DFF).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-            color: const Color(0xFF7C4DFF).withValues(alpha: 0.25)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF7C4DFF),
-        ),
       ),
     );
   }
@@ -888,7 +979,6 @@ class _AiBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Align(
       alignment: Alignment.centerLeft,
       child: Row(

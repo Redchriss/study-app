@@ -1,3 +1,11 @@
+const String kChatSessions = r'''
+query ChatSessions {
+  chatSessions {
+    id title updatedAt
+  }
+}
+''';
+
 const String kCreateChatSession = r'''
 mutation CreateChatSession($materialId: ID) {
   createChatSession(materialId: $materialId) {
