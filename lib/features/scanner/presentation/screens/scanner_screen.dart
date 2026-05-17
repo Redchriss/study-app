@@ -444,6 +444,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with TickerProvid
       default: return 'MSCE';
     }
   }
+
+  Widget _buildPreview() {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
 
