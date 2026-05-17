@@ -74,19 +74,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with TickerProvid
     if (_educationLevel == null) {
       final auth = ref.read(authProvider);
       _educationLevel = auth.user?['profile']?['educationLevel']?.toString() ?? 'secondary';
+      _examType = _examTypeDefault();
+      _examTypeCtrl.text = _examTypeDefault();
       _loadSubjects();
     }
   }
 
+  final _examTypeCtrl = TextEditingController();
+
   @override
   void dispose() {
     _laserAnim.dispose();
+    _examTypeCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _loadSubjects() async {
     final level = _educationLevel ?? 'secondary';
-    setState(() { _loadingSubjects = true; _subject = null; });
+    setState(() { _loadingSubjects = true; _subject = null; _examType = _examTypeDefault(); _examTypeCtrl.text = _examTypeDefault(); });
     try {
       final client = ref.read(graphqlClientProvider);
       final result = await client.query(QueryOptions(document: gql(kSubjects), variables: {'educationLevel': level}, fetchPolicy: FetchPolicy.cacheFirst));
@@ -424,7 +429,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with TickerProvid
     );
   }
 
-  Widget _buildPreview() {
+  String _examTypeHint() {
+    switch (_educationLevel) {
+      case 'primary': return 'e.g. PSLCE';
+      case 'tertiary': return 'e.g. End of Semester';
+      default: return 'e.g. MSCE, JCE';
+    }
+  }
+
+  String _examTypeDefault() {
+    switch (_educationLevel) {
+      case 'primary': return 'PSLCE';
+      case 'tertiary': return 'End of Semester';
+      default: return 'MSCE';
+    }
+  }
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
 
@@ -542,8 +561,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> with TickerProvid
                       Expanded(
                         flex: 2,
                         child: TextField(
+                          controller: _examTypeCtrl,
                           decoration: InputDecoration(
-                            labelText: 'Exam type (e.g. MSCE)',
+                            labelText: 'Exam type',
+                            hintText: _examTypeHint(),
                             filled: true,
                             fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
