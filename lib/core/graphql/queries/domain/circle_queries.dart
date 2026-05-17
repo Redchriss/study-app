@@ -10,7 +10,7 @@ query StudyCircles($level: String, $search: String) {
 const String kMyCircles = r'''
 query MyCircles {
   myCircles {
-    id name slug memberCount
+    id name slug memberCount educationLevel
   }
 }
 ''';

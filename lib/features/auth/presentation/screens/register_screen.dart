@@ -96,7 +96,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!mounted) return;
     
     if (ok) {
-      context.go('/setup');
+      // Router redirect handles navigation via _RouterRefresh.
+      return;
     } else {
       final error = ref.read(authProvider).error ?? 'Registration failed.';
       ScaffoldMessenger.of(context).showSnackBar(
