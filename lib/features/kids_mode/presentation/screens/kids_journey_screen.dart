@@ -9,7 +9,7 @@ import '../../data/kid_graphql_client.dart';
 import '../../kids_visual_theme.dart';
 import '../widgets/kids_reward_panel.dart';
 import '../widgets/kids_world_map.dart';
-import 'kid_login_screen.dart';
+import '../widgets/kid_auth_widgets.dart';
 
 class KidsJourneyScreen extends ConsumerStatefulWidget {
   const KidsJourneyScreen({

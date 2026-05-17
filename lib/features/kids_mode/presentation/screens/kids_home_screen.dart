@@ -15,7 +15,7 @@ import '../widgets/kids_lesson_step_bar.dart';
 import '../widgets/kids_subject_card.dart';
 import '../widgets/kids_topic_chip.dart';
 import '../widgets/kids_visual_lesson.dart';
-import 'kid_login_screen.dart';
+import '../widgets/kid_auth_widgets.dart';
 
 class KidsHomeScreen extends ConsumerStatefulWidget {
   const KidsHomeScreen({super.key});
