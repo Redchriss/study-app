@@ -116,7 +116,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/upload-material'),
+        onPressed: () => context.push('/upload-material'),
         icon: const Icon(Icons.upload_file_rounded),
         label: const Text('Upload'),
         tooltip: 'Upload a study material',
@@ -254,7 +254,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
-            onPressed: () => context.go('/upload-material'),
+            onPressed: () => context.push('/upload-material'),
             icon: const Icon(Icons.upload_file_rounded),
             label: const Text('Upload Material'),
           ),

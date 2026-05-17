@@ -179,7 +179,7 @@ class _QuizCard extends StatelessWidget {
     final diffLabel = difficulty[0].toUpperCase() + difficulty.substring(1);
 
     return AnimatedPress(
-      onTap: () => context.go('/quiz/${quiz['slug']}'),
+      onTap: () => context.push('/quiz/${quiz['slug']}'),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(

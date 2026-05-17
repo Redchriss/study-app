@@ -100,7 +100,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
         final submitted = result.data?['submitQuizAttempt'];
         final attemptId = submitted?['attempt']?['id'] as String?;
         if (submitted?['success'] == true && attemptId != null && attemptId.isNotEmpty) {
-          context.go('/quiz-results/$attemptId');
+          context.pushReplacement('/quiz-results/$attemptId');
           return;
         }
         ScaffoldMessenger.of(context).showSnackBar(
