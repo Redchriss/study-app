@@ -79,7 +79,7 @@ class HistoryScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  t['description'] ?? 'Payment', 
+                                  t['packageName'] ?? 'Payment', 
                                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)
                                 ),
                                 const SizedBox(height: 4),

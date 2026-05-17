@@ -52,8 +52,8 @@ query KidLesson($subjectId: ID!, $standard: Int!, $topicId: ID) {
 ''';
 
 const String kFetchKidLesson = r'''
-mutation FetchKidLesson($subjectId: ID!, $standard: Int!, $topicId: ID) {
-  fetchKidLesson(subjectId: $subjectId, standard: $standard, topicId: $topicId) {
+mutation FetchKidLesson($subjectId: ID!, $standard: Int!, $topicId: ID, $language: String) {
+  fetchKidLesson(subjectId: $subjectId, standard: $standard, topicId: $topicId, language: $language) {
     success errors
     lesson { id title bodyText quiz chunks }
     state {
@@ -293,7 +293,7 @@ mutation CreateChildProfile($childName: String!, $standard: Int!, $pinCode: Stri
 const String kKidLogin = r'''
 mutation KidLogin($username: String!, $pinCode: String!) {
   kidLogin(username: $username, pinCode: $pinCode) {
-    success token errors
+    success token refreshToken errors
     child { id childName standard isChild username childEducationTrack kidBonusStars }
   }
 }

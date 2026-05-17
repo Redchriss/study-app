@@ -20,6 +20,7 @@ const String kMySolveSessions = r'''
 query MySolveSessions($limit: Int) {
   mySolveSessions(limit: $limit) {
     id publicId filename subject educationLevel examType year status creditCharged createdAt
+    solutions { questionNumber questionText answer explanation confidence steps { text } }
   }
 }
 ''';

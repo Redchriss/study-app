@@ -36,7 +36,12 @@ query QuizAttempt($id: ID!) {
     score totalPoints timeTakenSeconds timeDisplay
     completed completedAt
     correctCount
-    userAnswers { id answer isCorrect pointsEarned }
+    userAnswers {
+      id
+      isCorrect
+      selectedAnswer { answerText isCorrect }
+      correctAnswer { answerText isCorrect }
+    }
   }
 }
 ''';

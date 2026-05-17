@@ -15,8 +15,22 @@ class PastPaperLibraryScreen extends StatelessWidget {
         options: QueryOptions(document: gql(kPastPapers)),
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
+          if (result.hasException) {
+            return const Center(child: Text('Could not load past papers.', style: TextStyle(color: DesignTokens.textTertiary)));
+          }
           final papers = (result.data?['pastPapers'] as List?) ?? [];
-          if (papers.isEmpty) return const Center(child: Text('No past papers', style: TextStyle(color: DesignTokens.textTertiary)));
+          if (papers.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'No past papers available for your education level.\nPast papers are currently available for primary and secondary students.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: DesignTokens.textTertiary),
+                ),
+              ),
+            );
+          }
           return ListView.builder(
             padding: const EdgeInsets.all(DesignTokens.spMd),
             itemCount: papers.length,

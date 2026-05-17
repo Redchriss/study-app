@@ -213,7 +213,7 @@ mutation SendReaderAiMessage($sessionId: ID!, $content: String!, $materialId: ID
   sendMessage(sessionId: $sessionId, content: $content, materialId: $materialId) {
     success
     error
-    message { id messageText timestamp }
+    message { id messageText isUser timestamp }
     creditsCost
     creditsRemaining
   }

@@ -92,19 +92,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         return;
       }
       await ref.read(authProvider.notifier).refreshUser();
-      if (!mounted) return;
-      final preferredGoal = await _preferences.preferredGoal();
-      if (!mounted) return;
-      switch (preferredGoal) {
-        case 'quiz':
-          context.go('/quizzes');
-          break;
-        case 'ai':
-          context.go('/ai-tutor');
-          break;
-        default:
-          context.go('/materials');
-      }
+      // Router redirect handles navigation once onboardingComplete=true is set.
     } finally {
       if (mounted) {
         setState(() => _saving = false);

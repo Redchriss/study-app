@@ -118,10 +118,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       style: IconButton.styleFrom(backgroundColor: DesignTokens.info.withValues(alpha: 0.1)),
                       onPressed: () async {
                         final client = ref.read(graphqlClientProvider);
-                        final content = '${post['title'] ?? ''}\n${post['body'] ?? ''}';
                         final result = await client.mutate(MutationOptions(
                           document: gql(kAskAiOnPost),
-                          variables: {'postId': post['id'], 'postContent': content},
+                          variables: {'postId': post['id']},
                         ));
                         if (context.mounted) {
                           final message = result.data?['askAiOnPost']?['reply'] ??

@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../kids_visual_theme.dart';
 import '../widgets/kids_playful_button.dart';
@@ -82,7 +84,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
       return;
     }
 
-    final parentToken = prefs.getString('parent_token');
+    final parentToken = await SecureStorage.getToken();
     if (parentToken != null && parentToken.isNotEmpty) {
       setState(() {
         _parentToken = parentToken;
@@ -95,9 +97,10 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   }
 
   Future<void> _logoutParent() async {
+    await SecureStorage.clearTokens();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('parent_token');
     await prefs.remove('kid_token');
+    await prefs.remove('kid_refresh_token');
     await prefs.remove('kid_child_name');
     await prefs.remove('kid_standard');
     await prefs.remove('kid_education_track');
@@ -127,13 +130,15 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
       if (t != null) {
         _parentToken = t;
         _client = null;
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('parent_token', _parentToken!);
+        await SecureStorage.saveTokens(t, result.data!['tokenAuth']['refreshToken'] as String? ?? '');
       }
       await _fetchChildren();
     } else {
+      final msg = result.exception?.graphqlErrors.firstOrNull?.message
+          ?? result.exception?.linkException?.toString()
+          ?? 'Invalid credentials';
       setState(() {
-        _error = 'Invalid credentials';
+        _error = msg;
         _parentLoading = false;
       });
     }
@@ -205,7 +210,11 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
           if (data?['success'] == true) {
             final child = data['child'] as Map<String, dynamic>?;
             final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('kid_token', data['token']);
+            await prefs.setString('kid_token', data['token'] as String);
+            final refreshToken = data['refreshToken'] as String?;
+            if (refreshToken != null && refreshToken.isNotEmpty) {
+              await prefs.setString('kid_refresh_token', refreshToken);
+            }
             await prefs.setString('kid_child_name', child?['childName'] as String? ?? kid['childName'] as String? ?? '');
             await prefs.setInt('kid_standard', (child?['standard'] as num?)?.toInt() ?? kid['standard'] as int? ?? 1);
             await prefs.setString('kid_education_track', child?['childEducationTrack'] as String? ?? 'primary');

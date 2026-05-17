@@ -54,24 +54,32 @@ class QuizResultsScreen extends ConsumerWidget {
               const SizedBox(height: DesignTokens.spLg),
               ...answers.asMap().entries.map((e) {
                 final a = e.value;
-                final correct = a['isCorrect'] == true;
-                final pts = a['pointsEarned'] ?? 0;
+                final isCorrect = a['isCorrect'] == true;
+                final yourAnswer = (a['selectedAnswer'] as Map?)?['answerText'] as String?;
+                final correctAnswer = (a['correctAnswer'] as Map?)?['answerText'] as String?;
                 return Container(
                   margin: const EdgeInsets.only(bottom: DesignTokens.spSm),
                   padding: const EdgeInsets.all(DesignTokens.spMd),
                   decoration: BoxDecoration(
                     color: theme.cardTheme.color,
                     borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-                    border: Border.all(color: correct ? DesignTokens.success.withValues(alpha: 0.3) : DesignTokens.error.withValues(alpha: 0.2)),
+                    border: Border.all(color: isCorrect ? DesignTokens.success.withValues(alpha: 0.3) : DesignTokens.error.withValues(alpha: 0.2)),
                     boxShadow: DesignTokens.shadowSm(dark),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [
-                      Icon(correct ? Icons.check_circle : Icons.cancel, color: correct ? DesignTokens.success : DesignTokens.error, size: 20),
+                      Icon(isCorrect ? Icons.check_circle : Icons.cancel, color: isCorrect ? DesignTokens.success : DesignTokens.error, size: 20),
                       const SizedBox(width: 8),
                       Expanded(child: Text('Question ${e.key + 1}', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600))),
-                      Text('+$pts pts', style: TextStyle(fontSize: 12, color: correct ? DesignTokens.success : DesignTokens.textTertiary)),
                     ]),
+                    if (!isCorrect && correctAnswer != null) ...[
+                      const SizedBox(height: 6),
+                      Text('Correct: $correctAnswer', style: const TextStyle(fontSize: 12, color: DesignTokens.success)),
+                    ],
+                    if (yourAnswer != null) ...[
+                      const SizedBox(height: 2),
+                      Text('Your answer: $yourAnswer', style: TextStyle(fontSize: 12, color: isCorrect ? DesignTokens.textSecondary : DesignTokens.error)),
+                    ],
                   ]),
                 );
               }),

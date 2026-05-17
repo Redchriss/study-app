@@ -14,7 +14,7 @@ query CreditLedger($limit: Int) {
 
 const String kPaymentHistory = r'''
 query PaymentHistory($limit: Int) {
-  paymentHistory(limit: $limit) { id amount description status createdAt }
+  paymentHistory(limit: $limit) { id amount packageName status createdAt }
 }
 ''';
 
