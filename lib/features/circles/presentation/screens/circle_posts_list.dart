@@ -41,7 +41,7 @@ class CirclePostsList extends StatelessWidget {
     return Query(
       options: QueryOptions(
         document: gql(kCirclePosts),
-        variables: {'circleSlug': slug, 'sort': sort},
+        variables: {'slug': slug, 'sort': sort},
         pollInterval: const Duration(seconds: 30),
       ),
       builder: (postResult, {fetchMore, refetch}) {

@@ -27,7 +27,7 @@ class HistoryScreen extends ConsumerWidget {
         body: TabBarView(
           children: [
             Query(
-              options: QueryOptions(document: gql(kPaymentHistory), variables: const {'limit': 50}),
+              options: QueryOptions(document: gql(kPaymentHistory)),
               builder: (result, {fetchMore, refetch}) {
                 if (result.isLoading) return const LoadingWidget();
                 if (result.hasException) {
