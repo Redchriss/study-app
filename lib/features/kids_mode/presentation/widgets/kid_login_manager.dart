@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/storage/secure_storage.dart';
 import 'kid_auth_widgets.dart';
+import 'kid_session_manager.dart';
 
 class KidLoginManager {
   late WidgetRef _ref;
@@ -28,6 +27,25 @@ class KidLoginManager {
   List<dynamic>? children;
   Map<String, String> avatars = {};
   String? error;
+  late final KidSessionManager session;
+
+  void refreshToken(String token, Map<String, dynamic> kid) {
+    _ref.read(kidTokenProvider.notifier).state = token;
+    _ref.read(kidProfileProvider.notifier).state = kid;
+    _ref.read(kidAuthStateProvider.notifier).state = KidAuthState(
+      isAuthenticated: true,
+      childName: kid['childName'] as String? ?? '',
+      standard: (kid['standard'] as num?)?.toInt() ?? 1,
+      educationTrack: (kid['educationTrack'] as String?) ?? 'primary',
+      token: token,
+    );
+  }
+
+  void clearSession() {
+    _ref.read(kidTokenProvider.notifier).state = null;
+    _ref.read(kidProfileProvider.notifier).state = null;
+    _ref.read(kidAuthStateProvider.notifier).state = const KidAuthState();
+  }
 
   void attach({
     required WidgetRef ref,
@@ -39,6 +57,7 @@ class KidLoginManager {
     _setStateFn = setState;
     _contextFn = getContext;
     _mountedFn = isMounted;
+    session = KidSessionManager(this);
   }
 
   void dispose() {
@@ -139,121 +158,6 @@ class KidLoginManager {
       nameCtrl.clear();
       kidPinCtrl.clear();
       newKidAvatar = '🦊';
-      await fetchChildren();
-    }
-  }
-
-  Future<void> loginAsKid(Map<String, dynamic> kid) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => KidPinDialog(
-        kidName: kid['childName'] as String? ?? 'Kid',
-        onSubmit: (pin) async {
-          Navigator.pop(context);
-          final result = await _buildClient().mutate(MutationOptions(
-            document: gql(kKidLogin),
-            variables: {'username': kid['username'], 'pinCode': pin},
-          ));
-          final data = result.data?['kidLogin'];
-          if (data?['success'] == true) {
-            final child = data['child'] as Map<String, dynamic>?;
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('kid_token', data['token'] as String);
-            final rt = data['refreshToken'] as String?;
-            if (rt != null && rt.isNotEmpty)
-              await prefs.setString('kid_refresh_token', rt);
-            await prefs.setString(
-                'kid_child_name',
-                child?['childName'] as String? ??
-                    kid['childName'] as String? ??
-                    '');
-            await prefs.setInt(
-                'kid_standard',
-                (child?['standard'] as num?)?.toInt() ??
-                    kid['standard'] as int? ??
-                    1);
-            await prefs.setString('kid_education_track',
-                child?['childEducationTrack'] as String? ?? 'primary');
-            _ref.read(kidTokenProvider.notifier).state = data['token'];
-            _ref.read(kidProfileProvider.notifier).state =
-                Map<String, dynamic>.from(kid);
-            _ref.read(kidAuthStateProvider.notifier).state = KidAuthState(
-              isAuthenticated: true,
-              childName: child?['childName'] as String? ??
-                  kid['childName'] as String? ??
-                  '',
-              standard: (child?['standard'] as num?)?.toInt() ??
-                  kid['standard'] as int? ??
-                  1,
-              educationTrack:
-                  child?['childEducationTrack'] as String? ?? 'primary',
-              token: data['token'],
-            );
-            if (mounted) context.go('/kids/learn');
-          } else if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(data?['errors']?.first ?? 'Wrong PIN'),
-                backgroundColor: DesignTokens.error));
-          }
-        },
-      ),
-    );
-  }
-
-  Future<void> logoutParent() async {
-    await SecureStorage.clearTokens();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('kid_token');
-    await prefs.remove('kid_refresh_token');
-    await prefs.remove('kid_child_name');
-    await prefs.remove('kid_standard');
-    await prefs.remove('kid_education_track');
-    if (!mounted) return;
-    _ref.read(kidTokenProvider.notifier).state = null;
-    _ref.read(kidProfileProvider.notifier).state = null;
-    _ref.read(kidAuthStateProvider.notifier).state = const KidAuthState();
-    setState(() {
-      parentToken = null;
-      children = null;
-      _client = null;
-    });
-  }
-
-  Future<void> restoreSavedSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    final kidToken = prefs.getString('kid_token');
-    final kidName = prefs.getString('kid_child_name');
-    final kidStandard = prefs.getInt('kid_standard');
-    final kidTrack = prefs.getString('kid_education_track');
-    if (!mounted) return;
-    if (kidToken != null &&
-        kidToken.isNotEmpty &&
-        kidName != null &&
-        kidName.isNotEmpty &&
-        kidStandard != null) {
-      _ref.read(kidTokenProvider.notifier).state = kidToken;
-      _ref.read(kidAuthStateProvider.notifier).state = KidAuthState(
-        isAuthenticated: true,
-        childName: kidName,
-        standard: kidStandard,
-        educationTrack:
-            (kidTrack == null || kidTrack.isEmpty) ? 'primary' : kidTrack,
-        token: kidToken,
-      );
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.go('/kids/learn');
-      });
-      return;
-    }
-    final pt2 = await SecureStorage.getToken();
-    if (pt2 != null && pt2.isNotEmpty) {
-      setState(() {
-        parentToken = pt2;
-        parentLoading = true;
-        error = null;
-        _client = null;
-      });
       await fetchChildren();
     }
   }

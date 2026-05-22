@@ -7,6 +7,8 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import 'quiz_question_card.dart';
+import 'quiz_timer_widget.dart';
 
 class QuizTakeScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -15,7 +17,8 @@ class QuizTakeScreen extends ConsumerStatefulWidget {
   ConsumerState<QuizTakeScreen> createState() => _QuizTakeScreenState();
 }
 
-class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBindingObserver {
+class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
+    with WidgetsBindingObserver {
   final Map<String, String?> _answers = {};
   int _time = 0;
   String? _attemptId;
@@ -40,7 +43,8 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       _paused = true;
     } else if (state == AppLifecycleState.resumed && _paused) {
       _paused = false;
@@ -61,9 +65,11 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
         variables: {'quizId': quizId},
       ));
       if (!mounted) return;
-      final attemptId = result.data?['startQuizAttempt']?['attempt']?['id'] as String?;
+      final attemptId =
+          result.data?['startQuizAttempt']?['attempt']?['id'] as String?;
       if (attemptId == null || attemptId.isEmpty) {
-        final message = result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not start quiz.';
+        final message = result.exception?.graphqlErrors.firstOrNull?.message ??
+            'Could not start quiz.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
         );
@@ -78,21 +84,29 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
   Future<void> _submit(GraphQLClient client) async {
     if (_submitting || _attemptId == null) return;
     setState(() => _submitting = true);
-    final answers = _answers.entries.map((e) => {
-      'questionId': e.key,
-      if (e.value != null) 'selectedAnswerId': e.value,
-    }).toList();
+    final answers = _answers.entries
+        .map((e) => {
+              'questionId': e.key,
+              if (e.value != null) 'selectedAnswerId': e.value,
+            })
+        .toList();
     try {
       final result = await client.mutate(MutationOptions(
         document: gql(kSubmitQuizAttempt),
-        variables: {'attemptId': _attemptId, 'answers': answers, 'timeTakenSeconds': _time},
+        variables: {
+          'attemptId': _attemptId,
+          'answers': answers,
+          'timeTakenSeconds': _time
+        },
       ));
       if (mounted) {
         setState(() => _submitting = false);
         if (result.hasException) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result.exception?.graphqlErrors.firstOrNull?.message ?? 'Submit failed'),
+              content: Text(
+                  result.exception?.graphqlErrors.firstOrNull?.message ??
+                      'Submit failed'),
               backgroundColor: DesignTokens.error,
             ),
           );
@@ -100,13 +114,17 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
         }
         final submitted = result.data?['submitQuizAttempt'];
         final attemptId = submitted?['attempt']?['id'] as String?;
-        if (submitted?['success'] == true && attemptId != null && attemptId.isNotEmpty) {
+        if (submitted?['success'] == true &&
+            attemptId != null &&
+            attemptId.isNotEmpty) {
           context.pushReplacement('/quiz-results/$attemptId');
           return;
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text((submitted?['errors'] as List?)?.firstOrNull?.toString() ?? 'Submit failed'),
+            content: Text(
+                (submitted?['errors'] as List?)?.firstOrNull?.toString() ??
+                    'Submit failed'),
             backgroundColor: DesignTokens.error,
           ),
         );
@@ -115,7 +133,8 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
       if (mounted) {
         setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: DesignTokens.error),
+          SnackBar(
+              content: Text('Error: $e'), backgroundColor: DesignTokens.error),
         );
       }
     }
@@ -126,9 +145,12 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     return Query(
-      options: QueryOptions(document: gql(kQuiz), variables: {'slug': widget.slug}),
+      options:
+          QueryOptions(document: gql(kQuiz), variables: {'slug': widget.slug}),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (result.isLoading)
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
         if (result.hasException)
           return Scaffold(
             body: ErrorState(
@@ -138,52 +160,48 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
             ),
           );
         final quiz = result.data?['quiz'];
-        if (quiz == null) return const Scaffold(body: Center(child: Text('Quiz not found')));
+        if (quiz == null)
+          return const Scaffold(body: Center(child: Text('Quiz not found')));
         final questions = (quiz['questions'] as List?) ?? [];
         final quizId = quiz['id'] as String?;
-        if (quizId != null && quizId.isNotEmpty && _attemptId == null && !_startingAttempt) {
+        if (quizId != null &&
+            quizId.isNotEmpty &&
+            _attemptId == null &&
+            !_startingAttempt) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               _startAttempt(quizId, ref.read(graphqlClientProvider));
             }
           });
         }
-        final mins = _time ~/ 60;
-        final secs = _time % 60;
         final answered = _answers.length;
         return Scaffold(
           appBar: AppBar(
             title: Text(quiz['title'] ?? '', overflow: TextOverflow.ellipsis),
             actions: [
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: dark ? DesignTokens.warning.withValues(alpha: 0.15) : DesignTokens.warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.timer, size: 16, color: DesignTokens.warning),
-                  const SizedBox(width: 4),
-                  Text('${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}', style: const TextStyle(fontWeight: FontWeight.w600, color: DesignTokens.warning)),
-                ]),
-              ),
+              QuizTimerWidget(seconds: _time),
             ],
           ),
           body: Column(children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(children: [
-                Text('$answered/${questions.length} answered', style: theme.textTheme.bodySmall),
+                Text('$answered/${questions.length} answered',
+                    style: theme.textTheme.bodySmall),
                 const Spacer(),
-                Text('${(answered / (questions.isEmpty ? 1 : questions.length) * 100).round()}%', style: theme.textTheme.bodySmall),
+                Text(
+                    '${(answered / (questions.isEmpty ? 1 : questions.length) * 100).round()}%',
+                    style: theme.textTheme.bodySmall),
               ]),
             ),
             if (questions.isNotEmpty)
               LinearProgressIndicator(
                 value: answered / questions.length,
-                backgroundColor: dark ? DesignTokens.surfaceVariant : DesignTokens.border,
-                color: answered == questions.length ? DesignTokens.success : DesignTokens.primary,
+                backgroundColor:
+                    dark ? DesignTokens.surfaceVariant : DesignTokens.border,
+                color: answered == questions.length
+                    ? DesignTokens.success
+                    : DesignTokens.primary,
                 minHeight: 4,
               ),
             const SizedBox(height: 8),
@@ -194,40 +212,13 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
                 itemBuilder: (_, i) {
                   final q = questions[i] as Map<String, dynamic>;
                   final qId = q['id'] as String? ?? '$i';
-                  final options = (q['answers'] as List?) ?? [];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Q${i + 1}. ${q['questionText'] ?? ''}', style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 12),
-                        ...options.map((opt) {
-                          final optId = opt['id'] as String? ?? '';
-                          final selected = _answers[qId] == optId;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: InkWell(
-                              onTap: () => setState(() => _answers[qId] = optId),
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: selected ? DesignTokens.primary : DesignTokens.border),
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: selected ? DesignTokens.primary.withValues(alpha: 0.08) : null,
-                                ),
-                                child: Row(children: [
-                                  Icon(selected ? Icons.radio_button_checked : Icons.radio_button_unchecked, size: 20, color: selected ? DesignTokens.primary : DesignTokens.textTertiary),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: Text(opt['answerText'] ?? '', style: theme.textTheme.bodyMedium)),
-                                ]),
-                              ),
-                            ),
-                          );
-                        }),
-                      ]),
-                    ),
+                  return QuizQuestionCard(
+                    index: i,
+                    questionId: qId,
+                    questionText: q['questionText'] ?? '',
+                    options: (q['answers'] as List?) ?? [],
+                    selectedAnswerId: _answers[qId],
+                    onSelect: (optId) => setState(() => _answers[qId] = optId),
                   );
                 },
               ),
@@ -237,12 +228,18 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: (_submitting || _attemptId == null || answered == 0) ? null : () {
-                    _submit(ref.read(graphqlClientProvider));
-                  },
+                  onPressed:
+                      (_submitting || _attemptId == null || answered == 0)
+                          ? null
+                          : () {
+                              _submit(ref.read(graphqlClientProvider));
+                            },
                   child: _submitting
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text('Submit ($answered/${questions.length})'),
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : Text('Submit ($answered/${questions.length})'),
                 ),
               ),
             ),

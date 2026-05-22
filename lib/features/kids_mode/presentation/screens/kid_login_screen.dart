@@ -25,7 +25,7 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
         setState: setState,
         getContext: () => context,
         isMounted: () => mounted);
-    _mgr.restoreSavedSession();
+    _mgr.session.restoreSavedSession();
   }
 
   @override
@@ -68,8 +68,8 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
         avatars: _mgr.avatars,
         parentToken: _mgr.parentToken,
         onCreateKid: _showCreateKidDialog,
-        onLoginKid: (kid) => _mgr.loginAsKid(kid),
-        onLogout: () => _mgr.logoutParent(),
+        onLoginKid: (kid) => _mgr.session.loginAsKid(kid),
+        onLogout: () => _mgr.session.logoutParent(),
       );
     }
     return Theme(

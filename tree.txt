@@ -1,0 +1,376 @@
+.
+├── core
+│   ├── config
+│   │   └── app_config.dart
+│   ├── graphql
+│   │   ├── client.dart
+│   │   ├── graphql_options.dart
+│   │   └── queries
+│   │       ├── domain
+│   │       │   ├── account_queries.dart
+│   │       │   ├── ai_queries.dart
+│   │       │   ├── auth_queries.dart
+│   │       │   ├── circle_queries.dart
+│   │       │   ├── dashboard_queries.dart
+│   │       │   ├── education_queries.dart
+│   │       │   ├── kid_queries.dart
+│   │       │   ├── material_queries.dart
+│   │       │   ├── notification_queries.dart
+│   │       │   ├── payment_queries.dart
+│   │       │   ├── quiz_queries.dart
+│   │       │   ├── scanner_queries.dart
+│   │       │   └── site_queries.dart
+│   │       └── queries.dart
+│   ├── network
+│   ├── services
+│   │   ├── analytics_service.dart
+│   │   ├── app_preferences_service.dart
+│   │   ├── connectivity_service.dart
+│   │   ├── download_service.dart
+│   │   ├── material_cache_service.dart
+│   │   ├── material_upload_service.dart
+│   │   ├── notification_service.dart
+│   │   ├── retention_service.dart
+│   │   └── study_progress_store.dart
+│   ├── storage
+│   │   └── secure_storage.dart
+│   ├── theme
+│   │   ├── app_theme.dart
+│   │   └── design_tokens.dart
+│   └── widgets
+│       ├── animated_press.dart
+│       ├── bento_card.dart
+│       ├── empty_state.dart
+│       ├── error_state.dart
+│       ├── glass_card.dart
+│       ├── loading_overlay.dart
+│       ├── offline_banner.dart
+│       ├── section_header.dart
+│       ├── shimmer_box.dart
+│       └── widgets.dart
+├── features
+│   ├── account
+│   │   └── presentation
+│   │       ├── screens
+│   │       │   ├── bookmarks_screen.dart
+│   │       │   ├── edit_profile_screen.dart
+│   │       │   ├── history_screen.dart
+│   │       │   ├── past_paper_detail_screen.dart
+│   │       │   ├── past_paper_library_screen.dart
+│   │       │   ├── past_papers_screen.dart
+│   │       │   ├── quiz_share_screen.dart
+│   │       │   ├── upgrade_screen.dart
+│   │       │   └── upload_material_screen.dart
+│   │       └── widgets
+│   │           ├── education_pickers.dart
+│   │           └── upload_success_sheet.dart
+│   ├── ai_tutor
+│   │   └── presentation
+│   │       ├── providers
+│   │       ├── screens
+│   │       │   └── ai_tutor_screen.dart
+│   │       └── widgets
+│   │           ├── ai_tutor_bubbles.dart
+│   │           ├── ai_tutor_empty_state.dart
+│   │           ├── ai_tutor_header.dart
+│   │           ├── ai_tutor_input_bar.dart
+│   │           ├── ai_tutor_mode_bar.dart
+│   │           ├── ai_tutor_preferences_sheet.dart
+│   │           └── ai_tutor_snapshot_cards.dart
+│   ├── auth
+│   │   ├── data
+│   │   └── presentation
+│   │       ├── providers
+│   │       │   └── auth_provider.dart
+│   │       └── screens
+│   │           ├── login_screen.dart
+│   │           ├── onboarding_screen.dart
+│   │           ├── profile_setup_screen.dart
+│   │           ├── register_screen.dart
+│   │           └── splash_screen.dart
+│   ├── circles
+│   │   └── presentation
+│   │       ├── providers
+│   │       ├── screens
+│   │       │   ├── circle_detail_screen.dart
+│   │       │   ├── circles_screen.dart
+│   │       │   └── post_detail_screen.dart
+│   │       └── widgets
+│   │           └── circle_post_card.dart
+│   ├── dashboard
+│   │   └── presentation
+│   │       ├── providers
+│   │       ├── screens
+│   │       │   └── dashboard_screen.dart
+│   │       └── widgets
+│   │           ├── dashboard_adaptive_plan_card.dart
+│   │           ├── dashboard_focus_coach_card.dart
+│   │           ├── dashboard_hero_header.dart
+│   │           ├── dashboard_material_cards.dart
+│   │           ├── dashboard_progress_snapshot_card.dart
+│   │           └── dashboard_quick_actions.dart
+│   ├── kids_mode
+│   │   ├── data
+│   │   │   └── kid_graphql_client.dart
+│   │   ├── kids_visual_theme.dart
+│   │   └── presentation
+│   │       ├── screens
+│   │       │   ├── kid_login_screen.dart
+│   │       │   ├── kids_home_screen.dart
+│   │       │   ├── kids_journey_screen.dart
+│   │       │   └── parent_kids_progress_screen.dart
+│   │       └── widgets
+│   │           ├── kid_auth_widgets.dart
+│   │           ├── kids_daily_goal_ring.dart
+│   │           ├── kids_home_sections.dart
+│   │           ├── kids_lesson_step_bar.dart
+│   │           ├── kids_mission_board.dart
+│   │           ├── kids_playful_button.dart
+│   │           ├── kids_progress_snapshot_card.dart
+│   │           ├── kids_reward_panel.dart
+│   │           ├── kids_story_chunk_card.dart
+│   │           ├── kids_subject_card.dart
+│   │           ├── kids_topic_chip.dart
+│   │           ├── kids_topic_roadmap_card.dart
+│   │           ├── kids_visual_lesson.dart
+│   │           ├── kids_world_map.dart
+│   │           └── parent_kid_summary_card.dart
+│   ├── leaderboard
+│   │   └── presentation
+│   │       └── screens
+│   │           └── leaderboard_screen.dart
+│   ├── materials
+│   │   └── presentation
+│   │       ├── providers
+│   │       ├── reader
+│   │       │   ├── material_content_readers.dart
+│   │       │   ├── material_reader_helpers.dart
+│   │       │   ├── material_reader_models.dart
+│   │       │   ├── material_reader_screen.dart
+│   │       │   ├── material_reader_services.dart
+│   │       │   ├── reader_chrome.dart
+│   │       │   └── reader_support_sheets.dart
+│   │       ├── screens
+│   │       │   ├── material_detail_screen.dart
+│   │       │   ├── material_reader_screen.dart
+│   │       │   ├── materials_screen.dart
+│   │       │   └── my_uploads_screen.dart
+│   │       └── widgets
+│   │           └── material_widgets.dart
+│   ├── notifications
+│   │   └── presentation
+│   │       └── screens
+│   │           └── notifications_screen.dart
+│   ├── profile
+│   │   └── presentation
+│   │       ├── providers
+│   │       └── screens
+│   │           ├── about_screen.dart
+│   │           ├── profile_screen.dart
+│   │           └── site_page_screen.dart
+│   ├── quizzes
+│   │   └── presentation
+│   │       ├── providers
+│   │       └── screens
+│   │           ├── quiz_results_screen.dart
+│   │           ├── quiz_take_screen.dart
+│   │           └── quizzes_screen.dart
+│   └── scanner
+│       └── presentation
+│           ├── providers
+│           └── screens
+│               ├── scanner_results_screen.dart
+│               └── scanner_screen.dart
+├── main.dart
+├── router.dart
+└── shell.dart
+
+65 directories, 121 files
+.
+├── core
+│   ├── config
+│   │   └── app_config.dart
+│   ├── graphql
+│   │   ├── client.dart
+│   │   ├── graphql_options.dart
+│   │   └── queries
+│   │       ├── domain
+│   │       │   ├── account_queries.dart
+│   │       │   ├── ai_queries.dart
+│   │       │   ├── auth_queries.dart
+│   │       │   ├── circle_queries.dart
+│   │       │   ├── dashboard_queries.dart
+│   │       │   ├── education_queries.dart
+│   │       │   ├── kid_queries.dart
+│   │       │   ├── material_queries.dart
+│   │       │   ├── notification_queries.dart
+│   │       │   ├── payment_queries.dart
+│   │       │   ├── quiz_queries.dart
+│   │       │   ├── scanner_queries.dart
+│   │       │   └── site_queries.dart
+│   │       └── queries.dart
+│   ├── network
+│   ├── services
+│   │   ├── analytics_service.dart
+│   │   ├── app_preferences_service.dart
+│   │   ├── connectivity_service.dart
+│   │   ├── download_service.dart
+│   │   ├── material_cache_service.dart
+│   │   ├── material_upload_service.dart
+│   │   ├── notification_service.dart
+│   │   ├── retention_service.dart
+│   │   └── study_progress_store.dart
+│   ├── storage
+│   │   └── secure_storage.dart
+│   ├── theme
+│   │   ├── app_theme.dart
+│   │   └── design_tokens.dart
+│   └── widgets
+│       ├── animated_press.dart
+│       ├── bento_card.dart
+│       ├── empty_state.dart
+│       ├── error_state.dart
+│       ├── glass_card.dart
+│       ├── loading_overlay.dart
+│       ├── offline_banner.dart
+│       ├── section_header.dart
+│       ├── shimmer_box.dart
+│       └── widgets.dart
+├── features
+│   ├── account
+│   │   └── presentation
+│   │       ├── screens
+│   │       │   ├── bookmarks_screen.dart
+│   │       │   ├── edit_profile_screen.dart
+│   │       │   ├── history_screen.dart
+│   │       │   ├── past_paper_detail_screen.dart
+│   │       │   ├── past_paper_library_screen.dart
+│   │       │   ├── past_papers_screen.dart
+│   │       │   ├── quiz_share_screen.dart
+│   │       │   ├── upgrade_screen.dart
+│   │       │   └── upload_material_screen.dart
+│   │       └── widgets
+│   │           ├── education_pickers.dart
+│   │           └── upload_success_sheet.dart
+│   ├── ai_tutor
+│   │   └── presentation
+│   │       ├── providers
+│   │       ├── screens
+│   │       │   └── ai_tutor_screen.dart
+│   │       └── widgets
+│   │           ├── ai_tutor_bubbles.dart
+│   │           ├── ai_tutor_empty_state.dart
+│   │           ├── ai_tutor_header.dart
+│   │           ├── ai_tutor_input_bar.dart
+│   │           ├── ai_tutor_mode_bar.dart
+│   │           ├── ai_tutor_preferences_sheet.dart
+│   │           └── ai_tutor_snapshot_cards.dart
+│   ├── auth
+│   │   ├── data
+│   │   └── presentation
+│   │       ├── providers
+│   │       │   └── auth_provider.dart
+│   │       └── screens
+│   │           ├── login_screen.dart
+│   │           ├── onboarding_screen.dart
+│   │           ├── profile_setup_screen.dart
+│   │           ├── register_screen.dart
+│   │           └── splash_screen.dart
+│   ├── circles
+│   │   └── presentation
+│   │       ├── providers
+│   │       ├── screens
+│   │       │   ├── circle_detail_screen.dart
+│   │       │   ├── circles_screen.dart
+│   │       │   └── post_detail_screen.dart
+│   │       └── widgets
+│   │           └── circle_post_card.dart
+│   ├── dashboard
+│   │   └── presentation
+│   │       ├── providers
+│   │       ├── screens
+│   │       │   └── dashboard_screen.dart
+│   │       └── widgets
+│   │           ├── dashboard_adaptive_plan_card.dart
+│   │           ├── dashboard_focus_coach_card.dart
+│   │           ├── dashboard_hero_header.dart
+│   │           ├── dashboard_material_cards.dart
+│   │           ├── dashboard_progress_snapshot_card.dart
+│   │           └── dashboard_quick_actions.dart
+│   ├── kids_mode
+│   │   ├── data
+│   │   │   └── kid_graphql_client.dart
+│   │   ├── kids_visual_theme.dart
+│   │   └── presentation
+│   │       ├── screens
+│   │       │   ├── kid_login_screen.dart
+│   │       │   ├── kids_home_screen.dart
+│   │       │   ├── kids_journey_screen.dart
+│   │       │   └── parent_kids_progress_screen.dart
+│   │       └── widgets
+│   │           ├── kid_auth_widgets.dart
+│   │           ├── kids_daily_goal_ring.dart
+│   │           ├── kids_home_sections.dart
+│   │           ├── kids_lesson_step_bar.dart
+│   │           ├── kids_mission_board.dart
+│   │           ├── kids_playful_button.dart
+│   │           ├── kids_progress_snapshot_card.dart
+│   │           ├── kids_reward_panel.dart
+│   │           ├── kids_story_chunk_card.dart
+│   │           ├── kids_subject_card.dart
+│   │           ├── kids_topic_chip.dart
+│   │           ├── kids_topic_roadmap_card.dart
+│   │           ├── kids_visual_lesson.dart
+│   │           ├── kids_world_map.dart
+│   │           └── parent_kid_summary_card.dart
+│   ├── leaderboard
+│   │   └── presentation
+│   │       └── screens
+│   │           └── leaderboard_screen.dart
+│   ├── materials
+│   │   └── presentation
+│   │       ├── providers
+│   │       ├── reader
+│   │       │   ├── material_content_readers.dart
+│   │       │   ├── material_reader_helpers.dart
+│   │       │   ├── material_reader_models.dart
+│   │       │   ├── material_reader_screen.dart
+│   │       │   ├── material_reader_services.dart
+│   │       │   ├── reader_chrome.dart
+│   │       │   └── reader_support_sheets.dart
+│   │       ├── screens
+│   │       │   ├── material_detail_screen.dart
+│   │       │   ├── material_reader_screen.dart
+│   │       │   ├── materials_screen.dart
+│   │       │   └── my_uploads_screen.dart
+│   │       └── widgets
+│   │           └── material_widgets.dart
+│   ├── notifications
+│   │   └── presentation
+│   │       └── screens
+│   │           └── notifications_screen.dart
+│   ├── profile
+│   │   └── presentation
+│   │       ├── providers
+│   │       └── screens
+│   │           ├── about_screen.dart
+│   │           ├── profile_screen.dart
+│   │           └── site_page_screen.dart
+│   ├── quizzes
+│   │   └── presentation
+│   │       ├── providers
+│   │       └── screens
+│   │           ├── quiz_results_screen.dart
+│   │           ├── quiz_take_screen.dart
+│   │           └── quizzes_screen.dart
+│   └── scanner
+│       └── presentation
+│           ├── providers
+│           └── screens
+│               ├── scanner_results_screen.dart
+│               └── scanner_screen.dart
+├── main.dart
+├── router.dart
+└── shell.dart
+
+65 directories, 121 files

@@ -47,16 +47,32 @@ class AiTutorManager {
     _streamService = AiTutorStreamService();
   }
 
-  Future<String?> _getToken() async => SecureStorage.getToken();
+  Map<String, dynamic> _messageMap(String text, bool isUser) => {
+    'messageText': text,
+    if (!isUser) 'displayText': text,
+    'isUser': isUser,
+    'timestamp': DateTime.now().toIso8601String(),
+  };
+
+  void _resetStream() => _setState(() {
+    sending = false;
+    streaming = false;
+    streamingText = '';
+  });
+
+  void _addAiMessage(String msg) {
+    _setState(() {
+      messages.add(_messageMap(msg, false));
+      streamingText = '';
+      sending = false;
+      streaming = false;
+    });
+    loadTutorSnapshot();
+  }
 
   void addUserMessage(String text) {
     _setState(() {
-      messages.add({
-        'messageText': text,
-        'displayText': text,
-        'isUser': true,
-        'timestamp': DateTime.now().toIso8601String(),
-      });
+      messages.add(_messageMap(text, true));
       sending = true;
       streaming = true;
       streamingText = '';
@@ -67,14 +83,8 @@ class AiTutorManager {
     if (text.isEmpty || sending) return;
     addUserMessage(text);
     _onScrollDown.call();
-    final token = await _getToken();
-    if (token == null) {
-      _setState(() {
-        sending = false;
-        streaming = false;
-      });
-      return;
-    }
+    final token = await SecureStorage.getToken();
+    if (token == null) { _resetStream(); return; }
     try {
       await _streamService.sendStream(
         text: text,
@@ -83,59 +93,24 @@ class AiTutorManager {
         token: token,
         httpClient: httpClient,
         onToken: (t) => _setState(() => streamingText += t),
-        onAddMessage: (msg) {
-          _setState(() {
-            messages.add({
-              'messageText': msg,
-              'isUser': false,
-              'timestamp': DateTime.now().toIso8601String(),
-            });
-            streamingText = '';
-            sending = false;
-            streaming = false;
-          });
-          loadTutorSnapshot();
-        },
+        onAddMessage: _addAiMessage,
         onSessionId: (id) => sessionId = id,
         onError: (msg) {
-          if (!_isMounted()) return;
-          _setState(() {
-            sending = false;
-            streaming = false;
-            streamingText = '';
-          });
-          _onShowError.call(msg);
+          if (_isMounted()) { _resetStream(); _onShowError(msg); }
         },
         onScrollDown: _onScrollDown,
       );
       if (!_isMounted() || !streaming) return;
       if (streamingText.trim().isNotEmpty) {
-        _setState(() {
-          messages.add({
-            'messageText': streamingText.trim(),
-            'isUser': false,
-            'timestamp': DateTime.now().toIso8601String(),
-          });
-          streamingText = '';
-          sending = false;
-          streaming = false;
-        });
-        loadTutorSnapshot();
+        _addAiMessage(streamingText.trim());
         _onScrollDown.call();
       } else {
-        _setState(() {
-          sending = false;
-          streaming = false;
-        });
-        _onShowError
-            .call('Tutor response ended unexpectedly. Please try again.');
+        _resetStream();
+        _onShowError.call('Tutor response ended unexpectedly. Please try again.');
       }
     } catch (_) {
       if (!_isMounted()) return;
-      _setState(() {
-        sending = false;
-        streaming = false;
-      });
+      _resetStream();
       _onShowError.call('Connection lost. Please try again.');
     }
   }
@@ -153,9 +128,7 @@ class AiTutorManager {
         prefersStepByStep = profile['prefersStepByStep'] as bool? ?? true;
         detailLevel = profile['detailLevel'] as int? ?? 2;
       });
-    } catch (_) {
-      if (!_isMounted()) return;
-    }
+    } catch (_) {}
   }
 
   Future<void> loadTutorSnapshot() async {
@@ -178,8 +151,7 @@ class AiTutorManager {
         snapshotLoading = false;
       });
     } catch (_) {
-      if (!_isMounted()) return;
-      _setState(() => snapshotLoading = false);
+      if (_isMounted()) _setState(() => snapshotLoading = false);
     }
   }
 
@@ -228,11 +200,8 @@ class AiTutorManager {
       await loadTutorSnapshot();
       return;
     }
-    final errors = (payload?['errors'] as List?)
-        ?.map((item) => item.toString())
-        .join(', ');
-    _onShowError
-        .call(errors?.isNotEmpty == true ? errors! : 'Could not build a plan.');
+    final errMsg = (payload?['errors'] as List?)?.cast<String>().join(', ');
+    _onShowError(errMsg?.isNotEmpty == true ? errMsg! : 'Could not build a plan.');
   }
 
   Future<void> saveLearningProfile({
@@ -249,12 +218,9 @@ class AiTutorManager {
         prefersStepByStep: prefersStepByStep,
         detailLevel: detailLevel,
       );
-      final errors =
-          (payload?['errors'] as List?)?.whereType<String>().toList() ??
-              const <String>[];
       if (payload?['success'] != true) {
-        final message = errors.firstOrNull ?? 'Could not save preferences.';
-        if (_isMounted()) _onShowError.call(message);
+        final errMsg = (payload?['errors'] as List?)?.map((e) => e.toString()).join(', ');
+        if (_isMounted()) _onShowError(errMsg?.isNotEmpty == true ? errMsg! : 'Could not save preferences.');
         return;
       }
       if (!_isMounted()) return;

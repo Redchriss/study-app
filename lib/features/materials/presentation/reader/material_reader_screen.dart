@@ -4,17 +4,16 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/material_cache_service.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
-import 'image_material_reader.dart';
-import 'pdf_material_reader.dart';
-import 'text_material_reader.dart';
-import 'video_material_reader.dart';
+import 'material_reader_error_handler.dart';
 import 'material_reader_helpers.dart';
 import 'material_reader_models.dart';
+import 'material_reader_selector.dart';
 import 'material_reader_services.dart';
-import 'reader_chrome.dart';
+import 'reader_ai_action_sheet.dart';
 import 'reader_annotation_sheets.dart';
 import 'reader_flashcards_sheet.dart';
+import 'reader_loading.dart';
+import 'reader_not_found.dart';
 import 'reader_quiz_sheet.dart';
 
 class MaterialReaderScreen extends StatefulWidget {
@@ -31,6 +30,24 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
   final _cache = MaterialCacheService();
   var _aiActionBusy = false;
 
+  void _showResultSnackBar(ReaderServiceResult result, String onSuccess, String onFail) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result.success ? onSuccess : (result.message ?? onFail)),
+        backgroundColor: result.success ? DesignTokens.success : DesignTokens.error,
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: DesignTokens.error,
+      ),
+    );
+  }
+
   Future<void> _saveAnnotation(
       ReaderStudySelection selection, VoidCallback? refetch) async {
     final draft =
@@ -45,16 +62,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       color: draft.color,
     );
     if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(result.success
-            ? 'Annotation saved'
-            : (result.message ?? 'Could not save annotation.')),
-        backgroundColor:
-            result.success ? DesignTokens.success : DesignTokens.error,
-      ),
-    );
+    _showResultSnackBar(result, 'Annotation saved', 'Could not save annotation.');
     if (result.success) refetch?.call();
   }
 
@@ -69,15 +77,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
           annotationId: annotation.id,
         );
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.success
-                ? 'Annotation removed'
-                : (result.message ?? 'Could not delete annotation.')),
-            backgroundColor:
-                result.success ? DesignTokens.success : DesignTokens.error,
-          ),
-        );
+        _showResultSnackBar(result, 'Annotation removed', 'Could not delete annotation.');
         if (result.success) {
           Navigator.of(context).pop();
           refetch?.call();
@@ -109,15 +109,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         );
         if (!mounted) return;
         setState(() => _aiActionBusy = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.message ??
-                result.errors.firstOrNull ??
-                'Flashcard request failed.'),
-            backgroundColor:
-                result.success ? DesignTokens.success : DesignTokens.error,
-          ),
-        );
+        _showResultSnackBar(result, 'Flashcards requested', result.message ?? result.errors.firstOrNull ?? 'Flashcard request failed.');
         if (result.success) refetch?.call();
       },
     );
@@ -127,43 +119,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     required ReaderMaterialData material,
     required ReaderStudySelection selection,
   }) async {
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Ask AI About This Section',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 12),
-                for (final item in const [
-                  ('explain', 'Explain this section', Icons.lightbulb_outline),
-                  (
-                    'summary',
-                    'Summarize this section',
-                    Icons.summarize_outlined
-                  ),
-                  (
-                    'memory',
-                    'Create a memory hook',
-                    Icons.psychology_alt_outlined
-                  ),
-                ])
-                  ListTile(
-                    leading: Icon(item.$3),
-                    title: Text(item.$2),
-                    onTap: () => Navigator.of(context).pop(item.$1),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    final action = await showReaderAiActionSheet(context);
     if (action == null || material.id.isEmpty || !mounted) return;
 
     final prompt = switch (action) {
@@ -206,13 +162,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       onSuccess: (reply) async {
         final quiz = parseQuickQuizPayload(reply);
         if (quiz == null || !mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                  'AI could not shape a mini quiz from this section right now.'),
-              backgroundColor: DesignTokens.error,
-            ),
-          );
+          _showErrorSnackBar('AI could not shape a mini quiz from this section right now.');
           return;
         }
         await showReaderQuickQuizSheet(context, quiz: quiz);
@@ -235,14 +185,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     Navigator.of(context).pop();
 
     if (!result.success || result.data == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.message ??
-              result.errors.firstOrNull ??
-              'AI could not help right now.'),
-          backgroundColor: DesignTokens.error,
-        ),
-      );
+      _showErrorSnackBar(result.message ?? result.errors.firstOrNull ?? 'AI could not help right now.');
       return;
     }
 
@@ -259,74 +202,22 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       ),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading && result.data == null) {
-          return const ReaderScaffold(
-            title: 'Study mode',
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return const ReaderLoading();
         }
         final rawMaterial = result.data?['material'];
         if (result.hasException && rawMaterial is! Map) {
-          return FutureBuilder<Map<String, dynamic>?>(
-            future: _cache.loadMaterial(widget.slug),
-            builder: (context, snapshot) {
-              final cached = snapshot.data;
-              if (cached == null) {
-                return ReaderScaffold(
-                  title: 'Study mode',
-                  child: ErrorState(
-                    message: result.exception?.graphqlErrors.firstOrNull?.message ??
-                        'Could not open this material.',
-                    onRetry: () => refetch?.call(),
-                  ),
-                );
-              }
-              return Stack(
-                children: [
-                  _buildReaderForMaterial(
-                    ReaderMaterialData.fromMap(widget.slug, cached),
-                    refetch,
-                  ),
-                  Positioned(
-                    top: 16,
-                    left: 16,
-                    right: 16,
-                    child: IgnorePointer(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: DesignTokens.warning.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.offline_bolt_outlined,
-                                color: Colors.white, size: 18),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'You are studying from cached material data.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
+          return MaterialReaderErrorHandler(
+            slug: widget.slug,
+            errorMessage: result.exception?.graphqlErrors.firstOrNull?.message ??
+                'Could not open this material.',
+            onRetry: () => refetch?.call(),
+            cache: _cache,
+            onCachedData: (material) =>
+                _buildReaderForMaterial(material, refetch),
           );
         }
         if (rawMaterial is! Map) {
-          return const ReaderScaffold(
-            title: 'Study mode',
-            child: Center(child: Text('Material not found.')),
-          );
+          return const ReaderNotFound();
         }
         _cache.saveMaterial(
             widget.slug, Map<String, dynamic>.from(rawMaterial));
@@ -339,94 +230,19 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
 
   Widget _buildReaderForMaterial(
       ReaderMaterialData material, VoidCallback? refetch) {
-    final theme = Theme.of(context);
-    if (material.isPdf) {
-      if (material.fileUrl.isEmpty) {
-        return ReaderScaffold(
-          title: material.title,
-          child:
-              const Center(child: Text('This PDF is not available right now.')),
-        );
-      }
-      return PdfMaterialReader(
-        material: material,
-        service: _service,
-        onOpenAnnotations: () =>
-            _openAnnotations(material.annotations, refetch),
-        onOpenFlashcards: () => _openFlashcards(material, refetch),
-        onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
-        onQuickQuiz: (selection) =>
-            _runQuickQuiz(material: material, selection: selection),
-        onAskAi: material.id.isEmpty
-            ? null
-            : (selection) =>
-                _askReaderAi(material: material, selection: selection),
-      );
-    }
-
-    if (material.isReadableText) {
-      return TextMaterialReader(
-        material: material,
-        service: _service,
-        onOpenAnnotations: () =>
-            _openAnnotations(material.annotations, refetch),
-        onOpenFlashcards: () => _openFlashcards(material, refetch),
-        onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
-        onQuickQuiz: (selection) =>
-            _runQuickQuiz(material: material, selection: selection),
-        onAskAi: material.id.isEmpty
-            ? null
-            : (selection) =>
-                _askReaderAi(material: material, selection: selection),
-      );
-    }
-
-    if (material.isVideo) {
-      return VideoMaterialReader(
-        material: material,
-        service: _service,
-        onOpenAnnotations: () =>
-            _openAnnotations(material.annotations, refetch),
-        onOpenFlashcards: () => _openFlashcards(material, refetch),
-        onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
-        onQuickQuiz: (selection) =>
-            _runQuickQuiz(material: material, selection: selection),
-        onAskAi: material.id.isEmpty
-            ? null
-            : (selection) =>
-                _askReaderAi(material: material, selection: selection),
-      );
-    }
-
-    if (material.isImage) {
-      return ImageMaterialReader(
-        material: material,
-        service: _service,
-        onOpenAnnotations: () =>
-            _openAnnotations(material.annotations, refetch),
-        onOpenFlashcards: () => _openFlashcards(material, refetch),
-        onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
-        onQuickQuiz: (selection) =>
-            _runQuickQuiz(material: material, selection: selection),
-        onAskAi: material.id.isEmpty
-            ? null
-            : (selection) =>
-                _askReaderAi(material: material, selection: selection),
-      );
-    }
-
-    return ReaderScaffold(
-      title: material.title,
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            'Study mode is currently available for PDF, text, video, and image materials.',
-            style: theme.textTheme.bodyLarge,
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
+    return MaterialReaderSelector(
+      material: material,
+      service: _service,
+      onOpenAnnotations: () =>
+          _openAnnotations(material.annotations, refetch),
+      onOpenFlashcards: () => _openFlashcards(material, refetch),
+      onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
+      onQuickQuiz: (selection) =>
+          _runQuickQuiz(material: material, selection: selection),
+      onAskAi: material.id.isEmpty
+          ? null
+          : (selection) =>
+              _askReaderAi(material: material, selection: selection),
     );
   }
 }

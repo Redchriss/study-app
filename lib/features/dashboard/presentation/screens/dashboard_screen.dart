@@ -17,6 +17,13 @@ import '../widgets/dashboard_focus_coach_card.dart';
 import '../widgets/dashboard_adaptive_plan_card.dart';
 import '../widgets/dashboard_progress_snapshot_card.dart';
 import '../widgets/dashboard_material_cards.dart';
+import '../widgets/dashboard_loading.dart';
+
+List<String> _toStringList(dynamic raw) => ((raw as List?) ?? const [])
+    .map((e) => e is Map ? (e['name']?.toString() ?? '') : e.toString())
+    .where((s) => s.trim().isNotEmpty)
+    .cast<String>()
+    .toList();
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -64,7 +71,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Query(
       options: QueryOptions(document: gql(kDashboard)),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) return Scaffold(body: _buildLoadingShimmer());
+        if (result.isLoading) return const Scaffold(body: DashboardLoading());
         if (result.hasException) {
           return Scaffold(
             body: ErrorState(
@@ -91,12 +98,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final streak = (profile?['studyStreak'] as num?)?.toInt() ?? 0;
         final points = (profile?['studyPoints'] as num?)?.toInt() ?? 0;
         final credits = (profile?['aiCredits'] as num?)?.toInt() ?? 0;
-
-        List<String> _toStringList(dynamic raw) => ((raw as List?) ?? const [])
-            .map((e) => e is Map ? (e['name']?.toString() ?? '') : e.toString())
-            .where((s) => s.trim().isNotEmpty)
-            .cast<String>()
-            .toList();
 
         final weakestTopics = _toStringList(snap?['weakestTopics']);
         final strongestTopics = _toStringList(snap?['strongestTopics']);
@@ -232,34 +233,4 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildLoadingShimmer() {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Column(
-            children: [
-              const ShimmerBox(height: 220, radius: 0),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    const ShimmerBox(height: 90, radius: 16),
-                    const SizedBox(height: 12),
-                    Row(children: const [
-                      Expanded(child: ShimmerBox(height: 90, radius: 16)),
-                      SizedBox(width: 10),
-                      Expanded(child: ShimmerBox(height: 90, radius: 16)),
-                    ]),
-                    const SizedBox(height: 12),
-                    const ShimmerBox(height: 120, radius: 16),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }

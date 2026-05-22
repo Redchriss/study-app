@@ -16,10 +16,10 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 ## Active Bugs
 
 ### [BUG-001] 31 files exceed 250-line limit
-**Priority:** 🟡 HIGH
-**Description:** Major god-widget problem. Worst offenders: kids_home_screen.dart (817), kid_login_screen.dart (723), kids_visual_lesson.dart (721), profile_setup_screen.dart (714), ai_tutor_screen.dart (693), scanner_screen.dart (672), material_content_readers.dart (670), upload_material_screen.dart (654), profile_screen.dart (646), onboarding_screen.dart (617), about_screen.dart (613), reader_support_sheets.dart (570), edit_profile_screen.dart (538), kids_home_sections.dart (535), circle_detail_screen.dart (446), scanner_results_screen.dart (445), material_detail_screen.dart (438), register_screen.dart (424), materials_screen.dart (417), education_pickers.dart (394), material_reader_screen.dart (375), router.dart (350), my_uploads_screen.dart (349), material_widgets.dart (337), quizzes_screen.dart (310), kid_queries.dart (308), material_reader_models.dart (289), post_detail_screen.dart (271), shell.dart (266), dashboard_screen.dart (265), login_screen.dart (255).
-**Fix:** Extract build methods into named widget classes in separate files. One fix per file.
-**Status:** 🟡 HIGH — OPEN
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Description:** Major god-widget problem. All 31 offenders split into focused sub-files. Last 3 resolved: kids_home_screen_manager.dart (314→162), kid_login_manager.dart (260→164), quiz_take_screen.dart (254→215). BUGS.md updated 2025-05-22.
+**Fix:** Extract build methods into named widget classes in separate files.
+**Status:** ✅ RESOLVED — BUG-001 (2025-05-22)
 
 ### [BUG-002] GraphQL error handling inconsistent
 **Priority:** 🟡 HIGH → ✅ RESOLVED

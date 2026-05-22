@@ -80,7 +80,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
     _mgr.fetchTopics(sid, auth.standard);
     _mgr.fetchSubjectProgress(sid, auth.standard);
     _mgr.fetchRoadmap(sid, auth.standard);
-    _mgr.fetchLesson(sid, auth.standard);
+    _mgr.actions.fetchLesson(sid, auth.standard);
   }
 
   void _onStarsTap() {
@@ -97,7 +97,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
         orElse: () => _mgr.data.topics.first,
       );
     });
-    _mgr.fetchLesson(sid, ref.read(kidAuthStateProvider).standard,
+    _mgr.actions.fetchLesson(sid, ref.read(kidAuthStateProvider).standard,
         topicId: topicId);
   }
 
@@ -117,7 +117,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
   void _onNextLesson() {
     final sid = _mgr.data.selectedSubject?['id']?.toString();
     if (sid != null && sid.isNotEmpty) {
-      _mgr.fetchLesson(sid, ref.read(kidAuthStateProvider).standard,
+      _mgr.actions.fetchLesson(sid, ref.read(kidAuthStateProvider).standard,
           topicId: _mgr.data.selectedTopic?['id']?.toString());
     }
   }
@@ -130,7 +130,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
         : null;
     final correctIdx = (firstQ?['correct'] as num?)?.toInt() ?? 0;
     final selectedIdx = correct > 0 ? correctIdx : 99;
-    await _mgr.answerQuiz(selectedIdx);
+    await _mgr.actions.answerQuiz(selectedIdx);
     if (correct / (total > 0 ? total : 1) >= 0.8 && mounted) {
       HapticFeedback.heavyImpact();
       _mgr.data.burstCtrl.forward(from: 0);
@@ -144,7 +144,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
     final sid = _mgr.data.selectedSubject?['id']?.toString();
     if (sid == null || sid.isEmpty) return;
     final auth = ref.read(kidAuthStateProvider);
-    _mgr.fetchLesson(sid, auth.standard,
+    _mgr.actions.fetchLesson(sid, auth.standard,
         topicId: _mgr.data.selectedTopic?['id']?.toString() ??
             _mgr.data.selectedTopic?['topicId']?.toString());
   }
@@ -164,7 +164,9 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted &&
             !_mgr.data.fetchedSubjects &&
-            !_mgr.data.subjectFetchStarted) { _mgr.fetchSubjects(); }
+            !_mgr.data.subjectFetchStarted) {
+          _mgr.fetchSubjects();
+        }
       });
     }
     return Theme(
@@ -204,7 +206,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
                       auth: auth,
                       data: d,
                       onStarsTap: _onStarsTap,
-                      onClaimDailyChest: _mgr.claimDailyChest,
+                      onClaimDailyChest: _mgr.actions.claimDailyChest,
                       onSubjectSelected: _onSubjectPicked,
                     )
                   : KidsLessonViewSection(
@@ -217,14 +219,15 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
                         d.topics = [];
                       }),
                       onTopicTap: _onTopicTap,
-                      onReviewTap: () => _mgr.openRoadmapTopicById(
+                      onReviewTap: () => _mgr.actions.openRoadmapTopicById(
                           d.roadmapSummary?['reviewTopicId']?.toString()),
-                      onNextTap: () => _mgr.openRoadmapTopicById(
+                      onNextTap: () => _mgr.actions.openRoadmapTopicById(
                           d.roadmapSummary?['nextTopicId']?.toString()),
-                      onJourneyTap: () => _mgr.openJourney(auth),
-                      onTapTopic: (tid) => _mgr.openRoadmapTopicById(tid),
+                      onJourneyTap: () => _mgr.actions.openJourney(auth),
+                      onTapTopic: (tid) =>
+                          _mgr.actions.openRoadmapTopicById(tid),
                       onTopicRoadmapTap: (tid) =>
-                          _mgr.openRoadmapTopicById(tid),
+                          _mgr.actions.openRoadmapTopicById(tid),
                       onChunkTap: _onChunkTap,
                       onListenTap: _onListenTap,
                       onStartQuiz: _onStartQuiz,
