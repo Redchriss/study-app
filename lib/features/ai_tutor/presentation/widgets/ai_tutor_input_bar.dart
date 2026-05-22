@@ -36,7 +36,8 @@ class AiTutorInputBar extends StatelessWidget {
                 itemCount: suggestions.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 6),
                 itemBuilder: (_, i) => ActionChip(
-                  label: Text(suggestions[i], style: const TextStyle(fontSize: 11)),
+                  label: Text(suggestions[i],
+                      style: const TextStyle(fontSize: 11)),
                   onPressed: sending ? null : () => onSend(suggestions[i]),
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -48,11 +49,46 @@ class AiTutorInputBar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
-              border: Border(top: BorderSide(color: dark ? DesignTokens.darkBorder : DesignTokens.border, width: 0.5)),
+              border: Border(
+                top: BorderSide(
+                    color: dark ? DesignTokens.darkBorder : DesignTokens.border,
+                    width: 0.5),
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                AnimatedPress(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Voice input coming soon'),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: dark
+                          ? DesignTokens.darkSurfaceVariant
+                          : DesignTokens.surfaceVariant,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      Icons.mic_rounded,
+                      size: 20,
+                      color: dark
+                          ? DesignTokens.darkTextSecondary
+                          : DesignTokens.textSecondary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 120),
@@ -61,10 +97,15 @@ class AiTutorInputBar extends StatelessWidget {
                       maxLines: null,
                       decoration: InputDecoration(
                         hintText: placeholder,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none),
                         filled: true,
-                        fillColor: dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        fillColor: dark
+                            ? DesignTokens.darkSurfaceVariant
+                            : DesignTokens.surfaceVariant,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
                         isDense: true,
                       ),
                       textInputAction: TextInputAction.send,
@@ -77,15 +118,27 @@ class AiTutorInputBar extends StatelessWidget {
                   onTap: sending ? null : () => onSend(),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    width: 46, height: 46,
+                    width: 46,
+                    height: 46,
                     decoration: BoxDecoration(
-                      gradient: sending ? null : const LinearGradient(colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]),
-                      color: sending ? DesignTokens.textTertiary.withValues(alpha: 0.3) : null,
+                      gradient: sending
+                          ? null
+                          : const LinearGradient(
+                              colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]),
+                      color: sending
+                          ? DesignTokens.textTertiary.withValues(alpha: 0.3)
+                          : null,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: sending
-                        ? const Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)))
-                        : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                        ? const Center(
+                            child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white)))
+                        : const Icon(Icons.send_rounded,
+                            color: Colors.white, size: 20),
                   ),
                 ),
               ],

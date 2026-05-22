@@ -1,9 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:genui/genui.dart' hide TextPart;
+import 'package:genui/genui.dart' as genui;
 import '../../../../core/storage/secure_storage.dart';
+import '../genui/tutor_catalog.dart';
 import 'ai_tutor_data_service.dart';
 import 'ai_tutor_stream_service.dart';
+
+sealed class ConversationItem {}
+
+class TextItem extends ConversationItem {
+  final String text;
+  final bool isUser;
+  TextItem({required this.text, this.isUser = false});
+}
+
+class SurfaceItem extends ConversationItem {
+  final String surfaceId;
+  SurfaceItem({required this.surfaceId});
+}
 
 class AiTutorManager {
   late void Function(VoidCallback) _setState;
@@ -13,11 +29,15 @@ class AiTutorManager {
   late AiTutorDataService _dataService;
   late AiTutorStreamService _streamService;
 
-  List<Map<String, dynamic>> messages = [];
+  // GenUI Controllers
+  late SurfaceController controller;
+  late A2uiTransportAdapter _transport;
+  late Conversation conversation;
+  late Catalog catalog;
+  List<ConversationItem> conversationItems = [];
+
   String? sessionId;
   bool sending = false;
-  bool streaming = false;
-  String streamingText = '';
   String studyMode = 'coach';
   String learningStyle = 'mixed';
   bool prefersExamples = true;
@@ -45,69 +65,80 @@ class AiTutorManager {
     _onShowError = onShowError;
     _dataService = AiTutorDataService(ref);
     _streamService = AiTutorStreamService();
-  }
 
-  Map<String, dynamic> _messageMap(String text, bool isUser) => {
-    'messageText': text,
-    if (!isUser) 'displayText': text,
-    'isUser': isUser,
-    'timestamp': DateTime.now().toIso8601String(),
-  };
+    catalog = buildTutorCatalog();
+    controller = SurfaceController(catalogs: [catalog]);
+    _transport = A2uiTransportAdapter(onSend: _sendAndReceive);
+    conversation = Conversation(controller: controller, transport: _transport);
+
+    conversation.events.listen((event) {
+      if (!_isMounted()) return;
+      _setState(() {
+        if (event is ConversationSurfaceAdded) {
+          conversationItems.add(SurfaceItem(surfaceId: event.surfaceId));
+          _onScrollDown();
+        } else if (event is ConversationSurfaceRemoved) {
+          conversationItems.removeWhere((item) =>
+              item is SurfaceItem && item.surfaceId == event.surfaceId);
+        } else if (event is ConversationContentReceived) {
+          conversationItems.add(TextItem(text: event.text, isUser: false));
+          _onScrollDown();
+        } else if (event is ConversationError) {
+          _onShowError(event.error.toString());
+        }
+      });
+    });
+  }
 
   void _resetStream() => _setState(() {
-    sending = false;
-    streaming = false;
-    streamingText = '';
-  });
+        sending = false;
+      });
 
-  void _addAiMessage(String msg) {
-    _setState(() {
-      messages.add(_messageMap(msg, false));
-      streamingText = '';
-      sending = false;
-      streaming = false;
-    });
-    loadTutorSnapshot();
-  }
+  Future<void> _sendAndReceive(ChatMessage msg) async {
+    final buffer = StringBuffer();
+    for (final part in msg.parts) {
+      if (part.isUiInteractionPart) {
+        buffer.write(part.asUiInteractionPart!.interaction);
+      } else if (part is genui.TextPart) {
+        buffer.write(part.text);
+      }
+    }
+    if (buffer.isEmpty) return;
 
-  void addUserMessage(String text) {
-    _setState(() {
-      messages.add(_messageMap(text, true));
-      sending = true;
-      streaming = true;
-      streamingText = '';
-    });
-  }
-
-  Future<void> send(String text, http.Client httpClient) async {
-    if (text.isEmpty || sending) return;
-    addUserMessage(text);
-    _onScrollDown.call();
+    final text = buffer.toString();
     final token = await SecureStorage.getToken();
-    if (token == null) { _resetStream(); return; }
+    if (token == null) {
+      _resetStream();
+      return;
+    }
+
+    final promptBuilder = PromptBuilder.chat(catalog: catalog);
+    final clientInstructions = promptBuilder.systemPromptJoined();
+
     try {
       await _streamService.sendStream(
         text: text,
         sessionId: sessionId,
         studyMode: studyMode,
         token: token,
-        httpClient: httpClient,
-        onToken: (t) => _setState(() => streamingText += t),
-        onAddMessage: _addAiMessage,
+        clientInstructions: clientInstructions,
+        httpClient: http.Client(),
+        onToken: (t) {
+          _transport.addChunk(t);
+        },
+        onAddMessage: (fullText) {
+          _resetStream();
+          loadTutorSnapshot();
+        },
         onSessionId: (id) => sessionId = id,
         onError: (msg) {
-          if (_isMounted()) { _resetStream(); _onShowError(msg); }
+          if (_isMounted()) {
+            _resetStream();
+            _onShowError(msg);
+          }
         },
         onScrollDown: _onScrollDown,
       );
-      if (!_isMounted() || !streaming) return;
-      if (streamingText.trim().isNotEmpty) {
-        _addAiMessage(streamingText.trim());
-        _onScrollDown.call();
-      } else {
-        _resetStream();
-        _onShowError.call('Tutor response ended unexpectedly. Please try again.');
-      }
     } catch (_) {
       if (!_isMounted()) return;
       _resetStream();
@@ -115,20 +146,28 @@ class AiTutorManager {
     }
   }
 
+  Future<void> send(String text, http.Client httpClient) async {
+    if (text.isEmpty || sending) return;
+    _setState(() {
+      sending = true;
+      conversationItems.add(TextItem(text: text, isUser: true));
+    });
+    _onScrollDown();
+    await conversation.sendRequest(ChatMessage.user(text));
+  }
+
   Future<void> loadLearningProfile() async {
-    try {
-      final profile = await _dataService.loadLearningProfile();
-      if (!_isMounted() || profile == null) return;
-      _setState(() {
-        learningStyle =
-            profile['learningStyle']?.toString().trim().isNotEmpty == true
-                ? profile['learningStyle'].toString()
-                : 'mixed';
-        prefersExamples = profile['prefersExamples'] as bool? ?? true;
-        prefersStepByStep = profile['prefersStepByStep'] as bool? ?? true;
-        detailLevel = profile['detailLevel'] as int? ?? 2;
-      });
-    } catch (_) {}
+    final profile = await _dataService.loadLearningProfile();
+    if (!_isMounted() || profile == null) return;
+    _setState(() {
+      learningStyle =
+          profile['learningStyle']?.toString().trim().isNotEmpty == true
+              ? profile['learningStyle'].toString()
+              : 'mixed';
+      prefersExamples = profile['prefersExamples'] as bool? ?? true;
+      prefersStepByStep = profile['prefersStepByStep'] as bool? ?? true;
+      detailLevel = profile['detailLevel'] as int? ?? 2;
+    });
   }
 
   Future<void> loadTutorSnapshot() async {
@@ -156,31 +195,31 @@ class AiTutorManager {
   }
 
   Future<void> loadChatHistory() async {
-    try {
-      final sessions = await _dataService.loadChatHistory();
-      if (!_isMounted()) return;
-      _setState(() {
-        chatHistory = sessions
-            .whereType<Map>()
-            .map((s) => Map<String, dynamic>.from(s))
-            .toList();
-      });
-    } catch (_) {}
+    final sessions = await _dataService.loadChatHistory();
+    if (!_isMounted()) return;
+    _setState(() {
+      chatHistory = sessions
+          .whereType<Map>()
+          .map((s) => Map<String, dynamic>.from(s))
+          .toList();
+    });
   }
 
   Future<void> restoreSession(String id) async {
-    try {
-      final msgs = await _dataService.restoreSession(id);
-      if (!_isMounted()) return;
-      _setState(() {
-        sessionId = id;
-        messages.clear();
-        for (final m in msgs) {
-          if (m is Map) messages.add(Map<String, dynamic>.from(m));
+    final msgs = await _dataService.restoreSession(id);
+    if (!_isMounted()) return;
+    _setState(() {
+      sessionId = id;
+      conversationItems.clear();
+      for (final m in msgs) {
+        if (m is Map) {
+          final isUser = m['isUser'] as bool? ?? false;
+          final text = m['messageText'] as String? ?? '';
+          conversationItems.add(TextItem(text: text, isUser: isUser));
         }
-      });
-      _onScrollDown.call();
-    } catch (_) {}
+      }
+    });
+    _onScrollDown.call();
   }
 
   Future<void> createAdaptivePlan(String? goalText) async {
@@ -201,7 +240,8 @@ class AiTutorManager {
       return;
     }
     final errMsg = (payload?['errors'] as List?)?.cast<String>().join(', ');
-    _onShowError(errMsg?.isNotEmpty == true ? errMsg! : 'Could not build a plan.');
+    _onShowError(
+        errMsg?.isNotEmpty == true ? errMsg! : 'Could not build a plan.');
   }
 
   Future<void> saveLearningProfile({
@@ -219,8 +259,13 @@ class AiTutorManager {
         detailLevel: detailLevel,
       );
       if (payload?['success'] != true) {
-        final errMsg = (payload?['errors'] as List?)?.map((e) => e.toString()).join(', ');
-        if (_isMounted()) _onShowError(errMsg?.isNotEmpty == true ? errMsg! : 'Could not save preferences.');
+        final errMsg =
+            (payload?['errors'] as List?)?.map((e) => e.toString()).join(', ');
+        if (_isMounted()) {
+          _onShowError(errMsg?.isNotEmpty == true
+              ? errMsg!
+              : 'Could not save preferences.');
+        }
         return;
       }
       if (!_isMounted()) return;
@@ -238,11 +283,10 @@ class AiTutorManager {
 
   void setStudyMode(String mode) => _setState(() => studyMode = mode);
   void toggleInsights() => _setState(() => showInsights = !showInsights);
-
   void newConversation() {
     _setState(() {
       sessionId = null;
-      messages.clear();
+      conversationItems.clear();
     });
   }
 }

@@ -10,6 +10,7 @@ class AiTutorStreamService {
     required String? sessionId,
     required String studyMode,
     required String token,
+    String? clientInstructions,
     required http.Client httpClient,
     required void Function(String) onToken,
     required void Function(String) onAddMessage,
@@ -28,6 +29,7 @@ class AiTutorStreamService {
       'message': text,
       'session_id': sessionId,
       'study_mode': studyMode,
+      if (clientInstructions != null) 'client_instructions': clientInstructions,
     })));
     request.sink.close();
 

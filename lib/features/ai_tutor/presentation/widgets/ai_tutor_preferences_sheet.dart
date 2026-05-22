@@ -26,7 +26,8 @@ class AiTutorPreferencesSheet extends StatefulWidget {
   }) onSave;
 
   @override
-  State<AiTutorPreferencesSheet> createState() => _AiTutorPreferencesSheetState();
+  State<AiTutorPreferencesSheet> createState() =>
+      _AiTutorPreferencesSheetState();
 }
 
 class _AiTutorPreferencesSheetState extends State<AiTutorPreferencesSheet> {
@@ -65,7 +66,8 @@ class _AiTutorPreferencesSheetState extends State<AiTutorPreferencesSheet> {
                   ),
                 ),
                 IconButton(
-                  onPressed: widget.saving ? null : () => Navigator.of(context).pop(),
+                  onPressed:
+                      widget.saving ? null : () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close),
                 ),
               ],
@@ -80,7 +82,8 @@ class _AiTutorPreferencesSheetState extends State<AiTutorPreferencesSheet> {
             const SizedBox(height: 16),
             Text(
               'Learning style',
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -105,7 +108,8 @@ class _AiTutorPreferencesSheetState extends State<AiTutorPreferencesSheet> {
             const SizedBox(height: 16),
             Text(
               'Response depth',
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             SegmentedButton<int>(
@@ -127,7 +131,8 @@ class _AiTutorPreferencesSheetState extends State<AiTutorPreferencesSheet> {
                   ? null
                   : (value) => setState(() => _prefersStepByStep = value),
               title: const Text('Prefer step-by-step explanations'),
-              subtitle: const Text('Useful for solving and working through unfamiliar topics.'),
+              subtitle: const Text(
+                  'Useful for solving and working through unfamiliar topics.'),
             ),
             SwitchListTile.adaptive(
               value: _prefersExamples,
@@ -136,7 +141,8 @@ class _AiTutorPreferencesSheetState extends State<AiTutorPreferencesSheet> {
                   ? null
                   : (value) => setState(() => _prefersExamples = value),
               title: const Text('Prefer worked examples'),
-              subtitle: const Text('Adds examples and concrete illustrations more often.'),
+              subtitle: const Text(
+                  'Adds examples and concrete illustrations more often.'),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -162,7 +168,8 @@ class _AiTutorPreferencesSheetState extends State<AiTutorPreferencesSheet> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.tune),
-                label: Text(widget.saving ? 'Saving...' : 'Save tutor preferences'),
+                label: Text(
+                    widget.saving ? 'Saving...' : 'Save tutor preferences'),
               ),
             ),
           ],

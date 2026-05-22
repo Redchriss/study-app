@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:genui/genui.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../providers/ai_tutor_provider.dart';
 import '../widgets/ai_tutor_bubbles.dart';
 import '../widgets/ai_tutor_empty_state.dart';
 
 class AiTutorMessageList extends StatelessWidget {
-  final List<Map<String, dynamic>> messages;
+  final List<ConversationItem> conversationItems;
+  final SurfaceController surfaceController;
   final bool streaming;
   final String streamingText;
   final Animation<double> cursorAnim;
@@ -12,10 +15,12 @@ class AiTutorMessageList extends StatelessWidget {
   final ScrollController scrollCtrl;
   final List<String> suggestions;
   final ValueChanged<String> onSuggestion;
+  final void Function(int, String?)? onFeedback;
 
   const AiTutorMessageList({
     super.key,
-    required this.messages,
+    required this.conversationItems,
+    required this.surfaceController,
     required this.streaming,
     required this.streamingText,
     required this.cursorAnim,
@@ -23,11 +28,12 @@ class AiTutorMessageList extends StatelessWidget {
     required this.scrollCtrl,
     required this.suggestions,
     required this.onSuggestion,
+    this.onFeedback,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (messages.isEmpty && !streaming) {
+    if (conversationItems.isEmpty && !streaming) {
       return AiTutorEmptyState(
         suggestions: suggestions,
         onSuggestion: onSuggestion,
@@ -36,28 +42,38 @@ class AiTutorMessageList extends StatelessWidget {
     return ListView.builder(
       controller: scrollCtrl,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      itemCount: messages.length + (streaming ? 1 : 0),
+      itemCount: conversationItems.length,
       itemBuilder: (_, i) {
-        if (streaming && i == messages.length) {
-          return AiAssistantBubble(
-            text: streamingText,
-            streaming: true,
-            cursorAnim: cursorAnim,
-            dark: dark,
+        final item = conversationItems[i];
+
+        if (item is SurfaceItem) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Surface(
+              surfaceContext: surfaceController.contextFor(item.surfaceId),
+            ),
           );
         }
-        final msg = messages[i];
-        final isUser = msg['isUser'] == true;
-        return isUser
-            ? AiUserBubble(
-                text:
-                    (msg['displayText'] ?? msg['messageText'] ?? '').toString())
-            : AiAssistantBubble(
-                text: (msg['messageText'] ?? '').toString(),
-                streaming: false,
-                cursorAnim: cursorAnim,
-                dark: dark,
-              );
+
+        if (item is TextItem) {
+          return Column(
+            crossAxisAlignment:
+                item.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            children: [
+              item.isUser
+                  ? AiUserBubble(text: item.text)
+                  : AiAssistantBubble(
+                      text: item.text,
+                      streaming: false,
+                      cursorAnim: cursorAnim,
+                      dark: dark,
+                      onFeedback: (value) => onFeedback?.call(i, value),
+                    ),
+            ],
+          );
+        }
+
+        return const SizedBox.shrink();
       },
     );
   }

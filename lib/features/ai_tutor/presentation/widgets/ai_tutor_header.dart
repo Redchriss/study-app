@@ -39,7 +39,8 @@ class AiTutorHeader extends StatelessWidget {
     final dark = theme.brightness == Brightness.dark;
 
     return Container(
-      color: dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
+      color:
+          dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -47,28 +48,50 @@ class AiTutorHeader extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
             child: Row(
               children: [
-                Expanded(child: AiTutorModeBar(selectedMode: studyMode, modes: modes, onSelect: onModeSelect)),
+                Expanded(
+                    child: AiTutorModeBar(
+                        selectedMode: studyMode,
+                        modes: modes,
+                        onSelect: onModeSelect)),
                 const SizedBox(width: 4),
                 GestureDetector(
                   onTap: onToggleInsights,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(
-                      color: showInsights ? const Color(0xFF7C4DFF).withValues(alpha: 0.15) : Colors.transparent,
+                      color: showInsights
+                          ? const Color(0xFF7C4DFF).withValues(alpha: 0.15)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: showInsights ? const Color(0xFF7C4DFF) : DesignTokens.textTertiary.withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color: showInsights
+                              ? const Color(0xFF7C4DFF)
+                              : DesignTokens.textTertiary
+                                  .withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.psychology_rounded, size: 16, color: showInsights ? const Color(0xFF7C4DFF) : DesignTokens.textSecondary),
+                        Icon(Icons.psychology_rounded,
+                            size: 16,
+                            color: showInsights
+                                ? const Color(0xFF7C4DFF)
+                                : DesignTokens.textSecondary),
                         if (reviewCount > 0) ...[
                           const SizedBox(width: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                            decoration: BoxDecoration(color: DesignTokens.warning, borderRadius: BorderRadius.circular(999)),
-                            child: Text('$reviewCount', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                                color: DesignTokens.warning,
+                                borderRadius: BorderRadius.circular(999)),
+                            child: Text('$reviewCount',
+                                style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white)),
                           ),
                         ],
                       ],
@@ -82,9 +105,16 @@ class AiTutorHeader extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 4, 14, 6),
             child: Row(
               children: [
-                Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color(0xFF7C4DFF), shape: BoxShape.circle)),
+                Container(
+                    width: 5,
+                    height: 5,
+                    decoration: const BoxDecoration(
+                        color: Color(0xFF7C4DFF), shape: BoxShape.circle)),
                 const SizedBox(width: 6),
-                Text(modeHint, style: theme.textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary, fontStyle: FontStyle.italic)),
+                Text(modeHint,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: DesignTokens.textSecondary,
+                        fontStyle: FontStyle.italic)),
               ],
             ),
           ),

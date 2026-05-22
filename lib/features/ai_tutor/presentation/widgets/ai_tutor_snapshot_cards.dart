@@ -32,7 +32,9 @@ class AiTutorSnapshotCards extends StatelessWidget {
                 title: 'Review Now',
                 value: '$reviewCount',
                 subtitle: reviewCount == 1 ? 'topic due' : 'topics due',
-                color: reviewCount > 0 ? DesignTokens.warning : DesignTokens.primary,
+                color: reviewCount > 0
+                    ? DesignTokens.warning
+                    : DesignTokens.primary,
               ),
             ),
             const SizedBox(width: 10),
@@ -66,7 +68,8 @@ class AiTutorSnapshotCards extends StatelessWidget {
                 (planSummary == null || planSummary!.trim().isEmpty)
                     ? 'No active plan yet. Build one from the learner model.'
                     : planSummary!,
-                style: const TextStyle(color: DesignTokens.textSecondary, height: 1.35),
+                style: const TextStyle(
+                    color: DesignTokens.textSecondary, height: 1.35),
               ),
               const SizedBox(height: 10),
               Wrap(
@@ -110,7 +113,8 @@ class AiTutorSnapshotCards extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
                       '${memory['title'] ?? 'Memory'}: ${memory['body'] ?? ''}',
-                      style: const TextStyle(color: DesignTokens.textSecondary, height: 1.35),
+                      style: const TextStyle(
+                          color: DesignTokens.textSecondary, height: 1.35),
                     ),
                   );
                 }),
@@ -147,10 +151,20 @@ class _MiniCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: DesignTokens.textSecondary)),
+          Text(title,
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: DesignTokens.textSecondary)),
           const SizedBox(height: 4),
-          Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: color)),
-          Text(subtitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.textSecondary)),
+          Text(value,
+              style: TextStyle(
+                  fontSize: 24, fontWeight: FontWeight.w900, color: color)),
+          Text(subtitle,
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: DesignTokens.textSecondary)),
         ],
       ),
     );

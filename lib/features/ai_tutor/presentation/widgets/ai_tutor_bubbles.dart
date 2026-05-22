@@ -13,17 +13,23 @@ class AiUserBubble extends StatelessWidget {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
         margin: const EdgeInsets.only(bottom: 10, left: 48),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Color(0xFF1B6CA8), Color(0xFF7C4DFF)]),
+          gradient:
+              LinearGradient(colors: [Color(0xFF1B6CA8), Color(0xFF7C4DFF)]),
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(18), topRight: Radius.circular(18),
-            bottomLeft: Radius.circular(18), bottomRight: Radius.circular(4),
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+            bottomLeft: Radius.circular(18),
+            bottomRight: Radius.circular(4),
           ),
         ),
-        child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5)),
+        child: Text(text,
+            style: const TextStyle(
+                color: Colors.white, fontSize: 14, height: 1.5)),
       ),
     ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.1);
   }
@@ -34,6 +40,8 @@ class AiAssistantBubble extends StatelessWidget {
   final bool streaming;
   final Animation<double> cursorAnim;
   final bool dark;
+  final String? feedback;
+  final void Function(String?)? onFeedback;
 
   const AiAssistantBubble({
     super.key,
@@ -41,6 +49,8 @@ class AiAssistantBubble extends StatelessWidget {
     required this.streaming,
     required this.cursorAnim,
     required this.dark,
+    this.feedback,
+    this.onFeedback,
   });
 
   @override
@@ -51,138 +61,151 @@ class AiAssistantBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 30, height: 30,
+            width: 30,
+            height: 30,
             margin: const EdgeInsets.only(right: 8, top: 2),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]),
+              gradient: const LinearGradient(
+                  colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 14),
+            child: const Icon(Icons.auto_awesome_rounded,
+                color: Colors.white, size: 14),
           ),
           Flexible(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-              margin: const EdgeInsets.only(bottom: 10, right: 48),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4), topRight: Radius.circular(18),
-                  bottomLeft: Radius.circular(18), bottomRight: Radius.circular(18),
-                ),
-              ),
-              child: text.isEmpty && streaming
-                  ? const SizedBox(width: 40, child: LinearProgressIndicator(minHeight: 2))
-                  : Stack(
-                      children: [
-                        MarkdownBody(
-                          data: text,
-                          styleSheet: MarkdownStyleSheet(
-                            p: const TextStyle(fontSize: 14, height: 1.55),
-                            code: TextStyle(fontSize: 13, fontFamily: 'monospace', backgroundColor: dark ? Colors.black26 : const Color(0xFFEEF0F2)),
-                            codeblockDecoration: BoxDecoration(color: dark ? const Color(0xFF161B22) : const Color(0xFFEEF0F2), borderRadius: BorderRadius.circular(8)),
-                          ),
-                        ),
-                        if (streaming)
-                          Positioned(
-                            bottom: 0, right: 0,
-                            child: FadeTransition(
-                              opacity: cursorAnim,
-                              child: Container(width: 8, height: 16, decoration: BoxDecoration(color: const Color(0xFF7C4DFF), borderRadius: BorderRadius.circular(2))),
-                            ),
-                          ),
-                      ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.78),
+                  margin: const EdgeInsets.only(bottom: 2, right: 48),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: dark
+                        ? DesignTokens.darkSurfaceVariant
+                        : DesignTokens.surfaceVariant,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(18),
+                      bottomLeft: Radius.circular(18),
+                      bottomRight: Radius.circular(18),
                     ),
+                  ),
+                  child: text.isEmpty && streaming
+                      ? const SizedBox(
+                          width: 40,
+                          child: LinearProgressIndicator(minHeight: 2))
+                      : Stack(
+                          children: [
+                            MarkdownBody(
+                              data: text,
+                              styleSheet: MarkdownStyleSheet(
+                                p: const TextStyle(fontSize: 14, height: 1.55),
+                                code: TextStyle(
+                                    fontSize: 13,
+                                    fontFamily: 'monospace',
+                                    backgroundColor: dark
+                                        ? Colors.black26
+                                        : const Color(0xFFEEF0F2)),
+                                codeblockDecoration: BoxDecoration(
+                                    color: dark
+                                        ? const Color(0xFF161B22)
+                                        : const Color(0xFFEEF0F2),
+                                    borderRadius: BorderRadius.circular(8)),
+                              ),
+                            ),
+                            if (streaming)
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: FadeTransition(
+                                  opacity: cursorAnim,
+                                  child: Container(
+                                      width: 8,
+                                      height: 16,
+                                      decoration: BoxDecoration(
+                                          color: const Color(0xFF7C4DFF),
+                                          borderRadius:
+                                              BorderRadius.circular(2))),
+                                ),
+                              ),
+                          ],
+                        ),
+                ),
+                if (!streaming && text.isNotEmpty)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _FeedbackButton(
+                        icon: Icons.thumb_up_alt_rounded,
+                        isActive: feedback == 'like',
+                        onTap: () => onFeedback
+                            ?.call(feedback == 'like' ? null : 'like'),
+                      ),
+                      _FeedbackButton(
+                        icon: Icons.thumb_down_alt_rounded,
+                        isActive: feedback == 'dislike',
+                        onTap: () => onFeedback
+                            ?.call(feedback == 'dislike' ? null : 'dislike'),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        iconSize: 14,
+                        icon: const Icon(Icons.copy_rounded),
+                        color: DesignTokens.textTertiary,
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: text));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: const Text('Copied to clipboard'),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                duration: const Duration(seconds: 1)),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+              ],
             ),
           ),
-          if (!streaming && text.isNotEmpty)
-            IconButton(
-              iconSize: 16,
-              icon: const Icon(Icons.copy_rounded),
-              color: DesignTokens.textTertiary,
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: text));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: const Text('Copied to clipboard'), behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), duration: const Duration(seconds: 1)),
-                );
-              },
-            ),
         ],
       ),
     ).animate().fadeIn(duration: 200.ms).slideX(begin: -0.05);
   }
 }
 
-class AiTypingIndicator extends StatelessWidget {
-  const AiTypingIndicator({super.key});
+class _FeedbackButton extends StatelessWidget {
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _FeedbackButton({
+    required this.icon,
+    required this.isActive,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-      child: Row(
-        children: [
-          Container(
-            width: 30, height: 30,
-            decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]), borderRadius: BorderRadius.circular(8)),
-            child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 14),
+    return Material(
+      color: isActive
+          ? DesignTokens.primary.withValues(alpha: 0.1)
+          : Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(
+            icon,
+            size: 14,
+            color: isActive ? DesignTokens.primary : DesignTokens.textTertiary,
           ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: const BoxDecoration(
-              color: DesignTokens.surfaceVariant,
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(18), bottomLeft: Radius.circular(18), bottomRight: Radius.circular(18)),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _BouncingDot(delay: 0),
-                SizedBox(width: 4),
-                _BouncingDot(delay: 200),
-                SizedBox(width: 4),
-                _BouncingDot(delay: 400),
-                SizedBox(width: 8),
-                Text('Thinking...', style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary, fontStyle: FontStyle.italic)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BouncingDot extends StatefulWidget {
-  final int delay;
-  const _BouncingDot({required this.delay});
-
-  @override
-  State<_BouncingDot> createState() => _BouncingDotState();
-}
-
-class _BouncingDotState extends State<_BouncingDot> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
-    _anim = Tween<double>(begin: 0, end: -6).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-    Future.delayed(Duration(milliseconds: widget.delay), () { if (mounted) _ctrl.repeat(reverse: true); });
-  }
-
-  @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, __) => Transform.translate(
-        offset: Offset(0, _anim.value),
-        child: Container(width: 7, height: 7, decoration: BoxDecoration(color: const Color(0xFF7C4DFF).withValues(alpha: 0.6), shape: BoxShape.circle)),
+        ),
       ),
     );
   }

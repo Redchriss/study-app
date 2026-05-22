@@ -15,12 +15,13 @@ mutation CreateChatSession($materialId: ID) {
 ''';
 
 const String kSendMessage = r'''
-mutation SendMessage($sessionId: ID!, $content: String!, $materialId: ID, $studyMode: String) {
+mutation SendMessage($sessionId: ID!, $content: String!, $materialId: ID, $studyMode: String, $clientInstructions: String) {
   sendMessage(
     sessionId: $sessionId
     content: $content
     materialId: $materialId
     studyMode: $studyMode
+    clientInstructions: $clientInstructions
   ) {
     success
     error
