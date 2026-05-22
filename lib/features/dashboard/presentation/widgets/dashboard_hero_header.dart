@@ -81,11 +81,11 @@ class DashboardHeroHeader extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
               child: Row(
                 children: [
-                  _HeroStat(value: streak.toString(), label: 'Day Streak', icon: Icons.local_fire_department_rounded, color: const Color(0xFFFF9800), iconBg: const Color(0x33FF9800)),
+                  _HeroStat(value: streak.toString(), label: 'Streak', icon: Icons.local_fire_department_rounded, color: const Color(0xFFFF9800), iconBg: const Color(0x33FF9800)),
                   const SizedBox(width: 10),
-                  _HeroStat(value: points.toString(), label: 'Study Points', icon: Icons.star_rounded, color: const Color(0xFFFFD700), iconBg: const Color(0x33FFD700)),
+                  _HeroStat(value: points.toString(), label: 'Points', icon: Icons.star_rounded, color: const Color(0xFFFFD700), iconBg: const Color(0x33FFD700)),
                   const SizedBox(width: 10),
-                  _HeroStat(value: credits.toString(), label: 'AI Credits', icon: Icons.bolt_rounded, color: const Color(0xFF69F0AE), iconBg: const Color(0x3369F0AE)),
+                  _HeroStat(value: credits.toString(), label: 'Credits', icon: Icons.bolt_rounded, color: const Color(0xFF69F0AE), iconBg: const Color(0x3369F0AE)),
                 ],
               ),
             ),

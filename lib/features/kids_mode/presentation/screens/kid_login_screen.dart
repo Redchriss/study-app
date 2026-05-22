@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/config/app_config.dart';
-import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../kids_visual_theme.dart';
+import '../widgets/kid_create_learner_sheet.dart';
+import '../widgets/kid_login_dashboard.dart';
+import '../widgets/kid_login_manager.dart';
 import '../widgets/kids_playful_button.dart';
-import '../widgets/kid_auth_widgets.dart';
-
-
 
 class KidLoginScreen extends ConsumerStatefulWidget {
   const KidLoginScreen({super.key});
@@ -21,240 +15,63 @@ class KidLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
-  final _parentUserCtrl = TextEditingController();
-  final _parentPassCtrl = TextEditingController();
-  final _nameCtrl = TextEditingController();
-  final _kidPinCtrl = TextEditingController();
-  bool _parentLoading = false;
-  bool _creatingKid = false;
-  int? _newKidStandard;
-  String _newKidEducationTrack = 'primary';
-  String _newKidAvatar = '🦊';
-  List<dynamic>? _children;
-  Map<String, String> _avatars = {};
-  String? _parentToken;
-  String? _error;
-  GraphQLClient? _client;
+  final _mgr = KidLoginManager();
 
   @override
   void initState() {
     super.initState();
-    _restoreSavedSession();
+    _mgr.attach(
+        ref: ref,
+        setState: setState,
+        getContext: () => context,
+        isMounted: () => mounted);
+    _mgr.restoreSavedSession();
   }
 
-  GraphQLClient _buildClient({String? token}) {
-    final t = token ?? _parentToken;
-    if (_client != null && token == null) return _client!;
-    final authLink = AuthLink(getToken: () async => t == null ? null : 'Bearer $t');
-    final httpLink = HttpLink(AppConfig.graphqlUrl);
-    final client = GraphQLClient(cache: GraphQLCache(), link: authLink.concat(httpLink));
-    if (token == null) {
-      _client = client;
-    }
-    return client;
+  @override
+  void dispose() {
+    _mgr.dispose();
+    super.dispose();
   }
 
-  Future<void> _restoreSavedSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    final kidToken = prefs.getString('kid_token');
-    final kidName = prefs.getString('kid_child_name');
-    final kidStandard = prefs.getInt('kid_standard');
-    final kidTrack = prefs.getString('kid_education_track');
-
-    if (!mounted) return;
-    if (kidToken != null &&
-        kidToken.isNotEmpty &&
-        kidName != null &&
-        kidName.isNotEmpty &&
-        kidStandard != null) {
-      ref.read(kidTokenProvider.notifier).state = kidToken;
-      ref.read(kidAuthStateProvider.notifier).state = KidAuthState(
-        isAuthenticated: true,
-        childName: kidName,
-        standard: kidStandard,
-        educationTrack: (kidTrack == null || kidTrack.isEmpty) ? 'primary' : kidTrack,
-        token: kidToken,
-      );
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          context.go('/kids/learn');
-        }
-      });
-      return;
-    }
-
-    final parentToken = await SecureStorage.getToken();
-    if (parentToken != null && parentToken.isNotEmpty) {
-      setState(() {
-        _parentToken = parentToken;
-        _parentLoading = true;
-        _error = null;
-        _client = null;
-      });
-      await _fetchChildren();
-    }
-  }
-
-  Future<void> _logoutParent() async {
-    await SecureStorage.clearTokens();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('kid_token');
-    await prefs.remove('kid_refresh_token');
-    await prefs.remove('kid_child_name');
-    await prefs.remove('kid_standard');
-    await prefs.remove('kid_education_track');
-    if (!mounted) return;
-    ref.read(kidTokenProvider.notifier).state = null;
-    ref.read(kidProfileProvider.notifier).state = null;
-    ref.read(kidAuthStateProvider.notifier).state = const KidAuthState();
-    setState(() {
-      _parentToken = null;
-      _children = null;
-      _client = null;
-    });
-  }
-
-  Future<void> _loginAsParent() async {
-    setState(() {
-      _parentLoading = true;
-      _error = null;
-    });
-    final client = _buildClient();
-    final result = await client.mutate(MutationOptions(
-      document: gql(kTokenAuth),
-      variables: {'username': _parentUserCtrl.text.trim(), 'password': _parentPassCtrl.text},
-    ));
-    if (result.data != null && result.data!['tokenAuth'] != null) {
-      final t = result.data!['tokenAuth']['token'] as String?;
-      if (t != null) {
-        _parentToken = t;
-        _client = null;
-        await SecureStorage.saveTokens(t, result.data!['tokenAuth']['refreshToken'] as String? ?? '');
-      }
-      await _fetchChildren();
-    } else {
-      final msg = result.exception?.graphqlErrors.firstOrNull?.message
-          ?? result.exception?.linkException?.toString()
-          ?? 'Invalid credentials';
-      setState(() {
-        _error = msg;
-        _parentLoading = false;
-      });
-    }
-  }
-
-  Future<void> _fetchChildren() async {
-    final client = _buildClient();
-    final result = await client.query(QueryOptions(document: gql(kMyChildren)));
-    if (!mounted) return;
-    
-    final prefs = await SharedPreferences.getInstance();
-    final Map<String, String> avs = {};
-    final childrenList = (result.data?['myChildren'] as List?) ?? [];
-    for (final kid in childrenList) {
-      final id = kid['id'].toString();
-      avs[id] = prefs.getString('kid_avatar_$id') ?? '';
-    }
-
-    setState(() {
-      _children = childrenList;
-      _avatars = avs;
-      _parentLoading = false;
-    });
-  }
-
-  Future<void> _createKid() async {
-    if (_nameCtrl.text.trim().isEmpty || _kidPinCtrl.text.length != 4 || _newKidStandard == null) return;
-    setState(() => _creatingKid = true);
-    final client = _buildClient();
-    final result = await client.mutate(MutationOptions(
-      document: gql(kCreateChildProfile),
-      variables: {
-        'childName': _nameCtrl.text.trim(),
-        'standard': _newKidStandard!,
-        'pinCode': _kidPinCtrl.text,
-        'educationTrack': _newKidEducationTrack,
-      },
-    ));
-    if (!mounted) return;
-    setState(() => _creatingKid = false);
-    if (result.data?['createChildProfile']?['success'] == true) {
-      final childId = result.data?['createChildProfile']?['child']?['id']?.toString();
-      if (childId != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('kid_avatar_$childId', _newKidAvatar);
-      }
-      
-      _nameCtrl.clear();
-      _kidPinCtrl.clear();
-      _newKidAvatar = '🦊';
-      await _fetchChildren();
-    }
-  }
-
-  Future<void> _loginAsKid(Map<String, dynamic> kid) async {
-    showDialog(
+  void _showCreateKidDialog() {
+    _mgr.newKidAvatar = '🦊';
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => KidPinDialog(
-        kidName: kid['childName'] as String? ?? 'Kid',
-        onSubmit: (pin) async {
-          Navigator.pop(context);
-          final client = _buildClient();
-          final result = await client.mutate(MutationOptions(
-            document: gql(kKidLogin),
-            variables: {'username': kid['username'], 'pinCode': pin},
-          ));
-          final data = result.data?['kidLogin'];
-          if (data?['success'] == true) {
-            final child = data['child'] as Map<String, dynamic>?;
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('kid_token', data['token'] as String);
-            final refreshToken = data['refreshToken'] as String?;
-            if (refreshToken != null && refreshToken.isNotEmpty) {
-              await prefs.setString('kid_refresh_token', refreshToken);
-            }
-            await prefs.setString('kid_child_name', child?['childName'] as String? ?? kid['childName'] as String? ?? '');
-            await prefs.setInt('kid_standard', (child?['standard'] as num?)?.toInt() ?? kid['standard'] as int? ?? 1);
-            await prefs.setString('kid_education_track', child?['childEducationTrack'] as String? ?? 'primary');
-            ref.read(kidTokenProvider.notifier).state = data['token'];
-            ref.read(kidProfileProvider.notifier).state = Map<String, dynamic>.from(kid);
-            ref.read(kidAuthStateProvider.notifier).state = KidAuthState(
-              isAuthenticated: true,
-              childName: child?['childName'] as String? ?? kid['childName'] as String? ?? '',
-              standard: (child?['standard'] as num?)?.toInt() ?? kid['standard'] as int? ?? 1,
-              educationTrack: child?['childEducationTrack'] as String? ?? 'primary',
-              token: data['token'],
-            );
-            if (mounted) context.go('/kids/learn');
-          } else {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(data?['errors']?.first ?? 'Wrong PIN'),
-                  backgroundColor: DesignTokens.error,
-                ),
-              );
-            }
-          }
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => KidCreateLearnerSheet(
+        existingAvatar: _mgr.newKidAvatar,
+        onCreate: (
+            {required name,
+            required pin,
+            required avatar,
+            required educationTrack,
+            required standard}) {
+          _mgr.nameCtrl.text = name;
+          _mgr.kidPinCtrl.text = pin;
+          _mgr.newKidAvatar = avatar;
+          _mgr.newKidEducationTrack = educationTrack;
+          _mgr.newKidStandard = standard;
+          _mgr.createKid();
         },
       ),
     );
   }
 
   @override
-  void dispose() {
-    _parentUserCtrl.dispose();
-    _parentPassCtrl.dispose();
-    _nameCtrl.dispose();
-    _kidPinCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    if (_parentToken != null) return _buildParentDashboard(theme);
+    if (_mgr.parentToken != null) {
+      return KidLoginDashboard(
+        children: _mgr.children,
+        avatars: _mgr.avatars,
+        parentToken: _mgr.parentToken,
+        onCreateKid: _showCreateKidDialog,
+        onLoginKid: (kid) => _mgr.loginAsKid(kid),
+        onLogout: () => _mgr.logoutParent(),
+      );
+    }
     return Theme(
       data: KidsVisualTheme.overlayOn(theme),
       child: Container(
@@ -282,31 +99,29 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.95),
                         shape: BoxShape.circle,
-                        boxShadow: DesignTokens.shadowSm(theme.brightness == Brightness.dark),
+                        boxShadow: DesignTokens.shadowSm(
+                            theme.brightness == Brightness.dark),
                       ),
-                      child: const Icon(Icons.family_restroom_rounded, size: 52, color: KidsVisualTheme.pathBlue),
+                      child: const Icon(Icons.family_restroom_rounded,
+                          size: 52, color: KidsVisualTheme.pathBlue),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    'Parent sign-in',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: KidsVisualTheme.ink,
-                    ),
-                  ),
+                  Text('Parent sign-in',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: KidsVisualTheme.ink)),
                   const SizedBox(height: 8),
                   Text(
-                    'Use the same username and password as your Yaza account.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      height: 1.35,
-                      fontWeight: FontWeight.w600,
-                      color: KidsVisualTheme.inkMuted.withValues(alpha: 0.95),
-                    ),
-                  ),
+                      'Use the same username and password as your Yaza account.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 15,
+                          height: 1.35,
+                          fontWeight: FontWeight.w600,
+                          color: KidsVisualTheme.inkMuted
+                              .withValues(alpha: 0.95))),
                   const SizedBox(height: 28),
                   Container(
                     padding: const EdgeInsets.all(20),
@@ -315,44 +130,49 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: KidsVisualTheme.pathBlue.withValues(alpha: 0.12),
-                          offset: const Offset(0, 8),
-                          blurRadius: 20,
-                        ),
+                            color: KidsVisualTheme.pathBlue
+                                .withValues(alpha: 0.12),
+                            offset: const Offset(0, 8),
+                            blurRadius: 20)
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         TextField(
-                          controller: _parentUserCtrl,
+                          controller: _mgr.parentUserCtrl,
                           decoration: const InputDecoration(
-                            labelText: 'Username',
-                            prefixIcon: Icon(Icons.person_outline_rounded),
-                          ),
+                              labelText: 'Username',
+                              prefixIcon: Icon(Icons.person_outline_rounded)),
                           textInputAction: TextInputAction.next,
                           textCapitalization: TextCapitalization.none,
                           autocorrect: false,
                         ),
                         const SizedBox(height: 14),
                         TextField(
-                          controller: _parentPassCtrl,
+                          controller: _mgr.parentPassCtrl,
                           decoration: const InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: Icon(Icons.lock_outline_rounded),
-                          ),
+                              labelText: 'Password',
+                              prefixIcon: Icon(Icons.lock_outline_rounded)),
                           obscureText: true,
                           textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _loginAsParent(),
+                          onSubmitted: (_) => _mgr.loginAsParent(),
                         ),
-                        if (_error != null) ...[
+                        if (_mgr.error != null) ...[
                           const SizedBox(height: 10),
-                          Text(_error!, style: const TextStyle(color: DesignTokens.error, fontWeight: FontWeight.w600)),
+                          Text(_mgr.error!,
+                              style: const TextStyle(
+                                  color: DesignTokens.error,
+                                  fontWeight: FontWeight.w600)),
                         ],
                         const SizedBox(height: 22),
                         KidsPlayfulPrimaryButton(
-                          label: _parentLoading ? 'Please wait…' : 'Continue',
-                          onTap: _parentLoading ? null : _loginAsParent,
+                          label: _mgr.parentLoading
+                              ? 'Please wait\u2026'
+                              : 'Continue',
+                          onTap: _mgr.parentLoading
+                              ? null
+                              : () => _mgr.loginAsParent(),
                         ),
                       ],
                     ),
@@ -360,7 +180,8 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => context.go('/home'),
-                    child: const Text('Back to Yaza', style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: const Text('Back to Yaza',
+                        style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ],
               ),
@@ -370,354 +191,4 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
       ),
     );
   }
-
-  Widget _buildParentDashboard(ThemeData theme) {
-    return Theme(
-      data: KidsVisualTheme.overlayOn(theme),
-      child: Container(
-        decoration: BoxDecoration(gradient: KidsVisualTheme.backgroundGradient),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            title: const Text('Who is learning?'),
-            actions: [
-              IconButton(
-                tooltip: 'Add child',
-                onPressed: () => _showCreateKidDialog(),
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.add_rounded, color: KidsVisualTheme.pathBlue),
-                ),
-              ),
-              IconButton(
-                tooltip: 'Sign out',
-                onPressed: _logoutParent,
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.logout_rounded, color: KidsVisualTheme.inkMuted),
-                ),
-              ),
-            ],
-          ),
-          body: _children == null
-              ? const Center(child: CircularProgressIndicator(color: Colors.white))
-              : _children!.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(28),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.95),
-                                shape: BoxShape.circle,
-                                boxShadow: DesignTokens.shadowSm(theme.brightness == Brightness.dark),
-                              ),
-                              child: Icon(Icons.child_friendly_rounded, size: 64, color: KidsVisualTheme.pathBlue.withValues(alpha: 0.85)),
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Add your first learner',
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Create a profile and PIN so your child can open Yaza Kids on their own.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.92),
-                                fontSize: 15,
-                                height: 1.4,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 28),
-                            KidsPlayfulPrimaryButton(
-                              label: 'Add a child',
-                              icon: Icons.add_rounded,
-                              onTap: () => _showCreateKidDialog(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      itemCount: _children!.length,
-                      itemBuilder: (_, i) {
-                        final kid = _children![i] as Map<String, dynamic>;
-                        final name = kid['childName'] as String? ?? 'Learner';
-                        final kidId = kid['id']?.toString() ?? '';
-                        final avatar = _avatars[kidId] ?? '';
-                        final letter = name.isNotEmpty ? name[0].toUpperCase() : '?';
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Material(
-                            color: Colors.white.withValues(alpha: 0.96),
-                            borderRadius: BorderRadius.circular(22),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(22),
-                              onTap: () {
-                                HapticFeedback.mediumImpact();
-                                _loginAsKid(kid);
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 56,
-                                      height: 56,
-                                      decoration: BoxDecoration(
-                                        gradient: KidsVisualTheme.ctaGradient,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: KidsVisualTheme.chunkyShadow(const Color(0xFF2A8F4A), dy: 3),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          avatar.isNotEmpty ? avatar : letter,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: avatar.isNotEmpty ? 32 : 24,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            name,
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w800,
-                                              color: KidsVisualTheme.ink,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            kid['childEducationTrack'] == 'ecd'
-                                                ? 'Early childhood · Std ${kid['standard'] ?? '?'}'
-                                                : 'Primary · Std ${kid['standard'] ?? '?'}',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: KidsVisualTheme.inkMuted,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Icon(Icons.play_circle_fill_rounded, color: KidsVisualTheme.pathBlue, size: 40),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-        ),
-      ),
-    );
-  }
-
-  void _showCreateKidDialog() {
-    _newKidAvatar = '🦊';
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDState) => Container(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 48,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Create Learner',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: KidsVisualTheme.ink,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Avatar Picker
-                  const Text(
-                    'Pick an avatar',
-                    style: TextStyle(fontWeight: FontWeight.w800, color: KidsVisualTheme.ink),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 64,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      clipBehavior: Clip.none,
-                      children: ['🦊', '🐰', '🐯', '🐧', '🐻', '🐸', '🐶', '🐱', '🐼', '🦁', '🐨']
-                          .map((a) => GestureDetector(
-                                onTap: () => setDState(() => _newKidAvatar = a),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 150),
-                                  margin: const EdgeInsets.only(right: 12),
-                                  width: 64,
-                                  decoration: BoxDecoration(
-                                    color: _newKidAvatar == a ? KidsVisualTheme.trailGreen : Colors.grey.shade100,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: _newKidAvatar == a ? KidsVisualTheme.trailGreen : Colors.transparent,
-                                      width: 2,
-                                    ),
-                                    boxShadow: _newKidAvatar == a
-                                        ? KidsVisualTheme.chunkyShadow(KidsVisualTheme.trailGreen, dy: 3)
-                                        : null,
-                                  ),
-                                  child: Center(
-                                    child: Text(a, style: const TextStyle(fontSize: 32)),
-                                  ),
-                                ),
-                              ))
-                          .toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  TextField(
-                    controller: _nameCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Child\'s name',
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    textCapitalization: TextCapitalization.words,
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _newKidEducationTrack,
-                          decoration: InputDecoration(
-                            labelText: 'Track',
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 'primary', child: Text('Primary')),
-                            DropdownMenuItem(value: 'ecd', child: Text('ECD (Infant)')),
-                          ],
-                          onChanged: (v) => setDState(() => _newKidEducationTrack = v ?? 'primary'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: DropdownButtonFormField<int>(
-                          initialValue: _newKidStandard ?? 1,
-                          decoration: InputDecoration(
-                            labelText: 'Standard',
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          items: List.generate(
-                            8,
-                            (i) => DropdownMenuItem(value: i + 1, child: Text('Std ${i + 1}')),
-                          ),
-                          onChanged: (v) => setDState(() => _newKidStandard = v),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  TextField(
-                    controller: _kidPinCtrl,
-                    decoration: InputDecoration(
-                      labelText: '4-digit PIN',
-                      helperText: 'Your child uses this to sign in',
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    keyboardType: TextInputType.number,
-                    maxLength: 4,
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  KidsPlayfulPrimaryButton(
-                    label: _creatingKid ? 'Saving...' : 'Add Learner',
-                    onTap: _creatingKid
-                        ? null
-                        : () {
-                            if (_nameCtrl.text.trim().isEmpty || _kidPinCtrl.text.length != 4) return;
-                            _newKidStandard ??= 1;
-                            Navigator.pop(ctx);
-                            _createKid();
-                          },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
 }
