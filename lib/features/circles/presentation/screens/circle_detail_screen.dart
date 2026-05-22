@@ -1,15 +1,12 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../widgets/circle_post_card.dart';
+import 'circle_detail_search.dart';
+import 'circle_detail_widgets.dart';
+import 'circle_new_post_form.dart';
+import 'circle_posts_list.dart';
 
 class CircleDetailScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -22,35 +19,11 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
   String _sort = 'hot';
   String _typeFilter = 'all';
   bool _solvedOnly = false;
-  final _titleCtrl = TextEditingController();
-  final _bodyCtrl = TextEditingController();
   bool _showNewPost = false;
-  File? _postImage;
-  String _postType = 'discussion';
-  bool _posting = false;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() { _titleCtrl.dispose(); _bodyCtrl.dispose(); super.dispose(); }
-
-  List<Map<String, dynamic>> _filterPosts(List rawPosts) {
-    return rawPosts
-        .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .where((post) {
-          if (_typeFilter != 'all' && post['postType']?.toString() != _typeFilter) {
-            return false;
-          }
-          if (_solvedOnly && post['isSolved'] != true) {
-            return false;
-          }
-          return true;
-        })
-        .toList();
+  void _showSearch() {
+    showSearch(
+        context: context, delegate: CirclePostSearchDelegate(widget.slug));
   }
 
   @override
@@ -58,387 +31,92 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     return Query(
-      options: QueryOptions(document: gql(kCircleDetail), variables: {'slug': widget.slug}, pollInterval: const Duration(seconds: 30)),
+      options: QueryOptions(
+          document: gql(kCircleDetail),
+          variables: {'slug': widget.slug},
+          pollInterval: const Duration(seconds: 30)),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        final circle = result.data?['studyCircle'];
-        if (circle == null) return const Scaffold(body: Center(child: Text('Circle not found')));
+        if (result.isLoading)
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
+        final circle = result.data?['studyCircle'] as Map<String, dynamic>?;
+        if (circle == null)
+          return const Scaffold(body: Center(child: Text('Circle not found')));
         return Scaffold(
           appBar: AppBar(
-            title: Text(circle['name'] ?? ''),
+            title: Text(circle['name']?.toString() ?? ''),
             actions: [
               if (circle['isMember'] != true)
-                Mutation(options: MutationOptions(document: gql(kJoinCircle)),
-                  builder: (run, _) => IconButton(icon: const Icon(Icons.person_add), onPressed: () { run({'slug': widget.slug}); refetch?.call(); }),
+                Mutation(
+                  options: MutationOptions(document: gql(kJoinCircle)),
+                  builder: (run, _) => IconButton(
+                      icon: const Icon(Icons.person_add),
+                      onPressed: () {
+                        run({'slug': widget.slug});
+                        refetch?.call();
+                      }),
                 ),
-              IconButton(icon: const Icon(Icons.search), onPressed: () => _showSearch(context)),
+              IconButton(
+                  icon: const Icon(Icons.search), onPressed: _showSearch),
               if (circle['isMember'] == true)
                 Mutation(
-                  options: MutationOptions(document: gql(kToggleFavouriteCircle)),
+                  options:
+                      MutationOptions(document: gql(kToggleFavouriteCircle)),
                   builder: (run, _) => IconButton(
-                    icon: Icon(circle['isFavorite'] == true ? Icons.star : Icons.star_border, color: circle['isFavorite'] == true ? DesignTokens.warning : null),
-                    onPressed: () { run({'circleSlug': widget.slug}); refetch?.call(); },
+                    icon: Icon(
+                        circle['isFavorite'] == true
+                            ? Icons.star
+                            : Icons.star_border,
+                        color: circle['isFavorite'] == true
+                            ? DesignTokens.warning
+                            : null),
+                    onPressed: () {
+                      run({'circleSlug': widget.slug});
+                      refetch?.call();
+                    },
                   ),
                 ),
             ],
           ),
           body: Column(children: [
-            if (circle['description'] != null && circle['description'] != '')
+            if (circle['description']?.toString().isNotEmpty == true)
               Container(
                 padding: const EdgeInsets.all(DesignTokens.spMd),
                 color: DesignTokens.primary.withValues(alpha: 0.04),
-                child: Text(circle['description'], style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                child: Text(circle['description']!.toString(),
+                    style: const TextStyle(
+                        color: DesignTokens.textSecondary, fontSize: 13)),
               ),
-            Container(
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: dark
-                      ? [DesignTokens.darkSurface, DesignTokens.darkSurfaceVariant]
-                      : const [Color(0xFFE9F4FF), Color(0xFFF7F1DE)],
-                ),
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          circle['isMember'] == true ? 'Study together' : 'Join this study circle',
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          circle['isMember'] == true
-                              ? 'Ask questions, share resources, and work through stuck points with your level.'
-                              : 'Become a member to ask questions and share revision resources.',
-                          style: const TextStyle(color: DesignTokens.textSecondary, height: 1.45),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.88),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          '${circle['memberCount'] ?? 0}',
-                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-                        ),
-                        const Text(
-                          'members',
-                          style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            CircleHeroBanner(circle: circle, dark: dark),
+            CircleFilterBar(
+              sort: _sort,
+              typeFilter: _typeFilter,
+              solvedOnly: _solvedOnly,
+              onSortChanged: (v) => setState(() => _sort = v),
+              onTypeFilterChanged: (v) => setState(() => _typeFilter = v),
+              onSolvedOnlyChanged: (v) => setState(() => _solvedOnly = v),
+              showNewPost: _showNewPost,
+              onToggleNewPost: () =>
+                  setState(() => _showNewPost = !_showNewPost),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd, vertical: DesignTokens.spXs),
-              child: Row(children: [
-                ChoiceChip(label: const Text('Hot'), selected: _sort == 'hot', onSelected: (_) => setState(() => _sort = 'hot')),
-                const SizedBox(width: 6),
-                ChoiceChip(label: const Text('New'), selected: _sort == 'new', onSelected: (_) => setState(() => _sort = 'new')),
-                const SizedBox(width: 6),
-                ChoiceChip(label: const Text('Top'), selected: _sort == 'top', onSelected: (_) => setState(() => _sort = 'top')),
-                const Spacer(),
-                AnimatedPress(
-                  onTap: () => setState(() => _showNewPost = !_showNewPost),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(color: DesignTokens.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
-                    child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.add, size: 16, color: DesignTokens.primary), SizedBox(width: 4),
-                      Text('Post', style: TextStyle(fontWeight: FontWeight.w600, color: DesignTokens.primary)),
-                    ]),
-                  ),
-                ),
-              ]),
-            ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd),
-              child: Row(
-                children: [
-                  for (final filter in const [('all', 'All'), ('question', 'Questions'), ('resource', 'Resources'), ('discussion', 'Discussion')])
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(filter.$2),
-                        selected: _typeFilter == filter.$1,
-                        onSelected: (_) => setState(() => _typeFilter = filter.$1),
-                      ),
-                    ),
-                  FilterChip(
-                    label: const Text('Solved only'),
-                    selected: _solvedOnly,
-                    onSelected: (value) => setState(() => _solvedOnly = value),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
             if (_showNewPost)
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: dark ? DesignTokens.darkSurface : Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: DesignTokens.primary.withValues(alpha: 0.2)),
-                  boxShadow: DesignTokens.shadowSm(dark),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text('Create new post', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _titleCtrl, 
-                      decoration: InputDecoration(
-                        labelText: 'Title', 
-                        filled: true,
-                        fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _bodyCtrl, 
-                      decoration: InputDecoration(
-                        labelText: 'Body', 
-                        filled: true,
-                        fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                      ),
-                      maxLines: 4,
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        if (_postImage != null)
-                          Stack(children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.file(_postImage!, height: 64, width: 64, fit: BoxFit.cover),
-                            ),
-                            Positioned(
-                              right: -4, 
-                              top: -4, 
-                              child: GestureDetector(
-                                onTap: () => setState(() => _postImage = null),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(color: DesignTokens.error, shape: BoxShape.circle),
-                                  child: const Icon(Icons.close, size: 14, color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ])
-                        else
-                          AnimatedPress(
-                            onTap: () async {
-                              final x = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1024);
-                              if (x != null) setState(() => _postImage = File(x.path));
-                            },
-                            child: Container(
-                              width: 64, height: 64,
-                              decoration: BoxDecoration(
-                                color: DesignTokens.primary.withValues(alpha: 0.1), 
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Icon(Icons.add_photo_alternate_rounded, color: DesignTokens.primary, size: 28),
-                            ),
-                          ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _postType,
-                            decoration: InputDecoration(
-                              labelText: 'Post Type',
-                              filled: true,
-                              fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            ),
-                            items: const [
-                              DropdownMenuItem(value: 'discussion', child: Text('Discussion')),
-                              DropdownMenuItem(value: 'question', child: Text('Question')),
-                              DropdownMenuItem(value: 'resource', child: Text('Resource')),
-                            ],
-                            onChanged: (v) => setState(() => _postType = v ?? 'discussion'),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => setState(() {
-                            _showNewPost = false;
-                            _titleCtrl.clear();
-                            _bodyCtrl.clear();
-                            _postImage = null;
-                          }),
-                          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
-                        ),
-                        const SizedBox(width: 8),
-                        FilledButton(
-                          onPressed: _posting ? null : () => _submitPost(refetch),
-                          style: FilledButton.styleFrom(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          ),
-                          child: _posting 
-                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : const Text('Post', style: TextStyle(fontWeight: FontWeight.w700)),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              CircleNewPostForm(
+                circleSlug: widget.slug,
+                onClose: () => setState(() => _showNewPost = false),
+                onPosted: () {
+                  setState(() => _showNewPost = false);
+                  refetch?.call();
+                },
               ),
-            Expanded(child: _buildPostsList(circle['slug'], refetch)),
+            Expanded(
+                child: CirclePostsList(
+              slug: widget.slug,
+              sort: _sort,
+              typeFilter: _typeFilter,
+              solvedOnly: _solvedOnly,
+              onRefetch: () => refetch?.call(),
+            )),
           ]),
-        );
-      },
-    );
-  }
-
-  Future<void> _submitPost(dynamic refetch) async {
-    if (_titleCtrl.text.trim().isEmpty || _posting) return;
-    setState(() => _posting = true);
-    try {
-      String? b64;
-      if (_postImage != null) {
-        final bytes = await _postImage!.readAsBytes();
-        if (bytes.length > 3 * 1024 * 1024) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Image too large (max 3MB)'), backgroundColor: DesignTokens.error),
-            );
-            setState(() => _posting = false);
-          }
-          return;
-        }
-        b64 = base64Encode(bytes);
-      }
-      final client = ref.read(graphqlClientProvider);
-      final result = await client.mutate(MutationOptions(
-        document: gql(kCreatePost),
-        variables: {
-          'circleSlug': widget.slug,
-          'title': _titleCtrl.text.trim(),
-          'content': _bodyCtrl.text.trim(),
-          'postType': _postType,
-          'imageBase64': b64,
-        },
-      ));
-      if (!mounted) return;
-      setState(() => _posting = false);
-      if (result.hasException || result.data?['createPost']?['success'] != true) {
-        final message = result.exception?.graphqlErrors.firstOrNull?.message ??
-            (result.data?['createPost']?['errors'] as List?)?.firstOrNull?.toString() ??
-            'unknown error';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to post: $message'), backgroundColor: DesignTokens.error),
-        );
-        return;
-      }
-      _titleCtrl.clear();
-      _bodyCtrl.clear();
-      setState(() { _showNewPost = false; _postImage = null; });
-      refetch?.call();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _posting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to post: $e'), backgroundColor: DesignTokens.error),
-      );
-    }
-  }
-
-  void _showSearch(BuildContext context) {
-    showSearch(context: context, delegate: _PostSearchDelegate(widget.slug));
-  }
-
-  Widget _buildPostsList(String slug, dynamic refetch) {
-    return Query(
-      options: QueryOptions(
-        document: gql(kCirclePosts),
-        variables: {'circleSlug': slug, 'sort': _sort},
-        pollInterval: const Duration(seconds: 30),
-      ),
-      builder: (postResult, {fetchMore, refetch}) {
-        if (postResult.isLoading) return const Center(child: CircularProgressIndicator());
-        final posts = _filterPosts((postResult.data?['circlePosts'] as List?) ?? const []);
-        if (posts.isEmpty) return const Center(child: Text('No posts yet', style: TextStyle(color: DesignTokens.textSecondary)));
-        return RefreshIndicator(
-          onRefresh: () async => refetch?.call(),
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd),
-            itemCount: posts.length,
-            itemBuilder: (_, i) {
-              final p = posts[i];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: DesignTokens.spXs),
-                child: CirclePostCard(
-                  post: p,
-                  onTap: () => context.push('/circles/${widget.slug}/post/${p['slug']}'),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _PostSearchDelegate extends SearchDelegate {
-  final String circleSlug;
-  _PostSearchDelegate(this.circleSlug);
-  @override
-  List<Widget>? buildActions(BuildContext context) => [IconButton(icon: const Icon(Icons.clear), onPressed: () => query = '')];
-  @override
-  Widget? buildLeading(BuildContext context) => IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => close(context, null));
-  @override
-  Widget buildResults(BuildContext context) => _buildSearch(context);
-  @override
-  Widget buildSuggestions(BuildContext context) => _buildSearch(context);
-
-  Widget _buildSearch(BuildContext context) {
-    if (query.isEmpty) return const EmptyState(icon: Icons.search, title: 'Search posts');
-    return Query(
-      options: QueryOptions(document: gql(kSearchPosts), variables: {'query': query, 'circleSlug': circleSlug}),
-      builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) return const Center(child: CircularProgressIndicator());
-        final posts = (result.data?['searchPosts'] as List?) ?? [];
-        if (posts.isEmpty) return const EmptyState(icon: Icons.search_off, title: 'No results');
-        return ListView.builder(
-          itemCount: posts.length,
-          itemBuilder: (_, i) {
-            final p = posts[i];
-            return ListTile(
-              title: Text(p['title'] ?? ''),
-              subtitle: Text('${p['author']?['username'] ?? ''}  ·  ${p['commentCount'] ?? 0} comments'),
-              onTap: () { close(context, null); context.go('/circles/$circleSlug/post/${p['slug']}'); },
-            );
-          },
         );
       },
     );
