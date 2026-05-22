@@ -67,3 +67,21 @@ class LoadingBuilder extends StatelessWidget {
     );
   }
 }
+
+class LoadingWidget extends StatelessWidget {
+  final Color? color;
+  final double? size;
+
+  const LoadingWidget({super.key, this.color, this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: CircularProgressIndicator(color: color),
+      ),
+    );
+  }
+}

@@ -4,44 +4,44 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../data/kid_graphql_client.dart';
 import 'kid_auth_widgets.dart';
-import 'kids_home_screen_data.dart';
+import 'kids_home_state_provider.dart';
 import 'kids_lesson_actions.dart';
 
 class KidsHomeScreenManager {
-  late WidgetRef _refStorage;
-  late void Function(VoidCallback) _setStateFn;
-  late BuildContext Function() _contextFn;
-  late bool Function() _mountedFn;
-  final data = KidsHomeScreenData();
+  final WidgetRef ref;
   late final KidsLessonActions actions;
+  BuildContext Function() _contextFn = () => throw UnimplementedError();
+  bool Function() _mountedFn = () => true;
 
-  WidgetRef get ref => _refStorage;
-
-  void attach({
-    required WidgetRef ref,
-    required void Function(VoidCallback) setState,
-    required BuildContext Function() getContext,
-    required bool Function() isMounted,
-  }) {
-    _refStorage = ref;
-    _setStateFn = setState;
-    _contextFn = getContext;
-    _mountedFn = isMounted;
+  KidsHomeScreenManager(this.ref) {
     actions = KidsLessonActions(this);
   }
 
-  bool get mounted => _mountedFn();
+  void attach({
+    required BuildContext Function() getContext,
+    required bool Function() isMounted,
+  }) {
+    _contextFn = getContext;
+    _mountedFn = isMounted;
+  }
+
   BuildContext get context => _contextFn();
-  void setState(VoidCallback fn) => _setStateFn(fn);
+  bool get mounted => _mountedFn();
+
+  KidsHomeState get state => ref.read(kidsHomeStateProvider);
+
+  void _update(KidsHomeState Function(KidsHomeState) cb) {
+    ref.read(kidsHomeStateProvider.notifier).apply(cb);
+  }
 
   GraphQLClient _buildKidClient() {
-    final auth = _refStorage.read(kidAuthStateProvider);
+    final auth = ref.read(kidAuthStateProvider);
     return KidGraphqlClient.fromToken(auth.token);
   }
 
   Future<void> fetchSubjects() async {
-    data.subjectFetchStarted = true;
-    final auth = _refStorage.read(kidAuthStateProvider);
+    _update((s) => s.copyWith(subjectFetchStarted: true));
+    final auth = ref.read(kidAuthStateProvider);
     final c = _buildKidClient();
     final result = await c.query(QueryOptions(
       document: gql(kPrimarySubjects),
@@ -50,39 +50,38 @@ class KidsHomeScreenManager {
         'educationTrack': auth.educationTrack
       },
     ));
-    if (!mounted) return;
     if (result.data != null) {
-      data.subjects = ((result.data!['primarySubjects'] as List?) ?? [])
+      final subjects = ((result.data!['primarySubjects'] as List?) ?? [])
           .map((s) => Map<String, dynamic>.from(s as Map))
           .toList();
-      data.fetchedSubjects = true;
-      data.subjectFetchStarted = false;
-      setState(() {});
+      _update((s) => s.copyWith(
+          subjects: subjects,
+          fetchedSubjects: true,
+          subjectFetchStarted: false));
       await fetchDailySummary();
       await fetchRewardProfile();
     } else {
-      setState(() {
-        data.fetchedSubjects = true;
-        data.subjectFetchStarted = false;
-      });
+      _update(
+          (s) => s.copyWith(fetchedSubjects: true, subjectFetchStarted: false));
     }
   }
 
   Future<void> fetchDailySummary() async {
-    final auth = _refStorage.read(kidAuthStateProvider);
+    final auth = ref.read(kidAuthStateProvider);
     if (!auth.isAuthenticated) return;
     final c = _buildKidClient();
     final result = await c.query(QueryOptions(
       document: gql(kKidDailySummary),
       fetchPolicy: FetchPolicy.networkOnly,
     ));
-    if (!mounted || result.data == null) return;
+    if (result.data == null) return;
     final s = result.data!['kidDailySummary'] as Map<String, dynamic>?;
     if (s != null) {
-      setState(() {
-        data.dailySummary = Map<String, dynamic>.from(s);
-        final ts = (data.dailySummary!['totalStars'] as num?)?.toInt();
-        if (ts != null) data.stars = ts;
+      _update((prev) {
+        final dailySummary = Map<String, dynamic>.from(s);
+        final stars =
+            (dailySummary['totalStars'] as num?)?.toInt() ?? prev.stars;
+        return prev.copyWith(dailySummary: dailySummary, stars: stars);
       });
     }
   }
@@ -93,12 +92,11 @@ class KidsHomeScreenManager {
           document: gql(kKidRewardProfile),
           fetchPolicy: FetchPolicy.networkOnly),
     );
-    if (!mounted) return;
     final profile = result.data?['kidRewardProfile'];
-    setState(() {
-      data.rewardProfile =
-          profile is Map ? Map<String, dynamic>.from(profile) : null;
-    });
+    if (profile is Map) {
+      _update(
+          (s) => s.copyWith(rewardProfile: Map<String, dynamic>.from(profile)));
+    }
   }
 
   Future<void> fetchTopics(String subjectId, int standard) async {
@@ -108,18 +106,19 @@ class KidsHomeScreenManager {
       variables: {'subjectId': subjectId, 'standard': standard},
       fetchPolicy: FetchPolicy.networkOnly,
     ));
-    if (!mounted) return;
-    setState(() {
-      data.topics = ((result.data?['primaryTopics'] as List?) ?? const [])
-          .whereType<Map>()
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
-      if (data.topics.isEmpty) {
-        data.selectedTopic = null;
-      } else if (data.selectedTopic == null ||
-          !data.topics.any((t) => t['id'] == data.selectedTopic?['id'])) {
-        data.selectedTopic = data.topics.first;
+    final topics = ((result.data?['primaryTopics'] as List?) ?? const [])
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+    _update((s) {
+      var selectedTopic = s.selectedTopic;
+      if (topics.isEmpty) {
+        selectedTopic = null;
+      } else if (selectedTopic == null ||
+          !topics.any((t) => t['id'] == selectedTopic!['id'])) {
+        selectedTopic = topics.first;
       }
+      return s.copyWith(topics: topics, selectedTopic: selectedTopic);
     });
   }
 
@@ -130,12 +129,11 @@ class KidsHomeScreenManager {
       variables: {'subjectId': subjectId, 'standard': standard},
       fetchPolicy: FetchPolicy.networkOnly,
     ));
-    if (!mounted) return;
     final progress = result.data?['kidProgress'];
-    setState(() {
-      data.subjectProgress =
-          progress is Map ? Map<String, dynamic>.from(progress) : null;
-    });
+    if (progress is Map) {
+      _update((s) =>
+          s.copyWith(subjectProgress: Map<String, dynamic>.from(progress)));
+    }
   }
 
   Future<void> fetchRoadmap(String subjectId, int standard) async {
@@ -150,22 +148,26 @@ class KidsHomeScreenManager {
       variables: const {'limit': 4},
       fetchPolicy: FetchPolicy.networkOnly,
     ));
-    if (!mounted) return;
     final roadmap = roadmapResult.data?['kidSubjectRoadmap'];
-    setState(() {
-      data.roadmapSummary = roadmap is Map && roadmap['summary'] is Map
+    _update((s) {
+      final roadmapSummary = roadmap is Map && roadmap['summary'] is Map
           ? Map<String, dynamic>.from(roadmap['summary'] as Map)
           : null;
-      data.topicRoadmap =
+      final topicRoadmap =
           ((roadmap is Map ? roadmap['topics'] : null) as List? ?? const [])
               .whereType<Map>()
               .map((item) => Map<String, dynamic>.from(item))
               .toList();
-      data.reviewQueue =
+      final reviewQueue =
           ((reviewResult.data?['kidReviewQueue'] as List?) ?? const [])
               .whereType<Map>()
               .map((item) => Map<String, dynamic>.from(item))
               .toList();
+      return s.copyWith(
+        roadmapSummary: roadmapSummary,
+        topicRoadmap: topicRoadmap,
+        reviewQueue: reviewQueue,
+      );
     });
     await fetchRewardProfile();
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../kids_visual_theme.dart';
 import 'kids_playful_button.dart';
 
@@ -64,8 +65,7 @@ class KidLoginDashboard extends StatelessWidget {
             ],
           ),
           body: children == null
-              ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white))
+              ? const LoadingWidget()
               : hasChildren
                   ? ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),

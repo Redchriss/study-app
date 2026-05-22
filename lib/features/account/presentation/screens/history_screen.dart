@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
 class HistoryScreen extends ConsumerWidget {
@@ -28,10 +29,10 @@ class HistoryScreen extends ConsumerWidget {
             Query(
               options: QueryOptions(document: gql(kPaymentHistory), variables: const {'limit': 50}),
               builder: (result, {fetchMore, refetch}) {
-                if (result.isLoading) return const Center(child: CircularProgressIndicator());
+                if (result.isLoading) return const LoadingWidget();
                 if (result.hasException) {
                   return ErrorState(
-                    message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load transactions.',
+                    message: graphQLErrorMessage(result.exception, 'Could not load transactions.'),
                     onRetry: () => refetch?.call(),
                   );
                 }
@@ -105,10 +106,10 @@ class HistoryScreen extends ConsumerWidget {
             Query(
               options: QueryOptions(document: gql(kCreditLedger), variables: const {'limit': 50}),
               builder: (result, {fetchMore, refetch}) {
-                if (result.isLoading) return const Center(child: CircularProgressIndicator());
+                if (result.isLoading) return const LoadingWidget();
                 if (result.hasException) {
                   return ErrorState(
-                    message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load credit usage.',
+                    message: graphQLErrorMessage(result.exception, 'Could not load credit usage.'),
                     onRetry: () => refetch?.call(),
                   );
                 }

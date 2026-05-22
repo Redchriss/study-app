@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
 class CirclePostSearchDelegate extends SearchDelegate {
@@ -32,11 +33,10 @@ class CirclePostSearchDelegate extends SearchDelegate {
           variables: {'query': query, 'circleSlug': circleSlug}),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading)
-          return const Center(child: CircularProgressIndicator());
+          return const LoadingWidget();
         if (result.hasException)
           return ErrorState(
-            message: result.exception?.graphqlErrors.firstOrNull?.message ??
-                'Search failed',
+            message: graphQLErrorMessage(result.exception, 'Search failed'),
             onRetry: () => refetch?.call(),
           );
         final posts = (result.data?['searchPosts'] as List?) ?? [];

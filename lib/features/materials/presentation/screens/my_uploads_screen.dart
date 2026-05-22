@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/graphql_options.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -47,7 +48,7 @@ class MyUploadsScreen extends ConsumerWidget {
     if (result.hasException) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.exception?.graphqlErrors.first.message ?? 'Delete failed'),
+          content: Text(graphQLErrorMessage(result.exception, 'Delete failed')),
           backgroundColor: DesignTokens.error,
         ),
       );
@@ -80,12 +81,10 @@ class MyUploadsScreen extends ConsumerWidget {
           variables: {'limit': _pageSize, 'offset': 0},
         ),
         builder: (result, {fetchMore, refetch}) {
-          if (result.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          if (result.isLoading) return const LoadingWidget();
           if (result.hasException) {
             return ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load uploads.',
+              message: graphQLErrorMessage(result.exception, 'Could not load uploads.'),
               onRetry: () => refetch?.call(),
             );
           }

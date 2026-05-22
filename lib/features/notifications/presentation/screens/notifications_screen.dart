@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -21,14 +22,14 @@ class NotificationsScreen extends ConsumerWidget {
         if (result.isLoading) {
           return Scaffold(
             appBar: AppBar(title: Text('Notifications', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
-            body: const Center(child: CircularProgressIndicator()),
+            body: const LoadingWidget(),
           );
         }
         if (result.hasException) {
           return Scaffold(
             appBar: AppBar(title: Text('Notifications', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800))),
             body: ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load notifications.',
+              message: graphQLErrorMessage(result.exception, 'Could not load notifications.'),
               onRetry: () => refetch?.call(),
             ),
           );
@@ -52,7 +53,7 @@ class NotificationsScreen extends ConsumerWidget {
                         if (markResult.hasException) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(markResult.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not mark notifications as read.'),
+                              content: Text(graphQLErrorMessage(markResult.exception, 'Could not mark notifications as read.')),
                               backgroundColor: DesignTokens.error,
                             ),
                           );

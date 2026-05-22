@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
 class UniversityPickerSheet extends StatefulWidget {
@@ -94,10 +95,10 @@ class _UniversityPickerSheetState extends State<UniversityPickerSheet> {
                   },
                 ),
                 builder: (result, {fetchMore, refetch}) {
-                  if (result.isLoading) return const Center(child: CircularProgressIndicator());
+                  if (result.isLoading) return const LoadingWidget();
                   if (result.hasException) {
                     return ErrorState(
-                      message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load institutions.',
+                      message: graphQLErrorMessage(result.exception, 'Could not load institutions.'),
                       onRetry: () => refetch?.call(),
                     );
                   }

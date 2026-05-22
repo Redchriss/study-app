@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../data/kid_graphql_client.dart';
 import '../../kids_visual_theme.dart';
 import '../widgets/kids_reward_panel.dart';
@@ -61,9 +63,10 @@ class _KidsJourneyScreenState extends ConsumerState<KidsJourneyScreen> {
     if (rewardResult.hasException || roadmapResult.hasException) {
       setState(() {
         _loading = false;
-        _error = rewardResult.exception?.graphqlErrors.firstOrNull?.message ??
-            roadmapResult.exception?.graphqlErrors.firstOrNull?.message ??
-            'Could not load the journey right now.';
+        _error = graphQLErrorMessage(
+            rewardResult.exception,
+            graphQLErrorMessage(roadmapResult.exception,
+                'Could not load the journey right now.'));
       });
       return;
     }
@@ -117,7 +120,7 @@ class _KidsJourneyScreenState extends ConsumerState<KidsJourneyScreen> {
             child: RefreshIndicator(
               onRefresh: _load,
               child: _loading
-                  ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                  ? const LoadingWidget()
                   : _error != null
                       ? ListView(
                           padding: const EdgeInsets.all(24),

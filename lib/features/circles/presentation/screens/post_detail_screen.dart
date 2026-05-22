@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import 'post_detail_comment_item.dart';
@@ -40,9 +41,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       if (!mounted) return;
       final payload = result.data?['addComment'];
       if (result.hasException || payload?['success'] != true) {
-        final message = result.exception?.graphqlErrors.firstOrNull?.message ??
-            (payload?['errors'] as List?)?.firstOrNull?.toString() ??
-            'Could not add comment';
+        final gqlErr = graphQLErrorMessage(result.exception, '');
+        final message = gqlErr.isNotEmpty
+            ? gqlErr
+            : (payload?['errors'] as List?)?.firstOrNull?.toString() ?? 'Could not add comment';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
         );
@@ -69,12 +71,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading)
           return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
+              body: LoadingWidget());
         if (result.hasException)
           return Scaffold(
             body: ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ??
-                  'Failed to load post',
+              message: graphQLErrorMessage(result.exception, 'Failed to load post'),
               onRetry: () => refetch?.call(),
             ),
           );
@@ -109,9 +110,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               child: CircularProgressIndicator());
                         if (cResult.hasException)
                           return ErrorState(
-                            message: cResult.exception?.graphqlErrors
-                                    .firstOrNull?.message ??
-                                'Failed to load comments',
+                            message: graphQLErrorMessage(cResult.exception, 'Failed to load comments'),
                             onRetry: () => refetch?.call(),
                           );
                         final comments =

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
 class ProgramPickerSheet extends StatefulWidget {
@@ -58,10 +59,10 @@ class _ProgramPickerSheetState extends State<ProgramPickerSheet> {
               child: Query(
                 options: QueryOptions(document: gql(kPrograms), variables: {'universityId': widget.universityId}),
                 builder: (result, {fetchMore, refetch}) {
-                  if (result.isLoading) return const Center(child: CircularProgressIndicator());
+                  if (result.isLoading) return const LoadingWidget();
                   if (result.hasException) {
                     return ErrorState(
-                      message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load programmes.',
+                      message: graphQLErrorMessage(result.exception, 'Could not load programmes.'),
                       onRetry: () => refetch?.call(),
                     );
                   }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 
@@ -55,8 +56,7 @@ class ScannerSubmitService {
       if (result.hasException || result.data?['submitScanSession'] == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.exception?.graphqlErrors.firstOrNull?.message ??
-                'Failed to solve'),
+            content: Text(graphQLErrorMessage(result.exception, 'Failed to solve')),
             backgroundColor: DesignTokens.error,
           ),
         );

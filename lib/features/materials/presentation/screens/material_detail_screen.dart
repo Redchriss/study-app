@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/app_preferences_service.dart';
 import '../../../../core/services/material_cache_service.dart';
@@ -56,8 +57,7 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
       if (result.hasException) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-                result.exception?.graphqlErrors.firstOrNull?.message ??
-                    'Bookmark update failed'),
+                graphQLErrorMessage(result.exception, 'Bookmark update failed')),
             backgroundColor: DesignTokens.error));
       }
     } finally {
@@ -78,8 +78,7 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
         if (result.hasException) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(
-                  result.exception?.graphqlErrors.firstOrNull?.message ??
-                      'AI task failed'),
+                  graphQLErrorMessage(result.exception, 'AI task failed')),
               backgroundColor: DesignTokens.error));
         } else {
           refetch?.call();
@@ -114,7 +113,7 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading && result.data == null)
           return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
+              body: LoadingWidget());
         final live = result.data?['material'];
         if (live is Map) {
           _cache.saveMaterial(widget.slug, Map<String, dynamic>.from(live));

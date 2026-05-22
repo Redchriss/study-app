@@ -5,6 +5,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
 /// Generic screen that fetches and renders any [SitePage] by slug.
@@ -40,8 +41,7 @@ class SitePageScreen extends StatelessWidget {
         if (result.hasException && result.data?['sitePage'] == null)
           return Scaffold(
             body: ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ??
-                  'Failed to load page',
+              message: graphQLErrorMessage(result.exception, 'Failed to load page'),
               onRetry: () => refetch?.call(),
             ),
           );

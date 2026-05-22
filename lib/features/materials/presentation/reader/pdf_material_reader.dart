@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import 'material_reader_models.dart';
 import 'material_reader_services.dart';
 import 'reader_chrome.dart';
@@ -54,7 +55,7 @@ class _PdfMaterialReaderState extends State<PdfMaterialReader> {
           return const ReaderScaffold(
             title: 'Study mode',
             trailing: ReaderPageBadge(label: 'Opening...'),
-            child: Center(child: CircularProgressIndicator()),
+            child: LoadingWidget(),
           );
         }
 

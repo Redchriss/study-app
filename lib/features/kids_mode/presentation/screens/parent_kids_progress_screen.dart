@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -16,14 +17,14 @@ class ParentKidsProgressScreen extends StatelessWidget {
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: LoadingWidget(),
           );
         }
         if (result.hasException) {
           return Scaffold(
             appBar: AppBar(title: const Text('Kids Progress')),
             body: ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load child progress.',
+              message: graphQLErrorMessage(result.exception, 'Could not load child progress.'),
               onRetry: () => refetch?.call(),
             ),
           );

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
 class BookmarksScreen extends ConsumerWidget {
@@ -18,10 +19,10 @@ class BookmarksScreen extends ConsumerWidget {
       body: Query(
         options: QueryOptions(document: gql(kBookmarkedMaterials)),
         builder: (result, {fetchMore, refetch}) {
-          if (result.isLoading) return const Center(child: CircularProgressIndicator());
+          if (result.isLoading) return const LoadingWidget();
           if (result.hasException) {
             return ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load bookmarks.',
+              message: graphQLErrorMessage(result.exception, 'Could not load bookmarks.'),
               onRetry: () => refetch?.call(),
             );
           }

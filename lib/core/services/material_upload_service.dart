@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 
-import '../config/app_config.dart';
+import '../constants/api_endpoints.dart';
 import '../storage/secure_storage.dart';
 
 class MaterialUploadResult {
@@ -50,7 +50,7 @@ class MaterialUploadService {
 
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('${AppConfig.apiUrl}/materials/api/upload/'),
+      Uri.parse(ApiEndpoints.materialUpload),
     );
     request.headers['Authorization'] = 'Bearer $token';
     request.fields['title'] = title;
@@ -67,25 +67,33 @@ class MaterialUploadService {
     }
     if (file != null) {
       if (file.path != null && file.path!.isNotEmpty) {
-        request.files.add(await http.MultipartFile.fromPath('file', file.path!, filename: file.name));
+        request.files.add(await http.MultipartFile.fromPath('file', file.path!,
+            filename: file.name));
       } else if (file.bytes != null) {
-        request.files.add(http.MultipartFile.fromBytes('file', file.bytes!, filename: file.name));
+        request.files.add(http.MultipartFile.fromBytes('file', file.bytes!,
+            filename: file.name));
       }
     }
 
     try {
       final response = await request.send();
       final body = await response.stream.bytesToString();
-      final decoded = body.isEmpty ? const <String, dynamic>{} : jsonDecode(body) as Map<String, dynamic>;
+      final decoded = body.isEmpty
+          ? const <String, dynamic>{}
+          : jsonDecode(body) as Map<String, dynamic>;
       final errors = ((decoded['errors'] as List?) ?? const <dynamic>[])
           .map((error) => error.toString())
           .toList();
 
-      if (response.statusCode < 200 || response.statusCode >= 300 || decoded['success'] != true) {
+      if (response.statusCode < 200 ||
+          response.statusCode >= 300 ||
+          decoded['success'] != true) {
         return MaterialUploadResult(
           success: false,
           message: decoded['message']?.toString(),
-          errors: errors.isNotEmpty ? errors : <String>['Upload failed. Please try again.'],
+          errors: errors.isNotEmpty
+              ? errors
+              : <String>['Upload failed. Please try again.'],
         );
       }
 

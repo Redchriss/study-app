@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/client.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/storage/secure_storage.dart';
@@ -28,12 +29,6 @@ final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new)
 
 class AuthNotifier extends Notifier<AuthState> {
   Timer? _refreshTimer;
-
-  String _errorMessage(OperationException? exception, [String fallback = 'Network error. Check your connection.']) {
-    return exception?.graphqlErrors.firstOrNull?.message ??
-        exception?.linkException?.toString() ??
-        fallback;
-  }
 
   @override
   AuthState build() {
@@ -107,7 +102,7 @@ class AuthNotifier extends Notifier<AuthState> {
       ));
 
       if (result.hasException) {
-        final msg = _errorMessage(result.exception);
+        final msg = graphQLErrorMessage(result.exception, 'Network error. Check your connection.');
         state = AuthState(isAuthenticated: false, isLoading: false, error: msg);
         return false;
       }
@@ -138,7 +133,7 @@ class AuthNotifier extends Notifier<AuthState> {
       ));
 
       if (result.hasException) {
-        final msg = _errorMessage(result.exception);
+        final msg = graphQLErrorMessage(result.exception, 'Network error. Check your connection.');
         state = AuthState(isAuthenticated: false, isLoading: false, error: msg);
         return false;
       }

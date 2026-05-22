@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'profile_body.dart';
 
@@ -41,7 +42,7 @@ class ProfileScreen extends ConsumerWidget {
               centerTitle: true,
             ),
             body: ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load profile.',
+              message: graphQLErrorMessage(result.exception, 'Could not load profile.'),
               onRetry: () => refetch?.call(),
             ),
           );

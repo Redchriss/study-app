@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../account/presentation/widgets/education_pickers.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/app_preferences_service.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -139,13 +140,9 @@ class ProfileSetupManager {
           .map((item) => item.toString())
           .where((item) => item.trim().isNotEmpty)
           .toList();
-      final graphQLError = result.exception?.graphqlErrors.firstOrNull?.message;
-      final linkError = result.exception?.linkException?.toString();
       if (result.hasException || payload?['success'] != true) {
         final message = payloadErrors.firstOrNull ??
-            graphQLError ??
-            linkError ??
-            'Save failed. Try again.';
+            graphQLErrorMessage(result.exception, 'Save failed. Try again.');
         ScaffoldMessenger.of(_context).showSnackBar(
           SnackBar(
             content: Text(message),

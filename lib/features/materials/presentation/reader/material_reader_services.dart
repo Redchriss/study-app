@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/study_progress_store.dart';
 import 'material_reader_models.dart';
@@ -31,9 +32,7 @@ class MaterialReaderService {
   final _progressStore = StudyProgressStore();
 
   String _errorMessage(QueryResult result, [String fallback = 'Something went wrong.']) {
-    return result.exception?.graphqlErrors.firstOrNull?.message ??
-        result.exception?.linkException?.toString() ??
-        fallback;
+    return graphQLErrorMessage(result.exception, fallback);
   }
 
   Future<String?> cachePdf(String url, String slug) async {

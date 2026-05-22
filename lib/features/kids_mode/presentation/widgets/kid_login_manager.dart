@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/storage/secure_storage.dart';
 import 'kid_auth_widgets.dart';
@@ -105,9 +106,7 @@ class KidLoginManager {
       }
       await fetchChildren();
     } else {
-      final msg = result.exception?.graphqlErrors.firstOrNull?.message ??
-          result.exception?.linkException?.toString() ??
-          'Invalid credentials';
+      final msg = graphQLErrorMessage(result.exception, 'Invalid credentials');
       setState(() {
         error = msg;
         parentLoading = false;

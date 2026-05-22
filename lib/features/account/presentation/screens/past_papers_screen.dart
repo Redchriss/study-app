@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
 class PastPapersScreen extends StatelessWidget {
@@ -15,10 +16,10 @@ class PastPapersScreen extends StatelessWidget {
       body: Query(
         options: QueryOptions(document: gql(kMySolveSessions), variables: const {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
-          if (result.isLoading) return const Center(child: CircularProgressIndicator());
+          if (result.isLoading) return const LoadingWidget();
           if (result.hasException) {
             return ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load solved papers.',
+              message: graphQLErrorMessage(result.exception, 'Could not load solved papers.'),
               onRetry: () => refetch?.call(),
             );
           }

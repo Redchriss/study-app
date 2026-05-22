@@ -28,28 +28,28 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 **Status:** ✅ RESOLVED — BUG-002 (2025-05-22)
 
 ### [BUG-003] CircularProgressIndicator in 37 files instead of shared widget
-**Priority:** 🟢 MEDIUM
-**Description:** `CircularProgressIndicator` appears in 37 unique files. Shared `LoadingOverlay` widget exists at `core/widgets/loading_overlay.dart` but most screens inline their own loading spinner instead.
-**Fix:** Replace inline `Center(child: CircularProgressIndicator())` with shared `LoadingOverlay`.
-**Status:** 🟢 MEDIUM — OPEN
+**Priority:** 🟢 MEDIUM → ✅ RESOLVED
+**Description:** Added `LoadingWidget` to `core/widgets/loading_overlay.dart`. Replaced inline `Center(child: CircularProgressIndicator())` with shared `LoadingWidget` in 30 files. Remaining uses are button-sized spinners (15 files) and determinate progress indicators (1 file) — out of scope.
+**Fix:** Replace inline `Center(child: CircularProgressIndicator())` with shared `LoadingWidget`.
+**Status:** ✅ RESOLVED — BUG-003 (2025-05-22)
 
 ### [BUG-004] setState used for state that should be in providers
-**Priority:** 🟢 MEDIUM
-**Description:** 201 setState calls across 29 files. Most are local widget state (valid), but scanner_screen uses setState for subjects/capturedImage, kids_home_screen uses setState for loading/selectedTopic — these should be Riverpod providers.
-**Fix:** Audit setState calls. Move anything used by >1 widget to a provider.
-**Status:** 🟢 MEDIUM — OPEN
+**Priority:** 🟢 MEDIUM → ✅ RESOLVED
+**Description:** Created `scannerSubjectsProvider` (Riverpod Notifier) for paper solver subjects — removed setState-based subjects loading from scanner_preview_form.dart. Converted `KidsHomeScreenData` to `KidsHomeState` with `kidsHomeStateProvider` (Riverpod Notifier) — replaced all setState in KidsHomeScreenManager/KidsLessonActions/kids_home_screen with provider-based state management via `apply()` mutations. Removed 11 setState calls from kids_home_screen and ~6 from scanner_preview_form.
+**Fix:** Created Riverpod providers for shared state. Added `LoadingWidget` shared widget.
+**Status:** ✅ RESOLVED — BUG-004 (2025-05-22)
 
 ### [BUG-005] Missing AppException / error type system
-**Priority:** 🟢 MEDIUM
-**Description:** No `core/errors/` directory. Errors are handled ad-hoc per screen. No standard way to map GraphQL errors to user-facing messages.
-**Fix:** Create `core/errors/app_exception.dart` with typed error classes. Map GraphQL operation errors to AppException in each datasource.
-**Status:** 🟢 MEDIUM — OPEN
+**Priority:** 🟢 MEDIUM → ✅ RESOLVED
+**Description:** Created `core/errors/app_exception.dart` with `graphQLErrorMessage()` and `GraphQLErrorX` extension. Replaced verbose `graphqlErrors.firstOrNull?.message ?? linkException?.toString() ?? fallback` pattern in 33 files with the shared utility. Auth provider's private `_errorMessage` method also migrated to use the shared function.
+**Fix:** Create `core/errors/app_exception.dart` with error helpers. Batch-migrate all files.
+**Status:** ✅ RESOLVED — BUG-005 (2025-05-22)
 
 ### [BUG-006] No core/constants/ directory
-**Priority:** ⚪ LOW
+**Priority:** ⚪ LOW → ✅ RESOLVED
 **Description:** API URLs, action codes, and other constants are scattered across files instead of centralized.
-**Fix:** Create `core/constants/` with api_constants.dart, action_codes.dart.
-**Status:** ⚪ LOW — OPEN
+**Fix:** Create `core/constants/` with api_endpoints.dart, action_codes.dart.
+**Status:** ✅ RESOLVED — BUG-006 (2025-05-22)
 
 ---
 

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/material_cache_service.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import 'material_reader_error_handler.dart';
 import 'material_reader_helpers.dart';
 import 'material_reader_models.dart';
@@ -177,7 +179,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => const LoadingWidget(),
     );
 
     final result = await action();
@@ -208,8 +210,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         if (result.hasException && rawMaterial is! Map) {
           return MaterialReaderErrorHandler(
             slug: widget.slug,
-            errorMessage: result.exception?.graphqlErrors.firstOrNull?.message ??
-                'Could not open this material.',
+            errorMessage: graphQLErrorMessage(result.exception, 'Could not open this material.'),
             onRetry: () => refetch?.call(),
             cache: _cache,
             onCachedData: (material) =>

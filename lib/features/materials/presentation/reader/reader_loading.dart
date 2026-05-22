@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/widgets.dart';
 import 'reader_chrome.dart';
 
 class ReaderLoading extends StatelessWidget {
@@ -10,7 +11,7 @@ class ReaderLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return ReaderScaffold(
       title: title,
-      child: const Center(child: CircularProgressIndicator()),
+      child: const LoadingWidget(),
     );
   }
 }

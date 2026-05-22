@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/services/material_upload_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -66,8 +67,7 @@ class UploadMaterialManager {
     if (result.hasException) {
       _setState(() {
         loadingSubjects = false;
-        subjectLoadError = result.exception?.graphqlErrors.firstOrNull?.message ??
-            'Could not load subjects.';
+        subjectLoadError = graphQLErrorMessage(result.exception, 'Could not load subjects.');
       });
       return;
     }

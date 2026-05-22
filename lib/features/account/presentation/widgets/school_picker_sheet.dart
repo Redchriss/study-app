@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
 class SchoolPickerSheet extends StatefulWidget {
@@ -76,10 +77,10 @@ class _SchoolPickerSheetState extends State<SchoolPickerSheet> {
                   variables: {if (_applied.isNotEmpty) 'search': _applied},
                 ),
                 builder: (result, {fetchMore, refetch}) {
-                  if (result.isLoading) return const Center(child: CircularProgressIndicator());
+                  if (result.isLoading) return const LoadingWidget();
                   if (result.hasException) {
                     return ErrorState(
-                      message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load schools.',
+                      message: graphQLErrorMessage(result.exception, 'Could not load schools.'),
                       onRetry: () => refetch?.call(),
                     );
                   }

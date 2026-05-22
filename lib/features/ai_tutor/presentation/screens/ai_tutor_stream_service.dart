@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../../../../core/config/app_config.dart';
+import '../../../../core/constants/api_endpoints.dart';
 
 class AiTutorStreamService {
   Future<void> sendStream({
@@ -19,7 +19,7 @@ class AiTutorStreamService {
   }) async {
     final request = http.StreamedRequest(
       'POST',
-      Uri.parse('${AppConfig.apiUrl}/ai/stream/'),
+      Uri.parse(ApiEndpoints.aiStream),
     );
     request.headers['Authorization'] = 'Bearer $token';
     request.headers['Content-Type'] = 'application/json';

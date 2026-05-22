@@ -4,6 +4,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -17,12 +18,11 @@ class QuizResultsScreen extends ConsumerWidget {
     return Query(
       options: QueryOptions(document: gql(kQuizAttempt), variables: {'id': attemptId}),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (result.isLoading) return const Scaffold(body: LoadingWidget());
         if (result.hasException)
           return Scaffold(
             body: ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ??
-                  'Failed to load results',
+              message: graphQLErrorMessage(result.exception, 'Failed to load results'),
               onRetry: () => refetch?.call(),
             ),
           );

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../kids_visual_theme.dart';
 import 'kid_auth_widgets.dart';
-import 'kids_home_screen_data.dart';
+import 'kids_home_state_provider.dart';
 import 'kids_hero_card.dart';
 import 'kids_home_sections.dart';
 import 'kids_lesson_sidebar_cards.dart';
@@ -15,7 +16,8 @@ class KidsLessonViewSection extends StatelessWidget {
   const KidsLessonViewSection({
     super.key,
     required this.auth,
-    required this.data,
+    required this.state,
+    required this.burstCtrl,
     required this.onBack,
     required this.onTopicTap,
     required this.onReviewTap,
@@ -33,7 +35,8 @@ class KidsLessonViewSection extends StatelessWidget {
   });
 
   final KidAuthState auth;
-  final KidsHomeScreenData data;
+  final KidsHomeState state;
+  final AnimationController burstCtrl;
   final VoidCallback onBack;
   final ValueChanged<String> onTopicTap;
   final VoidCallback onReviewTap;
@@ -52,11 +55,10 @@ class KidsLessonViewSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (data.loading) {
-      return const Center(
-          child: CircularProgressIndicator(color: Colors.white));
+    if (state.loading) {
+      return const LoadingWidget();
     }
-    if (data.currentLesson == null) {
+    if (state.currentLesson == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -84,7 +86,7 @@ class KidsLessonViewSection extends StatelessWidget {
         ),
       );
     }
-    final subjectId = data.selectedSubject?['id']?.toString() ?? '';
+    final subjectId = state.selectedSubject?['id']?.toString() ?? '';
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -120,17 +122,17 @@ class KidsLessonViewSection extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                if (data.topics.isNotEmpty) ...[
+                if (state.topics.isNotEmpty) ...[
                   SizedBox(
                     height: 46,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      itemCount: data.topics.length,
+                      itemCount: state.topics.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
-                        final topic = data.topics[index];
+                        final topic = state.topics[index];
                         final selected =
-                            topic['id'] == data.selectedTopic?['id'];
+                            topic['id'] == state.selectedTopic?['id'];
                         return KidsTopicChip(
                           label: topic['name']?.toString() ?? 'Topic',
                           selected: selected,
@@ -146,19 +148,19 @@ class KidsLessonViewSection extends StatelessWidget {
                   const SizedBox(height: 14),
                 ],
                 KidsLessonSidebarCards(
-                  subjectProgress: data.subjectProgress,
-                  roadmapSummary: data.roadmapSummary,
-                  rewardProfile: data.rewardProfile,
-                  reviewQueue: data.reviewQueue,
-                  topicRoadmap: data.topicRoadmap,
-                  selectedTopicId: data.selectedTopic?['id']?.toString(),
+                  subjectProgress: state.subjectProgress,
+                  roadmapSummary: state.roadmapSummary,
+                  rewardProfile: state.rewardProfile,
+                  reviewQueue: state.reviewQueue,
+                  topicRoadmap: state.topicRoadmap,
+                  selectedTopicId: state.selectedTopic?['id']?.toString(),
                   onReviewTap: onReviewTap,
                   onNextTap: onNextTap,
                   onJourneyTap: onJourneyTap,
                   onTapTopic: onTapTopic,
                   onTopicRoadmapTap: onTopicRoadmapTap,
                 ),
-                KidsLessonStepBar(inQuiz: data.inQuiz),
+                KidsLessonStepBar(inQuiz: state.inQuiz),
                 const SizedBox(height: 18),
                 Stack(
                   clipBehavior: Clip.none,
@@ -168,20 +170,20 @@ class KidsLessonViewSection extends StatelessWidget {
                         duration: DesignTokens.durNormal,
                         switchInCurve: Curves.easeOutCubic,
                         switchOutCurve: Curves.easeInCubic,
-                        child: data.inQuiz
+                        child: state.inQuiz
                             ? KidsMultiQuizPanel(
                                 key: ValueKey(
-                                    'quiz_${data.currentLesson?['id']}'),
-                                lesson: data.currentLesson!,
+                                    'quiz_${state.currentLesson?['id']}'),
+                                lesson: state.currentLesson!,
                                 onComplete: onQuizComplete,
                                 onBack: onQuizBack,
                               )
                             : KidsVisualLessonPanel(
                                 key: ValueKey(
-                                    'lesson_${data.currentLesson?['id']}'),
-                                lesson: data.currentLesson!,
-                                isSpeaking: data.isSpeaking,
-                                selectedChunk: data.selectedStoryChunk,
+                                    'lesson_${state.currentLesson?['id']}'),
+                                lesson: state.currentLesson!,
+                                isSpeaking: state.isSpeaking,
+                                selectedChunk: state.selectedStoryChunk,
                                 onChunkTap: onChunkTap,
                                 onListenTap: onListenTap,
                                 onStartQuiz: onStartQuiz,
@@ -189,25 +191,25 @@ class KidsLessonViewSection extends StatelessWidget {
                               ),
                       ),
                     ),
-                    if (data.showCorrectBurst)
-                      CorrectBurstOverlay(controller: data.burstCtrl),
+                    if (state.showCorrectBurst)
+                      CorrectBurstOverlay(controller: burstCtrl),
                   ],
                 ),
-                if (!data.inQuiz &&
-                    (data.lessonState != null ||
-                        data.quizReviewHint != null)) ...[
+                if (!state.inQuiz &&
+                    (state.lessonState != null ||
+                        state.quizReviewHint != null)) ...[
                   const SizedBox(height: 14),
                   KidsMasteryHint(
                     masteryLevel:
-                        (data.lessonState?['masteryLevel'] as num?)?.toInt() ??
+                        (state.lessonState?['masteryLevel'] as num?)?.toInt() ??
                             0,
-                    reviewHint: data.quizReviewHint ??
-                        data.lessonState?['nextReviewLabel']?.toString(),
+                    reviewHint: state.quizReviewHint ??
+                        state.lessonState?['nextReviewLabel']?.toString(),
                   ),
                 ],
-                if (!data.inQuiz && data.streak > 0) ...[
+                if (!state.inQuiz && state.streak > 0) ...[
                   const SizedBox(height: 14),
-                  KidsStreakChip(streak: data.streak, quizMode: true),
+                  KidsStreakChip(streak: state.streak, quizMode: true),
                 ],
               ],
             ),

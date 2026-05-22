@@ -6,6 +6,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -73,11 +74,13 @@ class _CircleNewPostFormState extends State<CircleNewPostForm> {
       setState(() => _posting = false);
       if (result.hasException ||
           result.data?['createPost']?['success'] != true) {
-        final msg = result.exception?.graphqlErrors.firstOrNull?.message ??
-            (result.data?['createPost']?['errors'] as List?)
-                ?.firstOrNull
-                ?.toString() ??
-            'unknown error';
+        final gqlErr = graphQLErrorMessage(result.exception, '');
+        final msg = gqlErr.isNotEmpty
+            ? gqlErr
+            : (result.data?['createPost']?['errors'] as List?)
+                    ?.firstOrNull
+                    ?.toString() ??
+                'unknown error';
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Failed to post: $msg'),
             backgroundColor: DesignTokens.error));

@@ -12,7 +12,7 @@ import 'core/config/app_config.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/retention_service.dart';
-import 'core/widgets/offline_banner.dart';
+import 'core/widgets/widgets.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'router.dart';
 
@@ -123,7 +123,7 @@ class StudyApp extends ConsumerWidget {
           final routed = child ??
               const Scaffold(
                 backgroundColor: DesignTokens.primary,
-                body: Center(child: CircularProgressIndicator(color: Colors.white)),
+                body: LoadingWidget(),
               );
           return OfflineBanner(child: routed);
         },

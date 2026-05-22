@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import 'quiz_question_card.dart';
@@ -68,8 +69,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
       final attemptId =
           result.data?['startQuizAttempt']?['attempt']?['id'] as String?;
       if (attemptId == null || attemptId.isEmpty) {
-        final message = result.exception?.graphqlErrors.firstOrNull?.message ??
-            'Could not start quiz.';
+        final message = graphQLErrorMessage(result.exception, 'Could not start quiz.');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
         );
@@ -105,8 +105,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  result.exception?.graphqlErrors.firstOrNull?.message ??
-                      'Submit failed'),
+                  graphQLErrorMessage(result.exception, 'Submit failed')),
               backgroundColor: DesignTokens.error,
             ),
           );
@@ -150,12 +149,11 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading)
           return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
+              body: LoadingWidget());
         if (result.hasException)
           return Scaffold(
             body: ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ??
-                  'Failed to load quiz',
+              message: graphQLErrorMessage(result.exception, 'Failed to load quiz'),
               onRetry: () => refetch?.call(),
             ),
           );

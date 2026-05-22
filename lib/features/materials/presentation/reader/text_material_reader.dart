@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import 'material_reader_helpers.dart';
 import 'material_reader_models.dart';
 import 'material_reader_services.dart';
@@ -67,7 +68,7 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
           return ReaderScaffold(
             title: widget.material.title,
             trailing: const ReaderPageBadge(label: 'Opening...'),
-            child: const Center(child: CircularProgressIndicator()),
+            child: const LoadingWidget(),
           );
         }
 

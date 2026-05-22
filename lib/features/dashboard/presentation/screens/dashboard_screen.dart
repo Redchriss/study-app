@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/retention_service.dart';
@@ -75,7 +76,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         if (result.hasException) {
           return Scaffold(
             body: ErrorState(
-              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load dashboard.',
+              message: graphQLErrorMessage(result.exception, 'Could not load dashboard.'),
               onRetry: () => refetch?.call(),
             ),
           );

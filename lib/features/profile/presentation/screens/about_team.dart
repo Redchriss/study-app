@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'about_cards.dart';
 import 'about_widgets.dart';
@@ -152,8 +153,7 @@ class TeamSection extends StatelessWidget {
           builder: (result, {fetchMore, refetch}) {
             if (result.hasException && result.data?['teamMembers'] == null)
               return ErrorState(
-                message: result.exception?.graphqlErrors.firstOrNull?.message ??
-                    'Failed to load team',
+                message: graphQLErrorMessage(result.exception, 'Failed to load team'),
                 onRetry: () => refetch?.call(),
               );
             final members = (result.data?['teamMembers'] as List?) ?? [];

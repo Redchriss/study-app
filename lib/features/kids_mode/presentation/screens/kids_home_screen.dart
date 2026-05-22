@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../kids_visual_theme.dart';
 import '../widgets/kid_auth_widgets.dart';
 import '../widgets/kids_home_app_bar.dart';
 import '../widgets/kids_home_screen_manager.dart';
+import '../widgets/kids_home_state_provider.dart';
 import '../widgets/kids_lesson_view_section.dart';
 import '../widgets/kids_subject_picker_section.dart';
 
@@ -19,30 +21,34 @@ class KidsHomeScreen extends ConsumerStatefulWidget {
 
 class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
     with SingleTickerProviderStateMixin {
-  final _mgr = KidsHomeScreenManager();
+  late final KidsHomeScreenManager _mgr;
   final _tts = FlutterTts();
   bool _redirectScheduled = false;
+  late final AnimationController _burstCtrl;
 
   @override
   void initState() {
     super.initState();
-    _mgr.attach(
-        ref: ref,
-        setState: setState,
-        getContext: () => context,
-        isMounted: () => mounted);
-    _mgr.data.burstCtrl = AnimationController(
+    _burstCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 700));
+    _mgr = KidsHomeScreenManager(ref);
+    _mgr.attach(
+      getContext: () => context,
+      isMounted: () => mounted,
+    );
     _tts.setSpeechRate(0.45);
     _tts.setVolume(1.0);
     _tts.setCompletionHandler(() {
-      if (mounted) setState(() => _mgr.data.isSpeaking = false);
+      if (mounted)
+        ref
+            .read(kidsHomeStateProvider.notifier)
+            .apply((s) => s.copyWith(isSpeaking: false));
     });
   }
 
   @override
   void dispose() {
-    _mgr.data.burstCtrl.dispose();
+    _burstCtrl.dispose();
     _tts.stop();
     _tts.setCompletionHandler(() {});
     super.dispose();
@@ -51,13 +57,17 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
   Future<void> _speak(String text) async {
     await _tts.stop();
     if (!mounted) return;
-    setState(() => _mgr.data.isSpeaking = true);
+    ref
+        .read(kidsHomeStateProvider.notifier)
+        .apply((s) => s.copyWith(isSpeaking: true));
     try {
       await _tts.speak(
           text.replaceAll('\n', ' ').replaceAll(RegExp(r'\{[^}]*\}'), ''));
     } catch (_) {
       if (mounted) {
-        setState(() => _mgr.data.isSpeaking = false);
+        ref
+            .read(kidsHomeStateProvider.notifier)
+            .apply((s) => s.copyWith(isSpeaking: false));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Reading aloud is not available on this device'),
@@ -71,12 +81,12 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
     final sid = subject['id']?.toString();
     if (sid == null || sid.isEmpty) return;
     final auth = ref.read(kidAuthStateProvider);
-    setState(() {
-      _mgr.data.selectedSubject = Map<String, dynamic>.from(subject);
-      _mgr.data.selectedTopic = null;
-      _mgr.data.topics = [];
-      _mgr.data.subjectProgress = null;
-    });
+    ref.read(kidsHomeStateProvider.notifier).apply((s) => s.copyWith(
+          selectedSubject: Map<String, dynamic>.from(subject),
+          selectedTopic: null,
+          topics: [],
+          subjectProgress: null,
+        ));
     _mgr.fetchTopics(sid, auth.standard);
     _mgr.fetchSubjectProgress(sid, auth.standard);
     _mgr.fetchRoadmap(sid, auth.standard);
@@ -85,68 +95,94 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
 
   void _onStarsTap() {
     HapticFeedback.selectionClick();
-    _speak('You have ${_mgr.data.stars} stars. Keep learning!');
+    _speak(
+        'You have ${ref.read(kidsHomeStateProvider).stars} stars. Keep learning!');
   }
 
   void _onTopicTap(String topicId) {
-    final sid = _mgr.data.selectedSubject?['id']?.toString();
+    final state = ref.read(kidsHomeStateProvider);
+    final sid = state.selectedSubject?['id']?.toString();
     if (sid == null || sid.isEmpty) return;
-    setState(() {
-      _mgr.data.selectedTopic = _mgr.data.topics.firstWhere(
-        (t) => t['id']?.toString() == topicId,
-        orElse: () => _mgr.data.topics.first,
-      );
-    });
+    ref.read(kidsHomeStateProvider.notifier).apply((_) => state.copyWith(
+          selectedTopic: state.topics.firstWhere(
+            (t) => t['id']?.toString() == topicId,
+            orElse: () => state.topics.first,
+          ),
+        ));
     _mgr.actions.fetchLesson(sid, ref.read(kidAuthStateProvider).standard,
         topicId: topicId);
   }
 
-  void _onChunkTap(int i) => setState(() => _mgr.data.selectedStoryChunk = i);
-  void _onStartQuiz() => setState(() => _mgr.data.inQuiz = true);
-  void _onQuizBack() => setState(() => _mgr.data.inQuiz = false);
+  void _onChunkTap(int i) {
+    ref
+        .read(kidsHomeStateProvider.notifier)
+        .apply((s) => s.copyWith(selectedStoryChunk: i));
+  }
+
+  void _onStartQuiz() {
+    ref
+        .read(kidsHomeStateProvider.notifier)
+        .apply((s) => s.copyWith(inQuiz: true));
+  }
+
+  void _onQuizBack() {
+    ref
+        .read(kidsHomeStateProvider.notifier)
+        .apply((s) => s.copyWith(inQuiz: false));
+  }
 
   void _onListenTap() {
-    if (_mgr.data.isSpeaking) {
+    final state = ref.read(kidsHomeStateProvider);
+    if (state.isSpeaking) {
       _tts.stop();
-      setState(() => _mgr.data.isSpeaking = false);
+      ref
+          .read(kidsHomeStateProvider.notifier)
+          .apply((_) => state.copyWith(isSpeaking: false));
     } else {
-      _speak(_mgr.data.currentLesson?['bodyText'] as String? ?? '');
+      _speak(state.currentLesson?['bodyText'] as String? ?? '');
     }
   }
 
   void _onNextLesson() {
-    final sid = _mgr.data.selectedSubject?['id']?.toString();
+    final state = ref.read(kidsHomeStateProvider);
+    final sid = state.selectedSubject?['id']?.toString();
     if (sid != null && sid.isNotEmpty) {
       _mgr.actions.fetchLesson(sid, ref.read(kidAuthStateProvider).standard,
-          topicId: _mgr.data.selectedTopic?['id']?.toString());
+          topicId: state.selectedTopic?['id']?.toString());
     }
   }
 
   Future<void> _onQuizComplete(
       {required int correct, required int total}) async {
-    if (_mgr.data.currentLesson == null) return;
-    final firstQ = _mgr.data.quiz.isNotEmpty
-        ? (_mgr.data.quiz[0] as Map<String, dynamic>?)
-        : null;
+    final state = ref.read(kidsHomeStateProvider);
+    if (state.currentLesson == null) return;
+    final firstQ =
+        state.quiz.isNotEmpty ? (state.quiz[0] as Map<String, dynamic>?) : null;
     final correctIdx = (firstQ?['correct'] as num?)?.toInt() ?? 0;
     final selectedIdx = correct > 0 ? correctIdx : 99;
     await _mgr.actions.answerQuiz(selectedIdx);
     if (correct / (total > 0 ? total : 1) >= 0.8 && mounted) {
       HapticFeedback.heavyImpact();
-      _mgr.data.burstCtrl.forward(from: 0);
-      setState(() => _mgr.data.showCorrectBurst = true);
+      _burstCtrl.forward(from: 0);
+      ref
+          .read(kidsHomeStateProvider.notifier)
+          .apply((s) => s.copyWith(showCorrectBurst: true));
       await Future.delayed(const Duration(milliseconds: 900));
-      if (mounted) setState(() => _mgr.data.showCorrectBurst = false);
+      if (mounted)
+        ref
+            .read(kidsHomeStateProvider.notifier)
+            .apply((s) => s.copyWith(showCorrectBurst: false));
     }
   }
 
   void _onRetryFetchLesson() {
-    final sid = _mgr.data.selectedSubject?['id']?.toString();
+    final state = ref.read(kidsHomeStateProvider);
+    final sid = state.selectedSubject?['id']?.toString();
     if (sid == null || sid.isEmpty) return;
     final auth = ref.read(kidAuthStateProvider);
     _mgr.actions.fetchLesson(sid, auth.standard,
-        topicId: _mgr.data.selectedTopic?['id']?.toString() ??
-            _mgr.data.selectedTopic?['topicId']?.toString());
+        topicId: state.selectedTopic?['id']?.toString() ??
+            state.selectedTopic?['topicId']?.toString());
   }
 
   Widget _buildRedirect() {
@@ -160,11 +196,10 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
   }
 
   Widget _buildLoading(ThemeData theme) {
-    if (!_mgr.data.subjectFetchStarted) {
+    final state = ref.read(kidsHomeStateProvider);
+    if (!state.subjectFetchStarted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted &&
-            !_mgr.data.fetchedSubjects &&
-            !_mgr.data.subjectFetchStarted) {
+        if (mounted && !state.fetchedSubjects && !state.subjectFetchStarted) {
           _mgr.fetchSubjects();
         }
       });
@@ -175,7 +210,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
         decoration: BoxDecoration(gradient: KidsVisualTheme.backgroundGradient),
         child: const Scaffold(
           backgroundColor: Colors.transparent,
-          body: Center(child: CircularProgressIndicator(color: Colors.white)),
+          body: LoadingWidget(),
         ),
       ),
     );
@@ -185,9 +220,9 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
   Widget build(BuildContext context) {
     final auth = ref.watch(kidAuthStateProvider);
     final theme = Theme.of(context);
-    final d = _mgr.data;
+    final state = ref.watch(kidsHomeStateProvider);
     if (!auth.isAuthenticated) return _buildRedirect();
-    if (!d.fetchedSubjects) return _buildLoading(theme);
+    if (!state.fetchedSubjects) return _buildLoading(theme);
     return Theme(
       data: KidsVisualTheme.overlayOn(theme),
       child: Container(
@@ -200,11 +235,11 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
               duration: DesignTokens.durNormal,
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
-              child: d.selectedSubject == null
+              child: state.selectedSubject == null
                   ? KidsSubjectPickerSection(
                       key: const ValueKey('picker'),
                       auth: auth,
-                      data: d,
+                      state: state,
                       onStarsTap: _onStarsTap,
                       onClaimDailyChest: _mgr.actions.claimDailyChest,
                       onSubjectSelected: _onSubjectPicked,
@@ -212,17 +247,24 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
                   : KidsLessonViewSection(
                       key: const ValueKey('lesson'),
                       auth: auth,
-                      data: d,
-                      onBack: () => setState(() {
-                        d.selectedSubject = d.selectedTopic =
-                            d.currentLesson = d.subjectProgress = null;
-                        d.topics = [];
-                      }),
+                      state: state,
+                      burstCtrl: _burstCtrl,
+                      onBack: () {
+                        ref
+                            .read(kidsHomeStateProvider.notifier)
+                            .apply((s) => s.copyWith(
+                                  selectedSubject: null,
+                                  selectedTopic: null,
+                                  currentLesson: null,
+                                  subjectProgress: null,
+                                  topics: [],
+                                ));
+                      },
                       onTopicTap: _onTopicTap,
                       onReviewTap: () => _mgr.actions.openRoadmapTopicById(
-                          d.roadmapSummary?['reviewTopicId']?.toString()),
+                          state.roadmapSummary?['reviewTopicId']?.toString()),
                       onNextTap: () => _mgr.actions.openRoadmapTopicById(
-                          d.roadmapSummary?['nextTopicId']?.toString()),
+                          state.roadmapSummary?['nextTopicId']?.toString()),
                       onJourneyTap: () => _mgr.actions.openJourney(auth),
                       onTapTopic: (tid) =>
                           _mgr.actions.openRoadmapTopicById(tid),

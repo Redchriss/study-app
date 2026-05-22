@@ -4,6 +4,8 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/errors/app_exception.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class QuizShareScreen extends ConsumerStatefulWidget {
@@ -40,9 +42,10 @@ class _QuizShareScreenState extends ConsumerState<QuizShareScreen> {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shared to circle!')));
         context.pop();
       } else {
-        final message = r.exception?.graphqlErrors.firstOrNull?.message ??
-            (r.data?['shareQuiz']?['errors'] as List?)?.firstOrNull?.toString() ??
-            'Could not share quiz.';
+        final gqlErr = graphQLErrorMessage(r.exception, '');
+        final message = gqlErr.isNotEmpty
+            ? gqlErr
+            : (r.data?['shareQuiz']?['errors'] as List?)?.firstOrNull?.toString() ?? 'Could not share quiz.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
         );
@@ -55,7 +58,7 @@ class _QuizShareScreenState extends ConsumerState<QuizShareScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Share Quiz')),
       body: _loading
-        ? const Center(child: CircularProgressIndicator())
+        ? const LoadingWidget()
         : ListView(
             padding: const EdgeInsets.all(16),
             children: [
