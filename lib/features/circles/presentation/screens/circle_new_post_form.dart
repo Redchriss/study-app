@@ -59,6 +59,7 @@ class _CircleNewPostFormState extends State<CircleNewPostForm> {
         b64 = base64Encode(bytes);
       }
       if (!context.mounted) return;
+      // ignore: use_build_context_synchronously
       final client = ProviderScope.containerOf(context, listen: false)
           .read(graphqlClientProvider);
       final result = await client.mutate(MutationOptions(

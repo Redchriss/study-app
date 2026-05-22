@@ -62,9 +62,11 @@ class KidSessionManager {
             );
             mgr.refreshToken(data['token'], Map<String, dynamic>.from(kid));
             if (!mgr.mounted) return;
+            // ignore: use_build_context_synchronously
             mgr.context.go('/kids/learn');
           } else {
             if (!mgr.mounted) return;
+            // ignore: use_build_context_synchronously
             ScaffoldMessenger.of(mgr.context).showSnackBar(SnackBar(
               content: Text(data?['errors']?.first ?? 'Wrong PIN'),
               backgroundColor: DesignTokens.error,

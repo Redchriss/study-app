@@ -40,6 +40,7 @@ class KidsLessonActions {
         ));
       }
       if (!mgr.mounted) return;
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(mgr.context).showSnackBar(
         const SnackBar(
             content: Text('You earned bonus stars!'),
@@ -49,6 +50,7 @@ class KidsLessonActions {
       final errs = (payload?['errors'] as List?)?.cast<String>() ??
           const ['Try again later'];
       if (!mgr.mounted) return;
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(mgr.context)
           .showSnackBar(SnackBar(content: Text(errs.join(', '))));
     }
@@ -90,6 +92,7 @@ class KidsLessonActions {
         final errs = (d['errors'] as List?)?.cast<String>() ??
             const ['Could not load lesson'];
         if (!mgr.mounted) return;
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(mgr.context)
             .showSnackBar(SnackBar(content: Text(errs.join(', '))));
       }
@@ -121,6 +124,7 @@ class KidsLessonActions {
       final errs = (payload?['errors'] as List?)?.cast<String>() ??
           const ['Could not save answer'];
       if (!mgr.mounted) return;
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(mgr.context)
           .showSnackBar(SnackBar(content: Text(errs.join(', '))));
       return;
@@ -156,6 +160,7 @@ class KidsLessonActions {
     if (newBadges.isNotEmpty) {
       final latestBadge = newBadges.first['title']?.toString() ?? 'New badge';
       if (!mgr.mounted) return;
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(mgr.context).showSnackBar(
         SnackBar(
             content: Text('Badge unlocked: $latestBadge'),
