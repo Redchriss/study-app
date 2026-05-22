@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 
 class PastPaperLibraryScreen extends StatelessWidget {
   const PastPaperLibraryScreen({super.key});
@@ -16,7 +17,10 @@ class PastPaperLibraryScreen extends StatelessWidget {
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
           if (result.hasException) {
-            return const Center(child: Text('Could not load past papers.', style: TextStyle(color: DesignTokens.textTertiary)));
+            return ErrorState(
+              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load past papers.',
+              onRetry: () => refetch?.call(),
+            );
           }
           final papers = (result.data?['pastPapers'] as List?) ?? [];
           if (papers.isEmpty) {

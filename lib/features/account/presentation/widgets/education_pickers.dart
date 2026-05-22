@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 
 /// Bottom-sheet: search + public/private filter, pick one university/college.
 class UniversityPickerSheet extends StatefulWidget {
@@ -97,14 +98,9 @@ class _UniversityPickerSheetState extends State<UniversityPickerSheet> {
                 builder: (result, {fetchMore, refetch}) {
                   if (result.isLoading) return const Center(child: CircularProgressIndicator());
                   if (result.hasException) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load institutions.',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
+                    return ErrorState(
+                      message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load institutions.',
+                      onRetry: () => refetch?.call(),
                     );
                   }
                   final list = (result.data?['universities'] as List?) ?? [];
@@ -234,14 +230,9 @@ class _SchoolPickerSheetState extends State<SchoolPickerSheet> {
                 builder: (result, {fetchMore, refetch}) {
                   if (result.isLoading) return const Center(child: CircularProgressIndicator());
                   if (result.hasException) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load schools.',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
+                    return ErrorState(
+                      message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load schools.',
+                      onRetry: () => refetch?.call(),
                     );
                   }
                   final schools = (result.data?[key] as List?) ?? [];
@@ -342,14 +333,9 @@ class _ProgramPickerSheetState extends State<ProgramPickerSheet> {
                 builder: (result, {fetchMore, refetch}) {
                   if (result.isLoading) return const Center(child: CircularProgressIndicator());
                   if (result.hasException) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load programmes.',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
+                    return ErrorState(
+                      message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load programmes.',
+                      onRetry: () => refetch?.call(),
                     );
                   }
                   final programs = (result.data?['programs'] as List?) ?? [];

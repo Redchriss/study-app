@@ -67,6 +67,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         if (result.isLoading)
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
+        if (result.hasException)
+          return Scaffold(
+            body: ErrorState(
+              message: result.exception?.graphqlErrors.firstOrNull?.message ??
+                  'Failed to load post',
+              onRetry: () => refetch?.call(),
+            ),
+          );
         final post = result.data?['circlePost'];
         if (post == null)
           return const Scaffold(body: Center(child: Text('Post not found')));
@@ -251,6 +259,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                         if (cResult.isLoading)
                           return const Center(
                               child: CircularProgressIndicator());
+                        if (cResult.hasException)
+                          return ErrorState(
+                            message: cResult.exception?.graphqlErrors
+                                    .firstOrNull?.message ??
+                                'Failed to load comments',
+                            onRetry: () => refetch?.call(),
+                          );
                         final comments =
                             (cResult.data?['postComments'] as List?) ?? [];
                         if (comments.isEmpty)

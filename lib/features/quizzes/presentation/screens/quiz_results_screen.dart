@@ -18,6 +18,14 @@ class QuizResultsScreen extends ConsumerWidget {
       options: QueryOptions(document: gql(kQuizAttempt), variables: {'id': attemptId}),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (result.hasException)
+          return Scaffold(
+            body: ErrorState(
+              message: result.exception?.graphqlErrors.firstOrNull?.message ??
+                  'Failed to load results',
+              onRetry: () => refetch?.call(),
+            ),
+          );
         final attempt = result.data?['quizAttempt'];
         if (attempt == null) return const Scaffold(body: Center(child: Text('Attempt not found')));
         final answers = (attempt['userAnswers'] as List?) ?? [];

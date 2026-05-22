@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 
 class LeaderboardScreen extends ConsumerWidget {
   const LeaderboardScreen({super.key});
@@ -46,6 +47,12 @@ class _LeaderboardTab extends ConsumerWidget {
       ),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Center(child: CircularProgressIndicator());
+        if (result.hasException)
+          return ErrorState(
+            message: result.exception?.graphqlErrors.firstOrNull?.message ??
+                'Failed to load leaderboard',
+            onRetry: () => refetch?.call(),
+          );
         final entries = (result.data?['leaderboard'] as List?) ?? [];
         if (entries.isEmpty) {
           return Center(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
@@ -29,14 +30,9 @@ class HistoryScreen extends ConsumerWidget {
               builder: (result, {fetchMore, refetch}) {
                 if (result.isLoading) return const Center(child: CircularProgressIndicator());
                 if (result.hasException) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load transactions.',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+                  return ErrorState(
+                    message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load transactions.',
+                    onRetry: () => refetch?.call(),
                   );
                 }
                 final items = (result.data?['paymentHistory'] as List?) ?? [];
@@ -111,14 +107,9 @@ class HistoryScreen extends ConsumerWidget {
               builder: (result, {fetchMore, refetch}) {
                 if (result.isLoading) return const Center(child: CircularProgressIndicator());
                 if (result.hasException) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load credit usage.',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+                  return ErrorState(
+                    message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load credit usage.',
+                    onRetry: () => refetch?.call(),
                   );
                 }
                 final items = (result.data?['creditLedger'] as List?) ?? [];

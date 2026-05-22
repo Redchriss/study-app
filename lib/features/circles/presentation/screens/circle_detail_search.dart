@@ -33,6 +33,12 @@ class CirclePostSearchDelegate extends SearchDelegate {
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading)
           return const Center(child: CircularProgressIndicator());
+        if (result.hasException)
+          return ErrorState(
+            message: result.exception?.graphqlErrors.firstOrNull?.message ??
+                'Search failed',
+            onRetry: () => refetch?.call(),
+          );
         final posts = (result.data?['searchPosts'] as List?) ?? [];
         if (posts.isEmpty)
           return const EmptyState(icon: Icons.search_off, title: 'No results');

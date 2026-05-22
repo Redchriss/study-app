@@ -19,14 +19,9 @@ class UpgradeScreen extends ConsumerWidget {
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
           if (result.hasException) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load plans.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
+            return ErrorState(
+              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load plans.',
+              onRetry: () => refetch?.call(),
             );
           }
           final pkgs = (result.data?['creditPackages'] as List?) ?? [];

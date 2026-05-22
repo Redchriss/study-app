@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 
 class PastPapersScreen extends StatelessWidget {
   const PastPapersScreen({super.key});
@@ -16,14 +17,9 @@ class PastPapersScreen extends StatelessWidget {
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const Center(child: CircularProgressIndicator());
           if (result.hasException) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load solved papers.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
+            return ErrorState(
+              message: result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not load solved papers.',
+              onRetry: () => refetch?.call(),
             );
           }
           final sessions = (result.data?['mySolveSessions'] as List?) ?? [];

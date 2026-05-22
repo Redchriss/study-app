@@ -37,6 +37,14 @@ class SitePageScreen extends StatelessWidget {
         fetchPolicy: FetchPolicy.cacheAndNetwork,
       ),
       builder: (result, {fetchMore, refetch}) {
+        if (result.hasException && result.data?['sitePage'] == null)
+          return Scaffold(
+            body: ErrorState(
+              message: result.exception?.graphqlErrors.firstOrNull?.message ??
+                  'Failed to load page',
+              onRetry: () => refetch?.call(),
+            ),
+          );
         final page = result.data?['sitePage'] as Map<String, dynamic>?;
         final title = page?['title'] as String? ?? fallbackTitle;
         final content = page?['content'] as String? ?? fallbackContent;

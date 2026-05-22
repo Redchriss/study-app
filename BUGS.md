@@ -22,10 +22,10 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 **Status:** 🟡 HIGH — OPEN
 
 ### [BUG-002] GraphQL error handling inconsistent
-**Priority:** 🟡 HIGH
+**Priority:** 🟡 HIGH → ✅ RESOLVED
 **Description:** Multiple screens silently fail on GraphQL errors: circle_detail_screen shows "Circle not found" with no retry, post_detail_screen has no error state, bookmarks/history/past_papers/leaderboard screens show blank screen on error (only check loading, not hasException). dashboard_screen has proper ErrorState — use that pattern everywhere.
-**Fix:** Every screen must handle `result.hasException` and show `ErrorState` widget with retry button.
-**Status:** 🟡 HIGH — OPEN
+**Fix:** Added `result.hasException` check + `ErrorState` with `refetch` retry to all 17 files that were missing it. 10 files had no error state at all; 7 files had error text but no retry button. All now use the shared `ErrorState` widget with retry.
+**Status:** ✅ RESOLVED — BUG-002 (2025-05-22)
 
 ### [BUG-003] CircularProgressIndicator in 37 files instead of shared widget
 **Priority:** 🟢 MEDIUM

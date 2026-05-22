@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class QuizTakeScreen extends ConsumerStatefulWidget {
@@ -128,6 +129,14 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> with WidgetsBin
       options: QueryOptions(document: gql(kQuiz), variables: {'slug': widget.slug}),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (result.hasException)
+          return Scaffold(
+            body: ErrorState(
+              message: result.exception?.graphqlErrors.firstOrNull?.message ??
+                  'Failed to load quiz',
+              onRetry: () => refetch?.call(),
+            ),
+          );
         final quiz = result.data?['quiz'];
         if (quiz == null) return const Scaffold(body: Center(child: Text('Quiz not found')));
         final questions = (quiz['questions'] as List?) ?? [];

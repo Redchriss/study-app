@@ -150,6 +150,12 @@ class TeamSection extends StatelessWidget {
             fetchPolicy: FetchPolicy.cacheAndNetwork,
           ),
           builder: (result, {fetchMore, refetch}) {
+            if (result.hasException && result.data?['teamMembers'] == null)
+              return ErrorState(
+                message: result.exception?.graphqlErrors.firstOrNull?.message ??
+                    'Failed to load team',
+                onRetry: () => refetch?.call(),
+              );
             final members = (result.data?['teamMembers'] as List?) ?? [];
             if (result.isLoading && members.isEmpty) {
               return Column(

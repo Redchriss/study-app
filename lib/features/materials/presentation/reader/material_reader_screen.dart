@@ -4,6 +4,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/material_cache_service.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import 'image_material_reader.dart';
 import 'pdf_material_reader.dart';
 import 'text_material_reader.dart';
@@ -272,15 +273,10 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
               if (cached == null) {
                 return ReaderScaffold(
                   title: 'Study mode',
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        result.exception?.graphqlErrors.firstOrNull?.message ??
-                            'Could not open this material.',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+                  child: ErrorState(
+                    message: result.exception?.graphqlErrors.firstOrNull?.message ??
+                        'Could not open this material.',
+                    onRetry: () => refetch?.call(),
                   ),
                 );
               }

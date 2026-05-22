@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../widgets/circle_post_card.dart';
 
 class CirclePostsList extends StatelessWidget {
@@ -44,6 +45,12 @@ class CirclePostsList extends StatelessWidget {
       builder: (postResult, {fetchMore, refetch}) {
         if (postResult.isLoading)
           return const Center(child: CircularProgressIndicator());
+        if (postResult.hasException)
+          return ErrorState(
+            message: postResult.exception?.graphqlErrors.firstOrNull?.message ??
+                'Failed to load posts',
+            onRetry: () => refetch?.call(),
+          );
         final posts = _filterPosts(
             (postResult.data?['circlePosts'] as List?) ?? const []);
         if (posts.isEmpty)
