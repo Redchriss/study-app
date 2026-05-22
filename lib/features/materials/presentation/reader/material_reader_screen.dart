@@ -12,7 +12,9 @@ import 'material_reader_helpers.dart';
 import 'material_reader_models.dart';
 import 'material_reader_services.dart';
 import 'reader_chrome.dart';
-import 'reader_support_sheets.dart';
+import 'reader_annotation_sheets.dart';
+import 'reader_flashcards_sheet.dart';
+import 'reader_quiz_sheet.dart';
 
 class MaterialReaderScreen extends StatefulWidget {
   const MaterialReaderScreen({super.key, required this.slug});
@@ -28,8 +30,10 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
   final _cache = MaterialCacheService();
   var _aiActionBusy = false;
 
-  Future<void> _saveAnnotation(ReaderStudySelection selection, VoidCallback? refetch) async {
-    final draft = await showReaderAnnotationComposer(context, selection: selection);
+  Future<void> _saveAnnotation(
+      ReaderStudySelection selection, VoidCallback? refetch) async {
+    final draft =
+        await showReaderAnnotationComposer(context, selection: selection);
     if (draft == null || !mounted) return;
 
     final result = await _service.saveAnnotation(
@@ -43,14 +47,18 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(result.success ? 'Annotation saved' : (result.message ?? 'Could not save annotation.')),
-        backgroundColor: result.success ? DesignTokens.success : DesignTokens.error,
+        content: Text(result.success
+            ? 'Annotation saved'
+            : (result.message ?? 'Could not save annotation.')),
+        backgroundColor:
+            result.success ? DesignTokens.success : DesignTokens.error,
       ),
     );
     if (result.success) refetch?.call();
   }
 
-  Future<void> _openAnnotations(List<ReaderAnnotationData> annotations, VoidCallback? refetch) async {
+  Future<void> _openAnnotations(
+      List<ReaderAnnotationData> annotations, VoidCallback? refetch) async {
     await showReaderAnnotationsSheet(
       context,
       annotations: annotations,
@@ -62,8 +70,11 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.success ? 'Annotation removed' : (result.message ?? 'Could not delete annotation.')),
-            backgroundColor: result.success ? DesignTokens.success : DesignTokens.error,
+            content: Text(result.success
+                ? 'Annotation removed'
+                : (result.message ?? 'Could not delete annotation.')),
+            backgroundColor:
+                result.success ? DesignTokens.success : DesignTokens.error,
           ),
         );
         if (result.success) {
@@ -74,7 +85,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     );
   }
 
-  Future<void> _openFlashcards(ReaderMaterialData material, VoidCallback? refetch) async {
+  Future<void> _openFlashcards(
+      ReaderMaterialData material, VoidCallback? refetch) async {
     final task = material.taskFor('flashcards');
     await showReaderFlashcardsSheet(
       context,
@@ -98,8 +110,11 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         setState(() => _aiActionBusy = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.message ?? result.errors.firstOrNull ?? 'Flashcard request failed.'),
-            backgroundColor: result.success ? DesignTokens.success : DesignTokens.error,
+            content: Text(result.message ??
+                result.errors.firstOrNull ??
+                'Flashcard request failed.'),
+            backgroundColor:
+                result.success ? DesignTokens.success : DesignTokens.error,
           ),
         );
         if (result.success) refetch?.call();
@@ -120,12 +135,22 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Ask AI About This Section', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                const Text('Ask AI About This Section',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 12),
                 for (final item in const [
                   ('explain', 'Explain this section', Icons.lightbulb_outline),
-                  ('summary', 'Summarize this section', Icons.summarize_outlined),
-                  ('memory', 'Create a memory hook', Icons.psychology_alt_outlined),
+                  (
+                    'summary',
+                    'Summarize this section',
+                    Icons.summarize_outlined
+                  ),
+                  (
+                    'memory',
+                    'Create a memory hook',
+                    Icons.psychology_alt_outlined
+                  ),
                 ])
                   ListTile(
                     leading: Icon(item.$3),
@@ -142,13 +167,17 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
 
     final prompt = switch (action) {
       'summary' => 'Summarize this study section into short revision bullets.',
-      'memory' => 'Create a memorable hook, analogy, or mnemonic from this study section and explain why it works.',
-      _ => 'Explain this study section clearly in simple language and point out what to remember.',
+      'memory' =>
+        'Create a memorable hook, analogy, or mnemonic from this study section and explain why it works.',
+      _ =>
+        'Explain this study section clearly in simple language and point out what to remember.',
     };
-    final message = '$prompt\n\nMaterial: ${material.title}\nAnchor: ${selection.anchorLabel}\n\nCurrent section:\n---\n${selection.selectedText.trim().isEmpty ? 'Use the material context available for this section.' : selection.selectedText.trim()}\n---';
+    final message =
+        '$prompt\n\nMaterial: ${material.title}\nAnchor: ${selection.anchorLabel}\n\nCurrent section:\n---\n${selection.selectedText.trim().isEmpty ? 'Use the material context available for this section.' : selection.selectedText.trim()}\n---';
 
     await _runAiAction<String>(
-      action: () => _service.askAi(context: context, materialId: material.id, message: message),
+      action: () => _service.askAi(
+          context: context, materialId: material.id, message: message),
       onSuccess: (reply) => showReaderAiReplySheet(
         context,
         title: 'Section AI Reply',
@@ -178,7 +207,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         if (quiz == null || !mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('AI could not shape a mini quiz from this section right now.'),
+              content: Text(
+                  'AI could not shape a mini quiz from this section right now.'),
               backgroundColor: DesignTokens.error,
             ),
           );
@@ -206,7 +236,9 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     if (!result.success || result.data == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.message ?? result.errors.firstOrNull ?? 'AI could not help right now.'),
+          content: Text(result.message ??
+              result.errors.firstOrNull ??
+              'AI could not help right now.'),
           backgroundColor: DesignTokens.error,
         ),
       );
@@ -244,7 +276,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        result.exception?.graphqlErrors.firstOrNull?.message ?? 'Could not open this material.',
+                        result.exception?.graphqlErrors.firstOrNull?.message ??
+                            'Could not open this material.',
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -270,7 +303,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.offline_bolt_outlined, color: Colors.white, size: 18),
+                            Icon(Icons.offline_bolt_outlined,
+                                color: Colors.white, size: 18),
                             SizedBox(width: 10),
                             Expanded(
                               child: Text(
@@ -298,81 +332,105 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
             child: Center(child: Text('Material not found.')),
           );
         }
-        _cache.saveMaterial(widget.slug, Map<String, dynamic>.from(rawMaterial));
-        final material = ReaderMaterialData.fromMap(widget.slug, Map<String, dynamic>.from(rawMaterial));
+        _cache.saveMaterial(
+            widget.slug, Map<String, dynamic>.from(rawMaterial));
+        final material = ReaderMaterialData.fromMap(
+            widget.slug, Map<String, dynamic>.from(rawMaterial));
         return _buildReaderForMaterial(material, refetch);
       },
     );
   }
 
-  Widget _buildReaderForMaterial(ReaderMaterialData material, VoidCallback? refetch) {
-        final theme = Theme.of(context);
-        if (material.isPdf) {
-          if (material.fileUrl.isEmpty) {
-            return ReaderScaffold(
-              title: material.title,
-              child: const Center(child: Text('This PDF is not available right now.')),
-            );
-          }
-          return PdfMaterialReader(
-            material: material,
-            service: _service,
-            onOpenAnnotations: () => _openAnnotations(material.annotations, refetch),
-            onOpenFlashcards: () => _openFlashcards(material, refetch),
-            onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
-            onQuickQuiz: (selection) => _runQuickQuiz(material: material, selection: selection),
-            onAskAi: material.id.isEmpty ? null : (selection) => _askReaderAi(material: material, selection: selection),
-          );
-        }
-
-        if (material.isReadableText) {
-          return TextMaterialReader(
-            material: material,
-            service: _service,
-            onOpenAnnotations: () => _openAnnotations(material.annotations, refetch),
-            onOpenFlashcards: () => _openFlashcards(material, refetch),
-            onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
-            onQuickQuiz: (selection) => _runQuickQuiz(material: material, selection: selection),
-            onAskAi: material.id.isEmpty ? null : (selection) => _askReaderAi(material: material, selection: selection),
-          );
-        }
-
-        if (material.isVideo) {
-          return VideoMaterialReader(
-            material: material,
-            service: _service,
-            onOpenAnnotations: () => _openAnnotations(material.annotations, refetch),
-            onOpenFlashcards: () => _openFlashcards(material, refetch),
-            onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
-            onQuickQuiz: (selection) => _runQuickQuiz(material: material, selection: selection),
-            onAskAi: material.id.isEmpty ? null : (selection) => _askReaderAi(material: material, selection: selection),
-          );
-        }
-
-        if (material.isImage) {
-          return ImageMaterialReader(
-            material: material,
-            service: _service,
-            onOpenAnnotations: () => _openAnnotations(material.annotations, refetch),
-            onOpenFlashcards: () => _openFlashcards(material, refetch),
-            onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
-            onQuickQuiz: (selection) => _runQuickQuiz(material: material, selection: selection),
-            onAskAi: material.id.isEmpty ? null : (selection) => _askReaderAi(material: material, selection: selection),
-          );
-        }
-
+  Widget _buildReaderForMaterial(
+      ReaderMaterialData material, VoidCallback? refetch) {
+    final theme = Theme.of(context);
+    if (material.isPdf) {
+      if (material.fileUrl.isEmpty) {
         return ReaderScaffold(
           title: material.title,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                'Study mode is currently available for PDF, text, video, and image materials.',
-                style: theme.textTheme.bodyLarge,
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
+          child:
+              const Center(child: Text('This PDF is not available right now.')),
         );
+      }
+      return PdfMaterialReader(
+        material: material,
+        service: _service,
+        onOpenAnnotations: () =>
+            _openAnnotations(material.annotations, refetch),
+        onOpenFlashcards: () => _openFlashcards(material, refetch),
+        onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
+        onQuickQuiz: (selection) =>
+            _runQuickQuiz(material: material, selection: selection),
+        onAskAi: material.id.isEmpty
+            ? null
+            : (selection) =>
+                _askReaderAi(material: material, selection: selection),
+      );
+    }
+
+    if (material.isReadableText) {
+      return TextMaterialReader(
+        material: material,
+        service: _service,
+        onOpenAnnotations: () =>
+            _openAnnotations(material.annotations, refetch),
+        onOpenFlashcards: () => _openFlashcards(material, refetch),
+        onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
+        onQuickQuiz: (selection) =>
+            _runQuickQuiz(material: material, selection: selection),
+        onAskAi: material.id.isEmpty
+            ? null
+            : (selection) =>
+                _askReaderAi(material: material, selection: selection),
+      );
+    }
+
+    if (material.isVideo) {
+      return VideoMaterialReader(
+        material: material,
+        service: _service,
+        onOpenAnnotations: () =>
+            _openAnnotations(material.annotations, refetch),
+        onOpenFlashcards: () => _openFlashcards(material, refetch),
+        onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
+        onQuickQuiz: (selection) =>
+            _runQuickQuiz(material: material, selection: selection),
+        onAskAi: material.id.isEmpty
+            ? null
+            : (selection) =>
+                _askReaderAi(material: material, selection: selection),
+      );
+    }
+
+    if (material.isImage) {
+      return ImageMaterialReader(
+        material: material,
+        service: _service,
+        onOpenAnnotations: () =>
+            _openAnnotations(material.annotations, refetch),
+        onOpenFlashcards: () => _openFlashcards(material, refetch),
+        onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
+        onQuickQuiz: (selection) =>
+            _runQuickQuiz(material: material, selection: selection),
+        onAskAi: material.id.isEmpty
+            ? null
+            : (selection) =>
+                _askReaderAi(material: material, selection: selection),
+      );
+    }
+
+    return ReaderScaffold(
+      title: material.title,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'Study mode is currently available for PDF, text, video, and image materials.',
+            style: theme.textTheme.bodyLarge,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -4,6 +4,7 @@ import 'kid_auth_widgets.dart';
 import 'kids_daily_goal_ring.dart';
 import 'kids_home_helpers.dart';
 import 'kids_home_screen_data.dart';
+import 'kids_hero_card.dart';
 import 'kids_home_sections.dart';
 import 'kids_subject_card.dart';
 
