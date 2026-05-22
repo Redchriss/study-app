@@ -143,6 +143,7 @@ class ProfileSetupManager {
       if (result.hasException || payload?['success'] != true) {
         final message = payloadErrors.firstOrNull ??
             graphQLErrorMessage(result.exception, 'Save failed. Try again.');
+        if (!_context.mounted) return;
         ScaffoldMessenger.of(_context).showSnackBar(
           SnackBar(
             content: Text(message),

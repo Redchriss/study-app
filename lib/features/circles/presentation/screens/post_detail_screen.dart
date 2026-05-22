@@ -69,19 +69,22 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         'postSlug': widget.postSlug
       }),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading)
+        if (result.isLoading) {
           return const Scaffold(
               body: LoadingWidget());
-        if (result.hasException)
+        }
+        if (result.hasException) {
           return Scaffold(
             body: ErrorState(
               message: graphQLErrorMessage(result.exception, 'Failed to load post'),
               onRetry: () => refetch?.call(),
             ),
           );
+        }
         final post = result.data?['circlePost'];
-        if (post == null)
+        if (post == null) {
           return const Scaffold(body: Center(child: Text('Post not found')));
+        }
         return Scaffold(
           appBar: AppBar(title: Text(post['title'] ?? ''), centerTitle: true),
           body: Column(children: [
@@ -105,20 +108,23 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                           document: gql(kPostComments),
                           variables: {'postId': post['id']}),
                       builder: (cResult, {fetchMore, refetch}) {
-                        if (cResult.isLoading)
+                        if (cResult.isLoading) {
                           return const Center(
                               child: CircularProgressIndicator());
-                        if (cResult.hasException)
+                        }
+                        if (cResult.hasException) {
                           return ErrorState(
                             message: graphQLErrorMessage(cResult.exception, 'Failed to load comments'),
                             onRetry: () => refetch?.call(),
                           );
+                        }
                         final comments =
                             (cResult.data?['postComments'] as List?) ?? [];
-                        if (comments.isEmpty)
+                        if (comments.isEmpty) {
                           return const Text('No comments yet. Be the first!',
                               style:
                                   TextStyle(color: DesignTokens.textSecondary));
+                        }
                         return Column(
                             children: comments
                                 .map((c) => PostDetailCommentItem(

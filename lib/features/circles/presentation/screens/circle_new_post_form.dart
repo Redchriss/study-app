@@ -58,6 +58,7 @@ class _CircleNewPostFormState extends State<CircleNewPostForm> {
         }
         b64 = base64Encode(bytes);
       }
+      if (!context.mounted) return;
       final client = ProviderScope.containerOf(context, listen: false)
           .read(graphqlClientProvider);
       final result = await client.mutate(MutationOptions(
@@ -190,7 +191,7 @@ class _CircleNewPostFormState extends State<CircleNewPostForm> {
               const SizedBox(width: 16),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _postType,
+                  initialValue: _postType,
                   decoration: InputDecoration(
                     labelText: 'Post Type',
                     filled: true,

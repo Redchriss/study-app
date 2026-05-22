@@ -6,26 +6,26 @@ class DashboardLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
+    return const CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Column(
             children: [
-              const ShimmerBox(height: 220, radius: 0),
-              const SizedBox(height: 16),
+              ShimmerBox(height: 220, radius: 0),
+              SizedBox(height: 16),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    const ShimmerBox(height: 90, radius: 16),
-                    const SizedBox(height: 12),
-                    Row(children: const [
+                    ShimmerBox(height: 90, radius: 16),
+                    SizedBox(height: 12),
+                    Row(children: [
                       Expanded(child: ShimmerBox(height: 90, radius: 16)),
                       SizedBox(width: 10),
                       Expanded(child: ShimmerBox(height: 90, radius: 16)),
                     ]),
-                    const SizedBox(height: 12),
-                    const ShimmerBox(height: 120, radius: 16),
+                    SizedBox(height: 12),
+                    ShimmerBox(height: 120, radius: 16),
                   ],
                 ),
               ),

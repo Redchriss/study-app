@@ -67,7 +67,8 @@ class UploadMaterialManager {
     if (result.hasException) {
       _setState(() {
         loadingSubjects = false;
-        subjectLoadError = graphQLErrorMessage(result.exception, 'Could not load subjects.');
+        subjectLoadError =
+            graphQLErrorMessage(result.exception, 'Could not load subjects.');
       });
       return;
     }
@@ -81,28 +82,51 @@ class UploadMaterialManager {
   bool get supportsOptionalFile => contentType == 'text';
 
   String levelLabel(BuildContext context) {
-    final level = _ref.read(authProvider).user?['profile']?['educationLevel']?.toString() ?? 'secondary';
+    final level = _ref
+            .read(authProvider)
+            .user?['profile']?['educationLevel']
+            ?.toString() ??
+        'secondary';
     switch (level) {
-      case 'primary': return 'Primary';
-      case 'tertiary': return 'Tertiary / University';
-      default: return 'Secondary';
+      case 'primary':
+        return 'Primary';
+      case 'tertiary':
+        return 'Tertiary / University';
+      default:
+        return 'Secondary';
     }
   }
 
   String titlePlaceholder() {
-    final level = _ref.read(authProvider).user?['profile']?['educationLevel']?.toString() ?? 'secondary';
+    final level = _ref
+            .read(authProvider)
+            .user?['profile']?['educationLevel']
+            ?.toString() ??
+        'secondary';
     switch (contentType) {
       case 'pdf':
-        if (level == 'primary') return 'e.g. Standard 7 Maths – Fractions';
-        if (level == 'tertiary') return 'e.g. UNIMA Physics 201 – Thermodynamics Notes';
+        if (level == 'primary') {
+          return 'e.g. Standard 7 Maths – Fractions';
+        }
+        if (level == 'tertiary') {
+          return 'e.g. UNIMA Physics 201 – Thermodynamics Notes';
+        }
         return 'e.g. Form 3 Biology – Respiration';
       case 'image':
-        if (level == 'primary') return 'e.g. Diagram – Water Cycle';
-        if (level == 'tertiary') return 'e.g. Anatomy Diagram – Digestive System';
+        if (level == 'primary') {
+          return 'e.g. Diagram – Water Cycle';
+        }
+        if (level == 'tertiary') {
+          return 'e.g. Anatomy Diagram – Digestive System';
+        }
         return 'e.g. MSCE Geography – Rainfall Map';
       case 'video':
-        if (level == 'primary') return 'e.g. English Lesson – Parts of Speech';
-        if (level == 'tertiary') return 'e.g. Organic Chemistry – Alkene Reactions';
+        if (level == 'primary') {
+          return 'e.g. English Lesson – Parts of Speech';
+        }
+        if (level == 'tertiary') {
+          return 'e.g. Organic Chemistry – Alkene Reactions';
+        }
         return 'e.g. MSCE Mathematics – Differentiation';
       case 'text':
         if (level == 'primary') return 'e.g. Science Summary – Living Things';
@@ -114,37 +138,58 @@ class UploadMaterialManager {
   }
 
   String descPlaceholder() {
-    final level = _ref.read(authProvider).user?['profile']?['educationLevel']?.toString() ?? 'secondary';
-    if (level == 'primary') return 'What topic does this cover? What standard is it for?';
-    if (level == 'tertiary') return 'What course, year, and topics are covered in this material?';
+    final level = _ref
+            .read(authProvider)
+            .user?['profile']?['educationLevel']
+            ?.toString() ??
+        'secondary';
+    if (level == 'primary') {
+      return 'What topic does this cover? What standard is it for?';
+    }
+    if (level == 'tertiary') {
+      return 'What course, year, and topics are covered in this material?';
+    }
     return 'What form and subject is this for? What topics does it cover?';
   }
 
   String primaryHint() {
     switch (contentType) {
-      case 'pdf': return 'Upload revision booklets, topic handouts, or scanned notes that students can read in-app.';
-      case 'image': return 'Upload diagrams, worked examples, maps, or annotated pages students can zoom into.';
-      case 'video': return 'Use a YouTube lesson so students can watch in-app and the AI can reuse transcripts when available.';
-      case 'text': return 'Paste notes directly or attach a readable file if you already have one.';
-      default: return '';
+      case 'pdf':
+        return 'Upload revision booklets, topic handouts, or scanned notes that students can read in-app.';
+      case 'image':
+        return 'Upload diagrams, worked examples, maps, or annotated pages students can zoom into.';
+      case 'video':
+        return 'Use a YouTube lesson so students can watch in-app and the AI can reuse transcripts when available.';
+      case 'text':
+        return 'Paste notes directly or attach a readable file if you already have one.';
+      default:
+        return '';
     }
   }
 
   String fileButtonLabel() {
     switch (contentType) {
-      case 'pdf': return 'Choose PDF';
-      case 'image': return 'Choose Image';
-      case 'text': return 'Attach File';
-      default: return 'Choose File';
+      case 'pdf':
+        return 'Choose PDF';
+      case 'image':
+        return 'Choose Image';
+      case 'text':
+        return 'Attach File';
+      default:
+        return 'Choose File';
     }
   }
 
   List<String> allowedExtensions() {
     switch (contentType) {
-      case 'pdf': return const ['pdf'];
-      case 'image': return const ['png', 'jpg', 'jpeg', 'gif', 'webp'];
-      case 'text': return const ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx'];
-      default: return const [];
+      case 'pdf':
+        return const ['pdf'];
+      case 'image':
+        return const ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+      case 'text':
+        return const ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx'];
+      default:
+        return const [];
     }
   }
 
@@ -173,11 +218,15 @@ class UploadMaterialManager {
     final errors = <String>[];
     if (titleCtrl.text.trim().isEmpty) errors.add('Add a clear title.');
     if (subjectId == null) errors.add('Pick a subject.');
-    if (requiresFile && selectedFile == null) errors.add('Choose a file for this material.');
+    if (requiresFile && selectedFile == null) {
+      errors.add('Choose a file for this material.');
+    }
     if (contentType == 'video' && youtubeCtrl.text.trim().isEmpty) {
       errors.add('Paste a YouTube link for the lesson.');
     }
-    if (contentType == 'text' && textCtrl.text.trim().isEmpty && selectedFile == null) {
+    if (contentType == 'text' &&
+        textCtrl.text.trim().isEmpty &&
+        selectedFile == null) {
       errors.add('Paste notes or attach a file for this text material.');
     }
     return errors;
@@ -187,7 +236,8 @@ class UploadMaterialManager {
     final errors = validateForm();
     if (errors.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errors.first), backgroundColor: DesignTokens.error),
+        SnackBar(
+            content: Text(errors.first), backgroundColor: DesignTokens.error),
       );
       return;
     }
@@ -203,21 +253,26 @@ class UploadMaterialManager {
     );
     if (!_isMounted()) return;
     _setState(() => saving = false);
+    if (!context.mounted) return;
     if (!result.success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.errors.isNotEmpty ? result.errors.first : (result.message ?? 'Upload failed')),
+          content: Text(result.errors.isNotEmpty
+              ? result.errors.first
+              : (result.message ?? 'Upload failed')),
           backgroundColor: DesignTokens.error,
         ),
       );
       return;
     }
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(result.message ?? 'Material submitted for review'),
         backgroundColor: DesignTokens.success,
       ),
     );
+    if (!context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,

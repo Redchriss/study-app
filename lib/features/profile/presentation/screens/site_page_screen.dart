@@ -38,13 +38,14 @@ class SitePageScreen extends StatelessWidget {
         fetchPolicy: FetchPolicy.cacheAndNetwork,
       ),
       builder: (result, {fetchMore, refetch}) {
-        if (result.hasException && result.data?['sitePage'] == null)
+        if (result.hasException && result.data?['sitePage'] == null) {
           return Scaffold(
             body: ErrorState(
               message: graphQLErrorMessage(result.exception, 'Failed to load page'),
               onRetry: () => refetch?.call(),
             ),
           );
+        }
         final page = result.data?['sitePage'] as Map<String, dynamic>?;
         final title = page?['title'] as String? ?? fallbackTitle;
         final content = page?['content'] as String? ?? fallbackContent;
@@ -140,7 +141,7 @@ class SitePageScreen extends StatelessWidget {
                           ),
                           blockquoteDecoration: BoxDecoration(
                             color: DesignTokens.primary.withValues(alpha: 0.06),
-                            border: Border(
+                            border: const Border(
                               left: BorderSide(color: DesignTokens.primary, width: 3),
                             ),
                             borderRadius: const BorderRadius.only(

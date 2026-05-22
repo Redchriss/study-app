@@ -23,13 +23,13 @@ class ProfileScreen extends ConsumerWidget {
           return Scaffold(
             body: ListView(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-              children: [
-                const SizedBox(height: 120),
-                const ShimmerBox(height: 160, radius: DesignTokens.radiusXl),
-                const SizedBox(height: 16),
-                const ShimmerBox(height: 200, radius: DesignTokens.radiusXl),
-                const SizedBox(height: 16),
-                const ShimmerBox(height: 280, radius: DesignTokens.radiusXl),
+              children: const [
+                SizedBox(height: 120),
+                ShimmerBox(height: 160, radius: DesignTokens.radiusXl),
+                SizedBox(height: 16),
+                ShimmerBox(height: 200, radius: DesignTokens.radiusXl),
+                SizedBox(height: 16),
+                ShimmerBox(height: 280, radius: DesignTokens.radiusXl),
               ],
             ),
           );

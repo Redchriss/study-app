@@ -39,10 +39,11 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
     _tts.setSpeechRate(0.45);
     _tts.setVolume(1.0);
     _tts.setCompletionHandler(() {
-      if (mounted)
+      if (mounted) {
         ref
             .read(kidsHomeStateProvider.notifier)
             .apply((s) => s.copyWith(isSpeaking: false));
+      }
     });
   }
 
@@ -168,10 +169,11 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
           .read(kidsHomeStateProvider.notifier)
           .apply((s) => s.copyWith(showCorrectBurst: true));
       await Future.delayed(const Duration(milliseconds: 900));
-      if (mounted)
+      if (mounted) {
         ref
             .read(kidsHomeStateProvider.notifier)
             .apply((s) => s.copyWith(showCorrectBurst: false));
+      }
     }
   }
 

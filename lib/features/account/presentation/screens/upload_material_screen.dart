@@ -181,9 +181,9 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
           Row(
             children: [
               const UploadPill(label: 'AI-ready first'),
-              SizedBox(width: DesignTokens.spSm),
+              const SizedBox(width: DesignTokens.spSm),
               const UploadPill(label: 'Mobile-friendly'),
-              SizedBox(width: DesignTokens.spSm),
+              const SizedBox(width: DesignTokens.spSm),
               UploadPill(label: _m.levelLabel(context)),
             ],
           ),

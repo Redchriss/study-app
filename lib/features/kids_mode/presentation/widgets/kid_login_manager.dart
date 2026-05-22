@@ -134,7 +134,9 @@ class KidLoginManager {
   Future<void> createKid() async {
     if (nameCtrl.text.trim().isEmpty ||
         kidPinCtrl.text.length != 4 ||
-        newKidStandard == null) return;
+        newKidStandard == null) {
+      return;
+    }
     setState(() => creatingKid = true);
     final result = await _buildClient().mutate(MutationOptions(
       document: gql(kCreateChildProfile),

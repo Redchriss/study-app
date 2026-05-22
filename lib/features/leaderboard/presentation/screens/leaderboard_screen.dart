@@ -48,11 +48,12 @@ class _LeaderboardTab extends ConsumerWidget {
       ),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const LoadingWidget();
-        if (result.hasException)
+        if (result.hasException) {
           return ErrorState(
             message: graphQLErrorMessage(result.exception, 'Failed to load leaderboard'),
             onRetry: () => refetch?.call(),
           );
+        }
         final entries = (result.data?['leaderboard'] as List?) ?? [];
         if (entries.isEmpty) {
           return Center(
@@ -72,7 +73,7 @@ class _LeaderboardTab extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   category == 'learners' ? 'Take your first quiz to join the leaderboard!' : 'Answer questions in circles to rank up!',
-                  style: TextStyle(color: DesignTokens.textSecondary, fontSize: 15),
+                  style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 15),
                 ),
               ],
             ),
@@ -157,16 +158,16 @@ class _LeaderboardTab extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Text(
                               '${e['questionsCorrect'] ?? 0} correct', 
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.textSecondary),
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.textSecondary),
                             ),
                             const SizedBox(width: 8),
-                            Text('•', style: TextStyle(color: DesignTokens.textTertiary, fontSize: 12)),
+                            const Text('•', style: TextStyle(color: DesignTokens.textTertiary, fontSize: 12)),
                             const SizedBox(width: 8),
                             const Icon(Icons.analytics_rounded, size: 12, color: DesignTokens.primary),
                             const SizedBox(width: 4),
                             Text(
                               '${e['score']?.toStringAsFixed(0) ?? '0'} avg', 
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.textSecondary),
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.textSecondary),
                             ),
                           ],
                         ),

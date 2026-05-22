@@ -108,8 +108,8 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
             return ListView.builder(
               padding: const EdgeInsets.all(DesignTokens.spMd),
               itemCount: 8,
-              itemBuilder: (_, __) => Padding(
-                padding: const EdgeInsets.only(bottom: DesignTokens.spSm),
+              itemBuilder: (_, __) => const Padding(
+                padding: EdgeInsets.only(bottom: DesignTokens.spSm),
                 child: ShimmerBox(height: 108, radius: DesignTokens.radiusLg),
               ),
             );

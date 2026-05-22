@@ -89,7 +89,7 @@ class _ScannerResultsSolutionCardState
                                   : TextOverflow.ellipsis),
                         const SizedBox(height: 4),
                         Row(children: [
-                          Icon(Icons.format_list_numbered,
+                          const Icon(Icons.format_list_numbered,
                               size: 13, color: DesignTokens.textTertiary),
                           const SizedBox(width: 4),
                           Text(
@@ -145,7 +145,7 @@ class _ScannerResultsSolutionCardState
                 ),
               ),
             if (hasAnswer)
-              ScannerResultsAnswerBox(answer: answer!, dark: widget.dark),
+              ScannerResultsAnswerBox(answer: answer, dark: widget.dark),
             const SizedBox(height: 8),
           ],
         ],

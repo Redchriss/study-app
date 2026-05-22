@@ -135,7 +135,7 @@ class QuizCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          Icon(Icons.help_outline_rounded, size: 12, color: DesignTokens.textTertiary),
+                          const Icon(Icons.help_outline_rounded, size: 12, color: DesignTokens.textTertiary),
                           const SizedBox(width: 4),
                           Text(
                             '$questionCount question${questionCount == 1 ? '' : 's'}',
@@ -143,7 +143,7 @@ class QuizCard extends StatelessWidget {
                           ),
                           if (durationMin != null) ...[
                             const SizedBox(width: 10),
-                            Icon(Icons.timer_outlined, size: 12, color: DesignTokens.textTertiary),
+                            const Icon(Icons.timer_outlined, size: 12, color: DesignTokens.textTertiary),
                             const SizedBox(width: 4),
                             Text(
                               '$durationMin min',
@@ -156,8 +156,8 @@ class QuizCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 10),
+              const Padding(
+                padding: EdgeInsets.only(right: 10),
                 child: Center(
                   child: Icon(
                     Icons.arrow_forward_ios_rounded,

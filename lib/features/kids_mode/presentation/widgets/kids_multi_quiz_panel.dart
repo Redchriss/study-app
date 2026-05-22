@@ -134,7 +134,7 @@ class _KidsMultiQuizPanelState extends State<KidsMultiQuizPanel> with SingleTick
         ),
       ).animate().fadeIn(duration: 300.ms);
     }
-    if (_done)
+    if (_done) {
       return KidsQuizSummaryPanel(
           correct: _correct,
           total: _questions.length,
@@ -146,6 +146,7 @@ class _KidsMultiQuizPanelState extends State<KidsMultiQuizPanel> with SingleTick
                 _done = false;
               }),
           onBack: widget.onBack);
+    }
     return KidsQuizQuestionPanel(
       question: _questions[_current],
       index: _current,

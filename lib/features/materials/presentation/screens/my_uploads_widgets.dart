@@ -159,7 +159,7 @@ class MyUploadMaterialCard extends StatelessWidget {
                           ),
                           child: Text(
                             subject,
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: DesignTokens.textSecondary),
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: DesignTokens.textSecondary),
                           ),
                         ),
                         const SizedBox(width: 8),

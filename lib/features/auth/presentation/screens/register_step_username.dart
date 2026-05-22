@@ -45,7 +45,7 @@ class RegisterStepUsername extends StatelessWidget {
                   ),
             ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Your unique username on Yaza.',
               style: TextStyle(fontSize: 15, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500),
             ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),

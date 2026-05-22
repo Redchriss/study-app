@@ -92,7 +92,7 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
           child: Container(
             decoration: BoxDecoration(
               gradient: dark
-                  ? LinearGradient(
+                  ? const LinearGradient(
                       begin: Alignment.topCenter, end: Alignment.bottomCenter,
                       colors: [DesignTokens.darkBackground, DesignTokens.darkSurface],
                     )

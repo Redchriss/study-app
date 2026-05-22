@@ -147,19 +147,22 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
       options:
           QueryOptions(document: gql(kQuiz), variables: {'slug': widget.slug}),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading)
+        if (result.isLoading) {
           return const Scaffold(
               body: LoadingWidget());
-        if (result.hasException)
+        }
+        if (result.hasException) {
           return Scaffold(
             body: ErrorState(
               message: graphQLErrorMessage(result.exception, 'Failed to load quiz'),
               onRetry: () => refetch?.call(),
             ),
           );
+        }
         final quiz = result.data?['quiz'];
-        if (quiz == null)
+        if (quiz == null) {
           return const Scaffold(body: Center(child: Text('Quiz not found')));
+        }
         final questions = (quiz['questions'] as List?) ?? [];
         final quizId = quiz['id'] as String?;
         if (quizId != null &&

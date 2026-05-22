@@ -43,7 +43,7 @@ class BookmarksScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   Text('No bookmarks yet', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Save materials you want to study later.', 
                     style: TextStyle(color: DesignTokens.textSecondary, fontSize: 15),
                   ),

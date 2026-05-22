@@ -96,8 +96,9 @@ class EditProfileManager {
       case 'secondary':
         if (form != null) m['form'] = form;
         if (term != null && term!.isNotEmpty) m['term'] = term;
-        if (secondarySchoolId != null)
+        if (secondarySchoolId != null) {
           m['secondarySchoolId'] = secondarySchoolId;
+        }
         break;
       case 'tertiary':
         if (universityId != null) m['universityId'] = universityId;
@@ -129,19 +130,19 @@ class EditProfileManager {
           ? 'Save failed'
           : (result.data?['updateProfile']?['errors'] as List?)?.first ??
               'Save failed';
-      if (_checkMounted())
-        ScaffoldMessenger.of(_context).showSnackBar(SnackBar(
-            content: Text('$err'), backgroundColor: DesignTokens.error));
+      if (!_context.mounted) return;
+      ScaffoldMessenger.of(_context).showSnackBar(
+          SnackBar(content: Text('$err'), backgroundColor: DesignTokens.error));
       return;
     }
     await _ref.read(authProvider.notifier).refreshUser();
     if (!_checkMounted()) return;
     loadEducationFromUser(_ref.read(authProvider).user);
     updateState(() {});
-    if (_checkMounted())
-      ScaffoldMessenger.of(_context).showSnackBar(const SnackBar(
-          content: Text('Profile updated'),
-          backgroundColor: DesignTokens.success));
+    if (!_context.mounted) return;
+    ScaffoldMessenger.of(_context).showSnackBar(const SnackBar(
+        content: Text('Profile updated'),
+        backgroundColor: DesignTokens.success));
   }
 
   Future<void> openUniversityPicker() async {
@@ -162,9 +163,10 @@ class EditProfileManager {
 
   Future<void> openProgramPicker() async {
     if (universityId == null) {
-      if (_checkMounted())
+      if (_checkMounted()) {
         ScaffoldMessenger.of(_context).showSnackBar(
             const SnackBar(content: Text('Choose an institution first')));
+      }
       return;
     }
     final picked = await showModalBottomSheet<Map<String, dynamic>>(

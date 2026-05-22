@@ -151,7 +151,7 @@ class _ScannerDetailsFormState extends ConsumerState<ScannerDetailsForm> {
     final subjects = subjectsState.subjects;
     return DropdownButtonFormField<String>(
       key: ValueKey('scanner_subject_${subjects.length}_$_subject'),
-      value: _subject,
+      initialValue: _subject,
       decoration: InputDecoration(
         labelText: 'Subject',
         filled: true,

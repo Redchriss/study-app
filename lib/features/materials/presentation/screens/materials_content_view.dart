@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/services/study_progress_store.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../widgets/material_card.dart';
 import '../widgets/material_widgets.dart';
 
 class MaterialsContentView extends StatefulWidget {
@@ -42,7 +43,9 @@ class _MaterialsContentViewState extends State<MaterialsContentView> {
     var result = widget.materials;
     if (widget.selectedType != 'all') {
       result = result
-          .where((m) => (m['contentType'] ?? '').toString().toLowerCase() == widget.selectedType)
+          .where((m) =>
+              (m['contentType'] ?? '').toString().toLowerCase() ==
+              widget.selectedType)
           .toList();
     }
     if (widget.searchQuery.isNotEmpty) {
@@ -50,7 +53,10 @@ class _MaterialsContentViewState extends State<MaterialsContentView> {
       result = result
           .where((m) =>
               (m['title'] ?? '').toString().toLowerCase().contains(q) ||
-              (m['subject']?['name'] ?? '').toString().toLowerCase().contains(q) ||
+              (m['subject']?['name'] ?? '')
+                  .toString()
+                  .toLowerCase()
+                  .contains(q) ||
               (m['description'] ?? '').toString().toLowerCase().contains(q))
           .toList();
     }
@@ -111,11 +117,14 @@ class _MaterialsContentViewState extends State<MaterialsContentView> {
               children: [
                 Expanded(
                   child: Text(
-                    (widget.searchQuery.isNotEmpty || widget.selectedType != 'all')
+                    (widget.searchQuery.isNotEmpty ||
+                            widget.selectedType != 'all')
                         ? '${filtered.length} result${filtered.length == 1 ? '' : 's'}'
                         : '${widget.materials.length} material${widget.materials.length == 1 ? '' : 's'}',
                     style: theme.textTheme.labelMedium?.copyWith(
-                      color: widget.dark ? DesignTokens.darkTextSecondary : DesignTokens.textSecondary,
+                      color: widget.dark
+                          ? DesignTokens.darkTextSecondary
+                          : DesignTokens.textSecondary,
                     ),
                   ),
                 ),
@@ -123,19 +132,29 @@ class _MaterialsContentViewState extends State<MaterialsContentView> {
             ),
           ),
         ),
-        if (filtered.isEmpty && (widget.searchQuery.isNotEmpty || widget.selectedType != 'all'))
+        if (filtered.isEmpty &&
+            (widget.searchQuery.isNotEmpty || widget.selectedType != 'all'))
           SliverFillRemaining(
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.search_off_rounded, size: 64,
-                      color: (widget.dark ? DesignTokens.darkTextTertiary : DesignTokens.textTertiary).withValues(alpha: 0.5)),
+                  Icon(Icons.search_off_rounded,
+                      size: 64,
+                      color: (widget.dark
+                              ? DesignTokens.darkTextTertiary
+                              : DesignTokens.textTertiary)
+                          .withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
                   Text('No materials match your filter.',
-                      style: TextStyle(color: widget.dark ? DesignTokens.darkTextSecondary : DesignTokens.textSecondary)),
+                      style: TextStyle(
+                          color: widget.dark
+                              ? DesignTokens.darkTextSecondary
+                              : DesignTokens.textSecondary)),
                   const SizedBox(height: 12),
-                  TextButton(onPressed: widget.onClearFilters, child: const Text('Clear filters')),
+                  TextButton(
+                      onPressed: widget.onClearFilters,
+                      child: const Text('Clear filters')),
                 ],
               ),
             ),
@@ -148,7 +167,9 @@ class _MaterialsContentViewState extends State<MaterialsContentView> {
                 (_, i) {
                   final m = filtered[i];
                   return MaterialCard(
-                    material: m, dark: widget.dark, index: i,
+                    material: m,
+                    dark: widget.dark,
+                    index: i,
                     onTap: () => context.push('/materials/${m['slug']}'),
                   );
                 },

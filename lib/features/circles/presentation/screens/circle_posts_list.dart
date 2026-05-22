@@ -28,8 +28,9 @@ class CirclePostsList extends StatelessWidget {
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
         .where((post) {
-      if (typeFilter != 'all' && post['postType']?.toString() != typeFilter)
+      if (typeFilter != 'all' && post['postType']?.toString() != typeFilter) {
         return false;
+      }
       if (solvedOnly && post['isSolved'] != true) return false;
       return true;
     }).toList();
@@ -44,19 +45,22 @@ class CirclePostsList extends StatelessWidget {
         pollInterval: const Duration(seconds: 30),
       ),
       builder: (postResult, {fetchMore, refetch}) {
-        if (postResult.isLoading)
+        if (postResult.isLoading) {
           return const LoadingWidget();
-        if (postResult.hasException)
+        }
+        if (postResult.hasException) {
           return ErrorState(
             message: graphQLErrorMessage(postResult.exception, 'Failed to load posts'),
             onRetry: () => refetch?.call(),
           );
+        }
         final posts = _filterPosts(
             (postResult.data?['circlePosts'] as List?) ?? const []);
-        if (posts.isEmpty)
+        if (posts.isEmpty) {
           return const Center(
               child: Text('No posts yet',
                   style: TextStyle(color: DesignTokens.textSecondary)));
+        }
         return RefreshIndicator(
           onRefresh: () async {
             refetch?.call();

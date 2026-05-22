@@ -30,7 +30,7 @@ class SchoolSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16)),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Your level',
+              const Text('Your level',
                   style: TextStyle(
                       fontSize: 12,
                       color: DesignTokens.textSecondary,

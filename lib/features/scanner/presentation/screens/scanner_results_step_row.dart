@@ -55,7 +55,7 @@ class ScannerResultsStepRow extends StatelessWidget {
                     color: DesignTokens.primary,
                     fontFamily: 'monospace'),
                 blockquoteDecoration: BoxDecoration(
-                  border: Border(
+                  border: const Border(
                       left: BorderSide(color: DesignTokens.accent, width: 3)),
                   color: DesignTokens.accent.withValues(alpha: 0.06),
                 ),

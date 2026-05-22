@@ -38,19 +38,22 @@ class _CircleDetailScreenState extends ConsumerState<CircleDetailScreen> {
           variables: {'slug': widget.slug},
           pollInterval: const Duration(seconds: 30)),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading)
+        if (result.isLoading) {
           return const Scaffold(
               body: LoadingWidget());
-        if (result.hasException)
+        }
+        if (result.hasException) {
           return Scaffold(
             body: ErrorState(
               message: graphQLErrorMessage(result.exception, 'Failed to load circle'),
               onRetry: () => refetch?.call(),
             ),
           );
+        }
         final circle = result.data?['studyCircle'] as Map<String, dynamic>?;
-        if (circle == null)
+        if (circle == null) {
           return const Scaffold(body: Center(child: Text('Circle not found')));
+        }
         return Scaffold(
           appBar: AppBar(
             title: Text(circle['name']?.toString() ?? ''),

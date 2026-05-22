@@ -36,7 +36,7 @@ class ScannerLandingPage extends StatelessWidget {
                     ?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 12),
-              Text(
+              const Text(
                 'Point your camera at a single question or upload a full past paper page. Our AI will break it down and solve it.',
                 textAlign: TextAlign.center,
                 style: TextStyle(

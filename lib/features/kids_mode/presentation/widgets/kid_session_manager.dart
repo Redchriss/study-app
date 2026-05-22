@@ -41,8 +41,9 @@ class KidSessionManager {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('kid_token', data['token'] as String);
             final rt = data['refreshToken'] as String?;
-            if (rt != null && rt.isNotEmpty)
+            if (rt != null && rt.isNotEmpty) {
               await prefs.setString('kid_refresh_token', rt);
+            }
             await prefs.setString(
               'kid_child_name',
               child?['childName'] as String? ??
@@ -60,8 +61,10 @@ class KidSessionManager {
               child?['childEducationTrack'] as String? ?? 'primary',
             );
             mgr.refreshToken(data['token'], Map<String, dynamic>.from(kid));
-            if (mgr.mounted) mgr.context.go('/kids/learn');
-          } else if (mgr.mounted) {
+            if (!mgr.mounted) return;
+            mgr.context.go('/kids/learn');
+          } else {
+            if (!mgr.mounted) return;
             ScaffoldMessenger.of(mgr.context).showSnackBar(SnackBar(
               content: Text(data?['errors']?.first ?? 'Wrong PIN'),
               backgroundColor: DesignTokens.error,

@@ -26,8 +26,9 @@ class TeamMemberCard extends StatelessWidget {
 
   String get _initials {
     final parts = name.trim().split(' ');
-    if (parts.length >= 2)
+    if (parts.length >= 2) {
       return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    }
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
@@ -151,18 +152,19 @@ class TeamSection extends StatelessWidget {
             fetchPolicy: FetchPolicy.cacheAndNetwork,
           ),
           builder: (result, {fetchMore, refetch}) {
-            if (result.hasException && result.data?['teamMembers'] == null)
+            if (result.hasException && result.data?['teamMembers'] == null) {
               return ErrorState(
                 message: graphQLErrorMessage(result.exception, 'Failed to load team'),
                 onRetry: () => refetch?.call(),
               );
+            }
             final members = (result.data?['teamMembers'] as List?) ?? [];
             if (result.isLoading && members.isEmpty) {
               return Column(
                 children: List.generate(
                     2,
-                    (i) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
+                    (i) => const Padding(
+                          padding: EdgeInsets.only(bottom: 10),
                           child: ShimmerBox(
                               height: 120, radius: DesignTokens.radiusXl),
                         )),

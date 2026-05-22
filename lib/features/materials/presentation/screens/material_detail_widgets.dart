@@ -75,8 +75,9 @@ class _MaterialDetailYoutubePlayerState
       if (fromQuery != null && fromQuery.isNotEmpty) return fromQuery;
       final segments =
           uri.pathSegments.where((segment) => segment.isNotEmpty).toList();
-      if (uri.host.contains('youtu.be') && segments.isNotEmpty)
+      if (uri.host.contains('youtu.be') && segments.isNotEmpty) {
         return segments.first;
+      }
       if (segments.length >= 2 && segments.first == 'embed') return segments[1];
       if (segments.isNotEmpty) return segments.last;
     }

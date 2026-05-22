@@ -54,7 +54,7 @@ class _RegisterStepPasswordState extends State<RegisterStepPassword> {
                   ),
             ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Create a strong password to keep your study progress safe.',
               style: TextStyle(fontSize: 15, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500, height: 1.4),
             ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),

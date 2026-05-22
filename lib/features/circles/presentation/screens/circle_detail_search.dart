@@ -25,23 +25,27 @@ class CirclePostSearchDelegate extends SearchDelegate {
   Widget buildSuggestions(BuildContext context) => _buildSearch(context);
 
   Widget _buildSearch(BuildContext context) {
-    if (query.isEmpty)
+    if (query.isEmpty) {
       return const EmptyState(icon: Icons.search, title: 'Search posts');
+    }
     return Query(
       options: QueryOptions(
           document: gql(kSearchPosts),
           variables: {'query': query, 'circleSlug': circleSlug}),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading)
+        if (result.isLoading) {
           return const LoadingWidget();
-        if (result.hasException)
+        }
+        if (result.hasException) {
           return ErrorState(
             message: graphQLErrorMessage(result.exception, 'Search failed'),
             onRetry: () => refetch?.call(),
           );
+        }
         final posts = (result.data?['searchPosts'] as List?) ?? [];
-        if (posts.isEmpty)
+        if (posts.isEmpty) {
           return const EmptyState(icon: Icons.search_off, title: 'No results');
+        }
         return ListView.builder(
           itemCount: posts.length,
           itemBuilder: (_, i) {

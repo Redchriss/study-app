@@ -84,7 +84,7 @@ class NotificationsScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   Text('All caught up!', textAlign: TextAlign.center, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'When you get replies, upvotes, or quiz results, they\'ll show up right here.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: DesignTokens.textSecondary, fontSize: 15, height: 1.4),

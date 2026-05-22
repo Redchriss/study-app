@@ -82,7 +82,7 @@ class HistoryScreen extends ConsumerWidget {
                                 const SizedBox(height: 4),
                                 Text(
                                   t['createdAt'] ?? '', 
-                                  style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500)
+                                  style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500)
                                 ),
                               ],
                             ),
@@ -159,7 +159,7 @@ class HistoryScreen extends ConsumerWidget {
                                 const SizedBox(height: 4),
                                 Text(
                                   e['createdAt'] ?? '', 
-                                  style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500),
+                                  style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),

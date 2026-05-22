@@ -196,10 +196,12 @@ class _ReaderQuickQuizSheetState extends State<_ReaderQuickQuizSheet> {
           ? DesignTokens.primary.withValues(alpha: 0.08)
           : Colors.transparent;
     }
-    if (question.answerIndex == optionIndex)
+    if (question.answerIndex == optionIndex) {
       return DesignTokens.success.withValues(alpha: 0.12);
-    if (_answers[questionIndex] == optionIndex)
+    }
+    if (_answers[questionIndex] == optionIndex) {
       return DesignTokens.error.withValues(alpha: 0.08);
+    }
     return Colors.transparent;
   }
 

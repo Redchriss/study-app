@@ -68,7 +68,7 @@ class CirclesScreen extends StatelessWidget {
                       style: theme.textTheme.titleLarge
                           ?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Complete your profile setup to join\nstudy groups matching your level.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -192,20 +192,20 @@ class CirclesScreen extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    Text(
+                                    const Text(
                                       '•',
                                       style: TextStyle(
                                           color: DesignTokens.textTertiary,
                                           fontSize: 12),
                                     ),
                                     const SizedBox(width: 8),
-                                    Icon(Icons.people_alt_rounded,
+                                    const Icon(Icons.people_alt_rounded,
                                         size: 14,
                                         color: DesignTokens.textSecondary),
                                     const SizedBox(width: 4),
                                     Text(
                                       '${c['memberCount'] ?? 0}',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         color: DesignTokens.textSecondary,
@@ -217,7 +217,7 @@ class CirclesScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Icon(Icons.chevron_right_rounded,
+                          const Icon(Icons.chevron_right_rounded,
                               color: DesignTokens.textTertiary),
                         ],
                       ),

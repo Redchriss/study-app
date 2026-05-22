@@ -205,7 +205,9 @@ class _KidCreateLearnerSheetState extends State<KidCreateLearnerSheet> {
                 label: 'Add Learner',
                 onTap: () {
                   if (_nameCtrl.text.trim().isEmpty ||
-                      _pinCtrl.text.length != 4) return;
+                      _pinCtrl.text.length != 4) {
+                    return;
+                  }
                   widget.onCreate(
                     name: _nameCtrl.text.trim(),
                     pin: _pinCtrl.text,

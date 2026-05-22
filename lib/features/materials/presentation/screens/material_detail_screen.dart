@@ -111,9 +111,10 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
           variables: {'slug': widget.slug},
           fetchPolicy: FetchPolicy.cacheAndNetwork),
       builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading && result.data == null)
+        if (result.isLoading && result.data == null) {
           return const Scaffold(
               body: LoadingWidget());
+        }
         final live = result.data?['material'];
         if (live is Map) {
           _cache.saveMaterial(widget.slug, Map<String, dynamic>.from(live));
@@ -123,20 +124,22 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
             future: _cache.loadMaterial(widget.slug),
             builder: (context, snapshot) {
               final cached = snapshot.data;
-              if (cached == null)
+              if (cached == null) {
                 return Scaffold(
                   body: ErrorState(
                     message: 'Material not found.',
                     onRetry: () => refetch?.call(),
                   ),
                 );
+              }
               return _buildBody(theme, cached, refetch, offline: true);
             },
           );
         }
-        if (live is! Map)
+        if (live is! Map) {
           return const Scaffold(
               body: Center(child: Text('Material not found.')));
+        }
         return _buildBody(theme, Map<String, dynamic>.from(live), refetch);
       },
     );

@@ -41,7 +41,8 @@ class _AsyncPreferenceSwitchState extends State<AsyncPreferenceSwitch> {
       child: Row(
         children: [
           Container(
-            width: 34, height: 34,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: widget.iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
@@ -53,23 +54,33 @@ class _AsyncPreferenceSwitchState extends State<AsyncPreferenceSwitch> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                Text(widget.subtitle, style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 11)),
+                Text(widget.title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14)),
+                Text(widget.subtitle,
+                    style: const TextStyle(
+                        color: DesignTokens.textSecondary, fontSize: 11)),
               ],
             ),
           ),
           _value == null
-              ? const SizedBox(width: 36, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox(
+                  width: 36,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2))
               : Switch.adaptive(
                   value: _value!,
                   onChanged: _saving
                       ? null
                       : (v) async {
-                          setState(() { _value = v; _saving = true; });
+                          setState(() {
+                            _value = v;
+                            _saving = true;
+                          });
                           await widget.onChanged(v);
                           if (mounted) setState(() => _saving = false);
                         },
-                  activeColor: DesignTokens.primary,
+                  activeTrackColor: DesignTokens.primary,
                 ),
         ],
       ),

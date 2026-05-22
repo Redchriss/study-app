@@ -16,17 +16,6 @@ Map<String, dynamic> _parseChunk(dynamic raw) {
   return {'emoji': '\u{1F4D6}', 'text': raw?.toString() ?? ''};
 }
 
-Map<String, dynamic> _parseQuiz(dynamic raw) {
-  if (raw is Map<String, dynamic>) return raw;
-  if (raw is String) {
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is Map<String, dynamic>) return decoded;
-    } catch (_) {}
-  }
-  return {};
-}
-
 class KidsVisualLessonPanel extends StatefulWidget {
   final Map<String, dynamic> lesson;
   final bool isSpeaking;
