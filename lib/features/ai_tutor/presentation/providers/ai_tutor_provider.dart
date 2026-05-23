@@ -9,7 +9,7 @@ import 'package:genui/genui.dart' as genui;
 import '../../../../core/storage/secure_storage.dart';
 import '../screens/ai_tutor_data_service.dart';
 import '../screens/ai_tutor_stream_service.dart';
-import '../genui/tutor_catalog.dart';
+import '../genui/tutor_catalog.dart' as tutor_catalog;
 
 final aiTutorProvider = NotifierProvider<AiTutorNotifier, AiTutorState>(
   AiTutorNotifier.new,
@@ -29,7 +29,7 @@ class AiTutorNotifier extends Notifier<AiTutorState> {
     _dataService = AiTutorDataService(ref as WidgetRef);
     _streamService = AiTutorStreamService();
 
-    catalog = buildTutorCatalog();
+    catalog = tutor_catalog.catalogForStudyMode(state.studyMode);
     surfaceController = SurfaceController(catalogs: [catalog]);
     _transport = A2uiTransportAdapter(onSend: _sendAndReceive);
     conversation =
@@ -62,7 +62,13 @@ class AiTutorNotifier extends Notifier<AiTutorState> {
     return const AiTutorState();
   }
 
-  void setStudyMode(String mode) => state = state.copyWith(studyMode: mode);
+  void setStudyMode(String mode) {
+    state = state.copyWith(studyMode: mode);
+    catalog = tutor_catalog.catalogForStudyMode(mode);
+    surfaceController = SurfaceController(catalogs: [catalog]);
+    conversation =
+        Conversation(controller: surfaceController, transport: _transport);
+  }
 
   void toggleInsights() =>
       state = state.copyWith(showInsights: !state.showInsights);
