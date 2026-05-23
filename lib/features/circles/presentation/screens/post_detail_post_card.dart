@@ -119,7 +119,7 @@ class PostDetailPostCard extends ConsumerWidget {
                   ));
                   if (context.mounted) {
                     final message = result
-                            .data?['askAiOnPost']?['reply'] ??
+                            .data?['askAiOnPost']?['comment']?['body'] ??
                         result.exception?.graphqlErrors
                             .firstOrNull?.message ??
                         'AI replied!';

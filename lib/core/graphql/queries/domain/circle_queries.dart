@@ -95,7 +95,7 @@ mutation VotePost($postId: ID!, $direction: String!) {
 
 const String kAskAiOnPost = r'''
 mutation AskAiOnPost($postId: ID!) {
-  askAiOnPost(postId: $postId) { success reply }
+  askAiOnPost(postId: $postId) { success comment { id body } }
 }
 ''';
 
