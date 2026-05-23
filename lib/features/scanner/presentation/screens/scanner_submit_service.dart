@@ -4,10 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../../core/errors/app_exception.dart';
-import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/services/scanner_stream_service.dart';
+import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/design_tokens.dart';
 
 Uint8List _readFileBytes(String path) {
@@ -25,10 +23,24 @@ class ScannerSubmitService {
     required BuildContext context,
     required VoidCallback onSolvingStart,
     required VoidCallback onSolvingEnd,
+    required void Function(String) onProgress,
   }) async {
     onSolvingStart();
+    final token = await SecureStorage.getToken();
+    if (token == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please log in again.'),
+            backgroundColor: DesignTokens.error,
+          ),
+        );
+      }
+      onSolvingEnd();
+      return;
+    }
+
     try {
-      final client = ref.read(graphqlClientProvider);
       final bytes = await compute(_readFileBytes, image.path);
       if (bytes.length > 5 * 1024 * 1024) {
         if (context.mounted) {
@@ -43,45 +55,38 @@ class ScannerSubmitService {
         return;
       }
       final b64 = base64Encode(bytes);
-      final result = await client.mutate(
-        MutationOptions(
-          document: gql(kSubmitScanSession),
-          variables: {
-            'imageBase64': b64,
-            'fileName': image.path.split('/').last,
-            'subject': subject?.trim() ?? '',
-            'educationLevel': educationLevel ?? 'secondary',
-            'examType': examType.trim(),
-            'year': int.tryParse(year),
-          },
-        ),
+
+      final service = ScannerStreamService();
+      final result = await service.send(
+        imageBase64: b64,
+        fileName: image.path.split('/').last,
+        subject: subject,
+        educationLevel: educationLevel,
+        examType: examType,
+        year: year,
+        token: token,
+        onProgress: onProgress,
+        onError: (msg) {
+          if (context.mounted) {
+            onSolvingEnd();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(msg),
+                backgroundColor: DesignTokens.error,
+              ),
+            );
+          }
+        },
       );
+
       if (!context.mounted) return;
       onSolvingEnd();
-      if (result.hasException || result.data?['submitScanSession'] == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                Text(graphQLErrorMessage(result.exception, 'Failed to solve')),
-            backgroundColor: DesignTokens.error,
-          ),
-        );
-        return;
-      }
-      final data = result.data!['submitScanSession'];
-      if (data['success'] != true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                (data['errors'] as List?)?.firstOrNull?.toString() ?? 'Failed'),
-            backgroundColor: DesignTokens.error,
-          ),
-        );
-        return;
-      }
+
+      if (result == null) return;
+
+      final solutions = result['solutions'] as List? ?? [];
       if (!context.mounted) return;
-      context.push('/scanner/results',
-          extra: {'solutions': data['session']?['solutions'] ?? []});
+      context.push('/scanner/results', extra: {'solutions': solutions});
     } catch (e) {
       if (context.mounted) {
         onSolvingEnd();

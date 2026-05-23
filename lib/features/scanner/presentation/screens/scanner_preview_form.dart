@@ -28,15 +28,16 @@ class _ScannerDetailsFormState extends ConsumerState<ScannerDetailsForm> {
   String _examType = '';
   String _year = '';
   bool _solving = false;
+  String _progressText = '';
   late final TextEditingController _examTypeCtrl;
 
   @override
   void initState() {
     super.initState();
     _examTypeCtrl = TextEditingController();
-    final auth = ref.read(authProvider);
+    final user = ref.read(authProvider).user;
     _educationLevel =
-        auth.user?['profile']?['educationLevel']?.toString() ?? 'secondary';
+        user?['profile']?['educationLevel']?.toString() ?? 'secondary';
     _examType = _examTypeDefault();
     _examTypeCtrl.text = _examTypeDefault();
     ref.read(scannerSubjectsProvider.notifier).load(level: _educationLevel!);
@@ -72,7 +73,10 @@ class _ScannerDetailsFormState extends ConsumerState<ScannerDetailsForm> {
 
   Future<void> _submit() async {
     if (_solving) return;
-    setState(() => _solving = true);
+    setState(() {
+      _solving = true;
+      _progressText = 'Starting...';
+    });
     widget.onSolvingChanged(true);
     await ScannerSubmitService.submit(
       ref: ref,
@@ -85,9 +89,15 @@ class _ScannerDetailsFormState extends ConsumerState<ScannerDetailsForm> {
       onSolvingStart: () {},
       onSolvingEnd: () {
         if (mounted) {
-          setState(() => _solving = false);
+          setState(() {
+            _solving = false;
+            _progressText = '';
+          });
           widget.onSolvingChanged(false);
         }
+      },
+      onProgress: (msg) {
+        if (mounted) setState(() => _progressText = msg);
       },
     );
   }
@@ -245,9 +255,13 @@ class _ScannerDetailsFormState extends ConsumerState<ScannerDetailsForm> {
                     child: CircularProgressIndicator(
                         color: Colors.white, strokeWidth: 2))
                 : const Icon(Icons.auto_awesome_rounded),
-            label: Text(_solving ? 'Solving...' : 'Solve This Paper',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            label: Text(
+              _solving
+                  ? (_progressText.isNotEmpty ? _progressText : 'Solving...')
+                  : 'Solve This Paper',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+              overflow: TextOverflow.ellipsis,
+            ),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF10B981),
               shape: RoundedRectangleBorder(
