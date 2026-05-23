@@ -70,6 +70,12 @@ mutation UnblockUser($username: String!) {
 }
 ''';
 
+const String kAskAiOnPost = r'''
+mutation AskAiOnPost($postId: ID!) {
+  askAiOnPost(postId: $postId) { comment { id body } errors }
+}
+''';
+
 const String kGiveAward = r'''
 mutation GiveAward($postId: ID!, $awardTypeId: ID!) {
   giveAward(postId: $postId, awardTypeId: $awardTypeId) { success errors }

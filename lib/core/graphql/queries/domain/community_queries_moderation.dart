@@ -5,8 +5,8 @@ mutation MarkOc($postId: ID!) {
 ''';
 
 const String kMarkSpoiler = r'''
-mutation MarkSpoiler($postId: ID!) {
-  markSpoiler(postId: $postId) { success }
+mutation MarkSpoiler($postId: ID!, $isSpoiler: Boolean!) {
+  markSpoiler(postId: $postId, isSpoiler: $isSpoiler) { success }
 }
 ''';
 
@@ -47,19 +47,19 @@ mutation ApprovePost($postId: ID!) {
 ''';
 
 const String kPinPost = r'''
-mutation PinPost($postId: ID!) {
-  pinPost(postId: $postId) { success }
+mutation PinPost($postId: ID!, $pinned: Boolean!) {
+  pinPost(postId: $postId, pinned: $pinned) { post { id isPinned } errors }
 }
 ''';
 
 const String kLockPost = r'''
-mutation LockPost($postId: ID!) {
-  lockPost(postId: $postId) { success }
+mutation LockPost($postId: ID!, $locked: Boolean!) {
+  lockPost(postId: $postId, locked: $locked) { post { id isLocked } errors }
 }
 ''';
 
 const String kBanUser = r'''
-mutation BanUser($communitySlug: String!, $username: String!, $reason: String) {
+mutation BanUser($communitySlug: String!, $username: String!, $reason: String!) {
   banUser(communitySlug: $communitySlug, username: $username, reason: $reason) {
     membership { id isBanned }
     errors
@@ -74,8 +74,8 @@ mutation UnbanUser($communitySlug: String!, $username: String!) {
 ''';
 
 const String kMuteUser = r'''
-mutation MuteUser($communitySlug: String!, $username: String!, $durationHours: Int) {
-  muteUser(communitySlug: $communitySlug, username: $username, durationHours: $durationHours) {
+mutation MuteUser($communitySlug: String!, $username: String!, $durationDays: Int!) {
+  muteUser(communitySlug: $communitySlug, username: $username, durationDays: $durationDays) {
     membership { id }
     errors
   }
