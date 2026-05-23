@@ -34,45 +34,52 @@ class AiTutorStreamService {
     request.sink.close();
 
     final response = await httpClient.send(request);
-    final lines = response.stream.transform(utf8.decoder);
+    final lines = response.stream
+        .transform(utf8.decoder)
+        .timeout(const Duration(seconds: 90));
     String eventType = '';
     StringBuffer dataBuffer = StringBuffer();
     String streamingText = '';
 
-    await for (final chunk in lines) {
-      for (final line in chunk.split('\n')) {
-        if (line.startsWith('event: ')) {
-          eventType = line.substring(7).trim();
-          dataBuffer = StringBuffer();
-        } else if (line.startsWith('data: ')) {
-          dataBuffer.write(line.substring(6));
-        } else if (line.isEmpty && eventType.isNotEmpty) {
-          final data = dataBuffer.toString();
-          try {
-            final payload = jsonDecode(data) as Map<String, dynamic>;
-            switch (eventType) {
-              case 'token':
-                final t = payload['text'] as String? ?? '';
-                streamingText += t;
-                onToken(t);
-                onScrollDown();
-              case 'done':
-                onAddMessage(streamingText);
-                streamingText = '';
-              case 'meta':
-                if (payload['session_id'] != null) {
-                  onSessionId(payload['session_id'].toString());
-                }
-              case 'error':
-                onError(payload['message'] ?? 'Something went wrong.');
+    try {
+      await for (final chunk in lines) {
+        for (final line in chunk.split('\n')) {
+          if (line.startsWith('event: ')) {
+            eventType = line.substring(7).trim();
+            dataBuffer = StringBuffer();
+          } else if (line.startsWith('data: ')) {
+            dataBuffer.write(line.substring(6));
+          } else if (line.isEmpty && eventType.isNotEmpty) {
+            final data = dataBuffer.toString();
+            try {
+              final payload = jsonDecode(data) as Map<String, dynamic>;
+              switch (eventType) {
+                case 'token':
+                  final t = payload['text'] as String? ?? '';
+                  streamingText += t;
+                  onToken(t);
+                  onScrollDown();
+                case 'done':
+                  onAddMessage(streamingText);
+                  streamingText = '';
+                case 'meta':
+                  if (payload['session_id'] != null) {
+                    onSessionId(payload['session_id'].toString());
+                  }
+                case 'error':
+                  onError(payload['message'] ?? 'Something went wrong.');
+              }
+            } catch (_) {
+              debugPrint(
+                  'AI Tutor: failed to parse SSE event: $eventType $data');
             }
-          } catch (_) {
-            debugPrint('AI Tutor: failed to parse SSE event: $eventType $data');
+            eventType = '';
+            dataBuffer = StringBuffer();
           }
-          eventType = '';
-          dataBuffer = StringBuffer();
         }
       }
+    } on TimeoutException {
+      onError('Response timed out. Please try again.');
     }
   }
 }

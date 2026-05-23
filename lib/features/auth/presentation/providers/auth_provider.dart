@@ -25,7 +25,8 @@ final graphqlClientProvider = Provider<GraphQLClient>((ref) {
   return buildGraphQLClient();
 });
 
-final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider =
+    NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
 
 class AuthNotifier extends Notifier<AuthState> {
   Timer? _refreshTimer;
@@ -52,11 +53,17 @@ class AuthNotifier extends Notifier<AuthState> {
         variables: {'refreshToken': refreshToken},
       ));
       final data = result.data?['refreshToken'];
-      if (data != null && data['token'] != null && data['refreshToken'] != null) {
+      if (data != null &&
+          data['token'] != null &&
+          data['refreshToken'] != null) {
         await SecureStorage.saveTokens(data['token'], data['refreshToken']);
-        _scheduleRefresh();
       }
-    } catch (_) {}
+    } catch (_) {
+      debugPrint('Token refresh failed — will retry in 2 minutes');
+      _refreshTimer = Timer(const Duration(minutes: 2), _doRefresh);
+      return;
+    }
+    _scheduleRefresh();
   }
 
   Future<void> _bootstrap() async {
@@ -71,12 +78,14 @@ class AuthNotifier extends Notifier<AuthState> {
       }
 
       final client = ref.read(graphqlClientProvider);
-      final result = await client.query(
-        QueryOptions(
-          document: gql(kMe),
-          fetchPolicy: FetchPolicy.networkOnly,
-        ),
-      ).timeout(const Duration(seconds: 25));
+      final result = await client
+          .query(
+            QueryOptions(
+              document: gql(kMe),
+              fetchPolicy: FetchPolicy.networkOnly,
+            ),
+          )
+          .timeout(const Duration(seconds: 25));
 
       if (result.hasException || result.data?['me'] == null) {
         await SecureStorage.clearTokens();
@@ -84,11 +93,15 @@ class AuthNotifier extends Notifier<AuthState> {
         return;
       }
 
-      state = AuthState(isAuthenticated: true, isLoading: false, user: result.data!['me']);
+      state = AuthState(
+          isAuthenticated: true, isLoading: false, user: result.data!['me']);
       _scheduleRefresh();
     } catch (e) {
       debugPrint('Auth bootstrap failed: $e');
-      state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Connection error. Check your network.');
+      state = const AuthState(
+          isAuthenticated: false,
+          isLoading: false,
+          error: 'Connection error. Check your network.');
     }
   }
 
@@ -102,14 +115,18 @@ class AuthNotifier extends Notifier<AuthState> {
       ));
 
       if (result.hasException) {
-        final msg = graphQLErrorMessage(result.exception, 'Network error. Check your connection.');
+        final msg = graphQLErrorMessage(
+            result.exception, 'Network error. Check your connection.');
         state = AuthState(isAuthenticated: false, isLoading: false, error: msg);
         return false;
       }
 
       final data = result.data?['tokenAuth'];
-      if (data == null || data['token'] == null || data['refreshToken'] == null) {
-        state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Login failed.');
+      if (data == null ||
+          data['token'] == null ||
+          data['refreshToken'] == null) {
+        state = const AuthState(
+            isAuthenticated: false, isLoading: false, error: 'Login failed.');
         return false;
       }
       await SecureStorage.saveTokens(data['token'], data['refreshToken']);
@@ -118,39 +135,55 @@ class AuthNotifier extends Notifier<AuthState> {
       return state.isAuthenticated;
     } catch (e) {
       debugPrint('Login failed: $e');
-      state = AuthState(isAuthenticated: false, isLoading: false, error: e.toString());
+      state = AuthState(
+          isAuthenticated: false, isLoading: false, error: e.toString());
       return false;
     }
   }
 
-  Future<bool> register(String username, String email, String password, {String? phone}) async {
+  Future<bool> register(String username, String email, String password,
+      {String? phone}) async {
     try {
       state = const AuthState(isAuthenticated: false, isLoading: true);
       final client = ref.read(graphqlClientProvider);
       final result = await client.mutate(MutationOptions(
         document: gql(kRegister),
-        variables: {'username': username, 'email': email, 'password': password, 'phone': phone},
+        variables: {
+          'username': username,
+          'email': email,
+          'password': password,
+          'phone': phone
+        },
       ));
 
       if (result.hasException) {
-        final msg = graphQLErrorMessage(result.exception, 'Network error. Check your connection.');
+        final msg = graphQLErrorMessage(
+            result.exception, 'Network error. Check your connection.');
         state = AuthState(isAuthenticated: false, isLoading: false, error: msg);
         return false;
       }
 
       final data = result.data?['register'];
       if (data == null) {
-        state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Registration failed.');
+        state = const AuthState(
+            isAuthenticated: false,
+            isLoading: false,
+            error: 'Registration failed.');
         return false;
       }
       if (data['success'] != true) {
-        final errors = (data['errors'] as List?)?.join(', ') ?? 'Registration failed.';
-        state = AuthState(isAuthenticated: false, isLoading: false, error: errors);
+        final errors =
+            (data['errors'] as List?)?.join(', ') ?? 'Registration failed.';
+        state =
+            AuthState(isAuthenticated: false, isLoading: false, error: errors);
         return false;
       }
 
       if (data['token'] == null || data['refreshToken'] == null) {
-        state = const AuthState(isAuthenticated: false, isLoading: false, error: 'Registration failed.');
+        state = const AuthState(
+            isAuthenticated: false,
+            isLoading: false,
+            error: 'Registration failed.');
         return false;
       }
       await SecureStorage.saveTokens(data['token'], data['refreshToken']);
@@ -159,7 +192,8 @@ class AuthNotifier extends Notifier<AuthState> {
       return state.isAuthenticated;
     } catch (e) {
       debugPrint('Registration failed: $e');
-      state = AuthState(isAuthenticated: false, isLoading: false, error: e.toString());
+      state = AuthState(
+          isAuthenticated: false, isLoading: false, error: e.toString());
       return false;
     }
   }
@@ -180,7 +214,8 @@ class AuthNotifier extends Notifier<AuthState> {
         QueryOptions(document: gql(kMe), fetchPolicy: FetchPolicy.networkOnly),
       );
       if (result.data?['me'] != null) {
-        state = AuthState(isAuthenticated: true, isLoading: false, user: result.data!['me']);
+        state = AuthState(
+            isAuthenticated: true, isLoading: false, user: result.data!['me']);
       }
     } catch (e) {
       debugPrint('refreshUser failed: $e');

@@ -104,7 +104,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
           fetchPolicy: FetchPolicy.cacheAndNetwork,
         ),
         builder: (result, {fetchMore, refetch}) {
-           if (result.isLoading && result.data == null) {
+          if (result.isLoading && result.data == null) {
             return ListView.builder(
               padding: const EdgeInsets.all(DesignTokens.spMd),
               itemCount: 8,
@@ -116,16 +116,6 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
           }
 
           final rawMaterials = (result.data?['materials'] as List?) ?? [];
-          if (rawMaterials.isNotEmpty) {
-            _cache.saveMaterialsList(rawMaterials);
-          }
-
-          final latestMaterialProgress = StudyMaterialProgress.fromGraphQL(
-            result.data?['latestMaterialProgress'] is Map
-                ? Map<String, dynamic>.from(
-                    result.data!['latestMaterialProgress'] as Map)
-                : null,
-          );
 
           if (result.hasException && rawMaterials.isEmpty) {
             return FutureBuilder<List<Map<String, dynamic>>>(
@@ -158,9 +148,19 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
             );
           }
 
+          if (rawMaterials.isNotEmpty) {
+            _cache.saveMaterialsList(rawMaterials);
+          }
+
           if (rawMaterials.isEmpty) {
             return MaterialsEmptyState(dark: dark);
           }
+
+          final latestMaterialProgress =
+              result.data?['latestMaterialProgress'] is Map
+                  ? StudyMaterialProgress.fromGraphQL(Map<String, dynamic>.from(
+                      result.data!['latestMaterialProgress'] as Map))
+                  : null;
 
           final materials = rawMaterials
               .whereType<Map>()
@@ -187,5 +187,4 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
       ),
     );
   }
-
 }

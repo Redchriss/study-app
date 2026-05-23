@@ -65,7 +65,7 @@ class UploadMaterialManager {
       QueryOptions(
         document: gql(kSubjects),
         variables: {'educationLevel': educationLevel},
-        fetchPolicy: FetchPolicy.cacheFirst,
+        fetchPolicy: FetchPolicy.cacheAndNetwork,
       ),
     );
     if (!_isMounted()) return;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'ai_tutor_state.dart';
 export 'ai_tutor_state.dart';
 
@@ -23,6 +25,7 @@ class AiTutorNotifier extends Notifier<AiTutorState> {
   late final A2uiTransportAdapter _transport;
   late final Conversation conversation;
   late final Catalog catalog;
+  StreamSubscription? _convSub;
 
   @override
   AiTutorState build() {
@@ -34,8 +37,16 @@ class AiTutorNotifier extends Notifier<AiTutorState> {
     _transport = A2uiTransportAdapter(onSend: _sendAndReceive);
     conversation =
         Conversation(controller: surfaceController, transport: _transport);
+    _listenConversation();
 
-    conversation.events.listen((event) {
+    loadLearningProfile();
+    loadTutorSnapshot();
+    return const AiTutorState();
+  }
+
+  void _listenConversation() {
+    _convSub?.cancel();
+    _convSub = conversation.events.listen((event) {
       if (event is ConversationSurfaceAdded) {
         state = state.copyWith(conversationItems: [
           ...state.conversationItems,
@@ -56,10 +67,6 @@ class AiTutorNotifier extends Notifier<AiTutorState> {
         state = state.copyWith(error: event.error.toString());
       }
     });
-
-    loadLearningProfile();
-    loadTutorSnapshot();
-    return const AiTutorState();
   }
 
   void setStudyMode(String mode) {
@@ -68,6 +75,7 @@ class AiTutorNotifier extends Notifier<AiTutorState> {
     surfaceController = SurfaceController(catalogs: [catalog]);
     conversation =
         Conversation(controller: surfaceController, transport: _transport);
+    _listenConversation();
   }
 
   void toggleInsights() =>
@@ -99,6 +107,7 @@ class AiTutorNotifier extends Notifier<AiTutorState> {
     final promptBuilder = PromptBuilder.chat(catalog: catalog);
     final clientInstructions = promptBuilder.systemPromptJoined();
 
+    final httpClient = http.Client();
     try {
       await _streamService.sendStream(
         text: text,
@@ -106,30 +115,45 @@ class AiTutorNotifier extends Notifier<AiTutorState> {
         studyMode: state.studyMode,
         token: token,
         clientInstructions: clientInstructions,
-        httpClient: http.Client(),
+        httpClient: httpClient,
         onToken: (t) {
+          state = state.copyWith(
+            streaming: true,
+            streamingText: state.streamingText + t,
+          );
           _transport.addChunk(t);
         },
         onAddMessage: (msg) {
-          state = state.copyWith(sending: false);
+          state = state.copyWith(
+            sending: false,
+            streaming: false,
+            streamingText: '',
+          );
           loadTutorSnapshot();
         },
         onSessionId: (id) => state = state.copyWith(sessionId: id),
         onError: (msg) {
           state = state.copyWith(
             sending: false,
+            streaming: false,
             error: msg,
           );
         },
         onScrollDown: () {},
       );
 
-      state = state.copyWith(sending: false);
+      state = state.copyWith(
+        sending: false,
+        streaming: false,
+      );
     } catch (_) {
       state = state.copyWith(
         sending: false,
+        streaming: false,
         error: 'Connection lost. Please try again.',
       );
+    } finally {
+      httpClient.close();
     }
   }
 

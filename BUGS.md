@@ -15,7 +15,35 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
-None — all known issues have been resolved.
+### [BUG-026] AI Tutor gray screen — setStudyMode() orphaned Conversation + streaming never set + SSE timeout + http.Client leak
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** `ai_tutor_provider.dart:65-71`, `ai_tutor_provider.dart:110-112`, `ai_tutor_stream_service.dart:42`
+**Root cause:** Multiple issues: (1) `setStudyMode()` created a new Conversation/SurfaceController without re-attaching event listeners — subsequent AI responses were silently dropped. (2) `onToken` never updated `streaming`/`streamingText` state, so UI never showed incremental output. (3) SSE stream had no timeout — if backend hung, the AI tutor was permanently stuck in "sending" state. (4) `http.Client()` created per request but never closed.
+**Fix:** Extracted `_listenConversation()` method, called from both `build()` and `setStudyMode()`. Streaming state now updated in `onToken` callback. Added 90s timeout to SSE stream. `http.Client()` wrapped in try/finally.
+
+### [BUG-027] Kids mode blank lesson — currentLesson: {} instead of null + text ignored
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** `kids_home_screen_manager.dart:52-55,111`
+**Root cause:** `startGenUiLesson()` set `currentLesson: {}` (empty Map), not `null`. The check `currentLesson == null && lessonItems.isEmpty` failed, so the "No lesson available" fallback never showed — instead the full layout rendered with empty content. Also, `ConversationContentReceived` events were silently ignored (the AI's text responses were never added to `lessonItems`), and `http.Client()` was created per request but never closed.
+**Fix:** Changed `currentLesson: {}` to `currentLesson: null`. `ConversationContentReceived` now adds a `TextItem` to `lessonItems`. Added `TextItem` rendering in `kids_lesson_view_section.dart`. `http.Client()` wrapped in try/finally.
+
+### [BUG-028] Auto logout — token refresh silently stops after first failure
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** `auth_provider.dart:45-59`
+**Root cause:** `_doRefresh()` only called `_scheduleRefresh()` on SUCCESS. If the refresh request ever failed (network hiccup, server restart), the 50-minute timer was never rescheduled. After the original JWT expired (~50-60 min), all subsequent API calls failed with auth errors — the user was effectively logged out but the UI still showed them as authenticated. Every screen silently broke.
+**Fix:** On success, the normal 50-min schedule continues. On catch/error, a retry is scheduled in 2 minutes. Refresh always keeps churning.
+
+### [BUG-029] Materials screen — fromGraphQL() called before error check (crash on null data)
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Location:** `materials_screen.dart:123-130`
+**Root cause:** `StudyMaterialProgress.fromGraphQL()` was called BEFORE the `result.hasException && rawMaterials.isEmpty` check. If the GraphQL query failed with `result.data == null`, the `result.data!['latestMaterialProgress']` expression would crash with a null error.
+**Fix:** Moved `latestMaterialProgress` computation after all error/empty checks, guarded by `result.data?['latestMaterialProgress'] is Map`.
+
+### [BUG-030] Upload subjects — stale cache (cacheFirst) shows wrong level subjects
+**Priority:** 🟢 MEDIUM → ✅ RESOLVED
+**Location:** `upload_material_manager.dart:68`
+**Root cause:** `loadSubjects()` used `FetchPolicy.cacheFirst`. If the user changed their education level, the old cached subjects (for a previous level) were returned — showing subjects like "Primary Mathematics" to a tertiary user (or nothing if the cache miss fell through to an error state).
+**Fix:** Changed to `FetchPolicy.cacheAndNetwork`, ensuring fresh subject data is fetched for the correct education level.
 
 ## Bypassed
 

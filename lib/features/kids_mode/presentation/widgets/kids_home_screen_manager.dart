@@ -50,8 +50,10 @@ class KidsHomeScreenManager {
               .toList();
           return state.copyWith(lessonItems: newItems);
         } else if (event is ConversationContentReceived) {
-          // If the AI says something plain text (like "Great job!"), we can optionally show it,
-          // but for Kids Mode we mostly rely on the surfaces.
+          return state.copyWith(lessonItems: [
+            ...state.lessonItems,
+            TextItem(text: event.text, isUser: false)
+          ]);
         }
         return state;
       });
@@ -76,14 +78,15 @@ class KidsHomeScreenManager {
     final promptBuilder = PromptBuilder.chat(catalog: catalog);
     final clientInstructions = promptBuilder.systemPromptJoined();
 
+    final httpClient = http.Client();
     try {
       await _streamService.sendStream(
         text: text,
-        sessionId: null, // Keep stateless or maintain session
+        sessionId: null,
         studyMode: 'kids_lesson',
         token: auth.token!,
         clientInstructions: clientInstructions,
-        httpClient: http.Client(),
+        httpClient: httpClient,
         onToken: (t) {
           _transport.addChunk(t);
         },
@@ -103,12 +106,14 @@ class KidsHomeScreenManager {
     } catch (_) {
       if (!_mountedFn()) return;
       _update((s) => s.copyWith(loading: false));
+    } finally {
+      httpClient.close();
     }
   }
 
   void startGenUiLesson(String topicName) {
     _update((s) => s.copyWith(
-        loading: true, lessonItems: [], inQuiz: false, currentLesson: {}));
+        loading: true, lessonItems: [], inQuiz: false, currentLesson: null));
     conversation.sendRequest(ChatMessage.user(
         "Teach me about $topicName using the InteractiveMatch and EmojiStoryCard."));
   }

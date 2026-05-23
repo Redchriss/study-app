@@ -178,6 +178,21 @@ class KidsLessonViewSection extends StatelessWidget {
                                       .contextFor(item.surfaceId)),
                             );
                           }
+                          if (item is TextItem) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Text(item.text,
+                                    style: const TextStyle(
+                                        fontSize: 15, height: 1.4)),
+                              ),
+                            );
+                          }
                           return const SizedBox.shrink();
                         }).toList(),
                       ),
