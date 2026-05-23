@@ -6,6 +6,8 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../widgets/post_card.dart';
+import 'community_post_list.dart';
+import 'community_header.dart';
 
 final _postSorts = ['hot', 'new', 'top', 'rising', 'controversial'];
 
@@ -67,10 +69,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 expandedHeight: 140,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
-                  background: _CommunityHeader(
-                    community: community,
-                    dark: dark,
-                  ),
+                  background: CommunityHeader(community: community, dark: dark),
                 ),
                 actions: [
                   if (isMod)
@@ -190,7 +189,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
               ),
               SliverToBoxAdapter(
-                child: _PostsList(
+                child: CommunityPostList(
                   key: ValueKey('posts_${widget.slug}_$_sortIdx'),
                   slug: widget.slug,
                   sort: _postSorts[_sortIdx],
@@ -208,138 +207,5 @@ class _CommunityScreenState extends State<CommunityScreen> {
     if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
     return n.toString();
-  }
-}
-
-class _CommunityHeader extends StatelessWidget {
-  final Map<String, dynamic> community;
-  final bool dark;
-
-  const _CommunityHeader({required this.community, required this.dark});
-
-  @override
-  Widget build(BuildContext context) {
-    final hasBanner = community['banner'] != null && community['banner'].toString().isNotEmpty;
-    return Stack(
-      children: [
-        if (hasBanner)
-          Image.network(community['banner'].toString(), fit: BoxFit.cover, width: double.infinity,
-              errorBuilder: (_, __, ___) => _defaultHeader())
-        else
-          _defaultHeader(),
-        Positioned(
-          bottom: 8, left: 16,
-          child: CircleAvatar(
-            radius: 28,
-            backgroundColor: DesignTokens.primary,
-            child: community['icon'] != null && community['icon'].toString().isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: Image.network(community['icon'].toString(), fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Icon(Icons.group, color: Colors.white, size: 28)),
-                  )
-                : Text(community['name']?.toString()[0].toUpperCase() ?? 'C',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _defaultHeader() => Container(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: dark
-            ? [DesignTokens.darkSurfaceVariant, DesignTokens.darkSurface]
-            : [DesignTokens.primaryLight.withValues(alpha: 0.3), DesignTokens.surfaceVariant],
-      ),
-    ),
-  );
-}
-
-class _PostsList extends StatelessWidget {
-  final String slug;
-  final String sort;
-  final bool isMember;
-
-  const _PostsList({super.key, required this.slug, required this.sort, required this.isMember});
-
-  @override
-  Widget build(BuildContext context) {
-    return Query(
-      options: QueryOptions(
-        document: gql(kCommunityPosts),
-        variables: {'slug': slug, 'sort': sort, 'limit': 25},
-        fetchPolicy: FetchPolicy.networkOnly,
-      ),
-      builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) {
-          return const Padding(
-            padding: EdgeInsets.all(12),
-            child: Column(children: [
-              ShimmerBox(height: 130, radius: 12),
-              SizedBox(height: 8),
-              ShimmerBox(height: 130, radius: 12),
-              SizedBox(height: 8),
-              ShimmerBox(height: 130, radius: 12),
-            ]),
-          );
-        }
-        if (result.hasException) {
-          return ErrorState(
-            message: graphQLErrorMessage(result.exception, 'Could not load posts'),
-            onRetry: () => refetch?.call(),
-          );
-        }
-
-        final data = result.data?['communityPosts'];
-        final edges = (data?['edges'] as List?) ?? [];
-        final posts = edges.map((e) => e['node'] as Map<String, dynamic>).toList();
-
-        if (posts.isEmpty) {
-          return EmptyState(
-            icon: Icons.article_outlined,
-            title: 'No posts yet',
-            subtitle: isMember ? 'Be the first to post!' : 'Join to participate.',
-            actionLabel: isMember ? 'Create Post' : null,
-            onAction: isMember ? () => context.push('/y/$slug/submit') : null,
-          );
-        }
-
-        return Column(
-          children: [
-            ...posts.map((p) => PostCard(
-              post: p,
-              onTap: () => context.push('/y/$slug/post/${p['slug']}'),
-            )),
-            if (data?['pageInfo']?['hasNextPage'] == true)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: TextButton(
-                  onPressed: () {
-                    fetchMore?.call(FetchMoreOptions(
-                      variables: {'after': data['pageInfo']['endCursor']},
-                      updateQuery: (prev, next) {
-                        if (next?['communityPosts'] == null) return prev;
-                        final merged = Map<String, dynamic>.from(prev ?? {});
-                        final prevData = Map<String, dynamic>.from(prev?['communityPosts'] ?? {});
-                        final nextData = Map<String, dynamic>.from(next!['communityPosts']);
-                        final prevEdges = (prevData['edges'] as List?) ?? [];
-                        final nextEdges = (nextData['edges'] as List?) ?? [];
-                        merged['communityPosts'] = {
-                          ...nextData,
-                          'edges': [...prevEdges, ...nextEdges],
-                        };
-                        return merged;
-                      },
-                    ));
-                  },
-                  child: const Text('Load more'),
-                ),
-              ),
-          ],
-        );
-      },
-    );
   }
 }

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
-import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import 'post_detail_poll.dart';
 
 class PostDetailHeader extends StatelessWidget {
   final Map<String, dynamic> post;
@@ -14,7 +13,7 @@ class PostDetailHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _PostHeaderInfo(post: post, dark: dark),
+        _PostHeaderInfo(post: post),
         if (post['bodyHtml'] != null && post['bodyHtml'].toString().isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -42,8 +41,7 @@ class PostDetailHeader extends StatelessWidget {
 
 class _PostHeaderInfo extends StatelessWidget {
   final Map<String, dynamic> post;
-  final bool dark;
-  const _PostHeaderInfo({required this.post, required this.dark});
+  const _PostHeaderInfo({required this.post});
 
   @override
   Widget build(BuildContext context) {
@@ -140,105 +138,6 @@ class _MarkdownBody extends StatelessWidget {
       child: Text(
         bodyHtml.replaceAll(RegExp(r'<[^>]*>'), ''),
         style: TextStyle(fontSize: 14, height: 1.5, color: DesignTokens.textPrimary),
-      ),
-    );
-  }
-}
-
-class PollWidget extends StatelessWidget {
-  final Map<String, dynamic> poll;
-  final bool dark;
-  const PollWidget({super.key, required this.poll, required this.dark});
-
-  @override
-  Widget build(BuildContext context) {
-    final options = (poll['options'] as List?) ?? [];
-    final total = options.fold<int>(0, (sum, o) => sum + ((o['voteCount'] as num?)?.toInt() ?? 0));
-    final userVote = poll['userVote'] as Map<String, dynamic>?;
-    final hasVoted = userVote != null;
-    final closed = poll['closesAt'] != null;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Poll${closed ? " (closed)" : ""}',
-              style: const TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          ...options.map((o) {
-            final count = (o['voteCount'] as num?)?.toInt() ?? 0;
-            final pct = total > 0 ? count / total : 0.0;
-            final isSelected = hasVoted && userVote['id'] == o['id'];
-            final pollId = poll['id'].toString();
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Mutation(
-                options: MutationOptions(document: gql(kVotePoll)),
-                builder: (run, _) => GestureDetector(
-                  onTap: (hasVoted || closed) ? null : () => run({'pollId': pollId, 'optionId': o['id']}),
-                  child: Stack(
-                    children: [
-                      Container(
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? DesignTokens.primary.withValues(alpha: 0.15)
-                              : dark ? DesignTokens.darkSurface : Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 12),
-                            if (hasVoted || closed) ...[
-                              Icon(
-                                isSelected ? Icons.check_circle : Icons.circle_outlined,
-                                size: 18,
-                                color: isSelected ? DesignTokens.primary : DesignTokens.textTertiary,
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            Expanded(
-                              child: Text(o['text']?.toString() ?? '',
-                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                            ),
-                            if (hasVoted || closed)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 12),
-                                child: Text('${(pct * 100).toInt()}%',
-                                    style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
-                              ),
-                          ],
-                        ),
-                      ),
-                      if ((hasVoted || closed) && pct > 0)
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: FractionallySizedBox(
-                              alignment: Alignment.centerLeft,
-                              widthFactor: pct,
-                              child: Container(
-                                color: DesignTokens.primary.withValues(alpha: 0.08),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-          if (hasVoted || closed)
-            Text('$total total votes',
-                style: TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
-        ],
       ),
     );
   }
