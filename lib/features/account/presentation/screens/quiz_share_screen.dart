@@ -27,8 +27,8 @@ class _QuizShareScreenState extends ConsumerState<QuizShareScreen> {
 
   Future<void> _load() async {
     final client = ref.read(graphqlClientProvider);
-    final r = await client.query(QueryOptions(document: gql(kMyCircles)));
-    if (mounted) setState(() { _circles = (r.data?['myCircles'] as List?) ?? []; _loading = false; });
+    final r = await client.query(QueryOptions(document: gql(kMyCommunities)));
+    if (mounted) setState(() { _circles = (r.data?['myCommunities'] as List?) ?? []; _loading = false; });
   }
 
   Future<void> _shareToCircle(String circleSlug) async {

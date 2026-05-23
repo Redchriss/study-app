@@ -3,24 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import 'post_detail_comment_item.dart';
-import 'post_detail_post_card.dart';
+import 'post_detail_header.dart';
+import 'post_detail_comments.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
-  final String circleSlug;
+  final String communitySlug;
   final String postSlug;
-  const PostDetailScreen(
-      {super.key, required this.circleSlug, required this.postSlug});
+  const PostDetailScreen({
+    super.key,
+    required this.communitySlug,
+    required this.postSlug,
+  });
+
   @override
   ConsumerState<PostDetailScreen> createState() => _PostDetailScreenState();
 }
 
 class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   final _commentCtrl = TextEditingController();
-  bool _sendingComment = false;
+  String _commentSort = 'best';
+  bool _sending = false;
 
   @override
   void dispose() {
@@ -28,34 +33,28 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     super.dispose();
   }
 
-  Future<void> _submitComment(String postId, VoidCallback? refetch) async {
-    final content = _commentCtrl.text.trim();
-    if (content.isEmpty || _sendingComment) return;
-    setState(() => _sendingComment = true);
+  Future<void> _submitComment(String postId, VoidCallback? onRefetch) async {
+    final body = _commentCtrl.text.trim();
+    if (body.isEmpty || _sending) return;
+    setState(() => _sending = true);
     try {
-      final result =
-          await ref.read(graphqlClientProvider).mutate(MutationOptions(
-                document: gql(kAddComment),
-                variables: {'postId': postId, 'content': content},
-              ));
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.mutate(MutationOptions(
+        document: gql(kAddComment),
+        variables: {'postId': postId, 'body': body},
+      ));
       if (!mounted) return;
-      final payload = result.data?['addComment'];
-      if (result.hasException || payload?['success'] != true) {
-        final gqlErr = graphQLErrorMessage(result.exception, '');
-        final message = gqlErr.isNotEmpty
-            ? gqlErr
-            : (payload?['errors'] as List?)?.firstOrNull?.toString() ?? 'Could not add comment';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
-        );
+      if (result.hasException) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(graphQLErrorMessage(result.exception, 'Could not add comment')),
+          backgroundColor: DesignTokens.error,
+        ));
         return;
       }
       _commentCtrl.clear();
-      refetch?.call();
+      onRefetch?.call();
     } finally {
-      if (mounted) {
-        setState(() => _sendingComment = false);
-      }
+      if (mounted) setState(() => _sending = false);
     }
   }
 
@@ -63,131 +62,204 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
+
     return Query(
-      options: QueryOptions(document: gql(kPostDetail), variables: {
-        'circleSlug': widget.circleSlug,
-        'postSlug': widget.postSlug
-      }),
-      builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) {
-          return const Scaffold(
-              body: LoadingWidget());
-        }
-        if (result.hasException) {
+      options: QueryOptions(
+        document: gql(kPost),
+        variables: {'communitySlug': widget.communitySlug, 'postSlug': widget.postSlug},
+      ),
+      builder: (postResult, {fetchMore, refetch}) {
+        if (postResult.isLoading) {
           return Scaffold(
+            appBar: AppBar(),
+            body: const Center(child: LoadingWidget()),
+          );
+        }
+        if (postResult.hasException) {
+          return Scaffold(
+            appBar: AppBar(),
             body: ErrorState(
-              message: graphQLErrorMessage(result.exception, 'Failed to load post'),
+              message: graphQLErrorMessage(postResult.exception, 'Could not load post'),
               onRetry: () => refetch?.call(),
             ),
           );
         }
-        final post = result.data?['circlePost'];
+
+        final post = postResult.data?['post'] as Map<String, dynamic>?;
         if (post == null) {
-          return const Scaffold(body: Center(child: Text('Post not found')));
+          return Scaffold(
+            appBar: AppBar(),
+            body: const Center(child: Text('Post not found')),
+          );
         }
+
+        final community = post['community'] as Map<String, dynamic>?;
+        final isLocked = post['isLocked'] == true;
+        final postId = post['id'].toString();
+
         return Scaffold(
-          appBar: AppBar(title: Text(post['title'] ?? ''), centerTitle: true),
-          body: Column(children: [
-            Expanded(
-                child: SingleChildScrollView(
-              padding: const EdgeInsets.all(DesignTokens.spMd),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          appBar: AppBar(
+            title: Text('y/${community?['name'] ?? ''}',
+                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+            actions: [
+              IconButton(icon: const Icon(Icons.share_outlined), onPressed: () {}),
+              _PostActions(postId: postId),
+            ],
+          ),
+          body: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.only(bottom: 80),
                   children: [
-                    PostDetailPostCard(
-                      post: post,
-                      dark: dark,
-                      refetch: refetch,
+                    PostDetailHeader(post: post, dark: dark),
+                    const SizedBox(height: 8),
+                    PostDetailStats(post: post),
+                    const Divider(),
+                    _CommentSortBar(
+                      sort: _commentSort,
+                      onChanged: (v) => setState(() => _commentSort = v),
                     ),
-                    const SizedBox(height: 24),
-                    SectionHeader(
-                        title: 'Comments (${post['commentCount'] ?? 0})'),
-                    const SizedBox(height: 16),
-                    Query(
-                      options: QueryOptions(
-                          document: gql(kPostComments),
-                          variables: {'postId': post['id']}),
-                      builder: (cResult, {fetchMore, refetch}) {
-                        if (cResult.isLoading) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                        if (cResult.hasException) {
-                          return ErrorState(
-                            message: graphQLErrorMessage(cResult.exception, 'Failed to load comments'),
-                            onRetry: () => refetch?.call(),
-                          );
-                        }
-                        final comments =
-                            (cResult.data?['postComments'] as List?) ?? [];
-                        if (comments.isEmpty) {
-                          return const Text('No comments yet. Be the first!',
-                              style:
-                                  TextStyle(color: DesignTokens.textSecondary));
-                        }
-                        return Column(
-                            children: comments
-                                .map((c) => PostDetailCommentItem(
-                                      comment: c,
-                                      dark: dark,
-                                    ))
-                                .toList());
-                      },
+                    PostCommentsList(
+                      key: ValueKey('comments_$postId$_commentSort'),
+                      postId: postId,
+                      sort: _commentSort,
                     ),
-                  ]),
-            )),
-            Container(
-              padding: EdgeInsets.fromLTRB(
-                  16, 12, 16, MediaQuery.of(context).padding.bottom + 12),
-              decoration: BoxDecoration(
-                color: dark ? DesignTokens.darkSurface : Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -4))
-                ],
+                  ],
+                ),
               ),
-              child: Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _commentCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Add a comment...',
-                      filled: true,
-                      fillColor: dark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.grey.shade100,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide.none),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                    ),
-                  ),
+              if (!isLocked)
+                _CommentInput(
+                  ctrl: _commentCtrl,
+                  sending: _sending,
+                  onSubmit: () => _submitComment(postId, () => refetch?.call()),
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: DesignTokens.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: _sendingComment
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2))
-                        : const Icon(Icons.send_rounded, color: Colors.white),
-                    onPressed: () => _submitComment(post['id'], refetch),
-                  ),
-                ),
-              ]),
-            ),
-          ]),
+            ],
+          ),
         );
       },
+    );
+  }
+}
+
+class _CommentSortBar extends StatelessWidget {
+  final String sort;
+  final ValueChanged<String> onChanged;
+  const _CommentSortBar({required this.sort, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        children: [
+          Text('Sort by: ',
+              style: TextStyle(color: DesignTokens.textTertiary, fontSize: 12)),
+          DropdownButton<String>(
+            value: sort,
+            underline: const SizedBox(),
+            isDense: true,
+            style: TextStyle(fontSize: 12, color: DesignTokens.primary),
+            items: ['best', 'new', 'top', 'controversial', 'old', 'qa']
+                .map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase())))
+                .toList(),
+            onChanged: (v) {
+              if (v != null) onChanged(v);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CommentInput extends StatelessWidget {
+  final TextEditingController ctrl;
+  final bool sending;
+  final VoidCallback onSubmit;
+  const _CommentInput({required this.ctrl, required this.sending, required this.onSubmit});
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+      decoration: BoxDecoration(
+        color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
+        border: Border(top: BorderSide(color: dark ? DesignTokens.darkBorder : DesignTokens.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: ctrl,
+                decoration: const InputDecoration(
+                  hintText: 'Add a comment...',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  isDense: true,
+                ),
+                maxLines: 2,
+                minLines: 1,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => onSubmit(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: sending
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : Icon(Icons.send_rounded, color: DesignTokens.primary),
+              onPressed: onSubmit,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PostActions extends ConsumerWidget {
+  final String postId;
+  const _PostActions({required this.postId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<String>(
+      onSelected: (v) async {
+        final client = ref.read(graphqlClientProvider);
+        if (v == 'save') {
+          await client.mutate(MutationOptions(
+            document: gql(kSavePost), variables: {'postId': postId},
+          ));
+        } else if (v == 'report') {
+          final reason = await showDialog<String>(
+            context: context,
+            builder: (ctx) {
+              final ctrl = TextEditingController();
+              return AlertDialog(
+                title: const Text('Report Post'),
+                content: TextField(controller: ctrl, decoration: const InputDecoration(hintText: 'Reason...'), autofocus: true),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                  TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text), child: const Text('Report')),
+                ],
+              );
+            },
+          );
+          if (reason != null && reason.trim().isNotEmpty) {
+            await client.mutate(MutationOptions(
+              document: gql(kReportPost), variables: {'postId': postId, 'reason': reason},
+            ));
+          }
+        }
+      },
+      itemBuilder: (_) => [
+        const PopupMenuItem(value: 'save', child: Text('Save')),
+        const PopupMenuItem(value: 'report', child: Text('Report')),
+      ],
     );
   }
 }

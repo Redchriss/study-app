@@ -38,6 +38,13 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 **Fix:** Changed `api_endpoints.dart:7` from `/scanner/stream/` to `/pastpapers/stream/`.
 **Verified:** Full end-to-end SSE flow confirmed working — sent test image with 2 math questions, received progress events ("Extracting questions...", "Solving 2 questions...", "Finalizing..."), then received `event: done` with correct solutions (`2+2=4`, `10-3=7`), credit charged (1 credit, 99 remaining).
 
+### [BUG-033] Circles — askAiOnPost uses wrong field name `reply` instead of `comment { body }`
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Location:** `circle_queries.dart:98`, `post_detail_post_card.dart:122`
+**Root cause:** `kAskAiOnPost` mutation queried `{ success reply }` but the Django `AskAiOnPost` Mutation's `Output` class is `CommentPayload` which has fields `success`, `comment`, `errors` — no `reply`. The backend creates a `Comment` object and returns it in the `comment` field. The Flutter consumer at `post_detail_post_card.dart:122` read `data['askAiOnPost']['reply']` which always returned null.
+**Fix:** Changed query to `{ success comment { id body } }` and consumer to `data['askAiOnPost']['comment']['body']`.
+**Verified:** Tested against production — AI replied with full quadratic formula explanation (multiple paragraphs).
+
 ### [BUG-026] AI Tutor gray screen — setStudyMode() orphaned Conversation + streaming never set + SSE timeout + http.Client leak
 **Priority:** 🔴 CRITICAL → ✅ RESOLVED
 **Location:** `ai_tutor_provider.dart:65-71`, `ai_tutor_provider.dart:110-112`, `ai_tutor_stream_service.dart:42`

@@ -4,7 +4,7 @@ export 'domain/auth_queries.dart';
 export 'domain/dashboard_queries.dart';
 export 'domain/material_queries.dart';
 export 'domain/quiz_queries.dart';
-export 'domain/circle_queries.dart';
+export 'domain/community_queries.dart';
 export 'domain/scanner_queries.dart';
 export 'domain/ai_queries.dart';
 export 'domain/notification_queries.dart';

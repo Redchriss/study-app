@@ -21,7 +21,7 @@ lib/
 │   ├── account/             9 screens (upgrade, history, bookmarks, past papers, etc.)
 │   ├── ai_tutor/            1 screen + widgets
 │   ├── auth/                5 screens + auth_provider
-│   ├── circles/             3 screens
+│   ├── circles/             8 screens + 3 widgets (community platform)
 │   ├── dashboard/           1 screen + 6 widgets
 │   ├── kids_mode/           4 screens + 12 widgets
 │   ├── leaderboard/         1 screen
@@ -55,9 +55,9 @@ Most features have `presentation/` only (no data/domain/ layers). This is intent
 
 ## Routes
 
-Router at `lib/router.dart` (350 lines). 32 routes total. Shell routes (bottom nav): `/home`, `/materials`, `/circles`, `/profile` plus AI tutor center tab.
+Router at `lib/router.dart` (310 lines). 35+ routes total. Shell routes (bottom nav): `/home`, `/materials`, `/circles`, `/profile` plus AI tutor center tab.
 
-Key routes: `/splash`, `/onboarding`, `/login`, `/register`, `/setup`, `/kids/*`, `/home`, `/materials/:slug`, `/materials/:slug/read`, `/circles/:slug`, `/circles/:slug/post/:postSlug`, `/scanner`, `/quiz/:slug`, `/quiz-results/:attemptId`, `/ai-tutor`, `/profile`, `/upgrade`, `/history`, `/bookmarks`, `/edit-profile`, `/past-papers`, `/paper-library`, `/upload-material`, `/my-uploads`, `/quizzes`, `/about`, `/legal/*`.
+Key routes: `/splash`, `/onboarding`, `/login`, `/register`, `/setup`, `/kids/*`, `/home`, `/materials/:slug`, `/materials/:slug/read`, `/circles` (HomeScreen), `/y/:slug`, `/y/:slug/post/:postSlug`, `/y/:slug/submit`, `/discover`, `/search`, `/create-community`, `/inbox`, `/scanner`, `/quiz/:slug`, `/quiz-results/:attemptId`, `/ai-tutor`, `/profile`, `/upgrade`, `/history`, `/bookmarks`, `/edit-profile`, `/past-papers`, `/paper-library`, `/upload-material`, `/my-uploads`, `/quizzes`, `/about`, `/legal/*`.
 
 ---
 

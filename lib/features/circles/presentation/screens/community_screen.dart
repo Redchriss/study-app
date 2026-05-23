@@ -1,0 +1,345 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
+import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
+import '../../../../core/errors/app_exception.dart';
+import '../widgets/post_card.dart';
+
+final _postSorts = ['hot', 'new', 'top', 'rising', 'controversial'];
+
+class CommunityScreen extends StatefulWidget {
+  final String slug;
+  const CommunityScreen({super.key, required this.slug});
+
+  @override
+  State<CommunityScreen> createState() => _CommunityScreenState();
+}
+
+class _CommunityScreenState extends State<CommunityScreen> {
+  int _sortIdx = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+
+    return Query(
+      options: QueryOptions(
+        document: gql(kCommunity),
+        variables: {'slug': widget.slug},
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: const Center(child: LoadingWidget()),
+          );
+        }
+        if (result.hasException) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: ErrorState(
+              message: graphQLErrorMessage(result.exception, 'Could not load community'),
+              onRetry: () => refetch?.call(),
+            ),
+          );
+        }
+
+        final community = result.data?['community'] as Map<String, dynamic>?;
+        if (community == null) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: const Center(child: Text('Community not found')),
+          );
+        }
+
+        final isMember = community['isMember'] == true;
+        final isMod = community['isModerator'] == true;
+        final isFav = community['isFavorite'] == true;
+        final memberCount = (community['memberCount'] as num?)?.toInt() ?? 0;
+
+        return Scaffold(
+          body: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 140,
+                pinned: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: _CommunityHeader(
+                    community: community,
+                    dark: dark,
+                  ),
+                ),
+                actions: [
+                  if (isMod)
+                    IconButton(
+                      icon: const Icon(Icons.shield_outlined),
+                      onPressed: () => context.push('/y/${widget.slug}/mod'),
+                    ),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('y/${community['name']}',
+                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                                const SizedBox(height: 2),
+                                Text('${_formatCount(memberCount)} members',
+                                    style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          Mutation(
+                            options: MutationOptions(document: gql(kJoinCommunity)),
+                            builder: (joinRun, joinResult) {
+                              return Mutation(
+                                options: MutationOptions(document: gql(kToggleFavourite)),
+                                builder: (favRun, favResult) {
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (isMember)
+                                        IconButton(
+                                          icon: Icon(
+                                            isFav ? Icons.star : Icons.star_border,
+                                            color: isFav ? DesignTokens.warning : null,
+                                          ),
+                                          onPressed: () {
+                                            favRun({'slug': widget.slug});
+                                            refetch?.call();
+                                          },
+                                        ),
+                                      const SizedBox(width: 4),
+                                      FilledButton.tonal(
+                                        onPressed: () {
+                                          if (isMember) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (ctx) => AlertDialog(
+                                                title: const Text('Leave community?'),
+                                                content: Text('Leave y/${community['name']}?'),
+                                                actions: [
+                                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(ctx);
+                                                      context.go('/');
+                                                    },
+                                                    child: Text('Leave', style: TextStyle(color: DesignTokens.error)),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          } else {
+                                            joinRun({'slug': widget.slug});
+                                            refetch?.call();
+                                          }
+                                        },
+                                        child: Text(isMember ? 'Joined' : 'Join'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      if (community['description'] != null && community['description'].toString().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(community['description'].toString(),
+                              style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    children: _postSorts.asMap().entries.map((e) {
+                      final isSelected = e.key == _sortIdx;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: ChoiceChip(
+                          label: Text(e.value.toUpperCase(),
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                          selected: isSelected,
+                          onSelected: (_) => setState(() {
+                            _sortIdx = e.key;
+                          }),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: _PostsList(
+                  key: ValueKey('posts_${widget.slug}_$_sortIdx'),
+                  slug: widget.slug,
+                  sort: _postSorts[_sortIdx],
+                  isMember: isMember,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _formatCount(int n) {
+    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
+    return n.toString();
+  }
+}
+
+class _CommunityHeader extends StatelessWidget {
+  final Map<String, dynamic> community;
+  final bool dark;
+
+  const _CommunityHeader({required this.community, required this.dark});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasBanner = community['banner'] != null && community['banner'].toString().isNotEmpty;
+    return Stack(
+      children: [
+        if (hasBanner)
+          Image.network(community['banner'].toString(), fit: BoxFit.cover, width: double.infinity,
+              errorBuilder: (_, __, ___) => _defaultHeader())
+        else
+          _defaultHeader(),
+        Positioned(
+          bottom: 8, left: 16,
+          child: CircleAvatar(
+            radius: 28,
+            backgroundColor: DesignTokens.primary,
+            child: community['icon'] != null && community['icon'].toString().isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Image.network(community['icon'].toString(), fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(Icons.group, color: Colors.white, size: 28)),
+                  )
+                : Text(community['name']?.toString()[0].toUpperCase() ?? 'C',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _defaultHeader() => Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: dark
+            ? [DesignTokens.darkSurfaceVariant, DesignTokens.darkSurface]
+            : [DesignTokens.primaryLight.withValues(alpha: 0.3), DesignTokens.surfaceVariant],
+      ),
+    ),
+  );
+}
+
+class _PostsList extends StatelessWidget {
+  final String slug;
+  final String sort;
+  final bool isMember;
+
+  const _PostsList({super.key, required this.slug, required this.sort, required this.isMember});
+
+  @override
+  Widget build(BuildContext context) {
+    return Query(
+      options: QueryOptions(
+        document: gql(kCommunityPosts),
+        variables: {'slug': slug, 'sort': sort, 'limit': 25},
+        fetchPolicy: FetchPolicy.networkOnly,
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading) {
+          return const Padding(
+            padding: EdgeInsets.all(12),
+            child: Column(children: [
+              ShimmerBox(height: 130, radius: 12),
+              SizedBox(height: 8),
+              ShimmerBox(height: 130, radius: 12),
+              SizedBox(height: 8),
+              ShimmerBox(height: 130, radius: 12),
+            ]),
+          );
+        }
+        if (result.hasException) {
+          return ErrorState(
+            message: graphQLErrorMessage(result.exception, 'Could not load posts'),
+            onRetry: () => refetch?.call(),
+          );
+        }
+
+        final data = result.data?['communityPosts'];
+        final edges = (data?['edges'] as List?) ?? [];
+        final posts = edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+
+        if (posts.isEmpty) {
+          return EmptyState(
+            icon: Icons.article_outlined,
+            title: 'No posts yet',
+            subtitle: isMember ? 'Be the first to post!' : 'Join to participate.',
+            actionLabel: isMember ? 'Create Post' : null,
+            onAction: isMember ? () => context.push('/y/$slug/submit') : null,
+          );
+        }
+
+        return Column(
+          children: [
+            ...posts.map((p) => PostCard(
+              post: p,
+              onTap: () => context.push('/y/$slug/post/${p['slug']}'),
+            )),
+            if (data?['pageInfo']?['hasNextPage'] == true)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextButton(
+                  onPressed: () {
+                    fetchMore?.call(FetchMoreOptions(
+                      variables: {'after': data['pageInfo']['endCursor']},
+                      updateQuery: (prev, next) {
+                        if (next?['communityPosts'] == null) return prev;
+                        final merged = Map<String, dynamic>.from(prev ?? {});
+                        final prevData = Map<String, dynamic>.from(prev?['communityPosts'] ?? {});
+                        final nextData = Map<String, dynamic>.from(next!['communityPosts']);
+                        final prevEdges = (prevData['edges'] as List?) ?? [];
+                        final nextEdges = (nextData['edges'] as List?) ?? [];
+                        merged['communityPosts'] = {
+                          ...nextData,
+                          'edges': [...prevEdges, ...nextEdges],
+                        };
+                        return merged;
+                      },
+                    ));
+                  },
+                  child: const Text('Load more'),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}

@@ -40,7 +40,7 @@ class MainShell extends StatelessWidget {
           builder: (ctx) => AlertDialog(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text('Leave Yaza?',
+            title: const Text('Leave?',
                 style: TextStyle(fontWeight: FontWeight.w800)),
             content: const Text('Your progress is saved. Come back anytime!'),
             actions: [
