@@ -26,6 +26,7 @@ import '../features/circles/presentation/screens/create_post_screen.dart';
 import '../features/circles/presentation/screens/discover_screen.dart';
 import '../features/circles/presentation/screens/create_community_screen.dart';
 import '../features/circles/presentation/screens/search_screen.dart';
+import '../features/circles/presentation/screens/mod_panel_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/leaderboard/presentation/screens/leaderboard_screen.dart';
 import '../features/account/presentation/screens/upgrade_screen.dart';
@@ -199,6 +200,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'submit',
             builder: (_, state) => CreatePostScreen(
+                communitySlug: state.pathParameters['slug']!),
+          ),
+          GoRoute(
+            path: 'mod',
+            builder: (_, state) => ModPanelScreen(
                 communitySlug: state.pathParameters['slug']!),
           ),
         ],

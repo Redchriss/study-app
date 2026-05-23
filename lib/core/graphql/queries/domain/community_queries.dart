@@ -531,3 +531,42 @@ mutation GiveAward($postId: ID!, $awardTypeId: ID!) {
   giveAward(postId: $postId, awardTypeId: $awardTypeId) { success errors }
 }
 ''';
+
+const String kReportsQuery = r'''
+query Reports($communitySlug: String!, $status: String) {
+  reports(communitySlug: $communitySlug, status: $status) {
+    id
+    reason
+    status
+    modNote
+    createdAt
+    reporter { username }
+    reviewedBy { username }
+    post { id title slug author { username } }
+    comment { id body author { username } }
+  }
+}
+''';
+
+const String kModLogQuery = r'''
+query ModLog($communitySlug: String!) {
+  modLog(communitySlug: $communitySlug) {
+    id
+    action
+    details
+    createdAt
+    moderator { username }
+    targetUser { username }
+    post { id title slug }
+  }
+}
+''';
+
+const String kResolveReport = r'''
+mutation ResolveReport($reportId: ID!, $action: String!, $modNote: String) {
+  resolveReport(reportId: $reportId, action: $action, modNote: $modNote) {
+    id
+    status
+  }
+}
+''';
