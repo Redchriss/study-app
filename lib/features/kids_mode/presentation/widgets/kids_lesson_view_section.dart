@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/design_tokens.dart';
+import 'package:genui/genui.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../ai_tutor/presentation/screens/ai_tutor_manager.dart';
 import '../../kids_visual_theme.dart';
 import 'kid_auth_widgets.dart';
 import 'kids_home_state_provider.dart';
+import 'kids_home_screen_manager.dart';
 import 'kids_hero_card.dart';
 import 'kids_home_sections.dart';
 import 'kids_lesson_sidebar_cards.dart';
 import 'kids_lesson_step_bar.dart';
 import 'kids_topic_chip.dart';
-import 'kids_multi_quiz_panel.dart';
-import 'kids_visual_lesson.dart';
 
 class KidsLessonViewSection extends StatelessWidget {
   const KidsLessonViewSection({
     super.key,
     required this.auth,
     required this.state,
+    required this.mgr,
     required this.burstCtrl,
     required this.onBack,
     required this.onTopicTap,
@@ -36,6 +37,7 @@ class KidsLessonViewSection extends StatelessWidget {
 
   final KidAuthState auth;
   final KidsHomeState state;
+  final KidsHomeScreenManager mgr;
   final AnimationController burstCtrl;
   final VoidCallback onBack;
   final ValueChanged<String> onTopicTap;
@@ -58,7 +60,7 @@ class KidsLessonViewSection extends StatelessWidget {
     if (state.loading) {
       return const LoadingWidget();
     }
-    if (state.currentLesson == null) {
+    if (state.currentLesson == null && state.lessonItems.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -165,48 +167,24 @@ class KidsLessonViewSection extends StatelessWidget {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    KidsFloatingPanel(
-                      child: AnimatedSwitcher(
-                        duration: DesignTokens.durNormal,
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        child: state.inQuiz
-                            ? KidsMultiQuizPanel(
-                                key: ValueKey(
-                                    'quiz_${state.currentLesson?['id']}'),
-                                lesson: state.currentLesson!,
-                                onComplete: onQuizComplete,
-                                onBack: onQuizBack,
-                              )
-                            : KidsVisualLessonPanel(
-                                key: ValueKey(
-                                    'lesson_${state.currentLesson?['id']}'),
-                                lesson: state.currentLesson!,
-                                isSpeaking: state.isSpeaking,
-                                selectedChunk: state.selectedStoryChunk,
-                                onChunkTap: onChunkTap,
-                                onListenTap: onListenTap,
-                                onStartQuiz: onStartQuiz,
-                                onNextLesson: onNextLesson,
-                              ),
+                    if (state.lessonItems.isNotEmpty)
+                      Column(
+                        children: state.lessonItems.map((item) {
+                          if (item is SurfaceItem) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Surface(
+                                  surfaceContext: mgr.surfaceController
+                                      .contextFor(item.surfaceId)),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }).toList(),
                       ),
-                    ),
                     if (state.showCorrectBurst)
                       CorrectBurstOverlay(controller: burstCtrl),
                   ],
                 ),
-                if (!state.inQuiz &&
-                    (state.lessonState != null ||
-                        state.quizReviewHint != null)) ...[
-                  const SizedBox(height: 14),
-                  KidsMasteryHint(
-                    masteryLevel:
-                        (state.lessonState?['masteryLevel'] as num?)?.toInt() ??
-                            0,
-                    reviewHint: state.quizReviewHint ??
-                        state.lessonState?['nextReviewLabel']?.toString(),
-                  ),
-                ],
                 if (!state.inQuiz && state.streak > 0) ...[
                   const SizedBox(height: 14),
                   KidsStreakChip(streak: state.streak, quizMode: true),

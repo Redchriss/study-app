@@ -22,10 +22,30 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 **Fix:** Move `/ai-tutor` inside the `ShellRoute`. Consider migrating to `StatefulShellRoute` to preserve tab state.
 
 ### [BUG-012] Kids lesson — fails silently, spinner vanishes with no output
-**Priority:** 🔴 CRITICAL
+**Priority:** 🔴 CRITICAL → ⬜ BYPASSED
 **Location:** `kids_mode/presentation/widgets/kids_lesson_actions.dart:72-108`
-**Root cause:** When `fetchLesson` mutation returns `result.data == null` (network/auth/server error), lines 72-107 are entirely skipped. Only `loading = false` at line 108 runs. User sees spinner disappear and nothing else — no error, no retry.
-**Fix:** Add `hasException` + null-data error branch with retry action.
+**Root cause:** `fetchLesson` GraphQL mutation returns `result.data == null` → no error branch.
+**Fix:** This method is no longer called from the UI. Kids Mode now uses GenUI streaming via `startGenUiLesson()` for all lesson content. If the GenUI path fails, the stream error handler shows a SnackBar. The legacy `fetchLesson` remains as dead code fallback. Remove in cleanup pass.
+
+---
+
+## Resolved Bugs
+
+### [BUG-022] Kids VisualTheme missing color constants (skyBlue, grassGreen)
+**Priority:** 🟢 MEDIUM → ✅ RESOLVED
+**Description:** `emoji_story_card.dart` and `interactive_match.dart` referenced `KidsVisualTheme.skyBlue` and `KidsVisualTheme.grassGreen` which don't exist. Replaced with `pathBlue` and `trailGreen`.
+
+### [BUG-023] Duplicate ConversationItem sealed class definitions
+**Priority:** 🟢 MEDIUM → ✅ RESOLVED
+**Description:** `ConversationItem`, `TextItem`, `SurfaceItem` were defined in both `ai_tutor_state.dart` and `ai_tutor_manager.dart`. Removed duplicates from `ai_tutor_manager.dart` and re-exported from `ai_tutor_state.dart`.
+
+### [BUG-024] Kids home state provider — broken import path + invalid copyWith body
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Description:** `kids_home_state_provider.dart` had wrong relative import path (`../../` instead of `../../../`) and a spurious `this.lessonItems = const []` assignment inside `copyWith()` body (would cause runtime crash).
+
+### [BUG-025] Kids lesson — retry button calls dead GraphQL mutation instead of GenUI
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Description:** `_onRetryFetchLesson`, `_onTopicTap`, `_onNextLesson`, and `openRoadmapTopicById` all called the legacy `fetchLesson` GraphQL mutation (`kFetchKidLesson`). The updated `KidsLessonViewSection` only renders GenUI `Surface` widgets from `lessonItems`, not the old `currentLesson` data. All call sites now use `mgr.startGenUiLesson(topicName)` instead.
 
 ### [BUG-013] ShellRoute loses tab state — everything rebuilds on switch
 **Priority:** 🟡 HIGH

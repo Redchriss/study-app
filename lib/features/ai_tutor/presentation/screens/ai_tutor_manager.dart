@@ -5,21 +5,11 @@ import 'package:genui/genui.dart' hide TextPart;
 import 'package:genui/genui.dart' as genui;
 import '../../../../core/storage/secure_storage.dart';
 import '../genui/tutor_catalog.dart';
+import '../providers/ai_tutor_state.dart';
+export '../providers/ai_tutor_state.dart'
+    show ConversationItem, TextItem, SurfaceItem;
 import 'ai_tutor_data_service.dart';
 import 'ai_tutor_stream_service.dart';
-
-sealed class ConversationItem {}
-
-class TextItem extends ConversationItem {
-  final String text;
-  final bool isUser;
-  TextItem({required this.text, this.isUser = false});
-}
-
-class SurfaceItem extends ConversationItem {
-  final String surfaceId;
-  SurfaceItem({required this.surfaceId});
-}
 
 class AiTutorManager {
   late void Function(VoidCallback) _setState;

@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../ai_tutor/presentation/screens/ai_tutor_manager.dart';
 
 class KidsHomeState {
   final Map<String, dynamic>? selectedSubject;
   final Map<String, dynamic>? selectedTopic;
   final Map<String, dynamic>? currentLesson;
+  final List<ConversationItem> lessonItems;
   final List<Map<String, dynamic>> subjects;
   final List<Map<String, dynamic>> topics;
   final List<dynamic> quiz;
@@ -29,6 +31,7 @@ class KidsHomeState {
     this.selectedSubject,
     this.selectedTopic,
     this.currentLesson,
+    this.lessonItems = const [],
     this.subjects = const [],
     this.topics = const [],
     this.quiz = const [],
@@ -55,6 +58,7 @@ class KidsHomeState {
     Map<String, dynamic>? selectedSubject,
     Map<String, dynamic>? selectedTopic,
     Map<String, dynamic>? currentLesson,
+    List<ConversationItem>? lessonItems,
     List<Map<String, dynamic>>? subjects,
     List<Map<String, dynamic>>? topics,
     List<dynamic>? quiz,
@@ -80,6 +84,7 @@ class KidsHomeState {
       selectedSubject: selectedSubject ?? this.selectedSubject,
       selectedTopic: selectedTopic ?? this.selectedTopic,
       currentLesson: currentLesson ?? this.currentLesson,
+      lessonItems: lessonItems ?? this.lessonItems,
       subjects: subjects ?? this.subjects,
       topics: topics ?? this.topics,
       quiz: quiz ?? this.quiz,

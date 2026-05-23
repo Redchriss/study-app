@@ -18,7 +18,7 @@ class AiTutorAppBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final hasMessages = ref.watch(aiTutorProvider).messages.isNotEmpty;
+    final hasMessages = ref.watch(aiTutorProvider).conversationItems.isNotEmpty;
     return AppBar(
       title: Row(
         mainAxisSize: MainAxisSize.min,

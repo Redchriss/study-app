@@ -67,7 +67,7 @@ class _SummaryCardWidget extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       elevation: 0,
-      color: colorScheme.secondaryContainer.withOpacity(0.4),
+      color: colorScheme.secondaryContainer.withValues(alpha: 0.4),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: colorScheme.secondaryContainer, width: 1),

@@ -56,6 +56,8 @@ class KidsLessonActions {
     }
   }
 
+  /// Deprecated: Kids Mode now uses GenUI streaming via [KidsHomeScreenManager.startGenUiLesson].
+  /// Kept as fallback — remove in cleanup pass.
   Future<void> fetchLesson(String subjectId, int standard,
       {String? topicId}) async {
     _setState(_state.copyWith(loading: true));
@@ -186,8 +188,8 @@ class KidsLessonActions {
     final sid = _state.selectedSubject?['id']?.toString();
     if (sid == null) return;
     _setState(_state.copyWith(selectedTopic: match));
-    fetchLesson(sid, mgr.ref.read(kidAuthStateProvider).standard,
-        topicId: topicId);
+    final topicName = match['name']?.toString() ?? 'this topic';
+    mgr.startGenUiLesson(topicName);
   }
 
   Future<void> openJourney(KidAuthState auth) async {

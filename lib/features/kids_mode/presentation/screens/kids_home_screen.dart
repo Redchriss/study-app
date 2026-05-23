@@ -91,7 +91,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
     _mgr.fetchTopics(sid, auth.standard);
     _mgr.fetchSubjectProgress(sid, auth.standard);
     _mgr.fetchRoadmap(sid, auth.standard);
-    _mgr.actions.fetchLesson(sid, auth.standard);
+    final subjectName = subject['name']?.toString() ?? 'this subject';
+    _mgr.startGenUiLesson(subjectName);
   }
 
   void _onStarsTap() {
@@ -110,8 +111,12 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
             orElse: () => state.topics.first,
           ),
         ));
-    _mgr.actions.fetchLesson(sid, ref.read(kidAuthStateProvider).standard,
-        topicId: topicId);
+    final topicName = state.topics
+            .firstWhere((t) => t['id']?.toString() == topicId,
+                orElse: () => state.topics.first)['name']
+            ?.toString() ??
+        'this topic';
+    _mgr.startGenUiLesson(topicName);
   }
 
   void _onChunkTap(int i) {
@@ -146,11 +151,9 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
 
   void _onNextLesson() {
     final state = ref.read(kidsHomeStateProvider);
-    final sid = state.selectedSubject?['id']?.toString();
-    if (sid != null && sid.isNotEmpty) {
-      _mgr.actions.fetchLesson(sid, ref.read(kidAuthStateProvider).standard,
-          topicId: state.selectedTopic?['id']?.toString());
-    }
+    final topicName =
+        state.selectedTopic?['name']?.toString() ?? 'the next topic';
+    _mgr.startGenUiLesson(topicName);
   }
 
   Future<void> _onQuizComplete(
@@ -179,12 +182,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
 
   void _onRetryFetchLesson() {
     final state = ref.read(kidsHomeStateProvider);
-    final sid = state.selectedSubject?['id']?.toString();
-    if (sid == null || sid.isEmpty) return;
-    final auth = ref.read(kidAuthStateProvider);
-    _mgr.actions.fetchLesson(sid, auth.standard,
-        topicId: state.selectedTopic?['id']?.toString() ??
-            state.selectedTopic?['topicId']?.toString());
+    final topicName = state.selectedTopic?['name']?.toString() ?? 'this topic';
+    _mgr.startGenUiLesson(topicName);
   }
 
   Widget _buildRedirect() {
@@ -250,6 +249,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
                       key: const ValueKey('lesson'),
                       auth: auth,
                       state: state,
+                      mgr: _mgr,
                       burstCtrl: _burstCtrl,
                       onBack: () {
                         ref

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'package:genui/genui.dart' hide TextPart;
+import 'package:genui/genui.dart' as genui;
 import '../../../../core/graphql/queries/queries.dart';
 import '../../data/kid_graphql_client.dart';
 import 'kid_auth_widgets.dart';
 import 'kids_home_state_provider.dart';
 import 'kids_lesson_actions.dart';
+import '../genui/kids_catalog.dart';
+import '../../../ai_tutor/presentation/screens/ai_tutor_stream_service.dart';
+import '../../../ai_tutor/presentation/screens/ai_tutor_manager.dart'; // for ConversationItem types
 
 class KidsHomeScreenManager {
   final WidgetRef ref;
@@ -13,8 +19,98 @@ class KidsHomeScreenManager {
   BuildContext Function() _contextFn = () => throw UnimplementedError();
   bool Function() _mountedFn = () => true;
 
+  // GenUI Controllers
+  late final SurfaceController surfaceController;
+  late final A2uiTransportAdapter _transport;
+  late final Conversation conversation;
+  late final Catalog catalog;
+  late final AiTutorStreamService _streamService;
+
   KidsHomeScreenManager(this.ref) {
     actions = KidsLessonActions(this);
+    catalog = buildKidsCatalog();
+    surfaceController = SurfaceController(catalogs: [catalog]);
+    _transport = A2uiTransportAdapter(onSend: _sendAndReceive);
+    conversation =
+        Conversation(controller: surfaceController, transport: _transport);
+    _streamService = AiTutorStreamService();
+
+    conversation.events.listen((event) {
+      if (!_mountedFn()) return;
+      _update((state) {
+        if (event is ConversationSurfaceAdded) {
+          return state.copyWith(lessonItems: [
+            ...state.lessonItems,
+            SurfaceItem(surfaceId: event.surfaceId)
+          ]);
+        } else if (event is ConversationSurfaceRemoved) {
+          final newItems = state.lessonItems
+              .where((item) =>
+                  !(item is SurfaceItem && item.surfaceId == event.surfaceId))
+              .toList();
+          return state.copyWith(lessonItems: newItems);
+        } else if (event is ConversationContentReceived) {
+          // If the AI says something plain text (like "Great job!"), we can optionally show it,
+          // but for Kids Mode we mostly rely on the surfaces.
+        }
+        return state;
+      });
+    });
+  }
+
+  Future<void> _sendAndReceive(ChatMessage msg) async {
+    final buffer = StringBuffer();
+    for (final part in msg.parts) {
+      if (part.isUiInteractionPart) {
+        buffer.write(part.asUiInteractionPart!.interaction);
+      } else if (part is genui.TextPart) {
+        buffer.write(part.text);
+      }
+    }
+    final text = buffer.toString();
+    if (text.isEmpty) return;
+
+    final auth = ref.read(kidAuthStateProvider);
+    if (!auth.isAuthenticated || auth.token == null) return;
+
+    final promptBuilder = PromptBuilder.chat(catalog: catalog);
+    final clientInstructions = promptBuilder.systemPromptJoined();
+
+    try {
+      await _streamService.sendStream(
+        text: text,
+        sessionId: null, // Keep stateless or maintain session
+        studyMode: 'kids_lesson',
+        token: auth.token!,
+        clientInstructions: clientInstructions,
+        httpClient: http.Client(),
+        onToken: (t) {
+          _transport.addChunk(t);
+        },
+        onAddMessage: (msg) {
+          _update((s) => s.copyWith(loading: false));
+        },
+        onSessionId: (id) {},
+        onError: (msg) {
+          _update((s) => s.copyWith(loading: false));
+          if (_mountedFn()) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(msg)));
+          }
+        },
+        onScrollDown: () {},
+      );
+    } catch (_) {
+      if (!_mountedFn()) return;
+      _update((s) => s.copyWith(loading: false));
+    }
+  }
+
+  void startGenUiLesson(String topicName) {
+    _update((s) => s.copyWith(
+        loading: true, lessonItems: [], inQuiz: false, currentLesson: {}));
+    conversation.sendRequest(ChatMessage.user(
+        "Teach me about $topicName using the InteractiveMatch and EmojiStoryCard."));
   }
 
   void attach({
