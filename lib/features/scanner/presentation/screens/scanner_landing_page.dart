@@ -37,7 +37,7 @@ class ScannerLandingPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Point your camera at a single question or upload a full past paper page. Our AI will break it down and solve it.',
+                'Snap a photo or upload an image of any exam paper — Yaza\'s AI will extract the questions and solve them step by step.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     color: DesignTokens.textSecondary,
