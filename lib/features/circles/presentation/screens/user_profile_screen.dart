@@ -146,7 +146,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Active in',
+                        const Text('Active in',
                             style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
@@ -167,7 +167,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                                           backgroundImage: NetworkImage(
                                               c['icon'].toString()),
                                         )
-                                      : CircleAvatar(
+                                      : const CircleAvatar(
                                           radius: 10,
                                           child: Text('y',
                                               style: TextStyle(
@@ -262,18 +262,19 @@ class _SavedTab extends StatelessWidget {
     return Query(
       options: QueryOptions(
         document: gql(kSavedPosts),
-        variables: {'limit': 25},
+        variables: const {'limit': 25},
         fetchPolicy: FetchPolicy.networkOnly,
       ),
       builder: (QueryResult result,
           {VoidCallback? refetch, FetchMore? fetchMore}) {
         if (result.isLoading) return const Center(child: LoadingWidget());
-        if (result.hasException)
+        if (result.hasException) {
           return ErrorState(
             message:
                 graphQLErrorMessage(result.exception, 'Could not load saved'),
             onRetry: () => refetch?.call(),
           );
+        }
         final data = result.data?['savedPosts'];
         final edges = (data?['edges'] as List?) ?? [];
         final posts =
@@ -363,10 +364,10 @@ class _ProfileHeader extends StatelessWidget {
                             width: 72,
                             height: 72,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Icon(Icons.person,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.person,
                                 size: 36, color: DesignTokens.primary)),
                       )
-                    : Icon(Icons.person, size: 36, color: DesignTokens.primary),
+                    : const Icon(Icons.person, size: 36, color: DesignTokens.primary),
               ),
             ),
           ],
@@ -397,7 +398,7 @@ class _ProfileHeader extends StatelessWidget {
                   _KarmaChip(label: 'Award', value: awardKarma),
                   const Spacer(),
                   Text('$totalKarma karma',
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: DesignTokens.primary)),
@@ -428,7 +429,7 @@ class _ProfileHeader extends StatelessWidget {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: Text(isBlocked ? 'Unblock' : 'Block',
-                            style: TextStyle(
+                            style: const TextStyle(
                                 fontSize: 12,
                                 color: DesignTokens.textSecondary)),
                       ),
@@ -438,18 +439,18 @@ class _ProfileHeader extends StatelessWidget {
               if (bio != null && bio.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(bio,
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontSize: 13, color: DesignTokens.textSecondary)),
               ],
               if (createdAt != null) ...[
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today,
+                    const Icon(Icons.calendar_today,
                         size: 12, color: DesignTokens.textTertiary),
                     const SizedBox(width: 4),
                     Text('Joined ${_formatDate(createdAt)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontSize: 11, color: DesignTokens.textTertiary)),
                   ],
                 ),
@@ -485,7 +486,7 @@ class _KarmaChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text('$label: $value',
-          style: TextStyle(
+          style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: DesignTokens.primary)),

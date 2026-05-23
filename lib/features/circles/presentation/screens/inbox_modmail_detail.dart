@@ -82,7 +82,7 @@ class ModmailThreadDetail extends StatelessWidget {
                                         .withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  child: Text('INTERNAL',
+                                  child: const Text('INTERNAL',
                                       style: TextStyle(
                                           fontSize: 9,
                                           fontWeight: FontWeight.w700,
@@ -91,7 +91,7 @@ class ModmailThreadDetail extends StatelessWidget {
                               ],
                               const Spacer(),
                               Text(_timeAgo(m['createdAt']?.toString() ?? ''),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 11,
                                       color: DesignTokens.textTertiary)),
                             ],

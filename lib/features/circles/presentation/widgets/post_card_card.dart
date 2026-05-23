@@ -49,18 +49,18 @@ class CardPostCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Text('y/${community['name']}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: DesignTokens.primary,
                         )),
                     const SizedBox(width: 4),
                     Text('• Posted by u/${author?['username'] ?? 'unknown'}',
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontSize: 11, color: DesignTokens.textTertiary)),
                     const Spacer(),
                     if (isPinned)
-                      Icon(Icons.push_pin_rounded,
+                      const Icon(Icons.push_pin_rounded,
                           size: 14, color: DesignTokens.warning),
                   ],
                 ),
@@ -82,7 +82,7 @@ class CardPostCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(post['flairText'].toString(),
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 10, color: DesignTokens.primary)),
                     ),
                   Expanded(
@@ -105,7 +105,7 @@ class CardPostCard extends StatelessWidget {
                   post['body'].toString(),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontSize: 13, color: DesignTokens.textSecondary),
                 ),
               ),
@@ -138,11 +138,11 @@ class CardPostCard extends StatelessWidget {
                     score: (post['fuzzedScore'] as num?)?.toInt() ?? 0,
                   ),
                   const SizedBox(width: 16),
-                  Icon(Icons.chat_bubble_outline_rounded,
+                  const Icon(Icons.chat_bubble_outline_rounded,
                       size: 16, color: DesignTokens.textTertiary),
                   const SizedBox(width: 4),
                   Text(_count(post['commentCount']),
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 12, color: DesignTokens.textTertiary)),
                   const Spacer(),
                   GestureDetector(
@@ -154,11 +154,11 @@ class CardPostCard extends StatelessWidget {
                       Share.share('${post['title']}\n\n$url',
                           subject: post['title']?.toString());
                     },
-                    child: Icon(Icons.share_outlined,
+                    child: const Icon(Icons.share_outlined,
                         size: 16, color: DesignTokens.textTertiary),
                   ),
                   const SizedBox(width: 16),
-                  Icon(Icons.bookmark_outline_rounded,
+                  const Icon(Icons.bookmark_outline_rounded,
                       size: 16, color: DesignTokens.textTertiary),
                 ],
               ),
@@ -171,7 +171,7 @@ class CardPostCard extends StatelessWidget {
                   color: DesignTokens.warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text('SPOILER',
+                child: const Text('SPOILER',
                     style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w700,

@@ -53,7 +53,7 @@ query Post($communitySlug: String!, $postSlug: String!) {
     flairText
     awardCount
     editedAt
-    community { id name slug displayName icon }
+    community { id name slug displayName icon isMember isModerator }
     poll {
       id closesAt allowAddOption
       options { id text order voteCount }

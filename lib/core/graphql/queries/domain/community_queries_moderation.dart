@@ -11,10 +11,9 @@ mutation MarkSpoiler($postId: ID!, $isSpoiler: Boolean!) {
 ''';
 
 const String kAddRule = r'''
-mutation AddRule($communitySlug: String!, $text: String!, $description: String) {
-  addRule(communitySlug: $communitySlug, text: $text, description: $description) {
-    communityRule { id text }
-    errors
+mutation AddRule($slug: String!, $title: String!, $description: String) {
+  addRule(slug: $slug, title: $title, description: $description) {
+    id title description order
   }
 }
 ''';
@@ -118,5 +117,19 @@ mutation ResolveReport($reportId: ID!, $action: String!, $modNote: String) {
     id
     status
   }
+}
+''';
+
+const String kUpdateRule = r'''
+mutation UpdateRule($ruleId: ID!, $title: String, $description: String, $order: Int) {
+  updateRule(ruleId: $ruleId, title: $title, description: $description, order: $order) {
+    id title description order
+  }
+}
+''';
+
+const String kDeleteRule = r'''
+mutation DeleteRule($ruleId: ID!) {
+  deleteRule(ruleId: $ruleId) { success }
 }
 ''';

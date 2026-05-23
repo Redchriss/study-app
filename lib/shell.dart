@@ -3,16 +3,29 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/design_tokens.dart';
 import 'widgets/nav_item.dart';
-import 'widgets/centre_ai_button.dart';
+import 'widgets/centre_post_button.dart';
+import 'features/circles/presentation/screens/create_post_screen.dart';
 
-/// Main app shell with a 5-tab bottom nav.
-/// The centre tab is the AI Tutor — prominent and always accessible.
 class MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
   const MainShell({super.key, required this.navigationShell});
 
   void _onDestinationSelected(BuildContext context, int index) {
     navigationShell.goBranch(index);
+  }
+
+  void _onPostTap(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const FractionallySizedBox(
+        heightFactor: 0.85,
+        child: CreatePostScreen(),
+      ),
+    );
   }
 
   @override
@@ -86,29 +99,28 @@ class MainShell extends StatelessWidget {
                     onTap: () => _onDestinationSelected(context, 0),
                   ),
                   NavItem(
-                    icon: Icons.menu_book_outlined,
-                    activeIcon: Icons.menu_book_rounded,
-                    label: 'Study',
+                    icon: Icons.explore_outlined,
+                    activeIcon: Icons.explore_rounded,
+                    label: 'Discover',
                     isSelected: currentIndex == 1,
                     onTap: () => _onDestinationSelected(context, 1),
                   ),
-                  CentreAiButton(
-                    isSelected: currentIndex == 2,
-                    onTap: () => _onDestinationSelected(context, 2),
+                  CentrePostButton(
+                    onTap: () => _onPostTap(context),
                   ),
                   NavItem(
-                    icon: Icons.groups_2_outlined,
-                    activeIcon: Icons.groups_2_rounded,
-                    label: 'Circles',
-                    isSelected: currentIndex == 3,
-                    onTap: () => _onDestinationSelected(context, 3),
+                    icon: Icons.inbox_outlined,
+                    activeIcon: Icons.inbox_rounded,
+                    label: 'Inbox',
+                    isSelected: currentIndex == 2,
+                    onTap: () => _onDestinationSelected(context, 2),
                   ),
                   NavItem(
                     icon: Icons.person_outline_rounded,
                     activeIcon: Icons.person_rounded,
                     label: 'Profile',
-                    isSelected: currentIndex == 4,
-                    onTap: () => _onDestinationSelected(context, 4),
+                    isSelected: currentIndex == 3,
+                    onTap: () => _onDestinationSelected(context, 3),
                   ),
                 ],
               ),

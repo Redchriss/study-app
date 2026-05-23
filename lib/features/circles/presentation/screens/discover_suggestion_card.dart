@@ -40,7 +40,7 @@ class _DiscoverSuggestionCardState extends State<DiscoverSuggestionCard> {
             backgroundImage: icon.isNotEmpty ? NetworkImage(icon) : null,
             child: icon.isEmpty
                 ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: TextStyle(color: DesignTokens.primary, fontWeight: FontWeight.w700))
+                    style: const TextStyle(color: DesignTokens.primary, fontWeight: FontWeight.w700))
                 : null,
           ),
           const SizedBox(width: 12),
@@ -51,11 +51,11 @@ class _DiscoverSuggestionCardState extends State<DiscoverSuggestionCard> {
                 Text(displayName,
                     style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 Text('y/$name • ${_formatCount(memberCount)} members',
-                    style: TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
+                    style: const TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
                 if (description.isNotEmpty)
                   Text(description,
                       maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
+                      style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
               ],
             ),
           ),

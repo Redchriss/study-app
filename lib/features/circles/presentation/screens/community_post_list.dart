@@ -9,6 +9,7 @@ import '../widgets/post_card.dart';
 class CommunityPostList extends StatelessWidget {
   final String slug;
   final String sort;
+  final String timeFilter;
   final bool isMember;
   final String? postType;
   final String? flairId;
@@ -17,6 +18,7 @@ class CommunityPostList extends StatelessWidget {
     super.key,
     required this.slug,
     required this.sort,
+    this.timeFilter = 'all',
     required this.isMember,
     this.postType,
     this.flairId,
@@ -31,6 +33,7 @@ class CommunityPostList extends StatelessWidget {
           'slug': slug,
           'sort': sort,
           'limit': 25,
+          if (timeFilter != 'all') 'timeFilter': timeFilter.toUpperCase(),
           if (postType != null) 'postType': postType,
           if (flairId != null) 'flairId': flairId,
         },

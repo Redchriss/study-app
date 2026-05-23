@@ -44,7 +44,7 @@ class ClassicPostCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '${_count((post['fuzzedScore'] as num?)?.toInt() ?? 0)} pts • ${_count(post['commentCount'])} comments',
-                    style: TextStyle(fontSize: 11, color: DesignTokens.textTertiary),
+                    style: const TextStyle(fontSize: 11, color: DesignTokens.textTertiary),
                   ),
                 ],
               ),
@@ -57,7 +57,7 @@ class ClassicPostCard extends StatelessWidget {
 
   Widget _placeholderIcon() => Container(
     color: DesignTokens.surfaceVariant,
-    child: Icon(Icons.article_outlined, color: DesignTokens.textTertiary, size: 28),
+    child: const Icon(Icons.article_outlined, color: DesignTokens.textTertiary, size: 28),
   );
 
   String _count(dynamic val) {

@@ -61,7 +61,7 @@ query CommunityModerators($slug: String!) {
 const String kCommunityRules = r'''
 query CommunityRules($slug: String!) {
   communityRules(slug: $slug) {
-    id text description
+    id title description order
   }
 }
 ''';

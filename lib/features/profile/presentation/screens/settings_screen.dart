@@ -19,9 +19,9 @@ class SettingsScreen extends StatelessWidget {
           _card(context, Icons.person_outline, 'Edit Profile', '/edit-profile'),
           _card(context, Icons.notifications_outlined, 'Notifications', null),
           _card(context, Icons.palette_outlined, 'Theme', null,
-              trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+              trailing: const Row(mainAxisSize: MainAxisSize.min, children: [
                 Text('System', style: TextStyle(color: DesignTokens.textSecondary)),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Icon(Icons.chevron_right_rounded, color: DesignTokens.textTertiary),
               ])),
           const Divider(height: 32),
@@ -41,7 +41,7 @@ class SettingsScreen extends StatelessWidget {
       child: ListTile(
         leading: Icon(icon, color: DesignTokens.primary),
         title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        trailing: trailing ?? Icon(Icons.chevron_right_rounded, color: DesignTokens.textTertiary),
+        trailing: trailing ?? const Icon(Icons.chevron_right_rounded, color: DesignTokens.textTertiary),
         onTap: route != null ? () => context.push(route) : null,
       ),
     );

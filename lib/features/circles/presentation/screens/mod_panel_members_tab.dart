@@ -38,7 +38,8 @@ class _ModPanelMembersTabState extends ConsumerState<ModPanelMembersTab> {
             decoration: InputDecoration(
               hintText: 'Search username...',
               prefixIcon: const Icon(Icons.search_rounded),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               isDense: true,
             ),
             onSubmitted: (q) => setState(() => _searchQuery = q.trim()),
@@ -78,14 +79,19 @@ class _ModList extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text('Moderators',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800)),
             ),
             ...mods.map((m) {
-              final user = (m as Map<String, dynamic>)['user'] as Map<String, dynamic>?;
+              final user =
+                  (m as Map<String, dynamic>)['user'] as Map<String, dynamic>?;
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor: DesignTokens.primary.withValues(alpha: 0.1),
-                  child: Icon(Icons.shield_rounded, size: 18, color: DesignTokens.primary),
+                  child: const Icon(Icons.shield_rounded,
+                      size: 18, color: DesignTokens.primary),
                 ),
                 title: Text('u/${user?['username'] ?? 'unknown'}',
                     style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -115,7 +121,10 @@ class _SearchedUserActions extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         Text('Actions for u/$username',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         _ActionButton(
           icon: Icons.block_rounded,
@@ -156,7 +165,11 @@ class _SearchedUserActions extends StatelessWidget {
     if (reason == null) return;
     final result = await client.mutate(MutationOptions(
       document: gql(kBanUser),
-      variables: {'communitySlug': communitySlug, 'username': username, 'reason': reason},
+      variables: {
+        'communitySlug': communitySlug,
+        'username': username,
+        'reason': reason
+      },
     ));
     if (context.mounted) _showResult(context, result);
   }
@@ -172,7 +185,11 @@ class _SearchedUserActions extends StatelessWidget {
   Future<void> _muteUser(BuildContext context) async {
     final result = await client.mutate(MutationOptions(
       document: gql(kMuteUser),
-      variables: {'communitySlug': communitySlug, 'username': username, 'durationHours': 72},
+      variables: {
+        'communitySlug': communitySlug,
+        'username': username,
+        'durationDays': 3
+      },
     ));
     if (context.mounted) _showResult(context, result);
   }
@@ -199,10 +216,16 @@ class _SearchedUserActions extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(label),
-        content: TextField(controller: ctrl, autofocus: true, decoration: InputDecoration(hintText: label)),
+        content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            decoration: InputDecoration(hintText: label)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text), child: const Text('Confirm')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text),
+              child: const Text('Confirm')),
         ],
       ),
     );
@@ -215,7 +238,8 @@ class _SearchedUserActions extends StatelessWidget {
         : 'Action completed';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(errors),
-      backgroundColor: result.hasException ? DesignTokens.error : DesignTokens.success,
+      backgroundColor:
+          result.hasException ? DesignTokens.error : DesignTokens.success,
     ));
   }
 }
@@ -225,7 +249,11 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  const _ActionButton({required this.icon, required this.label, required this.color, required this.onTap});
+  const _ActionButton(
+      {required this.icon,
+      required this.label,
+      required this.color,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -233,7 +261,8 @@ class _ActionButton extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Icon(icon, color: color),
-        title: Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: color)),
+        title: Text(label,
+            style: TextStyle(fontWeight: FontWeight.w600, color: color)),
         trailing: const Icon(Icons.chevron_right_rounded),
         onTap: onTap,
       ),

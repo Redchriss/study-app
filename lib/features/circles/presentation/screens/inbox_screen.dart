@@ -55,13 +55,13 @@ class _InboxScreenState extends ConsumerState<InboxScreen>
         ),
         body: TabBarView(
           controller: _tabCtrl,
-          children: [
+          children: const [
             InboxNotificationsTab(onlyUnread: false),
             InboxNotificationsTab(onlyUnread: true),
             InboxNotificationsTab(notifType: 'post_mention'),
             InboxNotificationsTab(notifType: 'post_reply'),
             InboxNotificationsTab(notifType: 'comment_reply'),
-            const InboxModmailTab(),
+            InboxModmailTab(),
           ],
         ),
       ),

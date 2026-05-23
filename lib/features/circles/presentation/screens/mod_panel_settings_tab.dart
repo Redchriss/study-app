@@ -11,7 +11,8 @@ class ModPanelSettingsTab extends ConsumerStatefulWidget {
   const ModPanelSettingsTab({super.key, required this.communitySlug});
 
   @override
-  ConsumerState<ModPanelSettingsTab> createState() => _ModPanelSettingsTabState();
+  ConsumerState<ModPanelSettingsTab> createState() =>
+      _ModPanelSettingsTabState();
 }
 
 class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
@@ -55,12 +56,18 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
         '''),
         variables: {'slug': widget.communitySlug},
       ),
-      builder: (QueryResult result, {VoidCallback? refetch, FetchMore? fetchMore}) {
-        if (result.isLoading) return const Center(child: CircularProgressIndicator());
-        if (result.hasException) return ErrorState(
-          message: result.exception?.graphqlErrors.first.message ?? 'Failed to load',
-          onRetry: () => refetch?.call(),
-        );
+      builder: (QueryResult result,
+          {VoidCallback? refetch, FetchMore? fetchMore}) {
+        if (result.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (result.hasException) {
+          return ErrorState(
+            message: result.exception?.graphqlErrors.first.message ??
+                'Failed to load',
+            onRetry: () => refetch?.call(),
+          );
+        }
         final c = result.data?['community'] as Map<String, dynamic>?;
         if (c == null) return const Center(child: Text('Community not found'));
         _initFrom(c);
@@ -91,7 +98,7 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
       children: [
         _section('Community Type'),
         DropdownButtonFormField<String>(
-          value: _communityType,
+          initialValue: _communityType,
           items: const [
             DropdownMenuItem(value: 'public', child: Text('Public')),
             DropdownMenuItem(value: 'restricted', child: Text('Restricted')),
@@ -104,46 +111,69 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
         TextFormField(
           controller: _descriptionCtrl,
           maxLines: 3,
-          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Community description'),
+          decoration: const InputDecoration(
+              border: OutlineInputBorder(), hintText: 'Community description'),
         ),
         const SizedBox(height: 16),
         _section('Sidebar (Markdown)'),
         TextFormField(
           controller: _sidebarCtrl,
           maxLines: 4,
-          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Sidebar content'),
+          decoration: const InputDecoration(
+              border: OutlineInputBorder(), hintText: 'Sidebar content'),
         ),
         const SizedBox(height: 16),
         _section('Posting Controls'),
         Row(children: [
-          Expanded(child: TextField(
+          Expanded(
+              child: TextField(
             controller: _minAgeCtrl,
-            decoration: const InputDecoration(labelText: 'Min account age (days)', border: OutlineInputBorder(), isDense: true),
+            decoration: const InputDecoration(
+                labelText: 'Min account age (days)',
+                border: OutlineInputBorder(),
+                isDense: true),
             keyboardType: TextInputType.number,
           )),
           const SizedBox(width: 12),
-          Expanded(child: TextField(
+          Expanded(
+              child: TextField(
             controller: _minKarmaCtrl,
-            decoration: const InputDecoration(labelText: 'Min karma to post', border: OutlineInputBorder(), isDense: true),
+            decoration: const InputDecoration(
+                labelText: 'Min karma to post',
+                border: OutlineInputBorder(),
+                isDense: true),
             keyboardType: TextInputType.number,
           )),
         ]),
         const SizedBox(height: 16),
         _section('Media & Content'),
-        _switch('Allow images', _allowImages, (v) => setState(() => _allowImages = v)),
-        _switch('Allow videos', _allowVideos, (v) => setState(() => _allowVideos = v)),
-        _switch('Allow polls', _allowPolls, (v) => setState(() => _allowPolls = v)),
-        _switch('Allow links', _allowLinks, (v) => setState(() => _allowLinks = v)),
-        _switch('Allow galleries', _allowGalleries, (v) => setState(() => _allowGalleries = v)),
-        _switch('Allow crossposts', _allowCrossposts, (v) => setState(() => _allowCrossposts = v)),
-        _switch('Spoilers enabled', _spoilersEnabled, (v) => setState(() => _spoilersEnabled = v)),
+        _switch('Allow images', _allowImages,
+            (v) => setState(() => _allowImages = v)),
+        _switch('Allow videos', _allowVideos,
+            (v) => setState(() => _allowVideos = v)),
+        _switch(
+            'Allow polls', _allowPolls, (v) => setState(() => _allowPolls = v)),
+        _switch(
+            'Allow links', _allowLinks, (v) => setState(() => _allowLinks = v)),
+        _switch('Allow galleries', _allowGalleries,
+            (v) => setState(() => _allowGalleries = v)),
+        _switch('Allow crossposts', _allowCrossposts,
+            (v) => setState(() => _allowCrossposts = v)),
+        _switch('Spoilers enabled', _spoilersEnabled,
+            (v) => setState(() => _spoilersEnabled = v)),
         const SizedBox(height: 8),
         _section('Safety'),
-        _switch('Over 18 community', _over18, (v) => setState(() => _over18 = v)),
+        _switch(
+            'Over 18 community', _over18, (v) => setState(() => _over18 = v)),
         const SizedBox(height: 24),
         FilledButton.icon(
           onPressed: _saving ? null : _save,
-          icon: _saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save),
+          icon: _saving
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.save),
           label: Text(_saving ? 'Saving...' : 'Save Settings'),
         ),
         const SizedBox(height: 80),
@@ -154,7 +184,11 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
   Widget _section(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+      child: Text(title,
+          style: Theme.of(context)
+              .textTheme
+              .titleSmall
+              ?.copyWith(fontWeight: FontWeight.w800)),
     );
   }
 
@@ -169,6 +203,8 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
   }
 
   Future<void> _save() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final themeColor = Theme.of(context).colorScheme.error;
     setState(() => _saving = true);
     final client = ref.read(graphqlClientProvider);
     final result = await client.mutate(MutationOptions(
@@ -191,10 +227,9 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
       },
     ));
     setState(() => _saving = false);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    messenger.showSnackBar(SnackBar(
       content: Text(result.hasException ? 'Failed to save' : 'Settings saved'),
-      backgroundColor: result.hasException ? Theme.of(context).colorScheme.error : null,
+      backgroundColor: result.hasException ? themeColor : null,
     ));
   }
 }

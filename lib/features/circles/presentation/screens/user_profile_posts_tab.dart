@@ -42,9 +42,9 @@ class UserProfilePostsTab extends StatelessWidget {
             edges.map((e) => e['node'] as Map<String, dynamic>).toList();
 
         if (posts.isEmpty) {
-          return Center(
+          return const Center(
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: EdgeInsets.all(32),
               child: Text('No posts yet',
                   style: TextStyle(color: DesignTokens.textSecondary)),
             ),

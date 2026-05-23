@@ -60,7 +60,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             Query(
               options: QueryOptions(
                 document: gql(kTrendingCommunities),
-                variables: {'limit': 10},
+                variables: const {'limit': 10},
               ),
               builder: (result, {fetchMore, refetch}) {
                 if (result.isLoading) {
@@ -95,7 +95,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             Query(
               options: QueryOptions(
                 document: gql(kSuggestedCommunities),
-                variables: {'limit': 20},
+                variables: const {'limit': 20},
               ),
               builder: (result, {fetchMore, refetch}) {
                 if (result.isLoading) {
@@ -109,8 +109,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 }
                 final communities = (result.data?['suggestedCommunities'] as List?) ?? [];
                 if (communities.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
                     child: Center(
                       child: Text('No suggestions yet',
                           style: TextStyle(color: DesignTokens.textSecondary)),

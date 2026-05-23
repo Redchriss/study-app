@@ -36,9 +36,9 @@ class UserProfileCommentsTab extends StatelessWidget {
             edges.map((e) => e['node'] as Map<String, dynamic>).toList();
 
         if (comments.isEmpty) {
-          return Center(
+          return const Center(
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: EdgeInsets.all(32),
               child: Text('No comments yet',
                   style: TextStyle(color: DesignTokens.textSecondary)),
             ),
@@ -86,7 +86,7 @@ class UserProfileCommentsTab extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       'u/${author?['username'] ?? 'unknown'}',
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 11, color: DesignTokens.textSecondary),
                     ),
                   ],

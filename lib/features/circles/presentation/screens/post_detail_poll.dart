@@ -69,7 +69,7 @@ class PollWidget extends StatelessWidget {
                               Padding(
                                 padding: const EdgeInsets.only(right: 12),
                                 child: Text('${(pct * 100).toInt()}%',
-                                    style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
+                                    style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
                               ),
                           ],
                         ),
@@ -95,7 +95,7 @@ class PollWidget extends StatelessWidget {
           }),
           if (hasVoted || closed)
             Text('$total total votes',
-                style: TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
+                style: const TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
         ],
       ),
     );

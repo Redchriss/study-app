@@ -55,7 +55,7 @@ class InboxNotificationsTab extends ConsumerWidget {
                       size: 64,
                       color: DesignTokens.textTertiary.withValues(alpha: 0.4)),
                   const SizedBox(height: 16),
-                  Text('All caught up!',
+                  const Text('All caught up!',
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -65,7 +65,7 @@ class InboxNotificationsTab extends ConsumerWidget {
                       onlyUnread
                           ? 'No unread notifications'
                           : 'No notifications yet',
-                      style: TextStyle(color: DesignTokens.textTertiary)),
+                      style: const TextStyle(color: DesignTokens.textTertiary)),
                 ],
               ),
             ),

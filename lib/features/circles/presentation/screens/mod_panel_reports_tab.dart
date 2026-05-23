@@ -26,7 +26,8 @@ class ModPanelReportsTab extends ConsumerWidget {
         }
         if (result.hasException) {
           return ErrorState(
-            message: result.exception?.graphqlErrors.first.message ?? 'Failed to load reports',
+            message: result.exception?.graphqlErrors.first.message ??
+                'Failed to load reports',
             onRetry: () => refetch?.call(),
           );
         }
@@ -40,9 +41,11 @@ class ModPanelReportsTab extends ConsumerWidget {
                   children: [
                     Icon(Icons.shield_outlined, size: 64, color: Colors.grey),
                     SizedBox(height: 16),
-                    Text('No pending reports', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                    Text('No pending reports',
+                        style: TextStyle(fontSize: 18, color: Colors.grey)),
                     SizedBox(height: 8),
-                    Text('Your community is looking good!', style: TextStyle(color: Colors.grey)),
+                    Text('Your community is looking good!',
+                        style: TextStyle(color: Colors.grey)),
                   ],
                 ),
               ),
@@ -100,21 +103,26 @@ class _ReportCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     'Reported by u/${reporter?['username'] ?? 'unknown'}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: Colors.grey),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(report['reason'] as String? ?? '', style: Theme.of(context).textTheme.bodyMedium),
+            Text(report['reason'] as String? ?? '',
+                style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 4),
             if (post != null)
               InkWell(
-                onTap: () => context.push('/y/$communitySlug/post/${post['slug']}'),
+                onTap: () =>
+                    context.push('/y/$communitySlug/post/${post['slug']}'),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -124,7 +132,10 @@ class _ReportCard extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           post['title'] as String? ?? '',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -137,7 +148,7 @@ class _ReportCard extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -178,7 +189,8 @@ class _ReportCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _resolve(BuildContext context, WidgetRef ref, String action) async {
+  Future<void> _resolve(
+      BuildContext context, WidgetRef ref, String action) async {
     final client = ref.read(graphqlClientProvider);
     final result = await client.mutate(
       MutationOptions(
@@ -192,14 +204,18 @@ class _ReportCard extends ConsumerWidget {
     if (result.hasException) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.exception?.graphqlErrors.first.message ?? 'Failed')),
+          SnackBar(
+              content: Text(
+                  result.exception?.graphqlErrors.first.message ?? 'Failed')),
         );
       }
       return;
     }
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(action == 'IGNORE' ? 'Report ignored' : 'Content removed')),
+        SnackBar(
+            content: Text(
+                action == 'IGNORE' ? 'Report ignored' : 'Content removed')),
       );
     }
     onResolved();

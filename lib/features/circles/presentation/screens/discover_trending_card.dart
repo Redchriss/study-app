@@ -36,12 +36,12 @@ class DiscoverTrendingCard extends StatelessWidget {
                   backgroundImage: icon.isNotEmpty ? NetworkImage(icon) : null,
                   child: icon.isEmpty
                       ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
-                          style: TextStyle(color: DesignTokens.primary, fontWeight: FontWeight.w700))
+                          style: const TextStyle(color: DesignTokens.primary, fontWeight: FontWeight.w700))
                       : null,
                 ),
                 const Spacer(),
                 Text('y/$name',
-                    style: TextStyle(fontSize: 10, color: DesignTokens.primary, fontWeight: FontWeight.w600)),
+                    style: const TextStyle(fontSize: 10, color: DesignTokens.primary, fontWeight: FontWeight.w600)),
               ],
             ),
             const SizedBox(height: 8),
@@ -51,10 +51,10 @@ class DiscoverTrendingCard extends StatelessWidget {
             if (description.isNotEmpty)
               Text(description,
                   maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: DesignTokens.textSecondary)),
+                  style: const TextStyle(fontSize: 11, color: DesignTokens.textSecondary)),
             const Spacer(),
             Text('${_formatCount(memberCount)} members',
-                style: TextStyle(fontSize: 10, color: DesignTokens.textTertiary)),
+                style: const TextStyle(fontSize: 10, color: DesignTokens.textTertiary)),
           ],
         ),
       ),

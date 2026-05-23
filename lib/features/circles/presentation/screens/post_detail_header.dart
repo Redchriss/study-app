@@ -60,7 +60,7 @@ class _PostHeaderInfo extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(post['flairText'].toString(),
-                  style: TextStyle(fontSize: 10, color: DesignTokens.primary, fontWeight: FontWeight.w700)),
+                  style: const TextStyle(fontSize: 10, color: DesignTokens.primary, fontWeight: FontWeight.w700)),
             ),
           Row(
             children: [
@@ -73,15 +73,15 @@ class _PostHeaderInfo extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              Icon(Icons.person_outline, size: 14, color: DesignTokens.textTertiary),
+              const Icon(Icons.person_outline, size: 14, color: DesignTokens.textTertiary),
               const SizedBox(width: 4),
               Text('u/${author?['username'] ?? 'unknown'}',
-                  style: TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
+                  style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
               const SizedBox(width: 8),
-              Icon(Icons.access_time_rounded, size: 12, color: DesignTokens.textTertiary),
+              const Icon(Icons.access_time_rounded, size: 12, color: DesignTokens.textTertiary),
               const SizedBox(width: 4),
               Text(_timeAgo(post['createdAt']?.toString() ?? ''),
-                  style: TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
+                  style: const TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
               if (post['isOc'] == true) ...[
                 const SizedBox(width: 8),
                 Container(
@@ -90,7 +90,7 @@ class _PostHeaderInfo extends StatelessWidget {
                     color: DesignTokens.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text('OC', style: TextStyle(fontSize: 9, color: DesignTokens.success, fontWeight: FontWeight.w700)),
+                  child: const Text('OC', style: TextStyle(fontSize: 9, color: DesignTokens.success, fontWeight: FontWeight.w700)),
                 ),
               ],
               if (post['isSpoiler'] == true) ...[
@@ -101,7 +101,7 @@ class _PostHeaderInfo extends StatelessWidget {
                     color: DesignTokens.warning.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text('SPOILER', style: TextStyle(fontSize: 9, color: DesignTokens.warning, fontWeight: FontWeight.w700)),
+                  child: const Text('SPOILER', style: TextStyle(fontSize: 9, color: DesignTokens.warning, fontWeight: FontWeight.w700)),
                 ),
               ],
             ],
@@ -137,7 +137,7 @@ class _MarkdownBody extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Text(
         bodyHtml.replaceAll(RegExp(r'<[^>]*>'), ''),
-        style: TextStyle(fontSize: 14, height: 1.5, color: DesignTokens.textPrimary),
+        style: const TextStyle(fontSize: 14, height: 1.5, color: DesignTokens.textPrimary),
       ),
     );
   }
@@ -175,11 +175,11 @@ class _LinkPreview extends StatelessWidget {
                     maxLines: 2, overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                 if (domain.isNotEmpty)
-                  Text(domain, style: TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
+                  Text(domain, style: const TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
               ],
             ),
           ),
-          Icon(Icons.open_in_new, size: 16, color: DesignTokens.textTertiary),
+          const Icon(Icons.open_in_new, size: 16, color: DesignTokens.textTertiary),
         ],
       ),
     );

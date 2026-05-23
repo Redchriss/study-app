@@ -205,12 +205,12 @@ class _CommunityDrawer extends StatelessWidget {
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
                                   child: Image.network(c['icon'].toString(), fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Icon(Icons.group, size: 18, color: DesignTokens.primary)),
+                                      errorBuilder: (_, __, ___) => const Icon(Icons.group, size: 18, color: DesignTokens.primary)),
                                 )
-                              : Icon(Icons.group, size: 18, color: DesignTokens.primary),
+                              : const Icon(Icons.group, size: 18, color: DesignTokens.primary),
                         ),
                         title: Text('y/${c['name']}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                        trailing: isFav ? Icon(Icons.star, size: 16, color: DesignTokens.warning) : null,
+                        trailing: isFav ? const Icon(Icons.star, size: 16, color: DesignTokens.warning) : null,
                         onTap: () { Navigator.pop(context); context.push('/y/${c['slug']}'); },
                       );
                     },

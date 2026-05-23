@@ -26,7 +26,7 @@ class CommunityHeader extends StatelessWidget {
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(28),
                     child: Image.network(community['icon'].toString(), fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Icon(Icons.group, color: Colors.white, size: 28)),
+                        errorBuilder: (_, __, ___) => const Icon(Icons.group, color: Colors.white, size: 28)),
                   )
                 : Text(community['name']?.toString()[0].toUpperCase() ?? 'C',
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20)),

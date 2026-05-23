@@ -5,11 +5,20 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
-import '../widgets/post_card.dart';
 import 'community_post_list.dart';
 import 'community_header.dart';
 
 final _postSorts = ['hot', 'new', 'top', 'rising', 'controversial'];
+final _timeFilters = ['all', 'hour', 'day', 'week', 'month', 'year'];
+final _timeFilterLabels = {
+  'all': 'All time',
+  'hour': 'Past hour',
+  'day': 'Today',
+  'week': 'This week',
+  'month': 'This month',
+  'year': 'This year'
+};
+final _timeFilterSorts = {'top', 'controversial'};
 final _postTypes = <String?>{null, 'TEXT', 'IMAGE', 'VIDEO', 'LINK', 'POLL'};
 final _postTypeLabels = {
   null: 'All',
@@ -30,6 +39,7 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> {
   int _sortIdx = 0;
+  String _timeFilter = 'all';
   String? _postType;
   String? _flairId;
   List<Map<String, dynamic>> _flairs = [];
@@ -114,7 +124,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                             fontWeight: FontWeight.w800)),
                                 const SizedBox(height: 2),
                                 Text('${_formatCount(memberCount)} members',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         color: DesignTokens.textSecondary,
                                         fontSize: 13)),
                               ],
@@ -168,7 +178,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                                       Navigator.pop(ctx);
                                                       context.go('/');
                                                     },
-                                                    child: Text('Leave',
+                                                    child: const Text('Leave',
                                                         style: TextStyle(
                                                             color: DesignTokens
                                                                 .error)),
@@ -197,7 +207,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(community['description'].toString(),
-                              style: TextStyle(
+                              style: const TextStyle(
                                   color: DesignTokens.textSecondary,
                                   fontSize: 13)),
                         ),
@@ -217,7 +227,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         padding: const EdgeInsets.only(right: 6),
                         child: ChoiceChip(
                           label: Text(e.value.toUpperCase(),
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 11, fontWeight: FontWeight.w700)),
                           selected: isSelected,
                           onSelected: (_) => setState(() {
@@ -241,7 +251,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         padding: const EdgeInsets.only(right: 6),
                         child: FilterChip(
                           label: Text(_postTypeLabels[t]!,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 11, fontWeight: FontWeight.w600)),
                           selected: isSelected,
                           onSelected: (_) => setState(
@@ -252,6 +262,30 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   ),
                 ),
               ),
+              if (_timeFilterSorts.contains(_postSorts[_sortIdx]))
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 36,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      children: _timeFilters.map((t) {
+                        final isSelected = _timeFilter == t;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: FilterChip(
+                            label: Text(_timeFilterLabels[t]!,
+                                style: const TextStyle(
+                                    fontSize: 11, fontWeight: FontWeight.w600)),
+                            selected: isSelected,
+                            onSelected: (_) => setState(() =>
+                                _timeFilter = t == _timeFilter ? 'all' : t),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
               if (_flairs.isNotEmpty)
                 SliverToBoxAdapter(
                   child: SizedBox(
@@ -276,7 +310,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             padding: const EdgeInsets.only(right: 6),
                             child: FilterChip(
                               label: Text(f['text']?.toString() ?? '',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600)),
                               selected: isSelected,
@@ -292,9 +326,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
               SliverToBoxAdapter(
                 child: CommunityPostList(
                   key: ValueKey(
-                      'posts_${widget.slug}_$_sortIdx$_postType$_flairId'),
+                      'posts_${widget.slug}_$_sortIdx$_timeFilter$_postType$_flairId'),
                   slug: widget.slug,
                   sort: _postSorts[_sortIdx],
+                  timeFilter: _timeFilter,
                   isMember: isMember,
                   postType: _postType,
                   flairId: _flairId,

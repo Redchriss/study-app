@@ -37,7 +37,7 @@ class CommunitySidebarScreen extends ConsumerWidget {
             children: [
               Text(c['displayName']?.toString() ?? '', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),
-              Text('y/${c['name']}', style: TextStyle(color: DesignTokens.textSecondary)),
+              Text('y/${c['name']}', style: const TextStyle(color: DesignTokens.textSecondary)),
               const SizedBox(height: 12),
               if (c['description'] != null && c['description'].toString().isNotEmpty)
                 Padding(
@@ -55,7 +55,7 @@ class CommunitySidebarScreen extends ConsumerWidget {
               Text('Rules', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               if (rules.isEmpty)
-                Text('No rules yet', style: TextStyle(color: DesignTokens.textSecondary))
+                const Text('No rules yet', style: TextStyle(color: DesignTokens.textSecondary))
               else
                 ...rules.asMap().entries.map((e) {
                   final r = e.value as Map<String, dynamic>;
@@ -70,7 +70,7 @@ class CommunitySidebarScreen extends ConsumerWidget {
                           if (r['description'] != null && r['description'].toString().isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
-                              child: Text(r['description'].toString(), style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                              child: Text(r['description'].toString(), style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
                             ),
                         ],
                       ),
@@ -102,7 +102,7 @@ class CommunitySidebarScreen extends ConsumerWidget {
     return Row(mainAxisSize: MainAxisSize.min, children: [
       Icon(icon, size: 16, color: DesignTokens.textSecondary),
       const SizedBox(width: 4),
-      Text(label, style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+      Text(label, style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
     ]);
   }
 }

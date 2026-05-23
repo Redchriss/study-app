@@ -48,7 +48,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       if (!mounted) return;
       if (result.hasException) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(graphQLErrorMessage(result.exception, 'Could not add comment')),
+          content: Text(
+              graphQLErrorMessage(result.exception, 'Could not add comment')),
           backgroundColor: DesignTokens.error,
         ));
         return;
@@ -68,7 +69,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     return Query(
       options: QueryOptions(
         document: gql(kPost),
-        variables: {'communitySlug': widget.communitySlug, 'postSlug': widget.postSlug},
+        variables: {
+          'communitySlug': widget.communitySlug,
+          'postSlug': widget.postSlug
+        },
       ),
       builder: (postResult, {fetchMore, refetch}) {
         if (postResult.isLoading) {
@@ -81,7 +85,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           return Scaffold(
             appBar: AppBar(),
             body: ErrorState(
-              message: graphQLErrorMessage(postResult.exception, 'Could not load post'),
+              message: graphQLErrorMessage(
+                  postResult.exception, 'Could not load post'),
               onRetry: () => refetch?.call(),
             ),
           );
@@ -97,21 +102,35 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
         final community = post['community'] as Map<String, dynamic>?;
         final isLocked = post['isLocked'] == true;
+        final isPinned = post['isPinned'] == true;
+        final isRemoved = post['isRemoved'] == true;
+        final isMod = community?['isModerator'] == true;
         final postId = post['id'].toString();
 
         return Scaffold(
           appBar: AppBar(
             title: Text('y/${community?['name'] ?? ''}',
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700)),
             actions: [
               IconButton(
                 icon: const Icon(Icons.share_outlined),
                 onPressed: () {
-                  final url = 'https://yaza.app/y/${community?['name'] ?? ''}/post/${post['slug']}';
-                  Share.share('${post['title']}\n\n$url', subject: post['title']?.toString());
+                  final url =
+                      'https://yaza.app/y/${community?['name'] ?? ''}/post/${post['slug']}';
+                  Share.share('${post['title']}\n\n$url',
+                      subject: post['title']?.toString());
                 },
               ),
-              PostActions(postId: postId),
+              PostActions(
+                postId: postId,
+                communitySlug: widget.communitySlug,
+                isMod: isMod,
+                isPinned: isPinned,
+                isLocked: isLocked,
+                isRemoved: isRemoved,
+                onRefetch: () => refetch?.call(),
+              ),
             ],
           ),
           body: Column(

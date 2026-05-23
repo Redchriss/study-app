@@ -52,7 +52,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     _titleCtrl.dispose();
     _bodyCtrl.dispose();
     _urlCtrl.dispose();
-    for (final c in _pollOptions) c.dispose();
+    for (final c in _pollOptions) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -198,7 +200,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
                       label: Text('${t['icon']} ${t['label']}',
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w600)),
                       selected: selected,
                       onSelected: (_) =>
@@ -354,7 +356,7 @@ class _CommunityPicker extends StatelessWidget {
       builder: (result, {fetchMore, refetch}) {
         final communities = (result.data?['myCommunities'] as List?) ?? [];
         return DropdownButtonFormField<String>(
-          value: selected,
+          initialValue: selected,
           decoration: const InputDecoration(
             labelText: 'Community',
             border: OutlineInputBorder(),

@@ -96,14 +96,14 @@ class InboxNotificationCard extends StatelessWidget {
                       children: [
                         if (community != null) ...[
                           Text('y/${community['name']}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: DesignTokens.primary)),
                           const SizedBox(width: 8),
                         ],
                         Text(_timeAgo(createdAt),
-                            style: TextStyle(
+                            style: const TextStyle(
                                 fontSize: 11,
                                 color: DesignTokens.textTertiary)),
                       ],

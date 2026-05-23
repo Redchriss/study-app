@@ -17,9 +17,9 @@ class InboxModmailTab extends ConsumerWidget {
         final communities = (result.data?['myCommunities'] as List?) ?? [];
         if (result.isLoading) return const Center(child: LoadingWidget());
         if (communities.isEmpty) {
-          return Center(
+          return const Center(
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: EdgeInsets.all(32),
               child: Text('Join a community to access modmail',
                   style: TextStyle(color: DesignTokens.textSecondary)),
             ),
@@ -48,14 +48,14 @@ class _ModmailCommunityList extends StatelessWidget {
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: DesignTokens.primary.withValues(alpha: 0.1),
-              child: Icon(Icons.mail_outline_rounded,
+              child: const Icon(Icons.mail_outline_rounded,
                   color: DesignTokens.primary, size: 20),
             ),
             title: Text('y/${c['name']}',
                 style: const TextStyle(fontWeight: FontWeight.w600)),
             subtitle: Text('${c['memberCount']} members',
                 style:
-                    TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
+                    const TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _openThreadList(context, c['slug'].toString()),
           ),
@@ -113,7 +113,7 @@ class _ModmailThreadList extends StatelessWidget {
             ),
             const Divider(height: 1),
             if (threads.isEmpty)
-              Expanded(
+              const Expanded(
                 child: Center(
                     child: Text('No modmail threads',
                         style: TextStyle(color: DesignTokens.textSecondary))),
@@ -129,10 +129,10 @@ class _ModmailThreadList extends StatelessWidget {
                           style: const TextStyle(fontWeight: FontWeight.w600)),
                       subtitle: Text(
                           _timeAgo(t['lastUpdated']?.toString() ?? ''),
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: DesignTokens.textSecondary, fontSize: 12)),
                       trailing: t['isArchived'] == true
-                          ? Icon(Icons.archive_rounded,
+                          ? const Icon(Icons.archive_rounded,
                               size: 18, color: DesignTokens.textTertiary)
                           : null,
                       onTap: () =>

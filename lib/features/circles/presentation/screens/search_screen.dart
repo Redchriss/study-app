@@ -51,7 +51,7 @@ class _SearchScreenState extends State<SearchScreen> {
         ],
       ),
       body: _query.isEmpty
-          ? Center(child: Text('Type a query to search',
+          ? const Center(child: Text('Type a query to search',
               style: TextStyle(color: DesignTokens.textSecondary)))
           : Query(
               key: ValueKey('search_$_query'),
@@ -85,7 +85,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   return Center(child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: Text('No results for "$_query"',
-                        style: TextStyle(color: DesignTokens.textSecondary)),
+                        style: const TextStyle(color: DesignTokens.textSecondary)),
                   ));
                 }
 

@@ -8,13 +8,12 @@ import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/onboarding_screen.dart';
 import '../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../features/dashboard/presentation/screens/dashboard_screen.dart';
-import '../features/notifications/presentation/screens/notifications_screen.dart';
-import '../features/materials/presentation/screens/materials_screen.dart';
-import '../features/materials/presentation/screens/material_detail_screen.dart';
-import '../features/materials/presentation/screens/material_reader_screen.dart';
 import '../features/ai_tutor/presentation/screens/ai_tutor_screen.dart';
 import '../features/circles/presentation/screens/home_screen.dart';
+import '../features/circles/presentation/screens/discover_screen.dart';
+import '../features/circles/presentation/screens/inbox_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
+import '../features/notifications/presentation/screens/notifications_screen.dart';
 import 'shell.dart';
 import 'routes/community_routes.dart';
 import 'routes/app_routes.dart';
@@ -71,41 +70,34 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       // Auth routes
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
+      GoRoute(
+          path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(path: '/setup', builder: (_, __) => const ProfileSetupScreen()),
 
+      // Standalone AI Tutor route (keep accessible from Dashboard quick actions)
+      GoRoute(path: '/ai-tutor', builder: (_, __) => const AiTutorScreen()),
+
+      // Standalone Circles community feed (keep accessible from Dashboard)
+      GoRoute(path: '/circles', builder: (_, __) => const HomeScreen()),
+
       ...appRoutes,
 
-      // Main shell with bottom nav
+      // Main shell with bottom nav: Home | Discover | Inbox | Profile
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             MainShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/home', builder: (_, __) => const DashboardScreen()),
-              GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
               GoRoute(
-                path: '/materials',
-                builder: (_, __) => const MaterialsScreen(),
+                path: '/home',
+                builder: (_, __) => const DashboardScreen(),
                 routes: [
                   GoRoute(
-                    path: ':slug',
-                    builder: (_, state) => MaterialDetailScreen(
-                        slug: state.pathParameters['slug']!),
-                    routes: [
-                      GoRoute(
-                        path: 'read',
-                        builder: (_, state) => MaterialReaderScreen(
-                            slug: state.pathParameters['slug']!),
-                      ),
-                    ],
+                    path: 'notifications',
+                    builder: (_, __) => const NotificationsScreen(),
                   ),
                 ],
               ),
@@ -113,17 +105,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/ai-tutor', builder: (_, __) => const AiTutorScreen()),
+              GoRoute(
+                  path: '/discover',
+                  builder: (_, __) => const DiscoverScreen()),
             ],
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/circles', builder: (_, __) => const HomeScreen()),
+              GoRoute(path: '/inbox', builder: (_, __) => const InboxScreen()),
             ],
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+              GoRoute(
+                  path: '/profile', builder: (_, __) => const ProfileScreen()),
             ],
           ),
         ],

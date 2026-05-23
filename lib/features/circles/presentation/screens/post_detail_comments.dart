@@ -25,17 +25,17 @@ class PostDetailStats extends StatelessWidget {
           score: (post['fuzzedScore'] as num?)?.toInt() ?? 0,
         ),
         const SizedBox(width: 16),
-        Icon(Icons.chat_bubble_outline_rounded,
+        const Icon(Icons.chat_bubble_outline_rounded,
             size: 18, color: DesignTokens.textTertiary),
         const SizedBox(width: 4),
         Text('${(post['commentCount'] as num?)?.toInt() ?? 0}',
-            style: TextStyle(fontSize: 13, color: DesignTokens.textTertiary)),
+            style: const TextStyle(fontSize: 13, color: DesignTokens.textTertiary)),
         const Spacer(),
-        Icon(Icons.bookmark_outline_rounded,
+        const Icon(Icons.bookmark_outline_rounded,
             size: 18, color: DesignTokens.textTertiary),
         const SizedBox(width: 4),
         Text('${(post['awardCount'] as num?)?.toInt() ?? 0} awards',
-            style: TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
+            style: const TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
         const SizedBox(width: 16),
       ],
     );
@@ -204,7 +204,7 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: isDeleted
-                ? Text('[deleted]',
+                ? const Text('[deleted]',
                     style: TextStyle(
                         color: DesignTokens.textTertiary,
                         fontStyle: FontStyle.italic))
@@ -214,16 +214,16 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
                       Row(
                         children: [
                           Text('u/${author?['username'] ?? 'unknown'}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.w600, fontSize: 12)),
                           if (widget.comment['isPinned'] == true) ...[
                             const SizedBox(width: 6),
-                            Icon(Icons.push_pin_rounded,
+                            const Icon(Icons.push_pin_rounded,
                                 size: 12, color: DesignTokens.warning),
                           ],
                           if (widget.comment['isAnswer'] == true) ...[
                             const SizedBox(width: 6),
-                            Icon(Icons.check_circle,
+                            const Icon(Icons.check_circle,
                                 size: 12, color: DesignTokens.success),
                           ],
                           const SizedBox(width: 8),
@@ -245,7 +245,7 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
                               _timeAgo(
                                   widget.comment['createdAt']?.toString() ??
                                       ''),
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 11,
                                   color: DesignTokens.textTertiary)),
                         ],
@@ -268,9 +268,9 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
                           TextButton.icon(
                             onPressed: () =>
                                 setState(() => _showReply = !_showReply),
-                            icon: Icon(Icons.reply_rounded, size: 14),
+                            icon: const Icon(Icons.reply_rounded, size: 14),
                             label: Text(_showReply ? 'Cancel' : 'Reply',
-                                style: TextStyle(
+                                style: const TextStyle(
                                     fontSize: 11,
                                     color: DesignTokens.textTertiary)),
                             style: TextButton.styleFrom(
@@ -282,8 +282,8 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
                           const SizedBox(width: 16),
                           TextButton.icon(
                             onPressed: () => _reportComment(context),
-                            icon: Icon(Icons.flag_outlined, size: 14),
-                            label: Text('Report',
+                            icon: const Icon(Icons.flag_outlined, size: 14),
+                            label: const Text('Report',
                                 style: TextStyle(
                                     fontSize: 11,
                                     color: DesignTokens.textTertiary)),
@@ -323,7 +323,7 @@ class _CommentItemState extends ConsumerState<_CommentItem> {
                                       height: 20,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2))
-                                  : Icon(Icons.send_rounded,
+                                  : const Icon(Icons.send_rounded,
                                       color: DesignTokens.primary),
                               onPressed: _submitReply,
                             ),
