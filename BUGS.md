@@ -15,6 +15,29 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-031] API test — false failures from wrong auth header prefix (JWT vs Bearer)
+**Priority:** ✅ NO BUG (false alarm)
+**Location:** `lib/core/graphql/client.dart:17`
+**Summary:** Production GraphQL API tested 87 operations against `yaza-ai-tutor.onrender.com`. Initial tests used `Authorization: JWT <token>` but the backend expects `Authorization: Bearer <token>`. All "permission denied" and `me: null` results were caused by this prefix mismatch. Re-tested with correct `Bearer` prefix — all 87 operations pass.
+**What works:**
+- Auth: `tokenAuth`, `register`, `verifyToken`, `refreshToken`
+- Profile: `me` returns full user (id=75, madalakoso), `updateProfile`, `learningProfile`
+- Materials: `subjects` → ~90 secondary subjects, `myCircles` → 11 circles
+- AI: `chatSessions`, `createChatSession`, `tutorSnapshot`, `sendMessage`
+- Payments: `creditPackages` (4 plans), `aiActionCatalog` (5 actions), `creditLedger`, `paymentHistory`
+- Leaderboard: shows `redson` with 100 pts, `score` field correct
+- Schools: 47 universities, 8 secondary schools, programs per university
+- Quizzes: `popularQuizzes` → 2 quizzes, `progressSnapshot` (no data)
+- All field names match: `studyPoints` on UserProfileType, `subjectName` on PopularQuizType, `delta` on AICreditLedgerEntryType, `isApproved` on StudyMaterialType, `subject { name }` on QuizType
+**Note:** Some queries return empty/non-seeded data because the production DB has limited test content — this is expected, not a bug.
+
+### [BUG-032] Scanner endpoint URL mismatch — Flutter calls /scanner/stream/ but backend serves /pastpapers/stream/
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** `lib/core/constants/api_endpoints.dart:7`
+**Root cause:** Flutter app's `ScannerStreamService` sends the POST request to `${AppConfig.apiUrl}/scanner/stream/` (resolves to `https://yaza-ai-tutor.onrender.com/scanner/stream/`). The Django backend registers this streaming view at `/pastpapers/stream/` (in `apps/pastpapers/urls.py:8`). The `/scanner/stream/` path returned a 404 (serving the landing page HTML), so scanner submissions silently failed.
+**Fix:** Changed `api_endpoints.dart:7` from `/scanner/stream/` to `/pastpapers/stream/`.
+**Verified:** Full end-to-end SSE flow confirmed working — sent test image with 2 math questions, received progress events ("Extracting questions...", "Solving 2 questions...", "Finalizing..."), then received `event: done` with correct solutions (`2+2=4`, `10-3=7`), credit charged (1 credit, 99 remaining).
+
 ### [BUG-026] AI Tutor gray screen — setStudyMode() orphaned Conversation + streaming never set + SSE timeout + http.Client leak
 **Priority:** 🔴 CRITICAL → ✅ RESOLVED
 **Location:** `ai_tutor_provider.dart:65-71`, `ai_tutor_provider.dart:110-112`, `ai_tutor_stream_service.dart:42`
