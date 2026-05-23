@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'vote_buttons.dart';
@@ -23,18 +24,23 @@ class CardPostCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
           borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-          border: Border.all(color: dark ? DesignTokens.darkBorder : DesignTokens.border),
+          border: Border.all(
+              color: dark ? DesignTokens.darkBorder : DesignTokens.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (community != null) ...[
-              if (community['icon'] != null && community['icon'].toString().isNotEmpty)
+              if (community['icon'] != null &&
+                  community['icon'].toString().isNotEmpty)
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
                   child: Image.network(
                     community['icon'].toString(),
-                    height: 80, width: double.infinity, fit: BoxFit.cover,
+                    height: 80,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),
@@ -44,15 +50,18 @@ class CardPostCard extends StatelessWidget {
                   children: [
                     Text('y/${community['name']}',
                         style: TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
                           color: DesignTokens.primary,
                         )),
                     const SizedBox(width: 4),
                     Text('• Posted by u/${author?['username'] ?? 'unknown'}',
-                        style: TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
+                        style: TextStyle(
+                            fontSize: 11, color: DesignTokens.textTertiary)),
                     const Spacer(),
                     if (isPinned)
-                      Icon(Icons.push_pin_rounded, size: 14, color: DesignTokens.warning),
+                      Icon(Icons.push_pin_rounded,
+                          size: 14, color: DesignTokens.warning),
                   ],
                 ),
               ),
@@ -62,47 +71,59 @@ class CardPostCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (post['flairText'] != null && post['flairText'].toString().isNotEmpty)
+                  if (post['flairText'] != null &&
+                      post['flairText'].toString().isNotEmpty)
                     Container(
                       margin: const EdgeInsets.only(right: 6, top: 2),
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
                         color: DesignTokens.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(post['flairText'].toString(),
-                          style: TextStyle(fontSize: 10, color: DesignTokens.primary)),
+                          style: TextStyle(
+                              fontSize: 10, color: DesignTokens.primary)),
                     ),
                   Expanded(
                     child: Text(
                       post['title']?.toString() ?? '',
-                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                      maxLines: 2, overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
             ),
-            if (post['body'] != null && post['body'].toString().trim().isNotEmpty)
+            if (post['body'] != null &&
+                post['body'].toString().trim().isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
                 child: Text(
                   post['body'].toString(),
-                  maxLines: 3, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, color: DesignTokens.textSecondary),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 13, color: DesignTokens.textSecondary),
                 ),
               ),
-            if (post['imageUrl'] != null && post['imageUrl'].toString().isNotEmpty)
+            if (post['imageUrl'] != null &&
+                post['imageUrl'].toString().isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
                     post['imageUrl'].toString(),
-                    height: 160, width: double.infinity, fit: BoxFit.cover,
+                    height: 160,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                    loadingBuilder: (_, child, progress) =>
-                        progress == null ? child : const ShimmerBox(height: 160, radius: 8),
+                    loadingBuilder: (_, child, progress) => progress == null
+                        ? child
+                        : const ShimmerBox(height: 160, radius: 8),
                   ),
                 ),
               ),
@@ -117,14 +138,28 @@ class CardPostCard extends StatelessWidget {
                     score: (post['fuzzedScore'] as num?)?.toInt() ?? 0,
                   ),
                   const SizedBox(width: 16),
-                  Icon(Icons.chat_bubble_outline_rounded, size: 16, color: DesignTokens.textTertiary),
+                  Icon(Icons.chat_bubble_outline_rounded,
+                      size: 16, color: DesignTokens.textTertiary),
                   const SizedBox(width: 4),
                   Text(_count(post['commentCount']),
-                      style: TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
+                      style: TextStyle(
+                          fontSize: 12, color: DesignTokens.textTertiary)),
                   const Spacer(),
-                  Icon(Icons.share_outlined, size: 16, color: DesignTokens.textTertiary),
+                  GestureDetector(
+                    onTap: () {
+                      final community =
+                          post['community'] as Map<String, dynamic>?;
+                      final url =
+                          'https://yaza.app/y/${community?['name'] ?? ''}/post/${post['slug']}';
+                      Share.share('${post['title']}\n\n$url',
+                          subject: post['title']?.toString());
+                    },
+                    child: Icon(Icons.share_outlined,
+                        size: 16, color: DesignTokens.textTertiary),
+                  ),
                   const SizedBox(width: 16),
-                  Icon(Icons.bookmark_outline_rounded, size: 16, color: DesignTokens.textTertiary),
+                  Icon(Icons.bookmark_outline_rounded,
+                      size: 16, color: DesignTokens.textTertiary),
                 ],
               ),
             ),
@@ -137,7 +172,10 @@ class CardPostCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text('SPOILER',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: DesignTokens.warning)),
+                    style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: DesignTokens.warning)),
               ),
           ],
         ),

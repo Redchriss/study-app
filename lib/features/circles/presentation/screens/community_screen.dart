@@ -10,6 +10,15 @@ import 'community_post_list.dart';
 import 'community_header.dart';
 
 final _postSorts = ['hot', 'new', 'top', 'rising', 'controversial'];
+final _postTypes = <String?>{null, 'TEXT', 'IMAGE', 'VIDEO', 'LINK', 'POLL'};
+final _postTypeLabels = {
+  null: 'All',
+  'TEXT': 'Text',
+  'IMAGE': 'Images',
+  'VIDEO': 'Video',
+  'LINK': 'Links',
+  'POLL': 'Polls'
+};
 
 class CommunityScreen extends StatefulWidget {
   final String slug;
@@ -21,6 +30,9 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> {
   int _sortIdx = 0;
+  String? _postType;
+  String? _flairId;
+  List<Map<String, dynamic>> _flairs = [];
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +55,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
           return Scaffold(
             appBar: AppBar(),
             body: ErrorState(
-              message: graphQLErrorMessage(result.exception, 'Could not load community'),
+              message: graphQLErrorMessage(
+                  result.exception, 'Could not load community'),
               onRetry: () => refetch?.call(),
             ),
           );
@@ -56,6 +69,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
             body: const Center(child: Text('Community not found')),
           );
         }
+
+        final flairsData = result.data?['communityFlair'] as List? ?? [];
+        _flairs = flairsData.cast<Map<String, dynamic>>();
 
         final isMember = community['isMember'] == true;
         final isMod = community['isModerator'] == true;
@@ -81,7 +97,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -92,18 +109,24 @@ class _CommunityScreenState extends State<CommunityScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('y/${community['name']}',
-                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                            fontWeight: FontWeight.w800)),
                                 const SizedBox(height: 2),
                                 Text('${_formatCount(memberCount)} members',
-                                    style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                                    style: TextStyle(
+                                        color: DesignTokens.textSecondary,
+                                        fontSize: 13)),
                               ],
                             ),
                           ),
                           Mutation(
-                            options: MutationOptions(document: gql(kJoinCommunity)),
+                            options:
+                                MutationOptions(document: gql(kJoinCommunity)),
                             builder: (joinRun, joinResult) {
                               return Mutation(
-                                options: MutationOptions(document: gql(kToggleFavourite)),
+                                options: MutationOptions(
+                                    document: gql(kToggleFavourite)),
                                 builder: (favRun, favResult) {
                                   return Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -111,8 +134,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                       if (isMember)
                                         IconButton(
                                           icon: Icon(
-                                            isFav ? Icons.star : Icons.star_border,
-                                            color: isFav ? DesignTokens.warning : null,
+                                            isFav
+                                                ? Icons.star
+                                                : Icons.star_border,
+                                            color: isFav
+                                                ? DesignTokens.warning
+                                                : null,
                                           ),
                                           onPressed: () {
                                             favRun({'slug': widget.slug});
@@ -126,16 +153,25 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                             showDialog(
                                               context: context,
                                               builder: (ctx) => AlertDialog(
-                                                title: const Text('Leave community?'),
-                                                content: Text('Leave y/${community['name']}?'),
+                                                title: const Text(
+                                                    'Leave community?'),
+                                                content: Text(
+                                                    'Leave y/${community['name']}?'),
                                                 actions: [
-                                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                                                  TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(ctx),
+                                                      child:
+                                                          const Text('Cancel')),
                                                   TextButton(
                                                     onPressed: () {
                                                       Navigator.pop(ctx);
                                                       context.go('/');
                                                     },
-                                                    child: Text('Leave', style: TextStyle(color: DesignTokens.error)),
+                                                    child: Text('Leave',
+                                                        style: TextStyle(
+                                                            color: DesignTokens
+                                                                .error)),
                                                   ),
                                                 ],
                                               ),
@@ -145,7 +181,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                             refetch?.call();
                                           }
                                         },
-                                        child: Text(isMember ? 'Joined' : 'Join'),
+                                        child:
+                                            Text(isMember ? 'Joined' : 'Join'),
                                       ),
                                     ],
                                   );
@@ -155,11 +192,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           ),
                         ],
                       ),
-                      if (community['description'] != null && community['description'].toString().isNotEmpty)
+                      if (community['description'] != null &&
+                          community['description'].toString().isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(community['description'].toString(),
-                              style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
+                              style: TextStyle(
+                                  color: DesignTokens.textSecondary,
+                                  fontSize: 13)),
                         ),
                     ],
                   ),
@@ -177,7 +217,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         padding: const EdgeInsets.only(right: 6),
                         child: ChoiceChip(
                           label: Text(e.value.toUpperCase(),
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                              style: TextStyle(
+                                  fontSize: 11, fontWeight: FontWeight.w700)),
                           selected: isSelected,
                           onSelected: (_) => setState(() {
                             _sortIdx = e.key;
@@ -189,11 +230,74 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
               ),
               SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 36,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    children: _postTypes.map((t) {
+                      final isSelected = _postType == t;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: FilterChip(
+                          label: Text(_postTypeLabels[t]!,
+                              style: TextStyle(
+                                  fontSize: 11, fontWeight: FontWeight.w600)),
+                          selected: isSelected,
+                          onSelected: (_) => setState(
+                              () => _postType = t == _postType ? null : t),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              if (_flairs.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 36,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: FilterChip(
+                            label: const Text('All Flairs',
+                                style: TextStyle(
+                                    fontSize: 11, fontWeight: FontWeight.w600)),
+                            selected: _flairId == null,
+                            onSelected: (_) => setState(() => _flairId = null),
+                          ),
+                        ),
+                        ..._flairs.map((f) {
+                          final isSelected = _flairId == f['id'];
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: FilterChip(
+                              label: Text(f['text']?.toString() ?? '',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600)),
+                              selected: isSelected,
+                              onSelected: (_) => setState(() => _flairId =
+                                  isSelected ? null : f['id']?.toString()),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
+              SliverToBoxAdapter(
                 child: CommunityPostList(
-                  key: ValueKey('posts_${widget.slug}_$_sortIdx'),
+                  key: ValueKey(
+                      'posts_${widget.slug}_$_sortIdx$_postType$_flairId'),
                   slug: widget.slug,
                   sort: _postSorts[_sortIdx],
                   isMember: isMember,
+                  postType: _postType,
+                  flairId: _flairId,
                 ),
               ),
             ],

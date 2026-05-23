@@ -1,9 +1,12 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/errors/app_exception.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/vote_buttons.dart';
 
 class PostDetailStats extends StatelessWidget {
@@ -22,12 +25,14 @@ class PostDetailStats extends StatelessWidget {
           score: (post['fuzzedScore'] as num?)?.toInt() ?? 0,
         ),
         const SizedBox(width: 16),
-        Icon(Icons.chat_bubble_outline_rounded, size: 18, color: DesignTokens.textTertiary),
+        Icon(Icons.chat_bubble_outline_rounded,
+            size: 18, color: DesignTokens.textTertiary),
         const SizedBox(width: 4),
         Text('${(post['commentCount'] as num?)?.toInt() ?? 0}',
             style: TextStyle(fontSize: 13, color: DesignTokens.textTertiary)),
         const Spacer(),
-        Icon(Icons.bookmark_outline_rounded, size: 18, color: DesignTokens.textTertiary),
+        Icon(Icons.bookmark_outline_rounded,
+            size: 18, color: DesignTokens.textTertiary),
         const SizedBox(width: 4),
         Text('${(post['awardCount'] as num?)?.toInt() ?? 0} awards',
             style: TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
@@ -50,7 +55,8 @@ class PostCommentsList extends StatelessWidget {
         variables: {'postId': postId, 'sort': sort, 'limit': 25},
         fetchPolicy: FetchPolicy.networkOnly,
       ),
-      builder: (result, {fetchMore, refetch}) {
+      builder: (QueryResult result,
+          {VoidCallback? refetch, FetchMore? fetchMore}) {
         if (result.isLoading) {
           return const Padding(
             padding: EdgeInsets.all(16),
@@ -64,7 +70,8 @@ class PostCommentsList extends StatelessWidget {
 
         final data = result.data?['postComments'];
         final edges = (data?['edges'] as List?) ?? [];
-        final comments = edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+        final comments =
+            edges.map((e) => e['node'] as Map<String, dynamic>).toList();
 
         if (comments.isEmpty) {
           return const Padding(
@@ -78,7 +85,11 @@ class PostCommentsList extends StatelessWidget {
 
         return Column(
           children: [
-            ...comments.map((c) => _CommentItem(comment: c, postId: postId)),
+            ...comments.map((c) => _CommentItem(
+                  comment: c,
+                  postId: postId,
+                  onRefetch: refetch,
+                )),
             if (data?['pageInfo']?['hasNextPage'] == true)
               Padding(
                 padding: const EdgeInsets.all(8),
@@ -89,8 +100,8 @@ class PostCommentsList extends StatelessWidget {
                       updateQuery: (prev, next) {
                         if (next?['postComments'] == null) return prev;
                         final merged = Map<String, dynamic>.from(prev ?? {});
-                        final prevData =
-                            Map<String, dynamic>.from(prev?['postComments'] ?? {});
+                        final prevData = Map<String, dynamic>.from(
+                            prev?['postComments'] ?? {});
                         final nextData =
                             Map<String, dynamic>.from(next!['postComments']);
                         final prevEdges = (prevData['edges'] as List?) ?? [];
@@ -113,16 +124,68 @@ class PostCommentsList extends StatelessWidget {
   }
 }
 
-class _CommentItem extends StatelessWidget {
+class _CommentItem extends ConsumerStatefulWidget {
   final Map<String, dynamic> comment;
   final String postId;
-  const _CommentItem({required this.comment, required this.postId});
+  final VoidCallback? onRefetch;
+
+  const _CommentItem({
+    required this.comment,
+    required this.postId,
+    this.onRefetch,
+  });
+
+  @override
+  ConsumerState<_CommentItem> createState() => _CommentItemState();
+}
+
+class _CommentItemState extends ConsumerState<_CommentItem> {
+  final _replyCtrl = TextEditingController();
+  bool _showReply = false;
+  bool _sendingReply = false;
+
+  @override
+  void dispose() {
+    _replyCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitReply() async {
+    final body = _replyCtrl.text.trim();
+    if (body.isEmpty || _sendingReply) return;
+    setState(() => _sendingReply = true);
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.mutate(MutationOptions(
+        document: gql(kAddComment),
+        variables: {
+          'postId': widget.postId,
+          'body': body,
+          'parentId': widget.comment['id'],
+        },
+      ));
+      if (!mounted) return;
+      if (result.hasException) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:
+              Text(graphQLErrorMessage(result.exception, 'Could not reply')),
+          backgroundColor: DesignTokens.error,
+        ));
+        return;
+      }
+      _replyCtrl.clear();
+      setState(() => _showReply = false);
+      widget.onRefetch?.call();
+    } finally {
+      if (mounted) setState(() => _sendingReply = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final author = comment['author'] as Map<String, dynamic>?;
-    final isDeleted = comment['isDeleted'] == true;
-    final depth = (comment['depth'] as num?)?.toInt() ?? 0;
+    final author = widget.comment['author'] as Map<String, dynamic>?;
+    final isDeleted = widget.comment['isDeleted'] == true;
+    final depth = (widget.comment['depth'] as num?)?.toInt() ?? 0;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -131,7 +194,8 @@ class _CommentItem extends StatelessWidget {
         border: depth > 0
             ? Border(
                 left: BorderSide(
-                    color: DesignTokens.border.withValues(alpha: 0.3), width: 2))
+                    color: DesignTokens.border.withValues(alpha: 0.3),
+                    width: 2))
             : null,
       ),
       child: Column(
@@ -152,50 +216,60 @@ class _CommentItem extends StatelessWidget {
                           Text('u/${author?['username'] ?? 'unknown'}',
                               style: TextStyle(
                                   fontWeight: FontWeight.w600, fontSize: 12)),
-                          if (comment['isPinned'] == true) ...[
+                          if (widget.comment['isPinned'] == true) ...[
                             const SizedBox(width: 6),
                             Icon(Icons.push_pin_rounded,
                                 size: 12, color: DesignTokens.warning),
                           ],
-                          if (comment['isAnswer'] == true) ...[
+                          if (widget.comment['isAnswer'] == true) ...[
                             const SizedBox(width: 6),
                             Icon(Icons.check_circle,
                                 size: 12, color: DesignTokens.success),
                           ],
                           const SizedBox(width: 8),
                           CommentVoteButtons(
-                            commentId: comment['id'].toString(),
-                            upvotes:
-                                (comment['fuzzedUpvotes'] as num?)?.toInt() ?? 0,
+                            commentId: widget.comment['id'].toString(),
+                            upvotes: (widget.comment['fuzzedUpvotes'] as num?)
+                                    ?.toInt() ??
+                                0,
                             downvotes:
-                                (comment['fuzzedDownvotes'] as num?)?.toInt() ?? 0,
-                            score:
-                                (comment['fuzzedScore'] as num?)?.toInt() ?? 0,
+                                (widget.comment['fuzzedDownvotes'] as num?)
+                                        ?.toInt() ??
+                                    0,
+                            score: (widget.comment['fuzzedScore'] as num?)
+                                    ?.toInt() ??
+                                0,
                           ),
                           const SizedBox(width: 8),
-                          Text(_timeAgo(comment['createdAt']?.toString() ?? ''),
+                          Text(
+                              _timeAgo(
+                                  widget.comment['createdAt']?.toString() ??
+                                      ''),
                               style: TextStyle(
                                   fontSize: 11,
                                   color: DesignTokens.textTertiary)),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      if (comment['bodyHtml'] != null &&
-                          comment['bodyHtml'].toString().isNotEmpty)
+                      if (widget.comment['bodyHtml'] != null &&
+                          widget.comment['bodyHtml'].toString().isNotEmpty)
                         Text(
-                          comment['bodyHtml'].toString().replaceAll(RegExp(r'<[^>]*>'), ''),
+                          widget.comment['bodyHtml']
+                              .toString()
+                              .replaceAll(RegExp(r'<[^>]*>'), ''),
                           style: const TextStyle(fontSize: 13, height: 1.4),
                         )
                       else
-                        Text(comment['body']?.toString() ?? '',
+                        Text(widget.comment['body']?.toString() ?? '',
                             style: const TextStyle(fontSize: 13, height: 1.4)),
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           TextButton.icon(
-                            onPressed: () {},
+                            onPressed: () =>
+                                setState(() => _showReply = !_showReply),
                             icon: Icon(Icons.reply_rounded, size: 14),
-                            label: Text('Reply',
+                            label: Text(_showReply ? 'Cancel' : 'Reply',
                                 style: TextStyle(
                                     fontSize: 11,
                                     color: DesignTokens.textTertiary)),
@@ -207,7 +281,7 @@ class _CommentItem extends StatelessWidget {
                           ),
                           const SizedBox(width: 16),
                           TextButton.icon(
-                            onPressed: () {},
+                            onPressed: () => _reportComment(context),
                             icon: Icon(Icons.flag_outlined, size: 14),
                             label: Text('Report',
                                 style: TextStyle(
@@ -221,12 +295,83 @@ class _CommentItem extends StatelessWidget {
                           ),
                         ],
                       ),
+                      if (_showReply) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _replyCtrl,
+                                decoration: const InputDecoration(
+                                  hintText: 'Write a reply...',
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  isDense: true,
+                                ),
+                                maxLines: 2,
+                                minLines: 1,
+                                textInputAction: TextInputAction.send,
+                                onSubmitted: (_) => _submitReply(),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: _sendingReply
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2))
+                                  : Icon(Icons.send_rounded,
+                                      color: DesignTokens.primary),
+                              onPressed: _submitReply,
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
           ),
           const Divider(height: 1),
         ],
       ),
+    );
+  }
+
+  void _reportComment(BuildContext context) async {
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        final ctrl = TextEditingController();
+        return AlertDialog(
+          title: const Text('Report Comment'),
+          content: TextField(
+            controller: ctrl,
+            decoration: const InputDecoration(hintText: 'Reason...'),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text),
+              child: const Text('Report'),
+            ),
+          ],
+        );
+      },
+    );
+    if (reason == null || reason.trim().isEmpty) return;
+    final client = ref.read(graphqlClientProvider);
+    await client.mutate(MutationOptions(
+      document: gql(kReportComment),
+      variables: {'commentId': widget.comment['id'], 'reason': reason},
+    ));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Comment reported')),
     );
   }
 

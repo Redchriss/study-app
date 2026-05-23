@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/graphql/graphql_client_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class CommentSortBar extends StatelessWidget {
   final String sort;

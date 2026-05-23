@@ -23,6 +23,7 @@ import '../../features/quizzes/presentation/screens/quizzes_screen.dart';
 import '../../features/quizzes/presentation/screens/quiz_take_screen.dart';
 import '../../features/quizzes/presentation/screens/quiz_results_screen.dart';
 import '../../features/materials/presentation/screens/my_uploads_screen.dart';
+import '../../features/profile/presentation/screens/settings_screen.dart';
 
 List<GoRoute> get appRoutes => [
   // Kids Mode
@@ -132,5 +133,9 @@ List<GoRoute> get appRoutes => [
     builder: (_, __) => const SitePageScreen(
       slug: 'support', fallbackTitle: 'Support & Contact', fallbackContent: kSupportFallback,
     ),
+  ),
+  GoRoute(
+    path: '/settings',
+    builder: (_, __) => const SettingsScreen(),
   ),
 ];

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'mod_panel_reports_tab.dart';
+import 'mod_panel_members_tab.dart';
+import 'mod_panel_modmail_tab.dart';
 import 'mod_panel_mod_log_tab.dart';
+import 'mod_panel_settings_tab.dart';
 
 class ModPanelScreen extends ConsumerWidget {
   final String communitySlug;
@@ -12,13 +15,17 @@ class ModPanelScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 2,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text('y/$communitySlug mod'),
           bottom: const TabBar(
+            isScrollable: true,
             tabs: [
               Tab(text: 'Reports', icon: Icon(Icons.flag_outlined)),
+              Tab(text: 'Members', icon: Icon(Icons.people_outline)),
+              Tab(text: 'Modmail', icon: Icon(Icons.mail_outline)),
+              Tab(text: 'Settings', icon: Icon(Icons.settings)),
               Tab(text: 'Mod Log', icon: Icon(Icons.history)),
             ],
           ),
@@ -26,6 +33,9 @@ class ModPanelScreen extends ConsumerWidget {
         body: TabBarView(
           children: [
             ModPanelReportsTab(communitySlug: communitySlug),
+            ModPanelMembersTab(communitySlug: communitySlug),
+            ModPanelModmailTab(communitySlug: communitySlug),
+            ModPanelSettingsTab(communitySlug: communitySlug),
             ModPanelModLogTab(communitySlug: communitySlug),
           ],
         ),

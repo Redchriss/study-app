@@ -10,6 +10,9 @@ query Community($slug: String!) {
     createdAt
     createdBy { id username }
   }
+  communityFlair(slug: $slug) {
+    id text backgroundColor textColor
+  }
 }
 ''';
 
@@ -87,10 +90,33 @@ mutation CreateCommunity(
 ''';
 
 const String kUpdateCommunity = r'''
-mutation UpdateCommunity($slug: String!, $description: String, $sidebar: String) {
-  updateCommunity(slug: $slug, description: $description, sidebar: $sidebar) {
-    community { id slug }
+mutation UpdateCommunity(
+  $slug: String!, $description: String, $sidebar: String,
+  $communityType: CommunityTypeEnum, $allowImages: Boolean, $allowVideos: Boolean,
+  $allowPolls: Boolean, $allowLinks: Boolean, $allowGalleries: Boolean,
+  $allowCrossposts: Boolean, $minAccountAgeDays: Int, $minKarmaToPost: Int,
+  $spoilersEnabled: Boolean, $over18: Boolean,
+) {
+  updateCommunity(
+    slug: $slug, description: $description, sidebar: $sidebar,
+    communityType: $communityType, allowImages: $allowImages, allowVideos: $allowVideos,
+    allowPolls: $allowPolls, allowLinks: $allowLinks, allowGalleries: $allowGalleries,
+    allowCrossposts: $allowCrossposts, minAccountAgeDays: $minAccountAgeDays,
+    minKarmaToPost: $minKarmaToPost, spoilersEnabled: $spoilersEnabled, over18: $over18
+  ) {
+    community { id slug name displayName description sidebar bannerColor communityType allowImages allowVideos allowPolls allowLinks allowGalleries allowCrossposts minAccountAgeDays minKarmaToPost spoilersEnabled over18 }
     errors
+  }
+}
+''';
+
+const String kCommunityStats = r'''
+query CommunityStats($communitySlug: String!) {
+  communityStats(communitySlug: $communitySlug) {
+    totalMembers newMembersToday postsToday commentsToday activeUsersToday
+    topPostThisWeek { id title slug score }
+    memberGrowthLast30Days { date count }
+    topFlairs { text count }
   }
 }
 ''';

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
-import '../../../../core/graphql/graphql_client_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import 'post_detail_header.dart';
 import 'post_detail_comments.dart';
@@ -104,7 +104,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             title: Text('y/${community?['name'] ?? ''}',
                 style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
             actions: [
-              IconButton(icon: const Icon(Icons.share_outlined), onPressed: () {}),
+              IconButton(
+                icon: const Icon(Icons.share_outlined),
+                onPressed: () {
+                  final url = 'https://yaza.app/y/${community?['name'] ?? ''}/post/${post['slug']}';
+                  Share.share('${post['title']}\n\n$url', subject: post['title']?.toString());
+                },
+              ),
               PostActions(postId: postId),
             ],
           ),

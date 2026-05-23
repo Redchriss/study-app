@@ -138,6 +138,14 @@ query UserProfile($username: String!) {
     user { id username }
     avatarUrl bannerUrl bio
     postKarma commentKarma awardKarma totalKarma
+    isFollowing isBlocked
+    achievements {
+      id achievement { id name description icon category }
+      earnedAt
+    }
+    activeCommunities {
+      slug name displayName icon memberCount
+    }
     createdAt
   }
 }
