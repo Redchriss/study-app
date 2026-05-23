@@ -69,20 +69,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (!auth.isAuthenticated) {
-        if (['/login', '/register', '/onboarding'].contains(location) || isKidsRoute) {
+        if (['/login', '/register', '/onboarding'].contains(location) ||
+            isKidsRoute) {
           return null;
         }
         if (location == '/splash') return '/onboarding';
         return '/onboarding';
       }
 
-      final profileComplete = auth.user?['profile']?['onboardingComplete'] == true;
+      final profileComplete =
+          auth.user?['profile']?['onboardingComplete'] == true;
       if (location == '/splash') {
         return profileComplete ? '/home' : '/setup';
       }
       if (!profileComplete && location != '/setup') return '/setup';
 
-      if (profileComplete && ['/login', '/register', '/onboarding'].contains(location)) {
+      if (profileComplete &&
+          ['/login', '/register', '/onboarding'].contains(location)) {
         return '/home';
       }
 
@@ -90,7 +93,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
+      GoRoute(
+          path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(path: '/setup', builder: (_, __) => const ProfileSetupScreen()),
@@ -102,7 +106,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/kids/journey',
         builder: (_, state) {
           final extra = state.extra;
-          final data = extra is Map ? Map<String, dynamic>.from(extra) : const <String, dynamic>{};
+          final data = extra is Map
+              ? Map<String, dynamic>.from(extra)
+              : const <String, dynamic>{};
           return KidsJourneyScreen(
             subjectId: data['subjectId']?.toString() ?? '',
             subjectName: data['subjectName']?.toString() ?? 'Journey',
@@ -110,48 +116,82 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      GoRoute(path: '/kids/progress', builder: (_, __) => const ParentKidsProgressScreen()),
+      GoRoute(
+          path: '/kids/progress',
+          builder: (_, __) => const ParentKidsProgressScreen()),
 
-      // Main shell with bottom nav
-      ShellRoute(
-        builder: (context, state, child) => MainShell(child: child),
-        routes: [
-          GoRoute(path: '/home', builder: (_, __) => const DashboardScreen()),
-          GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
-          GoRoute(
-            path: '/materials',
-            builder: (_, __) => const MaterialsScreen(),
+      // Main shell with bottom nav — preserves tab state
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            MainShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
             routes: [
               GoRoute(
-                path: ':slug',
-                builder: (_, state) => MaterialDetailScreen(slug: state.pathParameters['slug']!),
+                  path: '/home', builder: (_, __) => const DashboardScreen()),
+              GoRoute(
+                  path: '/notifications',
+                  builder: (_, __) => const NotificationsScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/materials',
+                builder: (_, __) => const MaterialsScreen(),
                 routes: [
                   GoRoute(
-                    path: 'read',
-                    builder: (_, state) => MaterialReaderScreen(slug: state.pathParameters['slug']!),
+                    path: ':slug',
+                    builder: (_, state) => MaterialDetailScreen(
+                        slug: state.pathParameters['slug']!),
+                    routes: [
+                      GoRoute(
+                        path: 'read',
+                        builder: (_, state) => MaterialReaderScreen(
+                            slug: state.pathParameters['slug']!),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
-          GoRoute(path: '/circles', builder: (_, __) => const CirclesScreen(),
+          StatefulShellBranch(
             routes: [
               GoRoute(
-                path: ':slug',
-                builder: (_, state) => CircleDetailScreen(slug: state.pathParameters['slug']!),
+                  path: '/ai-tutor', builder: (_, __) => const AiTutorScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/circles',
+                builder: (_, __) => const CirclesScreen(),
                 routes: [
                   GoRoute(
-                    path: 'post/:postSlug',
-                    builder: (_, state) => PostDetailScreen(
-                      circleSlug: state.pathParameters['slug']!,
-                      postSlug: state.pathParameters['postSlug']!,
-                    ),
+                    path: ':slug',
+                    builder: (_, state) =>
+                        CircleDetailScreen(slug: state.pathParameters['slug']!),
+                    routes: [
+                      GoRoute(
+                        path: 'post/:postSlug',
+                        builder: (_, state) => PostDetailScreen(
+                          circleSlug: state.pathParameters['slug']!,
+                          postSlug: state.pathParameters['postSlug']!,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
-          GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                  path: '/profile', builder: (_, __) => const ProfileScreen()),
+            ],
+          ),
         ],
       ),
 
@@ -159,20 +199,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/scanner', builder: (_, __) => const ScannerScreen()),
       GoRoute(
         path: '/quiz/:slug',
-        builder: (_, state) => QuizTakeScreen(slug: state.pathParameters['slug']!),
+        builder: (_, state) =>
+            QuizTakeScreen(slug: state.pathParameters['slug']!),
       ),
       GoRoute(
         path: '/quiz-results/:attemptId',
-        builder: (_, state) => QuizResultsScreen(attemptId: state.pathParameters['attemptId']!),
+        builder: (_, state) =>
+            QuizResultsScreen(attemptId: state.pathParameters['attemptId']!),
       ),
       GoRoute(
         path: '/scanner/results',
         builder: (_, state) => ScannerResultsScreen(
-          sessionData: (state.extra is Map) ? Map<String, dynamic>.from(state.extra as Map) : {},
+          sessionData: (state.extra is Map)
+              ? Map<String, dynamic>.from(state.extra as Map)
+              : {},
         ),
       ),
-      GoRoute(path: '/ai-tutor', builder: (_, __) => const AiTutorScreen()),
-      GoRoute(path: '/leaderboard', builder: (_, __) => const LeaderboardScreen()),
+      GoRoute(
+          path: '/leaderboard', builder: (_, __) => const LeaderboardScreen()),
       GoRoute(path: '/about', builder: (_, __) => const AboutScreen()),
       GoRoute(
         path: '/legal/terms',
@@ -209,9 +253,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/upgrade', builder: (_, __) => const UpgradeScreen()),
       GoRoute(path: '/history', builder: (_, __) => const HistoryScreen()),
       GoRoute(path: '/bookmarks', builder: (_, __) => const BookmarksScreen()),
-      GoRoute(path: '/edit-profile', builder: (_, __) => const EditProfileScreen()),
-      GoRoute(path: '/past-papers', builder: (_, __) => const PastPapersScreen()),
-      GoRoute(path: '/paper-library', builder: (_, __) => const PastPaperLibraryScreen()),
+      GoRoute(
+          path: '/edit-profile', builder: (_, __) => const EditProfileScreen()),
+      GoRoute(
+          path: '/past-papers', builder: (_, __) => const PastPapersScreen()),
+      GoRoute(
+          path: '/paper-library',
+          builder: (_, __) => const PastPaperLibraryScreen()),
       GoRoute(
         path: '/past-paper/view',
         builder: (context, state) {
@@ -230,17 +278,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           return PastPaperDetailScreen(paper: Map<String, dynamic>.from(extra));
         },
       ),
-      GoRoute(path: '/upload-material', builder: (_, __) => const UploadMaterialScreen()),
+      GoRoute(
+          path: '/upload-material',
+          builder: (_, __) => const UploadMaterialScreen()),
       GoRoute(path: '/my-uploads', builder: (_, __) => const MyUploadsScreen()),
       GoRoute(
         path: '/quizzes',
         builder: (_, __) => const QuizzesScreen(),
         routes: [
-          GoRoute(path: ':slug/share', builder: (_, state) => QuizShareScreen(quizSlug: state.pathParameters['slug']!)),
+          GoRoute(
+              path: ':slug/share',
+              builder: (_, state) =>
+                  QuizShareScreen(quizSlug: state.pathParameters['slug']!)),
         ],
       ),
     ],
   );
 });
-
-

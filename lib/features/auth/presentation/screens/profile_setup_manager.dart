@@ -122,6 +122,7 @@ class ProfileSetupManager {
         document: gql(kUpdateProfile),
         variables: {
           'input': {
+            'onboardingComplete': true,
             'educationLevel': level,
             if (standard != null) 'standard': standard,
             if (form != null) 'form': form,

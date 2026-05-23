@@ -6,6 +6,7 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/storage/secure_storage.dart';
+import '../../../../core/theme/design_tokens.dart';
 import 'kid_auth_widgets.dart';
 import 'kid_session_manager.dart';
 
@@ -160,6 +161,16 @@ class KidLoginManager {
       kidPinCtrl.clear();
       newKidAvatar = '🦊';
       await fetchChildren();
+    } else {
+      final msg = graphQLErrorMessage(
+          result.exception, 'Could not add learner. Try again.');
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: DesignTokens.error,
+        ),
+      );
     }
   }
 }

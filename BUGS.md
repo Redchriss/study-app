@@ -15,11 +15,9 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
-### [BUG-011] AI tutor back button exits the app
-**Priority:** 🔴 CRITICAL
-**Location:** `router.dart:174` + `shell.dart:50`
-**Root cause:** `/ai-tutor` is a `GoRoute` sibling of `ShellRoute` (line 174), not inside it. Bottom nav centre tab navigates outside the shell. The shell's `PopScope` doesn't apply. Back press hits root navigator with nothing to go back to → exits app.
-**Fix:** Move `/ai-tutor` inside the `ShellRoute`. Consider migrating to `StatefulShellRoute` to preserve tab state.
+None — all known issues have been resolved.
+
+## Bypassed
 
 ### [BUG-012] Kids lesson — fails silently, spinner vanishes with no output
 **Priority:** 🔴 CRITICAL → ⬜ BYPASSED
@@ -48,47 +46,41 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 **Description:** `_onRetryFetchLesson`, `_onTopicTap`, `_onNextLesson`, and `openRoadmapTopicById` all called the legacy `fetchLesson` GraphQL mutation (`kFetchKidLesson`). The updated `KidsLessonViewSection` only renders GenUI `Surface` widgets from `lessonItems`, not the old `currentLesson` data. All call sites now use `mgr.startGenUiLesson(topicName)` instead.
 
 ### [BUG-013] ShellRoute loses tab state — everything rebuilds on switch
-**Priority:** 🟡 HIGH
+**Priority:** 🟡 HIGH → ✅ RESOLVED
 **Location:** `router.dart:116` — uses `ShellRoute` instead of `StatefulShellRoute`
 **Root cause:** Plain `ShellRoute` destroys and rebuilds tab content on every switch. Root cause of most "state lost" complaints: kid data resets, scroll positions lost, form inputs cleared.
-**Fix:** Replace with `StatefulShellRoute.indexedStack()` + `StatefulNavigationShell` for tab switching.
+**Fix:** Replaced with `StatefulShellRoute.indexedStack()` + `StatefulNavigationShell` for tab switching. `MainShell` now receives `StatefulNavigationShell` and calls `goBranch()` to switch tabs.
 
 ### [BUG-014] Upload material — subject dropdown disabled with no fix path
-**Priority:** 🟡 HIGH
+**Priority:** 🟡 HIGH → ✅ RESOLVED
 **Location:** `account/presentation/screens/upload_material_manager.dart:45-53`
 **Root cause:** If profile has no `educationLevel`, `loadSubjects()` shows `ErrorState` replacing the dropdown. No button to go fix their profile. Upload flow is locked.
-**Fix:** Add "Complete Profile" button inside `ErrorState` that navigates to `/edit-profile`.
+**Fix:** Added `actionLabel`/`onAction` params to `ErrorState` widget. `upload_form_fields.dart` now passes `actionLabel: 'Complete Profile'` + `onAction: () => context.go('/edit-profile')`.
 
 ### [BUG-015] Adding a kid — sheet dismisses, no loading/error feedback
-**Priority:** 🟡 HIGH
+**Priority:** 🟡 HIGH → ✅ RESOLVED
 **Location:** `kids_mode/presentation/widgets/kid_login_manager.dart:134-163`
 **Root cause:** `createKid()` is fire-and-forget. Bottom sheet closes immediately. No loading indicator on dashboard during mutation. Mutation failure shows nothing (only `fetchChildren()` on success). User waits with no feedback on slow networks.
-**Fix:** Show loading state during `creatingKid`. Show error snackbar on failure.
+**Fix:** Added error snackbar in `createKid()` on failure. Added loading overlay in `kid_login_screen.dart` when `creatingKid` is true.
 
 ### [BUG-016] Scanner — "Solve" blocks UI thread on large images
-**Priority:** 🟡 HIGH
+**Priority:** 🟡 HIGH → ✅ RESOLVED
 **Location:** `scanner/presentation/screens/scanner_submit_service.dart:27`
 **Root cause:** `image.readAsBytes()` reads entire file into memory on the main isolate. For 3-5MB images this freezes the UI for noticeable time. The 5MB limit at line 28 is checked after the read starts. Also no loading progress indicator during the upload.
-**Fix:** Move file read to an isolate via `compute()`. Show progress indicator in the submit button.
+**Fix:** Replaced `image.readAsBytes()` with `compute(_readFileBytes, image.path)` — runs on a background isolate via `package:flutter/foundation.dart`.
 
 ### [BUG-017] Uploaded material — "nothing happens" because upload is fire-and-forget HTTP
-**Priority:** 🟡 HIGH
+**Priority:** 🟡 HIGH → ✅ RESOLVED
 **Location:** `core/services/material_upload_service.dart:78-116` hits REST endpoint at `/materials/api/upload/` (separate from GraphQL)
 **Root cause:** The upload uses `http.MultipartRequest` directly (not GraphQL). If the server returns `success != true` or there's a network error mid-flight, the user gets a snackbar they may miss. No retry mechanism. No progress bar. 
 **Backend clarification:** The GraphQL mutation `UploadMaterial` at `material_queries.dart:103` is defined but unused because the Django backend schema (`apps/materials/schema.py`) does *not* accept file uploads via GraphQL (it only accepts text and YouTube URLs). So the REST API *must* be used for PDFs/Images.
-**Fix:** Add upload progress (e.g. `http.StreamedRequest` + progress callback). Add retry on failure. Document that `kUploadMaterial` is reserved exclusively for text/link materials, not file uploads.
-
-### [BUG-018] Kids journey screen — crashes if `state.extra` is null
-**Priority:** 🔴 CRITICAL
-**Location:** `router.dart:104-105`
-**Root cause:** `/kids/journey` route does `Map<String, dynamic>.from(extra)` without null check. If navigated to directly (e.g. deep link, back button from another flow), `extra` is null → runtime crash.
-**Fix:** Add `if (extra is! Map) return redirect to fallback` before accessing extra.
+**Fix:** Added retry loop (max 3 attempts with exponential backoff). Added `onProgress` callback via `finalize()` + `StreamedRequest` for upload progress tracking.
 
 ### [BUG-019] Placeholders stale — `ref.read` instead of `ref.watch`
-**Priority:** 🟢 MEDIUM
+**Priority:** 🟢 MEDIUM → ✅ RESOLVED
 **Location:** `account/presentation/screens/upload_material_manager.dart:84,101,141`
 **Root cause:** `levelLabel()`, `titlePlaceholder()`, `descPlaceholder()` call `ref.read(authProvider)` — snapshot, never reactive. If auth data loads late, placeholders stay at default `'secondary'` forever.
-**Fix:** Use `ref.watch` or pass education level as explicit parameter.
+**Fix:** Added `educationLevel` field + `updateEducationLevel()` setter to manager. `UploadMaterialScreen.build()` calls `ref.watch(authProvider)` and passes the value reactively.
 
 ### [BUG-020] Registration → setup loop — `onboardingComplete` never set
 **Priority:** 🔴 CRITICAL

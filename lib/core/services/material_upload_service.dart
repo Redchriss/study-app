@@ -39,6 +39,38 @@ class MaterialUploadService {
     String? contentText,
     String? youtubeUrl,
     PlatformFile? file,
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    const maxRetries = 3;
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      final result = await _tryUpload(
+        title: title,
+        subjectId: subjectId,
+        contentType: contentType,
+        description: description,
+        contentText: contentText,
+        youtubeUrl: youtubeUrl,
+        file: file,
+        onProgress: onProgress,
+      );
+      if (result.success || attempt == maxRetries - 1) return result;
+      await Future.delayed(Duration(seconds: 2 * (attempt + 1)));
+    }
+    return const MaterialUploadResult(
+      success: false,
+      errors: <String>['Upload failed after several attempts.'],
+    );
+  }
+
+  Future<MaterialUploadResult> _tryUpload({
+    required String title,
+    required String subjectId,
+    required String contentType,
+    String? description,
+    String? contentText,
+    String? youtubeUrl,
+    PlatformFile? file,
+    void Function(int sent, int total)? onProgress,
   }) async {
     final token = await SecureStorage.getToken();
     if (token == null || token.isEmpty) {
@@ -76,11 +108,33 @@ class MaterialUploadService {
     }
 
     try {
-      final response = await request.send();
-      final body = await response.stream.bytesToString();
-      final decoded = body.isEmpty
+      http.Response response;
+      if (onProgress != null && request.contentLength > 0) {
+        final total = request.contentLength;
+        final byteStream = request.finalize();
+        int sent = 0;
+
+        final streamedRequest = http.StreamedRequest('POST', request.url);
+        streamedRequest.headers.addAll(request.headers);
+        streamedRequest.contentLength = total;
+
+        await for (final chunk in byteStream) {
+          sent += chunk.length;
+          streamedRequest.sink.add(chunk);
+          onProgress(sent, total);
+        }
+        await streamedRequest.sink.close();
+
+        final streamedResponse = await http.Client().send(streamedRequest);
+        response = await http.Response.fromStream(streamedResponse);
+      } else {
+        final streamedResponse = await request.send();
+        response = await http.Response.fromStream(streamedResponse);
+      }
+
+      final decoded = response.body.isEmpty
           ? const <String, dynamic>{}
-          : jsonDecode(body) as Map<String, dynamic>;
+          : jsonDecode(response.body) as Map<String, dynamic>;
       final errors = ((decoded['errors'] as List?) ?? const <dynamic>[])
           .map((error) => error.toString())
           .toList();

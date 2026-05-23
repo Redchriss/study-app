@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'upload_material_manager.dart';
@@ -33,10 +34,13 @@ class UploadFormFields extends StatelessWidget {
             ErrorState(
               message: manager.subjectLoadError!,
               onRetry: manager.loadSubjects,
+              actionLabel: 'Complete Profile',
+              onAction: () => context.go('/edit-profile'),
             )
           else
             DropdownButtonFormField<String>(
-              key: ValueKey('subject_${manager.subjects?.length}_${manager.subjectId}'),
+              key: ValueKey(
+                  'subject_${manager.subjects?.length}_${manager.subjectId}'),
               initialValue: manager.subjectId,
               decoration: const InputDecoration(labelText: 'Subject'),
               items: (manager.subjects ?? [])

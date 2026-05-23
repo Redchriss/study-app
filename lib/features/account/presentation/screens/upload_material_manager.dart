@@ -23,6 +23,7 @@ class UploadMaterialManager {
   String? subjectLoadError;
   PlatformFile? selectedFile;
   List? subjects;
+  String educationLevel = 'secondary';
 
   late WidgetRef _ref;
   late void Function(VoidCallback) _setState;
@@ -39,6 +40,10 @@ class UploadMaterialManager {
   }
 
   void init() => loadSubjects();
+
+  void updateEducationLevel(String? level) {
+    educationLevel = level ?? 'secondary';
+  }
 
   Future<void> loadSubjects() async {
     final auth = _ref.read(authProvider);
@@ -82,12 +87,7 @@ class UploadMaterialManager {
   bool get supportsOptionalFile => contentType == 'text';
 
   String levelLabel(BuildContext context) {
-    final level = _ref
-            .read(authProvider)
-            .user?['profile']?['educationLevel']
-            ?.toString() ??
-        'secondary';
-    switch (level) {
+    switch (educationLevel) {
       case 'primary':
         return 'Primary';
       case 'tertiary':
@@ -98,11 +98,7 @@ class UploadMaterialManager {
   }
 
   String titlePlaceholder() {
-    final level = _ref
-            .read(authProvider)
-            .user?['profile']?['educationLevel']
-            ?.toString() ??
-        'secondary';
+    final level = educationLevel;
     switch (contentType) {
       case 'pdf':
         if (level == 'primary') {
@@ -138,11 +134,7 @@ class UploadMaterialManager {
   }
 
   String descPlaceholder() {
-    final level = _ref
-            .read(authProvider)
-            .user?['profile']?['educationLevel']
-            ?.toString() ??
-        'secondary';
+    final level = educationLevel;
     if (level == 'primary') {
       return 'What topic does this cover? What standard is it for?';
     }

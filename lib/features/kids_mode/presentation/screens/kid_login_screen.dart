@@ -63,13 +63,22 @@ class _KidLoginScreenState extends ConsumerState<KidLoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     if (_mgr.parentToken != null) {
-      return KidLoginDashboard(
-        children: _mgr.children,
-        avatars: _mgr.avatars,
-        parentToken: _mgr.parentToken,
-        onCreateKid: _showCreateKidDialog,
-        onLoginKid: (kid) => _mgr.session.loginAsKid(kid),
-        onLogout: () => _mgr.session.logoutParent(),
+      return Stack(
+        children: [
+          KidLoginDashboard(
+            children: _mgr.children,
+            avatars: _mgr.avatars,
+            parentToken: _mgr.parentToken,
+            onCreateKid: _showCreateKidDialog,
+            onLoginKid: (kid) => _mgr.session.loginAsKid(kid),
+            onLogout: () => _mgr.session.logoutParent(),
+          ),
+          if (_mgr.creatingKid)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       );
     }
     return Theme(

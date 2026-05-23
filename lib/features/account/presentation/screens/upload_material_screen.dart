@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import 'upload_form_fields.dart';
 import 'upload_material_manager.dart';
 import 'upload_material_widgets.dart';
@@ -36,6 +37,9 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final auth = ref.watch(authProvider);
+    _m.updateEducationLevel(
+        auth.user?['profile']?['educationLevel']?.toString());
     const types = [
       ('pdf', 'PDF', Icons.picture_as_pdf_rounded, Color(0xFFC8583D)),
       ('text', 'Notes', Icons.menu_book_rounded, Color(0xFF1F6A52)),
@@ -45,8 +49,7 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
 
     return Scaffold(
       appBar: AppBar(
-          title: Text('Upload Material',
-              style: theme.textTheme.titleLarge)),
+          title: Text('Upload Material', style: theme.textTheme.titleLarge)),
       body: RefreshIndicator(
         onRefresh: _m.loadSubjects,
         child: ListView(
@@ -75,8 +78,7 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
             const SizedBox(height: DesignTokens.spLg),
             UploadFormFields(
               manager: _m,
-              onSubjectChanged: (value) =>
-                  setState(() => _m.subjectId = value),
+              onSubjectChanged: (value) => setState(() => _m.subjectId = value),
             ),
             const SizedBox(height: DesignTokens.spLg),
             if (_m.contentType == 'video') ...[
@@ -209,5 +211,4 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
       ),
     );
   }
-
 }
