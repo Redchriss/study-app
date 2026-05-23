@@ -27,24 +27,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        title: Text('Home',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.w800)),
         centerTitle: false,
         actions: [
           IconButton(
             icon: Icon(
-              _layout == PostCardLayout.compact ? Icons.view_list_rounded :
-              _layout == PostCardLayout.card ? Icons.grid_view_rounded : Icons.article_rounded,
+              _layout == PostCardLayout.compact
+                  ? Icons.view_list_rounded
+                  : _layout == PostCardLayout.card
+                      ? Icons.grid_view_rounded
+                      : Icons.article_rounded,
             ),
             onPressed: () {
               setState(() {
-                _layout = _layout == PostCardLayout.compact ? PostCardLayout.card :
-                    _layout == PostCardLayout.card ? PostCardLayout.classic : PostCardLayout.compact;
+                _layout = _layout == PostCardLayout.compact
+                    ? PostCardLayout.card
+                    : _layout == PostCardLayout.card
+                        ? PostCardLayout.classic
+                        : PostCardLayout.compact;
               });
             },
           ),
           IconButton(
-            icon: const Icon(Icons.explore_outlined),
-            onPressed: () => context.push('/discover'),
+            icon: const Icon(Icons.dashboard_rounded),
+            tooltip: 'Study Dashboard',
+            onPressed: () => context.push('/dashboard'),
           ),
         ],
       ),
@@ -71,20 +80,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (result.isLoading) return _FeedLoading();
                 if (result.hasException) {
                   return ErrorState(
-                    message: graphQLErrorMessage(result.exception, 'Could not load feed'),
+                    message: graphQLErrorMessage(
+                        result.exception, 'Could not load feed'),
                     onRetry: () => refetch?.call(),
                   );
                 }
 
                 final feed = result.data?['homeFeed'];
                 final edges = (feed?['edges'] as List?) ?? [];
-                final posts = edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+                final posts = edges
+                    .map((e) => e['node'] as Map<String, dynamic>)
+                    .toList();
 
                 if (posts.isEmpty) {
                   return EmptyState(
                     icon: Icons.group_outlined,
                     title: 'Join some communities',
-                    subtitle: 'Your feed is empty. Discover communities to follow.',
+                    subtitle:
+                        'Your feed is empty. Discover communities to follow.',
                     actionLabel: 'Discover',
                     onAction: () => context.push('/discover'),
                   );
@@ -94,18 +107,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   onRefresh: () async => refetch?.call(),
                   child: NotificationListener<ScrollNotification>(
                     onNotification: (scroll) {
-                      if (scroll is ScrollEndNotification && scroll.metrics.pixels >= scroll.metrics.maxScrollExtent - 200) {
+                      if (scroll is ScrollEndNotification &&
+                          scroll.metrics.pixels >=
+                              scroll.metrics.maxScrollExtent - 200) {
                         final pageInfo = feed?['pageInfo'];
                         if (pageInfo?['hasNextPage'] == true) {
                           fetchMore?.call(FetchMoreOptions(
                             variables: {'after': pageInfo['endCursor']},
                             updateQuery: (prev, next) {
                               if (next?['homeFeed'] == null) return prev;
-                              final merged = Map<String, dynamic>.from(prev ?? {});
-                              final prevFeed = Map<String, dynamic>.from(prev?['homeFeed'] ?? {});
-                              final nextFeed = Map<String, dynamic>.from(next!['homeFeed']);
-                              final prevEdges = (prevFeed['edges'] as List?) ?? [];
-                              final nextEdges = (nextFeed['edges'] as List?) ?? [];
+                              final merged =
+                                  Map<String, dynamic>.from(prev ?? {});
+                              final prevFeed = Map<String, dynamic>.from(
+                                  prev?['homeFeed'] ?? {});
+                              final nextFeed =
+                                  Map<String, dynamic>.from(next!['homeFeed']);
+                              final prevEdges =
+                                  (prevFeed['edges'] as List?) ?? [];
+                              final nextEdges =
+                                  (nextFeed['edges'] as List?) ?? [];
                               merged['homeFeed'] = {
                                 ...nextFeed,
                                 'edges': [...prevEdges, ...nextEdges],
@@ -126,7 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: () {
                           final c = posts[i]['community'];
                           if (c != null) {
-                            context.push('/y/${c['slug']}/post/${posts[i]['slug']}');
+                            context.push(
+                                '/y/${c['slug']}/post/${posts[i]['slug']}');
                           }
                         },
                       ),
@@ -168,21 +189,27 @@ class _CommunityDrawer extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               child: Text('My Communities',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800)),
             ),
-            Divider(color: dark ? DesignTokens.darkBorder : DesignTokens.border),
+            Divider(
+                color: dark ? DesignTokens.darkBorder : DesignTokens.border),
             Expanded(
               child: Query(
                 options: QueryOptions(document: gql(kMyCommunities)),
                 builder: (result, {refetch, fetchMore}) {
-                  final communities = (result.data?['myCommunities'] as List?) ?? [];
+                  final communities =
+                      (result.data?['myCommunities'] as List?) ?? [];
                   if (result.isLoading) {
                     return const Center(child: LoadingWidget());
                   }
                   if (communities.isEmpty) {
                     return const Padding(
                       padding: EdgeInsets.all(16),
-                      child: Text('No communities yet', style: TextStyle(color: DesignTokens.textSecondary)),
+                      child: Text('No communities yet',
+                          style: TextStyle(color: DesignTokens.textSecondary)),
                     );
                   }
                   return ListView.builder(
@@ -192,7 +219,10 @@ class _CommunityDrawer extends StatelessWidget {
                         return ListTile(
                           leading: const Icon(Icons.explore_outlined),
                           title: const Text('Discover'),
-                          onTap: () { Navigator.pop(context); context.push('/discover'); },
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.push('/discover');
+                          },
                         );
                       }
                       final c = communities[i - 1] as Map<String, dynamic>;
@@ -200,18 +230,33 @@ class _CommunityDrawer extends StatelessWidget {
                       return ListTile(
                         leading: CircleAvatar(
                           radius: 16,
-                          backgroundColor: DesignTokens.primary.withValues(alpha: 0.1),
-                          child: c['icon'] != null && c['icon'].toString().isNotEmpty
+                          backgroundColor:
+                              DesignTokens.primary.withValues(alpha: 0.1),
+                          child: c['icon'] != null &&
+                                  c['icon'].toString().isNotEmpty
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
-                                  child: Image.network(c['icon'].toString(), fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => const Icon(Icons.group, size: 18, color: DesignTokens.primary)),
+                                  child: Image.network(c['icon'].toString(),
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                          Icons.group,
+                                          size: 18,
+                                          color: DesignTokens.primary)),
                                 )
-                              : const Icon(Icons.group, size: 18, color: DesignTokens.primary),
+                              : const Icon(Icons.group,
+                                  size: 18, color: DesignTokens.primary),
                         ),
-                        title: Text('y/${c['name']}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                        trailing: isFav ? const Icon(Icons.star, size: 16, color: DesignTokens.warning) : null,
-                        onTap: () { Navigator.pop(context); context.push('/y/${c['slug']}'); },
+                        title: Text('y/${c['name']}',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
+                        trailing: isFav
+                            ? const Icon(Icons.star,
+                                size: 16, color: DesignTokens.warning)
+                            : null,
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/y/${c['slug']}');
+                        },
                       );
                     },
                   );
@@ -222,7 +267,10 @@ class _CommunityDrawer extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.add_circle_outline),
               title: const Text('Create Community'),
-              onTap: () { Navigator.pop(context); context.push('/create-community'); },
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/create-community');
+              },
             ),
           ],
         ),

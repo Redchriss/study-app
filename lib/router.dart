@@ -7,7 +7,6 @@ import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/onboarding_screen.dart';
 import '../features/auth/presentation/screens/profile_setup_screen.dart';
-import '../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../features/ai_tutor/presentation/screens/ai_tutor_screen.dart';
 import '../features/circles/presentation/screens/home_screen.dart';
 import '../features/circles/presentation/screens/discover_screen.dart';
@@ -76,11 +75,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(path: '/setup', builder: (_, __) => const ProfileSetupScreen()),
 
-      // Standalone AI Tutor route (keep accessible from Dashboard quick actions)
+      // Standalone AI Tutor route (keep accessible from quick actions)
       GoRoute(path: '/ai-tutor', builder: (_, __) => const AiTutorScreen()),
-
-      // Standalone Circles community feed (keep accessible from Dashboard)
-      GoRoute(path: '/circles', builder: (_, __) => const HomeScreen()),
 
       ...appRoutes,
 
@@ -93,7 +89,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (_, __) => const DashboardScreen(),
+                builder: (_, __) => const HomeScreen(),
                 routes: [
                   GoRoute(
                     path: 'notifications',
