@@ -1,8 +1,8 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import 'post_card_states.dart';
 import 'vote_buttons.dart';
 
 class CardPostCard extends StatefulWidget {
@@ -48,7 +48,8 @@ class _CardPostCardState extends State<CardPostCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (isRemoved && !_removedRevealed)
-              _buildRemovedOverlay()
+              RemovedOverlay(
+                  onReveal: () => setState(() => _removedRevealed = true))
             else ...[
               if (community != null) ...[
                 if (community['icon'] != null &&
@@ -118,22 +119,7 @@ class _CardPostCardState extends State<CardPostCard> {
                 ),
               ),
               if (isDeleted)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text('[deleted]',
-                        style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey,
-                            fontStyle: FontStyle.italic)),
-                  ),
-                )
+                const DeletedBody()
               else if (post['body'] != null &&
                   post['body'].toString().trim().isNotEmpty)
                 Padding(
@@ -152,11 +138,20 @@ class _CardPostCardState extends State<CardPostCard> {
                   padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: _buildMedia(
-                      imageUrl: post['imageUrl'].toString(),
-                      isSpoiler: isSpoiler && !_spoilerRevealed,
-                      isNsfw: isNsfw && !_nsfwRevealed,
-                    ),
+                    child: (isSpoiler && !_spoilerRevealed) ||
+                            (isNsfw && !_nsfwRevealed)
+                        ? SpoilerNsfwMedia(
+                            imageUrl: post['imageUrl'].toString(),
+                            isSpoiler: isSpoiler && !_spoilerRevealed,
+                            isNsfw: isNsfw && !_nsfwRevealed,
+                            onReveal: () {
+                              setState(() {
+                                if (isSpoiler) _spoilerRevealed = true;
+                                if (isNsfw) _nsfwRevealed = true;
+                              });
+                            },
+                          )
+                        : PlainMedia(imageUrl: post['imageUrl'].toString()),
                   ),
                 ),
               Padding(
@@ -181,7 +176,7 @@ class _CardPostCardState extends State<CardPostCard> {
                           : DesignTokens.textTertiary,
                     ),
                     const SizedBox(width: 4),
-                    Text(_count(post['commentCount']),
+                    Text(formatCount(post['commentCount']),
                         style: TextStyle(
                             fontSize: 12,
                             color: isLocked
@@ -205,148 +200,11 @@ class _CardPostCardState extends State<CardPostCard> {
                   ],
                 ),
               ),
-              if (isSpoiler && !_spoilerRevealed)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  margin: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-                  decoration: BoxDecoration(
-                    color: DesignTokens.warning.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text('SPOILER',
-                      style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: DesignTokens.warning)),
-                ),
+              if (isSpoiler && !_spoilerRevealed) const SpoilerBadge(),
             ],
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildRemovedOverlay() {
-    return GestureDetector(
-      onTap: () => setState(() => _removedRevealed = true),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-          color: Colors.grey.withValues(alpha: 0.08),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.visibility_off_rounded,
-                  size: 32, color: Colors.grey),
-              const SizedBox(height: 8),
-              const Text('[removed]',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.grey)),
-              const SizedBox(height: 4),
-              Text('Tap to view original',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade500,
-                      fontStyle: FontStyle.italic)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMedia({
-    required String imageUrl,
-    required bool isSpoiler,
-    required bool isNsfw,
-  }) {
-    Widget image = Image.network(
-      imageUrl,
-      height: 160,
-      width: double.infinity,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-      loadingBuilder: (_, child, progress) =>
-          progress == null ? child : const ShimmerBox(height: 160, radius: 8),
-    );
-
-    if (isSpoiler || isNsfw) {
-      final label = isNsfw ? 'NSFW — Tap to view' : 'Spoiler — Tap to view';
-      image = Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: ImageFiltered(
-                imageFilter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Image.network(
-                  imageUrl,
-                  height: 160,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  if (isSpoiler) _spoilerRevealed = true;
-                  if (isNsfw) _nsfwRevealed = true;
-                });
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      isNsfw
-                          ? Icons.warning_amber_rounded
-                          : Icons.visibility_off_rounded,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    return SizedBox(
-      height: 160,
-      width: double.infinity,
-      child: image,
-    );
-  }
-
-  String _count(dynamic val) {
-    final n = (val as num?)?.toInt() ?? 0;
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
-    return n.toString();
   }
 }
