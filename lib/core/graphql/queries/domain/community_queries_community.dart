@@ -118,6 +118,7 @@ query CommunityStats($communitySlug: String!) {
     topPostThisWeek { id title slug score }
     memberGrowthLast30Days { date count }
     topFlairs { text count }
+    trafficSources { source percentage }
   }
 }
 ''';

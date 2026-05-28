@@ -7,6 +7,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
 import 'community_post_list.dart';
 import 'community_header.dart';
+import '../widgets/post_card.dart';
 
 final _postSorts = ['hot', 'new', 'top', 'rising', 'controversial'];
 final _timeFilters = ['all', 'hour', 'day', 'week', 'month', 'year'];
@@ -324,6 +325,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   ),
                 ),
               SliverToBoxAdapter(
+                child: _PinnedPostsSection(
+                  slug: widget.slug,
+                  isMember: isMember,
+                ),
+              ),
+              SliverToBoxAdapter(
                 child: CommunityPostList(
                   key: ValueKey(
                       'posts_${widget.slug}_$_sortIdx$_timeFilter$_postType$_flairId'),
@@ -346,5 +353,62 @@ class _CommunityScreenState extends State<CommunityScreen> {
     if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
     return n.toString();
+  }
+}
+
+class _PinnedPostsSection extends StatelessWidget {
+  final String slug;
+  final bool isMember;
+  const _PinnedPostsSection({required this.slug, required this.isMember});
+
+  @override
+  Widget build(BuildContext context) {
+    return Query(
+      options: QueryOptions(
+        document: gql(kCommunityPosts),
+        variables: {
+          'slug': slug,
+          'sort': 'hot',
+          'isPinned': true,
+          'limit': 2,
+        },
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading || result.hasException) {
+          return const SizedBox.shrink();
+        }
+        final data = result.data?['communityPosts'];
+        final edges = (data?['edges'] as List?) ?? [];
+        final pinned =
+            edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+        if (pinned.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Row(
+                children: [
+                  Icon(Icons.push_pin, size: 14, color: DesignTokens.warning),
+                  SizedBox(width: 4),
+                  Text('PINNED',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: DesignTokens.warning,
+                        letterSpacing: 0.5,
+                      )),
+                ],
+              ),
+            ),
+            ...pinned.map((p) => PostCard(
+                  post: p,
+                  onTap: () => context.push('/y/$slug/post/${p['slug']}'),
+                )),
+            const Divider(height: 1),
+          ],
+        );
+      },
+    );
   }
 }

@@ -28,11 +28,11 @@ fragment CommentFields on CommentType {
 const String kCommunityPosts = r'''
 query CommunityPosts(
   $slug: String!, $sort: PostSortEnum, $timeFilter: TimeFilterEnum,
-  $postType: PostTypeEnum, $flairId: ID, $limit: Int, $after: String
+  $postType: PostTypeEnum, $flairId: ID, $isPinned: Boolean, $limit: Int, $after: String
 ) {
   communityPosts(
     slug: $slug, sort: $sort, timeFilter: $timeFilter,
-    postType: $postType, flairId: $flairId, limit: $limit, after: $after
+    postType: $postType, flairId: $flairId, isPinned: $isPinned, limit: $limit, after: $after
   ) {
     edges { cursor node { ...PostFields } }
     pageInfo { hasNextPage endCursor }

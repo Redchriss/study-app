@@ -6,7 +6,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../widgets/post_card.dart';
 
-class CommunityPostList extends StatelessWidget {
+class CommunityPostList extends StatefulWidget {
   final String slug;
   final String sort;
   final String timeFilter;
@@ -25,17 +25,63 @@ class CommunityPostList extends StatelessWidget {
   });
 
   @override
+  State<CommunityPostList> createState() => _CommunityPostListState();
+}
+
+class _CommunityPostListState extends State<CommunityPostList> {
+  final _scrollCtrl = ScrollController();
+  bool _loadingMore = false;
+
+  @override
+  void dispose() {
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onScroll(ScrollNotification info, FetchMore? fetchMore,
+      Map<String, dynamic>? data) {
+    if (_loadingMore || info is! ScrollUpdateNotification) return;
+    if (info.metrics.pixels < info.metrics.maxScrollExtent - 200) return;
+    if (data?['pageInfo']?['hasNextPage'] != true) return;
+    _loadingMore = true;
+    fetchMore
+        ?.call(FetchMoreOptions(
+      variables: {'after': data!['pageInfo']['endCursor']},
+      updateQuery: (prev, next) {
+        if (next?['communityPosts'] == null) return prev;
+        final merged = Map<String, dynamic>.from(prev ?? {});
+        final prevData =
+            Map<String, dynamic>.from(prev?['communityPosts'] ?? {});
+        final nextData = Map<String, dynamic>.from(next!['communityPosts']);
+        final prevEdges = (prevData['edges'] as List?) ?? [];
+        final nextEdges = (nextData['edges'] as List?) ?? [];
+        merged['communityPosts'] = {
+          ...nextData,
+          'edges': [...prevEdges, ...nextEdges],
+        };
+        return merged;
+      },
+    ))
+        .then((_) {
+      if (mounted) {
+        setState(() => _loadingMore = false);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Query(
       options: QueryOptions(
         document: gql(kCommunityPosts),
         variables: {
-          'slug': slug,
-          'sort': sort,
+          'slug': widget.slug,
+          'sort': widget.sort,
           'limit': 25,
-          if (timeFilter != 'all') 'timeFilter': timeFilter.toUpperCase(),
-          if (postType != null) 'postType': postType,
-          if (flairId != null) 'flairId': flairId,
+          if (widget.timeFilter != 'all')
+            'timeFilter': widget.timeFilter.toUpperCase(),
+          if (widget.postType != null) 'postType': widget.postType,
+          if (widget.flairId != null) 'flairId': widget.flairId,
         },
         fetchPolicy: FetchPolicy.networkOnly,
       ),
@@ -69,47 +115,39 @@ class CommunityPostList extends StatelessWidget {
           return EmptyState(
             icon: Icons.article_outlined,
             title: 'No posts yet',
-            subtitle:
-                isMember ? 'Be the first to post!' : 'Join to participate.',
-            actionLabel: isMember ? 'Create Post' : null,
-            onAction: isMember ? () => context.push('/y/$slug/submit') : null,
+            subtitle: widget.isMember
+                ? 'Be the first to post!'
+                : 'Join to participate.',
+            actionLabel: widget.isMember ? 'Create Post' : null,
+            onAction: widget.isMember
+                ? () => context.push('/y/${widget.slug}/submit')
+                : null,
           );
         }
 
-        return Column(
-          children: [
-            ...posts.map((p) => PostCard(
-                  post: p,
-                  onTap: () => context.push('/y/$slug/post/${p['slug']}'),
-                )),
-            if (data?['pageInfo']?['hasNextPage'] == true)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: TextButton(
-                  onPressed: () {
-                    fetchMore?.call(FetchMoreOptions(
-                      variables: {'after': data['pageInfo']['endCursor']},
-                      updateQuery: (prev, next) {
-                        if (next?['communityPosts'] == null) return prev;
-                        final merged = Map<String, dynamic>.from(prev ?? {});
-                        final prevData = Map<String, dynamic>.from(
-                            prev?['communityPosts'] ?? {});
-                        final nextData =
-                            Map<String, dynamic>.from(next!['communityPosts']);
-                        final prevEdges = (prevData['edges'] as List?) ?? [];
-                        final nextEdges = (nextData['edges'] as List?) ?? [];
-                        merged['communityPosts'] = {
-                          ...nextData,
-                          'edges': [...prevEdges, ...nextEdges],
-                        };
-                        return merged;
-                      },
-                    ));
-                  },
-                  child: const Text('Load more'),
+        return NotificationListener<ScrollNotification>(
+          onNotification: (info) {
+            _onScroll(info, fetchMore, data);
+            return false;
+          },
+          child: Column(
+            children: [
+              ...posts.map((p) => PostCard(
+                    post: p,
+                    onTap: () =>
+                        context.push('/y/${widget.slug}/post/${p['slug']}'),
+                  )),
+              if (_loadingMore)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         );
       },
     );
