@@ -35,7 +35,8 @@ class MaterialReaderSelector extends StatelessWidget {
       if (material.fileUrl.isEmpty) {
         return ReaderScaffold(
           title: material.title,
-          child: const Center(child: Text('This PDF is not available right now.')),
+          child:
+              const Center(child: Text('This PDF is not available right now.')),
         );
       }
       return PdfMaterialReader(

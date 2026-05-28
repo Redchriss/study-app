@@ -11,7 +11,8 @@ import 'inbox_notification_card.dart';
 class InboxNotificationsTab extends ConsumerWidget {
   final bool onlyUnread;
   final String? notifType;
-  const InboxNotificationsTab({super.key, this.onlyUnread = false, this.notifType});
+  const InboxNotificationsTab(
+      {super.key, this.onlyUnread = false, this.notifType});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -74,50 +75,88 @@ class InboxNotificationsTab extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async => refetch?.call(),
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (scroll) {
-              if (scroll is ScrollEndNotification &&
-                  scroll.metrics.pixels >=
-                      scroll.metrics.maxScrollExtent - 200) {
-                final pageInfo = data?['pageInfo'];
-                if (pageInfo?['hasNextPage'] == true) {
-                  fetchMore?.call(FetchMoreOptions(
-                    variables: {'after': pageInfo['endCursor']},
-                    updateQuery: (prev, next) {
-                      if (next?['notifications'] == null) return prev;
-                      final merged = Map<String, dynamic>.from(prev ?? {});
-                      final prevData = Map<String, dynamic>.from(
-                          prev?['notifications'] ?? {});
-                      final nextData =
-                          Map<String, dynamic>.from(next!['notifications']);
-                      final prevEdges = (prevData['edges'] as List?) ?? [];
-                      final nextEdges = (nextData['edges'] as List?) ?? [];
-                      merged['notifications'] = {
-                        ...nextData,
-                        'edges': [...prevEdges, ...nextEdges],
-                      };
-                      return merged;
-                    },
-                  ));
-                }
-              }
-              return false;
-            },
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-              itemCount: items.length,
-              itemBuilder: (_, i) => InboxNotificationCard(
-                notification: items[i],
-                onMarkRead: () async {
-                  final nid = items[i]['id'].toString();
-                  await client.mutate(MutationOptions(
-                    document: gql(kMarkNotificationRead),
-                    variables: {'notificationId': nid},
-                  ));
-                  refetch?.call();
-                },
+          child: Column(
+            children: [
+              // Mark all read button
+              if (!onlyUnread)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Row(
+                    children: [
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: () async {
+                          await client.mutate(MutationOptions(
+                            document: gql(kMarkAllNotificationsRead),
+                          ));
+                          refetch?.call();
+                        },
+                        icon: const Icon(Icons.done_all_rounded, size: 16),
+                        label: const Text('Mark all read',
+                            style: TextStyle(fontSize: 12)),
+                        style: TextButton.styleFrom(
+                          foregroundColor: DesignTokens.primary,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Expanded(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (scroll) {
+                    if (scroll is ScrollEndNotification &&
+                        scroll.metrics.pixels >=
+                            scroll.metrics.maxScrollExtent - 200) {
+                      final pageInfo = data?['pageInfo'];
+                      if (pageInfo?['hasNextPage'] == true) {
+                        fetchMore?.call(FetchMoreOptions(
+                          variables: {'after': pageInfo['endCursor']},
+                          updateQuery: (prev, next) {
+                            if (next?['notifications'] == null) return prev;
+                            final merged =
+                                Map<String, dynamic>.from(prev ?? {});
+                            final prevData = Map<String, dynamic>.from(
+                                prev?['notifications'] ?? {});
+                            final nextData = Map<String, dynamic>.from(
+                                next!['notifications']);
+                            final prevEdges =
+                                (prevData['edges'] as List?) ?? [];
+                            final nextEdges =
+                                (nextData['edges'] as List?) ?? [];
+                            merged['notifications'] = {
+                              ...nextData,
+                              'edges': [...prevEdges, ...nextEdges],
+                            };
+                            return merged;
+                          },
+                        ));
+                      }
+                    }
+                    return false;
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+                    itemCount: items.length,
+                    itemBuilder: (_, i) => InboxNotificationCard(
+                      notification: items[i],
+                      onMarkRead: () async {
+                        final nid = items[i]['id'].toString();
+                        await client.mutate(MutationOptions(
+                          document: gql(kMarkNotificationRead),
+                          variables: {'notificationId': nid},
+                        ));
+                        refetch?.call();
+                      },
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         );
       },

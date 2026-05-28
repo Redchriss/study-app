@@ -25,9 +25,11 @@ class KidsHomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: DesignTokens.shadowSm(theme.brightness == Brightness.dark),
+              boxShadow:
+                  DesignTokens.shadowSm(theme.brightness == Brightness.dark),
             ),
-            child: const Icon(Icons.school_rounded, color: KidsVisualTheme.pathBlue, size: 22),
+            child: const Icon(Icons.school_rounded,
+                color: KidsVisualTheme.pathBlue, size: 22),
           ),
           const SizedBox(width: 10),
           const Text('Yaza Kids'),
@@ -50,12 +52,15 @@ class KidsHomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 await prefs.remove('kid_education_track');
                 ref.read(kidTokenProvider.notifier).state = null;
                 ref.read(kidProfileProvider.notifier).state = null;
-                ref.read(kidAuthStateProvider.notifier).state = const KidAuthState();
+                ref.read(kidAuthStateProvider.notifier).state =
+                    const KidAuthState();
                 if (context.mounted) context.go('/kids');
               },
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                child: Text('Switch', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                child: Text('Switch',
+                    style:
+                        TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
               ),
             ),
           ),

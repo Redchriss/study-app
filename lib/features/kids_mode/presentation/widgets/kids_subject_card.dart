@@ -27,7 +27,8 @@ class KidsSubjectCard extends StatelessWidget {
       },
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: KidsVisualTheme.subjectTileShell(accent: accent, dark: dark),
+        decoration:
+            KidsVisualTheme.subjectTileShell(accent: accent, dark: dark),
         child: Row(
           children: [
             Container(

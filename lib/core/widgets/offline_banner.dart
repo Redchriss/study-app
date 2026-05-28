@@ -76,7 +76,9 @@ class _OfflineBannerState extends State<OfflineBanner> {
                   child: Row(
                     children: [
                       Icon(
-                        _isOffline ? Icons.wifi_off : Icons.data_saver_on_outlined,
+                        _isOffline
+                            ? Icons.wifi_off
+                            : Icons.data_saver_on_outlined,
                         color: Colors.white,
                         size: 16,
                       ),
@@ -86,7 +88,8 @@ class _OfflineBannerState extends State<OfflineBanner> {
                           _isOffline
                               ? 'You\'re offline. Cached study materials remain available.'
                               : 'Low-data mode is on. Heavy previews are reduced to save bandwidth.',
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 12),
                         ),
                       ),
                     ],

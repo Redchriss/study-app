@@ -31,25 +31,31 @@ class ParentKidSummaryCard extends StatelessWidget {
                     children: [
                       Text(
                         summary['childName']?.toString() ?? 'Learner',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${summary['educationTrack'] == 'ecd' ? 'Early childhood' : 'Standard'} ${summary['standard'] ?? '?'}',
-                        style: const TextStyle(color: DesignTokens.textSecondary, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                            color: DesignTokens.textSecondary,
+                            fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: DesignTokens.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
                     'Lv ${summary['currentLevel'] ?? 1}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, color: DesignTokens.primary),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: DesignTokens.primary),
                   ),
                 ),
               ],
@@ -59,10 +65,18 @@ class ParentKidSummaryCard extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _StatPill(icon: Icons.local_fire_department_rounded, label: '${summary['streak'] ?? 0} day streak'),
-                _StatPill(icon: Icons.star_rounded, label: '${summary['totalStars'] ?? 0} stars'),
-                _StatPill(icon: Icons.check_circle_outline_rounded, label: '${summary['masteredCount'] ?? 0} mastered'),
-                _StatPill(icon: Icons.refresh_rounded, label: '${summary['readyReviewCount'] ?? 0} to review'),
+                _StatPill(
+                    icon: Icons.local_fire_department_rounded,
+                    label: '${summary['streak'] ?? 0} day streak'),
+                _StatPill(
+                    icon: Icons.star_rounded,
+                    label: '${summary['totalStars'] ?? 0} stars'),
+                _StatPill(
+                    icon: Icons.check_circle_outline_rounded,
+                    label: '${summary['masteredCount'] ?? 0} mastered'),
+                _StatPill(
+                    icon: Icons.refresh_rounded,
+                    label: '${summary['readyReviewCount'] ?? 0} to review'),
               ],
             ),
             const SizedBox(height: 14),
@@ -73,7 +87,8 @@ class ParentKidSummaryCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               summary['supportTip']?.toString() ?? '',
-              style: const TextStyle(color: DesignTokens.textSecondary, height: 1.35),
+              style: const TextStyle(
+                  color: DesignTokens.textSecondary, height: 1.35),
             ),
             if (badges.isNotEmpty) ...[
               const SizedBox(height: 14),
@@ -82,7 +97,8 @@ class ParentKidSummaryCard extends StatelessWidget {
                 runSpacing: 8,
                 children: badges.map((badge) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(
                       color: DesignTokens.warning.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(12),

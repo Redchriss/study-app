@@ -158,7 +158,9 @@ class _CountingBoardWidgetState extends State<_CountingBoardWidget>
                         shape: BoxShape.circle,
                         color: isCorrect
                             ? KidsVisualTheme.trailGreen
-                            : (isWrong ? Colors.redAccent : KidsVisualTheme.pathBlue),
+                            : (isWrong
+                                ? Colors.redAccent
+                                : KidsVisualTheme.pathBlue),
                       ),
                       child: Center(
                         child: Text(

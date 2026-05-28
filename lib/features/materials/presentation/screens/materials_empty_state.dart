@@ -24,9 +24,11 @@ class MaterialsEmptyState extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 Positioned(
-                  top: 18, left: 18,
+                  top: 18,
+                  left: 18,
                   child: Container(
-                    width: 28, height: 36,
+                    width: 28,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: DesignTokens.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
@@ -34,16 +36,19 @@ class MaterialsEmptyState extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  bottom: 18, right: 18,
+                  bottom: 18,
+                  right: 18,
                   child: Container(
-                    width: 28, height: 36,
+                    width: 28,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: DesignTokens.accent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                 ),
-                const Icon(Icons.menu_book_rounded, size: 40, color: DesignTokens.primary),
+                const Icon(Icons.menu_book_rounded,
+                    size: 40, color: DesignTokens.primary),
               ],
             ),
           ),
@@ -51,15 +56,21 @@ class MaterialsEmptyState extends StatelessWidget {
           Text(
             'No materials yet',
             style: TextStyle(
-              fontSize: 18, fontWeight: FontWeight.w700,
-              color: dark ? DesignTokens.darkTextPrimary : DesignTokens.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: dark
+                  ? DesignTokens.darkTextPrimary
+                  : DesignTokens.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Be the first to upload study materials\nfor your classmates.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: dark ? DesignTokens.darkTextSecondary : DesignTokens.textSecondary),
+            style: TextStyle(
+                color: dark
+                    ? DesignTokens.darkTextSecondary
+                    : DesignTokens.textSecondary),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(

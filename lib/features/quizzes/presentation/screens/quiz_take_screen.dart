@@ -69,7 +69,8 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
       final attemptId =
           result.data?['startQuizAttempt']?['attempt']?['id'] as String?;
       if (attemptId == null || attemptId.isEmpty) {
-        final message = graphQLErrorMessage(result.exception, 'Could not start quiz.');
+        final message =
+            graphQLErrorMessage(result.exception, 'Could not start quiz.');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
         );
@@ -104,8 +105,8 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
         if (result.hasException) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                  graphQLErrorMessage(result.exception, 'Submit failed')),
+              content:
+                  Text(graphQLErrorMessage(result.exception, 'Submit failed')),
               backgroundColor: DesignTokens.error,
             ),
           );
@@ -148,13 +149,13 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
           QueryOptions(document: gql(kQuiz), variables: {'slug': widget.slug}),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) {
-          return const Scaffold(
-              body: LoadingWidget());
+          return const Scaffold(body: LoadingWidget());
         }
         if (result.hasException) {
           return Scaffold(
             body: ErrorState(
-              message: graphQLErrorMessage(result.exception, 'Failed to load quiz'),
+              message:
+                  graphQLErrorMessage(result.exception, 'Failed to load quiz'),
               onRetry: () => refetch?.call(),
             ),
           );

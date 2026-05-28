@@ -30,7 +30,8 @@ void main() {
       expect(find.text('Log In'), findsOneWidget);
     });
 
-    testWidgets('should show password visibility toggle', (WidgetTester tester) async {
+    testWidgets('should show password visibility toggle',
+        (WidgetTester tester) async {
       await tester.pumpWidget(createApp());
 
       final passwordField = find.byType(TextFormField).last;
@@ -50,10 +51,13 @@ void main() {
       expect(find.text('Required'), findsNWidgets(2));
     });
 
-    testWidgets('should navigate to register on tap', (WidgetTester tester) async {
+    testWidgets('should navigate to register on tap',
+        (WidgetTester tester) async {
       await tester.pumpWidget(createApp(
         extraRoutes: [
-          GoRoute(path: '/register', builder: (_, __) => const Scaffold(body: Text('Register Page'))),
+          GoRoute(
+              path: '/register',
+              builder: (_, __) => const Scaffold(body: Text('Register Page'))),
         ],
       ));
 

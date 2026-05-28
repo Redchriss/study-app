@@ -19,8 +19,7 @@ class ReaderCacheBanner extends StatelessWidget {
           ),
           child: const Row(
             children: [
-              Icon(Icons.offline_bolt_outlined,
-                  color: Colors.white, size: 18),
+              Icon(Icons.offline_bolt_outlined, color: Colors.white, size: 18),
               SizedBox(width: 10),
               Expanded(
                 child: Text(

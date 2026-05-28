@@ -35,7 +35,8 @@ class _KidsJourneyScreenState extends ConsumerState<KidsJourneyScreen> {
   List<Map<String, dynamic>> _worlds = [];
   String? _error;
 
-  GraphQLClient _client() => KidGraphqlClient.fromToken(ref.read(kidAuthStateProvider).token);
+  GraphQLClient _client() =>
+      KidGraphqlClient.fromToken(ref.read(kidAuthStateProvider).token);
 
   @override
   void initState() {
@@ -50,7 +51,9 @@ class _KidsJourneyScreenState extends ConsumerState<KidsJourneyScreen> {
     });
     final client = _client();
     final rewardResult = await client.query(
-      QueryOptions(document: gql(kKidRewardProfile), fetchPolicy: FetchPolicy.networkOnly),
+      QueryOptions(
+          document: gql(kKidRewardProfile),
+          fetchPolicy: FetchPolicy.networkOnly),
     );
     final roadmapResult = await client.query(
       QueryOptions(
@@ -72,13 +75,15 @@ class _KidsJourneyScreenState extends ConsumerState<KidsJourneyScreen> {
     }
     setState(() {
       _rewardProfile = rewardResult.data?['kidRewardProfile'] is Map
-          ? Map<String, dynamic>.from(rewardResult.data!['kidRewardProfile'] as Map)
+          ? Map<String, dynamic>.from(
+              rewardResult.data!['kidRewardProfile'] as Map)
           : null;
       final roadmap = roadmapResult.data?['kidSubjectRoadmap'];
-      _worlds = ((roadmap is Map ? roadmap['worlds'] : null) as List? ?? const [])
-          .whereType<Map>()
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
+      _worlds =
+          ((roadmap is Map ? roadmap['worlds'] : null) as List? ?? const [])
+              .whereType<Map>()
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList();
       _loading = false;
     });
   }
@@ -95,14 +100,17 @@ class _KidsJourneyScreenState extends ConsumerState<KidsJourneyScreen> {
     if (payload?['success'] == true && payload?['rewardProfile'] is Map) {
       HapticFeedback.selectionClick();
       setState(() {
-        _rewardProfile = Map<String, dynamic>.from(payload!['rewardProfile'] as Map);
+        _rewardProfile =
+            Map<String, dynamic>.from(payload!['rewardProfile'] as Map);
       });
       return;
     }
-    final message = ((payload?['errors'] as List?) ?? const ['Could not switch companion'])
-        .map((item) => item.toString())
-        .join(', ');
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    final message =
+        ((payload?['errors'] as List?) ?? const ['Could not switch companion'])
+            .map((item) => item.toString())
+            .join(', ');
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -128,7 +136,9 @@ class _KidsJourneyScreenState extends ConsumerState<KidsJourneyScreen> {
                             Text(
                               _error!,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700),
                             ),
                           ],
                         )
@@ -153,12 +163,17 @@ class _KidsJourneyScreenState extends ConsumerState<KidsJourneyScreen> {
                                 children: [
                                   const Text(
                                     'World Map',
-                                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: KidsVisualTheme.ink),
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                        color: KidsVisualTheme.ink),
                                   ),
                                   const SizedBox(height: 6),
                                   const Text(
                                     'Finish each stop, return for review, and unlock the next world.',
-                                    style: TextStyle(fontWeight: FontWeight.w600, color: KidsVisualTheme.inkMuted),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: KidsVisualTheme.inkMuted),
                                   ),
                                   const SizedBox(height: 16),
                                   KidsWorldMap(

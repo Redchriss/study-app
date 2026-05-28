@@ -17,11 +17,14 @@ class KidsRewardPanel extends StatelessWidget {
     final level = (rewardProfile['level'] as num?)?.toInt() ?? 1;
     final xp = (rewardProfile['xp'] as num?)?.toInt() ?? 0;
     final coins = (rewardProfile['coins'] as num?)?.toInt() ?? 0;
-    final progress = ((rewardProfile['progressToNextLevel'] as num?)?.toDouble() ?? 0).clamp(0, 100);
-    final companions = ((rewardProfile['availableCompanions'] as List?) ?? const [])
-        .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList();
+    final progress =
+        ((rewardProfile['progressToNextLevel'] as num?)?.toDouble() ?? 0)
+            .clamp(0, 100);
+    final companions =
+        ((rewardProfile['availableCompanions'] as List?) ?? const [])
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
     final badges = ((rewardProfile['recentBadges'] as List?) ?? const [])
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
@@ -46,7 +49,8 @@ class KidsRewardPanel extends StatelessWidget {
                   color: KidsVisualTheme.sunGold.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: const Icon(Icons.auto_awesome_rounded, color: KidsVisualTheme.sunGold, size: 30),
+                child: const Icon(Icons.auto_awesome_rounded,
+                    color: KidsVisualTheme.sunGold, size: 30),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -55,12 +59,18 @@ class KidsRewardPanel extends StatelessWidget {
                   children: [
                     Text(
                       'Level $level Explorer',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: KidsVisualTheme.ink),
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: KidsVisualTheme.ink),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '$xp xp · $coins coins',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: KidsVisualTheme.inkMuted),
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: KidsVisualTheme.inkMuted),
                     ),
                   ],
                 ),
@@ -80,12 +90,18 @@ class KidsRewardPanel extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${progress.round()}% to the next companion unlock',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: KidsVisualTheme.inkMuted),
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: KidsVisualTheme.inkMuted),
           ),
           const SizedBox(height: 18),
           const Text(
             'Companions',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: KidsVisualTheme.ink),
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: KidsVisualTheme.ink),
           ),
           const SizedBox(height: 10),
           SizedBox(
@@ -99,7 +115,9 @@ class KidsRewardPanel extends StatelessWidget {
                 final unlocked = item['unlocked'] == true;
                 final equipped = item['equipped'] == true;
                 return GestureDetector(
-                  onTap: unlocked && onCompanionTap != null ? () => onCompanionTap!(item['code'].toString()) : null,
+                  onTap: unlocked && onCompanionTap != null
+                      ? () => onCompanionTap!(item['code'].toString())
+                      : null,
                   child: Container(
                     width: 126,
                     padding: const EdgeInsets.all(12),
@@ -111,24 +129,36 @@ class KidsRewardPanel extends StatelessWidget {
                               : Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: equipped ? KidsVisualTheme.pathBlue : Colors.black.withValues(alpha: 0.05),
+                        color: equipped
+                            ? KidsVisualTheme.pathBlue
+                            : Colors.black.withValues(alpha: 0.05),
                       ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
-                          unlocked ? Icons.pets_rounded : Icons.lock_outline_rounded,
-                          color: unlocked ? KidsVisualTheme.pathBlue : Colors.grey,
+                          unlocked
+                              ? Icons.pets_rounded
+                              : Icons.lock_outline_rounded,
+                          color:
+                              unlocked ? KidsVisualTheme.pathBlue : Colors.grey,
                         ),
                         const Spacer(),
                         Text(
                           item['title']?.toString() ?? 'Companion',
-                          style: const TextStyle(fontWeight: FontWeight.w800, color: KidsVisualTheme.ink),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: KidsVisualTheme.ink),
                         ),
                         Text(
-                          unlocked ? (equipped ? 'Using now' : 'Tap to use') : 'Level ${item['unlockLevel'] ?? '?'}',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: KidsVisualTheme.inkMuted),
+                          unlocked
+                              ? (equipped ? 'Using now' : 'Tap to use')
+                              : 'Level ${item['unlockLevel'] ?? '?'}',
+                          style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: KidsVisualTheme.inkMuted),
                         ),
                       ],
                     ),
@@ -141,7 +171,10 @@ class KidsRewardPanel extends StatelessWidget {
             const SizedBox(height: 18),
             const Text(
               'Recent badges',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: KidsVisualTheme.ink),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: KidsVisualTheme.ink),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -149,7 +182,8 @@ class KidsRewardPanel extends StatelessWidget {
               runSpacing: 10,
               children: badges.map((badge) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: KidsVisualTheme.sunGold.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(18),
@@ -160,12 +194,17 @@ class KidsRewardPanel extends StatelessWidget {
                     children: [
                       Text(
                         badge['title']?.toString() ?? 'Badge',
-                        style: const TextStyle(fontWeight: FontWeight.w800, color: KidsVisualTheme.ink),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: KidsVisualTheme.ink),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         badge['description']?.toString() ?? '',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: KidsVisualTheme.inkMuted),
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: KidsVisualTheme.inkMuted),
                       ),
                     ],
                   ),

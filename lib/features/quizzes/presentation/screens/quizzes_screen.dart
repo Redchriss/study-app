@@ -14,9 +14,11 @@ class QuizzesScreen extends StatelessWidget {
     final dark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: dark ? DesignTokens.darkBackground : DesignTokens.background,
+      backgroundColor:
+          dark ? DesignTokens.darkBackground : DesignTokens.background,
       body: Query(
-        options: QueryOptions(document: gql(kQuizzes), variables: const {'limit': 50}),
+        options: QueryOptions(
+            document: gql(kQuizzes), variables: const {'limit': 50}),
         builder: (result, {fetchMore, refetch}) {
           final quizzes = (result.data?['quizzes'] as List?) ?? [];
 
@@ -25,7 +27,8 @@ class QuizzesScreen extends StatelessWidget {
               SliverAppBar(
                 pinned: true,
                 expandedHeight: 100,
-                backgroundColor: dark ? DesignTokens.darkSurface : DesignTokens.surface,
+                backgroundColor:
+                    dark ? DesignTokens.darkSurface : DesignTokens.surface,
                 flexibleSpace: FlexibleSpaceBar(
                   titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
                   title: Column(
@@ -34,12 +37,14 @@ class QuizzesScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Quizzes',
-                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                        style: theme.textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       if (quizzes.isNotEmpty)
                         Text(
                           '${quizzes.length} available',
-                          style: theme.textTheme.labelSmall?.copyWith(color: DesignTokens.textSecondary),
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(color: DesignTokens.textSecondary),
                         ),
                     ],
                   ),
@@ -61,7 +66,8 @@ class QuizzesScreen extends StatelessWidget {
                     delegate: SliverChildBuilderDelegate(
                       (_, __) => const Padding(
                         padding: EdgeInsets.only(bottom: 12),
-                        child: ShimmerBox(height: 96, radius: DesignTokens.radiusXl),
+                        child: ShimmerBox(
+                            height: 96, radius: DesignTokens.radiusXl),
                       ),
                       childCount: 8,
                     ),
@@ -85,19 +91,24 @@ class QuizzesScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          width: 80, height: 80,
+                          width: 80,
+                          height: 80,
                           decoration: BoxDecoration(
                             color: DesignTokens.primary.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.quiz_outlined, size: 40, color: DesignTokens.primary),
+                          child: const Icon(Icons.quiz_outlined,
+                              size: 40, color: DesignTokens.primary),
                         ),
                         const SizedBox(height: 16),
-                        Text('No quizzes yet', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                        Text('No quizzes yet',
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700)),
                         const SizedBox(height: 8),
                         Text(
                           'Check back soon — quizzes are added regularly.',
-                          style: theme.textTheme.bodyMedium?.copyWith(color: DesignTokens.textSecondary),
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(color: DesignTokens.textSecondary),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -126,5 +137,3 @@ class QuizzesScreen extends StatelessWidget {
     );
   }
 }
-
-

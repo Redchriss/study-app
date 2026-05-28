@@ -54,14 +54,19 @@ class _ImageMaterialReaderState extends State<ImageMaterialReader> {
       title: widget.material.title,
       trailing: const ReaderPageBadge(label: 'Image material'),
       actions: [
-        IconButton(icon: const Icon(Icons.sticky_note_2_outlined), onPressed: widget.onOpenAnnotations),
-        IconButton(icon: const Icon(Icons.style_outlined), onPressed: widget.onOpenFlashcards),
+        IconButton(
+            icon: const Icon(Icons.sticky_note_2_outlined),
+            onPressed: widget.onOpenAnnotations),
+        IconButton(
+            icon: const Icon(Icons.style_outlined),
+            onPressed: widget.onOpenFlashcards),
       ],
       bottomBar: ReaderActionBar(
         onNote: () => widget.onSaveAnnotation(_selection()),
         onQuickQuiz: () => widget.onQuickQuiz(_selection()),
         onFlashcards: widget.onOpenFlashcards,
-        onAskAi: widget.onAskAi == null ? null : () => widget.onAskAi!(_selection()),
+        onAskAi:
+            widget.onAskAi == null ? null : () => widget.onAskAi!(_selection()),
       ),
       child: Container(
         color: const Color(0xFF101114),
@@ -70,7 +75,9 @@ class _ImageMaterialReaderState extends State<ImageMaterialReader> {
             if (widget.material.subjectName.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: Align(alignment: Alignment.centerLeft, child: ReaderTag(label: widget.material.subjectName)),
+                child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: ReaderTag(label: widget.material.subjectName)),
               ),
             Expanded(
               child: InteractiveViewer(
@@ -83,7 +90,9 @@ class _ImageMaterialReaderState extends State<ImageMaterialReader> {
                     errorBuilder: (context, error, stackTrace) {
                       return const Padding(
                         padding: EdgeInsets.all(24),
-                        child: Text('This image could not be loaded right now.', style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+                        child: Text('This image could not be loaded right now.',
+                            style: TextStyle(color: Colors.white),
+                            textAlign: TextAlign.center),
                       );
                     },
                   ),
@@ -92,7 +101,9 @@ class _ImageMaterialReaderState extends State<ImageMaterialReader> {
             ),
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 0, 16, 20),
-              child: ReaderTip(text: 'Pinch to zoom, then save a highlight or quiz yourself on the diagram without leaving the app.'),
+              child: ReaderTip(
+                  text:
+                      'Pinch to zoom, then save a highlight or quiz yourself on the diagram without leaving the app.'),
             ),
           ],
         ),

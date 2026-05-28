@@ -99,7 +99,8 @@ void main() {
       expect(find.byType(TextFormField), findsAtLeast(3));
     });
 
-    testWidgets('6. Bottom navigation renders on authenticated pages', (tester) async {
+    testWidgets('6. Bottom navigation renders on authenticated pages',
+        (tester) async {
       await tester.pumpWidget(buildApp());
       await tester.pump(const Duration(seconds: 2));
 

@@ -29,6 +29,7 @@ query MyCommunities {
   myCommunities {
     id name slug displayName icon memberCount
     isFavorite
+    isModerator
   }
 }
 ''';

@@ -15,11 +15,7 @@ Future<String?> showReaderAiActionSheet(BuildContext context) {
               const SizedBox(height: 12),
               for (final item in const [
                 ('explain', 'Explain this section', Icons.lightbulb_outline),
-                (
-                  'summary',
-                  'Summarize this section',
-                  Icons.summarize_outlined
-                ),
+                ('summary', 'Summarize this section', Icons.summarize_outlined),
                 (
                   'memory',
                   'Create a memory hook',

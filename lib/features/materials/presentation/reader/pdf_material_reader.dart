@@ -40,8 +40,10 @@ class _PdfMaterialReaderState extends State<PdfMaterialReader> {
   void initState() {
     super.initState();
     _documentFuture = () async {
-      final filePath = await widget.service.cachePdf(widget.material.fileUrl, widget.material.slug);
-      final savedPage = widget.material.progress?.currentUnit ?? await widget.service.loadSavedPage(widget.material.slug);
+      final filePath = await widget.service
+          .cachePdf(widget.material.fileUrl, widget.material.slug);
+      final savedPage = widget.material.progress?.currentUnit ??
+          await widget.service.loadSavedPage(widget.material.slug);
       return (filePath, savedPage);
     }();
   }
@@ -64,24 +66,33 @@ class _PdfMaterialReaderState extends State<PdfMaterialReader> {
         if (filePath == null) {
           return ReaderScaffold(
             title: widget.material.title,
-            child: const Center(child: Text('Could not prepare this PDF for reading.')),
+            child: const Center(
+                child: Text('Could not prepare this PDF for reading.')),
           );
         }
 
         return ReaderScaffold(
           title: widget.material.title,
           trailing: ReaderPageBadge(
-            label: _pageCount == 0 ? 'Loading...' : 'Page ${_currentPage + 1} / $_pageCount',
+            label: _pageCount == 0
+                ? 'Loading...'
+                : 'Page ${_currentPage + 1} / $_pageCount',
           ),
           actions: [
-            IconButton(icon: const Icon(Icons.sticky_note_2_outlined), onPressed: widget.onOpenAnnotations),
-            IconButton(icon: const Icon(Icons.style_outlined), onPressed: widget.onOpenFlashcards),
+            IconButton(
+                icon: const Icon(Icons.sticky_note_2_outlined),
+                onPressed: widget.onOpenAnnotations),
+            IconButton(
+                icon: const Icon(Icons.style_outlined),
+                onPressed: widget.onOpenFlashcards),
           ],
           bottomBar: ReaderActionBar(
             onNote: () => widget.onSaveAnnotation(_selectionForCurrentPage()),
             onQuickQuiz: () => widget.onQuickQuiz(_selectionForCurrentPage()),
             onFlashcards: widget.onOpenFlashcards,
-            onAskAi: widget.onAskAi == null ? null : () => widget.onAskAi!(_selectionForCurrentPage()),
+            onAskAi: widget.onAskAi == null
+                ? null
+                : () => widget.onAskAi!(_selectionForCurrentPage()),
           ),
           child: Container(
             color: Colors.black,
@@ -116,12 +127,15 @@ class _PdfMaterialReaderState extends State<PdfMaterialReader> {
                   contentType: widget.material.contentType,
                   currentUnit: nextPage,
                   totalUnits: total ?? _pageCount,
-                  lastPositionLabel: 'Page ${nextPage + 1} of ${total ?? _pageCount}',
+                  lastPositionLabel:
+                      'Page ${nextPage + 1} of ${total ?? _pageCount}',
                 );
               },
               onError: (error) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Could not open PDF: $error'), backgroundColor: DesignTokens.error),
+                  SnackBar(
+                      content: Text('Could not open PDF: $error'),
+                      backgroundColor: DesignTokens.error),
                 );
               },
             ),
@@ -136,7 +150,8 @@ class _PdfMaterialReaderState extends State<PdfMaterialReader> {
     return ReaderStudySelection(
       unitIndex: _currentPage,
       anchorLabel: 'Page ${_currentPage + 1}',
-      selectedText: sectionPages.length > _currentPage ? sectionPages[_currentPage] : '',
+      selectedText:
+          sectionPages.length > _currentPage ? sectionPages[_currentPage] : '',
     );
   }
 }

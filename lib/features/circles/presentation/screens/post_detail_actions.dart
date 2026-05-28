@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -103,6 +105,7 @@ class PostActions extends ConsumerWidget {
   final bool isPinned;
   final bool isLocked;
   final bool isRemoved;
+  final Map<String, dynamic>? post;
   final VoidCallback onRefetch;
 
   const PostActions({
@@ -113,11 +116,15 @@ class PostActions extends ConsumerWidget {
     this.isPinned = false,
     this.isLocked = false,
     this.isRemoved = false,
+    this.post,
     required this.onRefetch,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final author = post?['author'] as Map<String, dynamic>?;
+    final authorUsername = author?['username']?.toString() ?? '';
+
     return PopupMenuButton<String>(
       onSelected: (v) async {
         final client = ref.read(graphqlClientProvider);
@@ -126,6 +133,37 @@ class PostActions extends ConsumerWidget {
             document: gql(kSavePost),
             variables: {'postId': postId},
           ));
+        } else if (v == 'copy_link') {
+          final url = 'https://yaza.app/y/$communitySlug/post/$postId';
+          await Clipboard.setData(ClipboardData(text: url));
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Link copied to clipboard')),
+            );
+          }
+        } else if (v == 'hide') {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Post hidden')),
+            );
+          }
+        } else if (v == 'crosspost') {
+          if (context.mounted) {
+            context.push('/y/$communitySlug/submit', extra: {
+              'crosspostOf': post,
+            });
+          }
+        } else if (v == 'block_author') {
+          if (authorUsername.isEmpty) return;
+          await client.mutate(MutationOptions(
+            document: gql(kBlockUser),
+            variables: {'username': authorUsername},
+          ));
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Blocked u/$authorUsername')),
+            );
+          }
         } else if (v == 'report') {
           final reason = await showDialog<String>(
             context: context,
@@ -190,6 +228,45 @@ class PostActions extends ConsumerWidget {
                 Text('Save')
               ],
             )),
+        const PopupMenuItem(
+            value: 'copy_link',
+            child: Row(
+              children: [
+                Icon(Icons.link, size: 18),
+                SizedBox(width: 8),
+                Text('Copy link')
+              ],
+            )),
+        const PopupMenuItem(
+            value: 'hide',
+            child: Row(
+              children: [
+                Icon(Icons.visibility_off_outlined, size: 18),
+                SizedBox(width: 8),
+                Text('Hide')
+              ],
+            )),
+        const PopupMenuItem(
+            value: 'crosspost',
+            child: Row(
+              children: [
+                Icon(Icons.repeat_rounded, size: 18),
+                SizedBox(width: 8),
+                Text('Crosspost')
+              ],
+            )),
+        if (authorUsername.isNotEmpty)
+          const PopupMenuItem(
+              value: 'block_author',
+              child: Row(
+                children: [
+                  Icon(Icons.block, size: 18, color: DesignTokens.error),
+                  SizedBox(width: 8),
+                  Text('Block author',
+                      style: TextStyle(color: DesignTokens.error)),
+                ],
+              )),
+        const PopupMenuDivider(),
         const PopupMenuItem(
             value: 'report',
             child: Row(

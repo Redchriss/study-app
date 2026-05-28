@@ -154,7 +154,8 @@ class TeamSection extends StatelessWidget {
           builder: (result, {fetchMore, refetch}) {
             if (result.hasException && result.data?['teamMembers'] == null) {
               return ErrorState(
-                message: graphQLErrorMessage(result.exception, 'Failed to load team'),
+                message: graphQLErrorMessage(
+                    result.exception, 'Failed to load team'),
                 onRetry: () => refetch?.call(),
               );
             }

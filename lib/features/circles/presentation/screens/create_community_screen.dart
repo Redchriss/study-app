@@ -11,7 +11,8 @@ class CreateCommunityScreen extends ConsumerStatefulWidget {
   const CreateCommunityScreen({super.key});
 
   @override
-  ConsumerState<CreateCommunityScreen> createState() => _CreateCommunityScreenState();
+  ConsumerState<CreateCommunityScreen> createState() =>
+      _CreateCommunityScreenState();
 }
 
 class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
@@ -54,7 +55,9 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
       final errors = (payload?['errors'] as List?)?.join(', ');
       if (result.hasException || (errors != null && errors.isNotEmpty)) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(errors ?? graphQLErrorMessage(result.exception, 'Could not create community')),
+          content: Text(errors ??
+              graphQLErrorMessage(
+                  result.exception, 'Could not create community')),
           backgroundColor: DesignTokens.error,
         ));
         return;
@@ -62,7 +65,8 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
       final slug = payload?['community']?['slug']?.toString();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Community created!'), backgroundColor: DesignTokens.success,
+          content: Text('Community created!'),
+          backgroundColor: DesignTokens.success,
         ));
         if (slug != null) {
           context.go('/y/$slug');
@@ -85,8 +89,16 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
           TextButton(
             onPressed: _submitting ? null : _submit,
             child: _submitting
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : Text('Create', style: TextStyle(fontWeight: FontWeight.w700, color: _isValid ? DesignTokens.primary : DesignTokens.textTertiary)),
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : Text('Create',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _isValid
+                            ? DesignTokens.primary
+                            : DesignTokens.textTertiary)),
           ),
         ],
       ),
@@ -109,7 +121,8 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
             TextField(
               controller: _displayNameCtrl,
               decoration: const InputDecoration(
-                labelText: 'Display Name', border: OutlineInputBorder(),
+                labelText: 'Display Name',
+                border: OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),
             ),
@@ -117,22 +130,28 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
             TextField(
               controller: _descCtrl,
               decoration: const InputDecoration(
-                labelText: 'Description', border: OutlineInputBorder(),
+                labelText: 'Description',
+                border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
               maxLines: 4,
             ),
             const SizedBox(height: 16),
             Text('Community Type',
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               initialValue: _type,
               decoration: const InputDecoration(border: OutlineInputBorder()),
               items: const [
-                DropdownMenuItem(value: 'public', child: Text('Public - Anyone can join')),
-                DropdownMenuItem(value: 'restricted', child: Text('Restricted - Approval required')),
-                DropdownMenuItem(value: 'private', child: Text('Private - Invite only')),
+                DropdownMenuItem(
+                    value: 'public', child: Text('Public - Anyone can join')),
+                DropdownMenuItem(
+                    value: 'restricted',
+                    child: Text('Restricted - Approval required')),
+                DropdownMenuItem(
+                    value: 'private', child: Text('Private - Invite only')),
               ],
               onChanged: (v) {
                 if (v != null) setState(() => _type = v);

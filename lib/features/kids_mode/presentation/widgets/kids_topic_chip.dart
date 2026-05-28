@@ -17,7 +17,9 @@ class KidsTopicChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? KidsVisualTheme.pathBlue : Colors.white.withValues(alpha: 0.88),
+      color: selected
+          ? KidsVisualTheme.pathBlue
+          : Colors.white.withValues(alpha: 0.88),
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),

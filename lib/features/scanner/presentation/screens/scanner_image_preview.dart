@@ -54,14 +54,14 @@ class ScannerImagePreview extends StatelessWidget {
                         color: const Color(0xFF10B981),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF10B981)
-                                .withValues(alpha: 0.8),
+                            color:
+                                const Color(0xFF10B981).withValues(alpha: 0.8),
                             blurRadius: 15,
                             spreadRadius: 5,
                           ),
                           BoxShadow(
-                            color: const Color(0xFF10B981)
-                                .withValues(alpha: 0.4),
+                            color:
+                                const Color(0xFF10B981).withValues(alpha: 0.4),
                             blurRadius: 30,
                             spreadRadius: 10,
                           ),

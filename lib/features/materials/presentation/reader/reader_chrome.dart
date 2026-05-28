@@ -197,7 +197,9 @@ class _ReaderActionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final foreground = emphasized ? Colors.black : Colors.white;
-    final background = emphasized ? const Color(0xFFEFCB74) : Colors.white.withValues(alpha: 0.08);
+    final background = emphasized
+        ? const Color(0xFFEFCB74)
+        : Colors.white.withValues(alpha: 0.08);
 
     return Material(
       color: background,

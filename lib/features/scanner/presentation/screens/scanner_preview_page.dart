@@ -15,8 +15,7 @@ class ScannerPreviewPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ScannerPreviewPage> createState() =>
-      _ScannerPreviewPageState();
+  ConsumerState<ScannerPreviewPage> createState() => _ScannerPreviewPageState();
 }
 
 class _ScannerPreviewPageState extends ConsumerState<ScannerPreviewPage>

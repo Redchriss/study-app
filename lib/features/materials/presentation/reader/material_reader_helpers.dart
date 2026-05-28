@@ -9,7 +9,8 @@ String? resolveYoutubeVideoId(String url) {
   if (direct != null && direct.isNotEmpty) return direct;
   final uri = Uri.tryParse(url);
   if (uri == null) return null;
-  final segments = uri.pathSegments.where((segment) => segment.isNotEmpty).toList();
+  final segments =
+      uri.pathSegments.where((segment) => segment.isNotEmpty).toList();
   if (segments.isEmpty) return null;
   return segments.last;
 }
@@ -68,7 +69,8 @@ ReaderQuickQuizData? parseQuickQuizPayload(String rawText) {
   try {
     final decoded = jsonDecode(jsonText);
     if (decoded is! Map) return null;
-    final quiz = ReaderQuickQuizData.fromMap(Map<String, dynamic>.from(decoded));
+    final quiz =
+        ReaderQuickQuizData.fromMap(Map<String, dynamic>.from(decoded));
     return quiz.isValid ? quiz : null;
   } catch (_) {
     return null;
@@ -79,7 +81,8 @@ String? extractJsonPayload(String rawText) {
   final trimmed = rawText.trim();
   if (trimmed.isEmpty) return null;
 
-  final fenceMatch = RegExp(r'```(?:json)?\s*([\s\S]+?)```').firstMatch(trimmed);
+  final fenceMatch =
+      RegExp(r'```(?:json)?\s*([\s\S]+?)```').firstMatch(trimmed);
   if (fenceMatch != null) {
     return fenceMatch.group(1)?.trim();
   }

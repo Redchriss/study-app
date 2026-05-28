@@ -81,18 +81,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           content: const Text('Passwords do not match'),
           backgroundColor: DesignTokens.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
     }
     setState(() => _loading = true);
     final ok = await ref.read(authProvider.notifier).register(
-      _usernameCtrl.text.trim(),
-      _emailCtrl.text.trim(),
-      _passwordCtrl.text,
-      phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
-    );
+          _usernameCtrl.text.trim(),
+          _emailCtrl.text.trim(),
+          _passwordCtrl.text,
+          phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
+        );
     if (mounted) setState(() => _loading = false);
     if (!mounted) return;
 
@@ -105,7 +106,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           content: Text(error),
           backgroundColor: DesignTokens.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -122,7 +124,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (!didPop) _prevPage();
       },
       child: Scaffold(
-        backgroundColor: dark ? DesignTokens.darkSurface : Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: dark
+            ? DesignTokens.darkSurface
+            : Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
@@ -139,7 +143,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 height: 6,
                 width: _currentPage == index ? 24 : 12,
                 decoration: BoxDecoration(
-                  color: _currentPage >= index ? DesignTokens.primary : DesignTokens.primary.withValues(alpha: 0.2),
+                  color: _currentPage >= index
+                      ? DesignTokens.primary
+                      : DesignTokens.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(3),
                 ),
               );
@@ -193,17 +199,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       elevation: 0,
                     ),
                     child: _loading
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                _currentPage == 2 ? 'Create Account' : 'Continue',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                                _currentPage == 2
+                                    ? 'Create Account'
+                                    : 'Continue',
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.w800),
                               ),
                               if (_currentPage < 2) ...[
                                 const SizedBox(width: 8),
-                                const Icon(Icons.arrow_forward_rounded, size: 20),
+                                const Icon(Icons.arrow_forward_rounded,
+                                    size: 20),
                               ],
                             ],
                           ),

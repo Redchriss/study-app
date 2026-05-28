@@ -33,7 +33,8 @@ class QuizCard extends StatelessWidget {
   final bool dark;
   final int index;
 
-  const QuizCard({super.key, required this.quiz, required this.dark, required this.index});
+  const QuizCard(
+      {super.key, required this.quiz, required this.dark, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +61,8 @@ class QuizCard extends StatelessWidget {
           color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
           borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
           border: Border.all(
-            color: (dark ? DesignTokens.darkBorder : DesignTokens.border).withValues(alpha: 0.6),
+            color: (dark ? DesignTokens.darkBorder : DesignTokens.border)
+                .withValues(alpha: 0.6),
           ),
           boxShadow: DesignTokens.shadowSm(dark),
         ),
@@ -81,7 +83,8 @@ class QuizCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
                 child: Container(
-                  width: 46, height: 46,
+                  width: 46,
+                  height: 46,
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
@@ -98,7 +101,8 @@ class QuizCard extends StatelessWidget {
                     children: [
                       Text(
                         quiz['title'] as String? ?? '',
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -107,27 +111,35 @@ class QuizCard extends StatelessWidget {
                         children: [
                           if (subjectName.isNotEmpty) ...[
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: color.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
                                 subjectName,
-                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: color),
                               ),
                             ),
                             const SizedBox(width: 6),
                           ],
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: diffColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
                               diffLabel,
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: diffColor),
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: diffColor),
                             ),
                           ),
                         ],
@@ -135,19 +147,23 @@ class QuizCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.help_outline_rounded, size: 12, color: DesignTokens.textTertiary),
+                          const Icon(Icons.help_outline_rounded,
+                              size: 12, color: DesignTokens.textTertiary),
                           const SizedBox(width: 4),
                           Text(
                             '$questionCount question${questionCount == 1 ? '' : 's'}',
-                            style: theme.textTheme.labelSmall?.copyWith(color: DesignTokens.textTertiary),
+                            style: theme.textTheme.labelSmall
+                                ?.copyWith(color: DesignTokens.textTertiary),
                           ),
                           if (durationMin != null) ...[
                             const SizedBox(width: 10),
-                            const Icon(Icons.timer_outlined, size: 12, color: DesignTokens.textTertiary),
+                            const Icon(Icons.timer_outlined,
+                                size: 12, color: DesignTokens.textTertiary),
                             const SizedBox(width: 4),
                             Text(
                               '$durationMin min',
-                              style: theme.textTheme.labelSmall?.copyWith(color: DesignTokens.textTertiary),
+                              style: theme.textTheme.labelSmall
+                                  ?.copyWith(color: DesignTokens.textTertiary),
                             ),
                           ],
                         ],

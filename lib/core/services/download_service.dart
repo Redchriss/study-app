@@ -32,11 +32,13 @@ class DownloadService {
         if (!await public.exists()) await public.create(recursive: true);
         return public;
       } catch (_) {}
-      final fallback = Directory('${(await getApplicationDocumentsDirectory()).path}/$_appFolder');
+      final fallback = Directory(
+          '${(await getApplicationDocumentsDirectory()).path}/$_appFolder');
       if (!await fallback.exists()) await fallback.create(recursive: true);
       return fallback;
     }
-    final dir = Directory('${(await getApplicationDocumentsDirectory()).path}/$_appFolder');
+    final dir = Directory(
+        '${(await getApplicationDocumentsDirectory()).path}/$_appFolder');
     if (!await dir.exists()) await dir.create(recursive: true);
     return dir;
   }

@@ -80,7 +80,8 @@ class KidsMascotHint extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: KidsVisualTheme.sunGold.withValues(alpha: 0.45), width: 2),
+        border: Border.all(
+            color: KidsVisualTheme.sunGold.withValues(alpha: 0.45), width: 2),
       ),
       child: Row(
         children: [
@@ -147,7 +148,8 @@ class KidsDailyChestChip extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 label,
-                style: const TextStyle(fontWeight: FontWeight.w800, color: KidsVisualTheme.ink),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w800, color: KidsVisualTheme.ink),
               ),
             ],
           ),

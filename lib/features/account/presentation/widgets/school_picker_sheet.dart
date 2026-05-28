@@ -6,7 +6,8 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
 class SchoolPickerSheet extends StatefulWidget {
-  const SchoolPickerSheet({super.key, required this.isPrimary, this.selectedId});
+  const SchoolPickerSheet(
+      {super.key, required this.isPrimary, this.selectedId});
 
   final bool isPrimary;
   final String? selectedId;
@@ -44,7 +45,9 @@ class _SchoolPickerSheetState extends State<SchoolPickerSheet> {
                 children: [
                   Text(title, style: Theme.of(context).textTheme.titleLarge),
                   const Spacer(),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                  IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context)),
                 ],
               ),
             ),
@@ -58,15 +61,21 @@ class _SchoolPickerSheetState extends State<SchoolPickerSheet> {
                       decoration: InputDecoration(
                         hintText: 'School name…',
                         prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         isDense: true,
                       ),
-                      onChanged: (value) => setState(() => _applied = value.trim()),
-                      onSubmitted: (_) => setState(() => _applied = _searchCtrl.text.trim()),
+                      onChanged: (value) =>
+                          setState(() => _applied = value.trim()),
+                      onSubmitted: (_) =>
+                          setState(() => _applied = _searchCtrl.text.trim()),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  FilledButton.tonal(onPressed: () => setState(() => _applied = _searchCtrl.text.trim()), child: const Text('Go')),
+                  FilledButton.tonal(
+                      onPressed: () =>
+                          setState(() => _applied = _searchCtrl.text.trim()),
+                      child: const Text('Go')),
                 ],
               ),
             ),
@@ -80,7 +89,8 @@ class _SchoolPickerSheetState extends State<SchoolPickerSheet> {
                   if (result.isLoading) return const LoadingWidget();
                   if (result.hasException) {
                     return ErrorState(
-                      message: graphQLErrorMessage(result.exception, 'Could not load schools.'),
+                      message: graphQLErrorMessage(
+                          result.exception, 'Could not load schools.'),
                       onRetry: () => refetch?.call(),
                     );
                   }
@@ -88,29 +98,36 @@ class _SchoolPickerSheetState extends State<SchoolPickerSheet> {
                   if (schools.isEmpty) {
                     return Center(
                       child: Text(
-                        _applied.isEmpty ? 'Type a name and tap Go.' : 'No match. Try other spelling.',
+                        _applied.isEmpty
+                            ? 'Type a name and tap Go.'
+                            : 'No match. Try other spelling.',
                         textAlign: TextAlign.center,
                       ),
                     );
                   }
                   return ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: schools.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 4),
                     itemBuilder: (_, i) {
                       final s = schools[i] as Map<String, dynamic>;
                       final id = s['id'] as String?;
                       final name = s['name'] as String? ?? '';
-                      final sub = '${s['district'] ?? ''} · ${s['region'] ?? ''}';
+                      final sub =
+                          '${s['district'] ?? ''} · ${s['region'] ?? ''}';
                       return ListTile(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: const BorderSide(color: DesignTokens.border),
                         ),
-                        title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        title: Text(name,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Text(sub),
                         selected: id == widget.selectedId,
-                        onTap: () => Navigator.pop(context, {'id': id, 'name': name}),
+                        onTap: () =>
+                            Navigator.pop(context, {'id': id, 'name': name}),
                       );
                     },
                   );

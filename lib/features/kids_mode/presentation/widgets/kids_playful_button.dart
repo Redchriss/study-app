@@ -18,7 +18,8 @@ class KidsPlayfulPrimaryButton extends StatefulWidget {
   final bool enabled;
 
   @override
-  State<KidsPlayfulPrimaryButton> createState() => _KidsPlayfulPrimaryButtonState();
+  State<KidsPlayfulPrimaryButton> createState() =>
+      _KidsPlayfulPrimaryButtonState();
 }
 
 class _KidsPlayfulPrimaryButtonState extends State<KidsPlayfulPrimaryButton> {
@@ -49,7 +50,8 @@ class _KidsPlayfulPrimaryButtonState extends State<KidsPlayfulPrimaryButton> {
             color: active ? null : Colors.grey.shade400,
             borderRadius: BorderRadius.circular(18),
             boxShadow: active
-                ? KidsVisualTheme.chunkyShadow(const Color(0xFF2A8F4A), dy: _down ? 1 : 4)
+                ? KidsVisualTheme.chunkyShadow(const Color(0xFF2A8F4A),
+                    dy: _down ? 1 : 4)
                 : null,
           ),
           child: Row(
@@ -107,14 +109,18 @@ class KidsPlayfulSecondaryButton extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           decoration: BoxDecoration(
-            color: active ? color.withValues(alpha: 0.14) : color.withValues(alpha: 0.06),
+            color: active
+                ? color.withValues(alpha: 0.14)
+                : color.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: color.withValues(alpha: active ? 0.45 : 0.15), width: 2),
+            border: Border.all(
+                color: color.withValues(alpha: active ? 0.45 : 0.15), width: 2),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: color.withValues(alpha: active ? 1 : 0.45), size: 22),
+              Icon(icon,
+                  color: color.withValues(alpha: active ? 1 : 0.45), size: 22),
               const SizedBox(width: 8),
               Text(
                 label,

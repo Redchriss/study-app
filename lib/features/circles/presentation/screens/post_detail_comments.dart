@@ -29,13 +29,15 @@ class PostDetailStats extends StatelessWidget {
             size: 18, color: DesignTokens.textTertiary),
         const SizedBox(width: 4),
         Text('${(post['commentCount'] as num?)?.toInt() ?? 0}',
-            style: const TextStyle(fontSize: 13, color: DesignTokens.textTertiary)),
+            style: const TextStyle(
+                fontSize: 13, color: DesignTokens.textTertiary)),
         const Spacer(),
         const Icon(Icons.bookmark_outline_rounded,
             size: 18, color: DesignTokens.textTertiary),
         const SizedBox(width: 4),
         Text('${(post['awardCount'] as num?)?.toInt() ?? 0} awards',
-            style: const TextStyle(fontSize: 12, color: DesignTokens.textTertiary)),
+            style: const TextStyle(
+                fontSize: 12, color: DesignTokens.textTertiary)),
         const SizedBox(width: 16),
       ],
     );

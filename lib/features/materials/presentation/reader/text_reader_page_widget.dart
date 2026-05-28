@@ -40,27 +40,44 @@ class TextReaderPageWidget extends StatelessWidget {
                   children: [
                     if (material.subjectName.isNotEmpty)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: DesignTokens.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        child: Text(material.subjectName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: DesignTokens.primary)),
+                        child: Text(material.subjectName,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: DesignTokens.primary)),
                       ),
                     const Spacer(),
-                    Text('${currentPage + 1}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: DesignTokens.textTertiary)),
+                    Text('${currentPage + 1}',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: DesignTokens.textTertiary)),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: dark ? DesignTokens.darkSurfaceVariant : const Color(0xFFF8F2E3),
+                    color: dark
+                        ? DesignTokens.darkSurfaceVariant
+                        : const Color(0xFFF8F2E3),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
                     'Tap a paragraph to highlight that exact section for notes, quiz, or AI help.',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: dark ? DesignTokens.darkTextSecondary : DesignTokens.textSecondary),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: dark
+                            ? DesignTokens.darkTextSecondary
+                            : DesignTokens.textSecondary),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -78,16 +95,26 @@ class TextReaderPageWidget extends StatelessWidget {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: selected
-                                ? (dark ? DesignTokens.primary.withValues(alpha: 0.18) : const Color(0xFFF3E6BE))
+                                ? (dark
+                                    ? DesignTokens.primary
+                                        .withValues(alpha: 0.18)
+                                    : const Color(0xFFF3E6BE))
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
                               color: selected
-                                  ? (dark ? DesignTokens.primaryLight.withValues(alpha: 0.5) : const Color(0xFFC28A2C))
+                                  ? (dark
+                                      ? DesignTokens.primaryLight
+                                          .withValues(alpha: 0.5)
+                                      : const Color(0xFFC28A2C))
                                   : Colors.transparent,
                             ),
                           ),
-                          child: Text(paragraphs[paragraphIndex], style: const TextStyle(fontSize: 18, height: 1.75, color: DesignTokens.textPrimary)),
+                          child: Text(paragraphs[paragraphIndex],
+                              style: const TextStyle(
+                                  fontSize: 18,
+                                  height: 1.75,
+                                  color: DesignTokens.textPrimary)),
                         ),
                       );
                     },
@@ -95,8 +122,13 @@ class TextReaderPageWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  currentPage == material.textPages.length - 1 ? 'End of notes' : 'Swipe for next page',
-                  style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary, fontWeight: FontWeight.w600),
+                  currentPage == material.textPages.length - 1
+                      ? 'End of notes'
+                      : 'Swipe for next page',
+                  style: const TextStyle(
+                      fontSize: 12,
+                      color: DesignTokens.textSecondary,
+                      fontWeight: FontWeight.w600),
                 ),
               ],
             ),

@@ -47,8 +47,7 @@ class LevelChip extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight:
-                      selected ? FontWeight.w800 : FontWeight.w600,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                   color: selected
                       ? DesignTokens.primary
                       : DesignTokens.textSecondary,
@@ -76,12 +75,10 @@ class CornerPainter extends CustomPainter {
     canvas.drawLine(const Offset(0, r), const Offset(0, len), paint);
     canvas.drawLine(
         Offset(size.width - len, 0), Offset(size.width - r, 0), paint);
-    canvas.drawLine(
-        Offset(size.width, r), Offset(size.width, len), paint);
+    canvas.drawLine(Offset(size.width, r), Offset(size.width, len), paint);
     canvas.drawLine(
         Offset(0, size.height - len), Offset(0, size.height - r), paint);
-    canvas.drawLine(
-        Offset(r, size.height), Offset(len, size.height), paint);
+    canvas.drawLine(Offset(r, size.height), Offset(len, size.height), paint);
     canvas.drawLine(Offset(size.width - len, size.height),
         Offset(size.width - r, size.height), paint);
     canvas.drawLine(Offset(size.width, size.height - len),

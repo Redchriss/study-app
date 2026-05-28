@@ -57,7 +57,8 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
     if (widget.material.textPages.isEmpty) {
       return ReaderScaffold(
         title: widget.material.title,
-        child: const Center(child: Text('There is no readable text in this material yet.')),
+        child: const Center(
+            child: Text('There is no readable text in this material yet.')),
       );
     }
 
@@ -72,32 +73,47 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
           );
         }
 
-        final initialPage = snapshot.data!.clamp(0, widget.material.textPages.length - 1).toInt();
+        final initialPage = snapshot.data!
+            .clamp(0, widget.material.textPages.length - 1)
+            .toInt();
         _pageController ??= PageController(initialPage: initialPage);
         _currentPage = _pageController!.hasClients ? _currentPage : initialPage;
 
         return ReaderScaffold(
           title: widget.material.title,
-          trailing: ReaderPageBadge(label: 'Page ${_currentPage + 1} / ${widget.material.textPages.length}'),
+          trailing: ReaderPageBadge(
+              label:
+                  'Page ${_currentPage + 1} / ${widget.material.textPages.length}'),
           actions: [
-            IconButton(icon: const Icon(Icons.sticky_note_2_outlined), onPressed: widget.onOpenAnnotations),
-            IconButton(icon: const Icon(Icons.style_outlined), onPressed: widget.onOpenFlashcards),
+            IconButton(
+                icon: const Icon(Icons.sticky_note_2_outlined),
+                onPressed: widget.onOpenAnnotations),
+            IconButton(
+                icon: const Icon(Icons.style_outlined),
+                onPressed: widget.onOpenFlashcards),
           ],
           bottomBar: ReaderActionBar(
             onNote: () => widget.onSaveAnnotation(_currentSelection()),
             onQuickQuiz: () => widget.onQuickQuiz(_currentSelection()),
             onFlashcards: widget.onOpenFlashcards,
-            onAskAi: widget.onAskAi == null ? null : () => widget.onAskAi!(_currentSelection()),
+            onAskAi: widget.onAskAi == null
+                ? null
+                : () => widget.onAskAi!(_currentSelection()),
           ),
           child: Container(
             decoration: BoxDecoration(
               gradient: dark
                   ? const LinearGradient(
-                      begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                      colors: [DesignTokens.darkBackground, DesignTokens.darkSurface],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        DesignTokens.darkBackground,
+                        DesignTokens.darkSurface
+                      ],
                     )
                   : const LinearGradient(
-                      begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                       colors: [Color(0xFFF7F0E1), Color(0xFFEEE4CF)],
                     ),
             ),
@@ -109,7 +125,8 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
                   _currentPage = page;
                   _selectedParagraphIndex = null;
                 });
-                widget.service.savePage(widget.material.slug, page, textMode: true);
+                widget.service
+                    .savePage(widget.material.slug, page, textMode: true);
                 widget.service.trackProgress(
                   context: context,
                   slug: widget.material.slug,
@@ -118,17 +135,21 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
                   contentType: widget.material.contentType,
                   currentUnit: page,
                   totalUnits: widget.material.textPages.length,
-                  lastPositionLabel: 'Page ${page + 1} of ${widget.material.textPages.length}',
+                  lastPositionLabel:
+                      'Page ${page + 1} of ${widget.material.textPages.length}',
                 );
               },
               itemBuilder: (context, index) {
-                final paragraphs = buildReaderParagraphs(widget.material.textPages[index]);
+                final paragraphs =
+                    buildReaderParagraphs(widget.material.textPages[index]);
                 return TextReaderPageWidget(
                   material: widget.material,
                   currentPage: index,
-                  selectedParagraphIndex: index == _currentPage ? _selectedParagraphIndex : null,
+                  selectedParagraphIndex:
+                      index == _currentPage ? _selectedParagraphIndex : null,
                   paragraphs: paragraphs,
-                  onParagraphTap: (paragraphIndex) => setState(() => _selectedParagraphIndex = paragraphIndex),
+                  onParagraphTap: (paragraphIndex) =>
+                      setState(() => _selectedParagraphIndex = paragraphIndex),
                 );
               },
             ),
@@ -142,10 +163,13 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
     final pageText = widget.material.textPages[_currentPage];
     final paragraphs = buildReaderParagraphs(pageText);
     final paragraphIndex = _selectedParagraphIndex;
-    if (paragraphIndex != null && paragraphIndex >= 0 && paragraphIndex < paragraphs.length) {
+    if (paragraphIndex != null &&
+        paragraphIndex >= 0 &&
+        paragraphIndex < paragraphs.length) {
       return ReaderStudySelection(
         unitIndex: _currentPage,
-        anchorLabel: 'Page ${_currentPage + 1} · Highlight ${paragraphIndex + 1}',
+        anchorLabel:
+            'Page ${_currentPage + 1} · Highlight ${paragraphIndex + 1}',
         selectedText: paragraphs[paragraphIndex],
       );
     }

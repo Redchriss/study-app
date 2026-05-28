@@ -28,7 +28,9 @@ class TypeCard extends StatelessWidget {
         width: 144,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.12) : Theme.of(context).cardColor,
+          color: selected
+              ? color.withValues(alpha: 0.12)
+              : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: selected ? color : DesignTokens.border),
         ),
@@ -37,7 +39,11 @@ class TypeCard extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 12),
-            Text(label, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+            Text(label,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700)),
           ],
         ),
       ),
@@ -60,7 +66,10 @@ class UploadPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: DesignTokens.textPrimary),
+        style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: DesignTokens.textPrimary),
       ),
     );
   }
@@ -98,7 +107,8 @@ class FilePickerCard extends StatelessWidget {
                     color: DesignTokens.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.upload_file_rounded, color: DesignTokens.primary),
+                  child: const Icon(Icons.upload_file_rounded,
+                      color: DesignTokens.primary),
                 ),
                 const SizedBox(width: DesignTokens.spMd),
                 Expanded(
@@ -106,16 +116,21 @@ class FilePickerCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(fileButtonLabel,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700)),
                       const SizedBox(height: 2),
                       Text(
-                        requiresFile ? 'Required for this material type.' : 'Optional, but useful when you already have a file version.',
-                        style: theme.textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary),
+                        requiresFile
+                            ? 'Required for this material type.'
+                            : 'Optional, but useful when you already have a file version.',
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: DesignTokens.textSecondary),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right, color: DesignTokens.textTertiary),
+                const Icon(Icons.chevron_right,
+                    color: DesignTokens.textTertiary),
               ],
             ),
             if (selectedFile != null) ...[
@@ -146,7 +161,8 @@ class UploadChecklist extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Upload checklist',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
           const SizedBox(height: DesignTokens.spXs),
           const Text(
             'Keep titles specific, match the right subject, and prefer readable notes over blurry scans when possible.',
@@ -195,18 +211,27 @@ class FilePreviewCard extends StatelessWidget {
               color: DesignTokens.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.insert_drive_file_rounded, color: DesignTokens.primary),
+            child: const Icon(Icons.insert_drive_file_rounded,
+                color: DesignTokens.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(file.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                Text(file.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
                 Text(formatSize(file.size),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DesignTokens.textSecondary)),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: DesignTokens.textSecondary)),
               ],
             ),
           ),

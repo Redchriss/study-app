@@ -16,8 +16,10 @@ class QuizShareScreen extends ConsumerStatefulWidget {
 }
 
 class _QuizShareScreenState extends ConsumerState<QuizShareScreen> {
-  List? _circles;
+  List? _communities;
   bool _loading = true;
+  bool _sharing = false;
+  String? _selectedCommunity;
 
   @override
   void initState() {
@@ -28,28 +30,57 @@ class _QuizShareScreenState extends ConsumerState<QuizShareScreen> {
   Future<void> _load() async {
     final client = ref.read(graphqlClientProvider);
     final r = await client.query(QueryOptions(document: gql(kMyCommunities)));
-    if (mounted) setState(() { _circles = (r.data?['myCommunities'] as List?) ?? []; _loading = false; });
+    if (mounted) {
+      setState(() {
+        _communities = (r.data?['myCommunities'] as List?) ?? [];
+        _loading = false;
+      });
+    }
   }
 
-  Future<void> _shareToCircle(String circleSlug) async {
-    final client = ref.read(graphqlClientProvider);
-    final r = await client.mutate(MutationOptions(
-      document: gql(kShareQuiz),
-      variables: {'quizSlug': widget.quizSlug, 'circleSlug': circleSlug},
-    ));
-    if (mounted) {
-      if (r.data?['shareQuiz']?['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shared to circle!')));
-        context.pop();
-      } else {
-        final gqlErr = graphQLErrorMessage(r.exception, '');
-        final message = gqlErr.isNotEmpty
-            ? gqlErr
-            : (r.data?['shareQuiz']?['errors'] as List?)?.firstOrNull?.toString() ?? 'Could not share quiz.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: DesignTokens.error),
-        );
+  Future<void> _shareToCommunity() async {
+    if (_selectedCommunity == null) return;
+    setState(() => _sharing = true);
+    try {
+      final client = ref.read(graphqlClientProvider);
+      // Fetch quiz details for the share post
+      final quizResult = await client.query(QueryOptions(
+        document: gql(kQuiz),
+        variables: {'slug': widget.quizSlug},
+      ));
+      final quizTitle =
+          quizResult.data?['quiz']?['title']?.toString() ?? 'Quiz';
+
+      final result = await client.mutate(MutationOptions(
+        document: gql(kCreatePost),
+        variables: {
+          'communitySlug': _selectedCommunity,
+          'title': 'Check out this quiz: $quizTitle',
+          'body':
+              'I found this quiz on Yaza! Check it out: https://yaza.app/quiz/${widget.quizSlug}',
+          'postType': 'LINK',
+          'url': 'https://yaza.app/quiz/${widget.quizSlug}',
+          'isOc': false,
+          'isSpoiler': false,
+        },
+      ));
+      if (!mounted) return;
+      if (result.hasException) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              graphQLErrorMessage(result.exception, 'Could not share quiz')),
+          backgroundColor: DesignTokens.error,
+        ));
+        return;
       }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Quiz shared to community!'),
+            backgroundColor: DesignTokens.success),
+      );
+      if (mounted) context.pop();
+    } finally {
+      if (mounted) setState(() => _sharing = false);
     }
   }
 
@@ -58,24 +89,51 @@ class _QuizShareScreenState extends ConsumerState<QuizShareScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Share Quiz')),
       body: _loading
-        ? const LoadingWidget()
-        : ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const Text('Share to a circle:', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
-              const SizedBox(height: 16),
-              if (_circles!.isEmpty)
-                const Text('You have not joined any circles.', style: TextStyle(color: DesignTokens.textTertiary)),
-              ..._circles!.map((c) => Card(
-                child: ListTile(
-                  title: Text(c['name'] ?? ''),
-                  subtitle: Text('${c['memberCount'] ?? 0} members'),
-                  trailing: const Icon(Icons.share),
-                  onTap: () => _shareToCircle(c['slug']),
-                ),
-              )),
-            ],
-          ),
+          ? const LoadingWidget()
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                const Text('Share to a community:',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+                const SizedBox(height: 16),
+                if (_communities!.isEmpty)
+                  const Text('You have not joined any communities.',
+                      style: TextStyle(color: DesignTokens.textTertiary)),
+                ..._communities!.map((c) => Card(
+                      child: ListTile(
+                        title: Text(c['name'] ?? ''),
+                        subtitle: Text('${c['memberCount'] ?? 0} members'),
+                        trailing: _selectedCommunity == c['slug']
+                            ? const Icon(Icons.check_circle,
+                                color: DesignTokens.primary)
+                            : const Icon(Icons.share),
+                        onTap: () {
+                          setState(() => _selectedCommunity = c['slug']);
+                        },
+                      ),
+                    )),
+                if (_selectedCommunity != null) ...[
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _sharing ? null : _shareToCommunity,
+                      icon: _sharing
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.share),
+                      label: Text(_sharing
+                          ? 'Sharing...'
+                          : 'Share to y/$_selectedCommunity'),
+                    ),
+                  ),
+                ],
+              ],
+            ),
     );
   }
 }

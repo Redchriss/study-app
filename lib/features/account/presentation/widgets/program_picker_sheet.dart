@@ -5,7 +5,8 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
 class ProgramPickerSheet extends StatefulWidget {
-  const ProgramPickerSheet({super.key, required this.universityId, this.selectedProgramId});
+  const ProgramPickerSheet(
+      {super.key, required this.universityId, this.selectedProgramId});
 
   final String universityId;
   final String? selectedProgramId;
@@ -36,9 +37,12 @@ class _ProgramPickerSheetState extends State<ProgramPickerSheet> {
               padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
               child: Row(
                 children: [
-                  Text('Choose programme', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Choose programme',
+                      style: Theme.of(context).textTheme.titleLarge),
                   const Spacer(),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                  IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context)),
                 ],
               ),
             ),
@@ -49,7 +53,8 @@ class _ProgramPickerSheetState extends State<ProgramPickerSheet> {
                 decoration: InputDecoration(
                   hintText: 'Filter by name or faculty…',
                   prefixIcon: const Icon(Icons.filter_list),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   isDense: true,
                 ),
                 onChanged: (_) => setState(() {}),
@@ -57,12 +62,15 @@ class _ProgramPickerSheetState extends State<ProgramPickerSheet> {
             ),
             Expanded(
               child: Query(
-                options: QueryOptions(document: gql(kPrograms), variables: {'universityId': widget.universityId}),
+                options: QueryOptions(
+                    document: gql(kPrograms),
+                    variables: {'universityId': widget.universityId}),
                 builder: (result, {fetchMore, refetch}) {
                   if (result.isLoading) return const LoadingWidget();
                   if (result.hasException) {
                     return ErrorState(
-                      message: graphQLErrorMessage(result.exception, 'Could not load programmes.'),
+                      message: graphQLErrorMessage(
+                          result.exception, 'Could not load programmes.'),
                       onRetry: () => refetch?.call(),
                     );
                   }
@@ -73,7 +81,8 @@ class _ProgramPickerSheetState extends State<ProgramPickerSheet> {
                       : programs.where((p) {
                           final m = p as Map<String, dynamic>;
                           final n = (m['name'] as String? ?? '').toLowerCase();
-                          final f = (m['faculty'] as String? ?? '').toLowerCase();
+                          final f =
+                              (m['faculty'] as String? ?? '').toLowerCase();
                           return n.contains(q) || f.contains(q);
                         }).toList();
                   if (filtered.isEmpty) {
@@ -90,10 +99,15 @@ class _ProgramPickerSheetState extends State<ProgramPickerSheet> {
                       final fac = p['faculty'] as String? ?? '';
                       final years = p['durationYears'];
                       return ListTile(
-                        title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: Text([fac, if (years != null) '$years years'].where((e) => e.toString().isNotEmpty).join(' · ')),
+                        title: Text(name,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text([fac, if (years != null) '$years years']
+                            .where((e) => e.toString().isNotEmpty)
+                            .join(' · ')),
                         selected: id == widget.selectedProgramId,
-                        onTap: () => Navigator.pop(context, {'id': id, 'name': name}),
+                        onTap: () =>
+                            Navigator.pop(context, {'id': id, 'name': name}),
                       );
                     },
                   );

@@ -4,7 +4,8 @@ import 'package:studyapp/core/widgets/loading_overlay.dart';
 
 void main() {
   group('LoadingOverlay Widget Tests', () {
-    testWidgets('should show loading indicator when visible', (WidgetTester tester) async {
+    testWidgets('should show loading indicator when visible',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -20,7 +21,8 @@ void main() {
       expect(find.text('Loading...'), findsOneWidget);
     });
 
-    testWidgets('should not show when visible is false', (WidgetTester tester) async {
+    testWidgets('should not show when visible is false',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -34,7 +36,8 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets('should show message when provided', (WidgetTester tester) async {
+    testWidgets('should show message when provided',
+        (WidgetTester tester) async {
       const testMessage = 'Please wait...';
       await tester.pumpWidget(
         const MaterialApp(
@@ -52,7 +55,8 @@ void main() {
   });
 
   group('LoadingBuilder Widget Tests', () {
-    testWidgets('should show child when not loading', (WidgetTester tester) async {
+    testWidgets('should show child when not loading',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -68,7 +72,8 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets('should show overlay when loading', (WidgetTester tester) async {
+    testWidgets('should show overlay when loading',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

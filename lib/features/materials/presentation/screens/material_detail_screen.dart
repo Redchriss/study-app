@@ -23,6 +23,7 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
   final _preferences = AppPreferencesService();
   final _cache = MaterialCacheService();
   bool _bookmarking = false;
+  bool _sharing = false;
   String? _aiTaskLoading;
   YoutubePlayerController? _ytCtrl;
   bool _lowDataMode = false;
@@ -56,12 +57,33 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
       if (!mounted) return;
       if (result.hasException) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(
-                graphQLErrorMessage(result.exception, 'Bookmark update failed')),
+            content: Text(graphQLErrorMessage(
+                result.exception, 'Bookmark update failed')),
             backgroundColor: DesignTokens.error));
       }
     } finally {
       if (mounted) setState(() => _bookmarking = false);
+    }
+  }
+
+  Future<void> _shareResource(Map<String, dynamic> material) async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    try {
+      final title = material['title']?.toString() ?? 'Study material';
+      final materialUrl =
+          material['fileUrl']?.toString() ?? material['url']?.toString() ?? '';
+
+      showModalBottomSheet(
+        context: context,
+        builder: (ctx) => _MaterialShareSheet(
+          title: 'Check out this resource: $title',
+          url: materialUrl,
+          ref: ref,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sharing = false);
     }
   }
 
@@ -77,8 +99,8 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
       if (mounted) {
         if (result.hasException) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(
-                  graphQLErrorMessage(result.exception, 'AI task failed')),
+              content:
+                  Text(graphQLErrorMessage(result.exception, 'AI task failed')),
               backgroundColor: DesignTokens.error));
         } else {
           refetch?.call();
@@ -112,8 +134,7 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
           fetchPolicy: FetchPolicy.cacheAndNetwork),
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading && result.data == null) {
-          return const Scaffold(
-              body: LoadingWidget());
+          return const Scaffold(body: LoadingWidget());
         }
         final live = result.data?['material'];
         if (live is Map) {
@@ -155,6 +176,17 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
       appBar: AppBar(
         title: Text(m['title'] ?? '', overflow: TextOverflow.ellipsis),
         actions: [
+          // Share resource button
+          IconButton(
+            icon: _sharing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.share_outlined),
+            tooltip: 'Share resource',
+            onPressed: () => _shareResource(m),
+          ),
           IconButton(
             icon: _bookmarking
                 ? const SizedBox(
@@ -185,6 +217,119 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
           _ytCtrl?.close();
           _ytCtrl = ctrl;
         },
+      ),
+    );
+  }
+}
+
+class _MaterialShareSheet extends ConsumerStatefulWidget {
+  final String title;
+  final String url;
+  final WidgetRef ref;
+  const _MaterialShareSheet({
+    required this.title,
+    required this.url,
+    required this.ref,
+  });
+
+  @override
+  ConsumerState<_MaterialShareSheet> createState() =>
+      _MaterialShareSheetState();
+}
+
+class _MaterialShareSheetState extends ConsumerState<_MaterialShareSheet> {
+  String? _selectedCommunity;
+  bool _sharing = false;
+
+  Future<void> _share() async {
+    if (_selectedCommunity == null) return;
+    setState(() => _sharing = true);
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.mutate(MutationOptions(
+        document: gql(kCreatePost),
+        variables: {
+          'communitySlug': _selectedCommunity,
+          'title': widget.title,
+          'body': widget.url.isNotEmpty
+              ? 'Check out this study resource: ${widget.url}'
+              : 'Study resource from Yaza',
+          'postType': 'LINK',
+          'url': widget.url.isNotEmpty ? widget.url : null,
+          'isOc': false,
+          'isSpoiler': false,
+        },
+      ));
+      if (!mounted) return;
+      if (result.hasException) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:
+              Text(graphQLErrorMessage(result.exception, 'Could not share')),
+          backgroundColor: DesignTokens.error,
+        ));
+        return;
+      }
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Resource shared to community!'),
+            backgroundColor: DesignTokens.success),
+      );
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Share Resource',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            Query(
+              options: QueryOptions(document: gql(kMyCommunities)),
+              builder: (qr, {fetchMore, refetch}) {
+                final communities = (qr.data?['myCommunities'] as List?) ?? [];
+                return DropdownButtonFormField<String>(
+                  value: _selectedCommunity,
+                  decoration: const InputDecoration(
+                    labelText: 'Select community',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: communities
+                      .map((c) => DropdownMenuItem(
+                            value: c['slug']?.toString(),
+                            child: Text('y/${c['name'] ?? c['slug']}'),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedCommunity = v),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed:
+                    (_selectedCommunity != null && !_sharing) ? _share : null,
+                icon: _sharing
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.share),
+                label: Text(_sharing ? 'Sharing...' : 'Share'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

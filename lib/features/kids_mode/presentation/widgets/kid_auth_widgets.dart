@@ -22,12 +22,14 @@ class KidAuthState {
 
 final kidTokenProvider = StateProvider<String?>((ref) => null);
 final kidProfileProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
-final kidAuthStateProvider = StateProvider<KidAuthState>((ref) => const KidAuthState());
+final kidAuthStateProvider =
+    StateProvider<KidAuthState>((ref) => const KidAuthState());
 
 // ── PIN Dialog ────────────────────────────────────────────────────────────────
 
 class KidPinDialog extends StatefulWidget {
-  const KidPinDialog({super.key, required this.kidName, required this.onSubmit});
+  const KidPinDialog(
+      {super.key, required this.kidName, required this.onSubmit});
 
   final String kidName;
   final Future<void> Function(String) onSubmit;
@@ -66,9 +68,16 @@ class _KidPinDialogState extends State<KidPinDialog> {
             decoration: BoxDecoration(gradient: KidsVisualTheme.ctaGradient),
             child: Column(
               children: [
-                Text('Hi, ${widget.kidName}!', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+                Text('Hi, ${widget.kidName}!',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900)),
                 const SizedBox(height: 4),
-                Text('Enter your secret PIN', style: TextStyle(color: Colors.white.withValues(alpha: 0.92), fontWeight: FontWeight.w600)),
+                Text('Enter your secret PIN',
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.92),
+                        fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -79,39 +88,75 @@ class _KidPinDialogState extends State<KidPinDialog> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(4, (i) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    curve: Curves.easeOutBack,
-                    width: 52, height: 52,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    decoration: BoxDecoration(
-                      color: i < _pin.length ? KidsVisualTheme.trailGreen : Colors.grey.shade200,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: i < _pin.length ? Colors.white : Colors.grey.shade400, width: 2),
-                      boxShadow: i < _pin.length ? [BoxShadow(color: KidsVisualTheme.trailGreen.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 3))] : null,
-                    ),
-                    child: Center(child: Text(i < _pin.length ? '•' : '○', style: TextStyle(color: i < _pin.length ? Colors.white : Colors.grey.shade500, fontSize: 22, fontWeight: FontWeight.w800))),
-                  )),
+                  children: List.generate(
+                      4,
+                      (i) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 160),
+                            curve: Curves.easeOutBack,
+                            width: 52,
+                            height: 52,
+                            margin: const EdgeInsets.symmetric(horizontal: 6),
+                            decoration: BoxDecoration(
+                              color: i < _pin.length
+                                  ? KidsVisualTheme.trailGreen
+                                  : Colors.grey.shade200,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: i < _pin.length
+                                      ? Colors.white
+                                      : Colors.grey.shade400,
+                                  width: 2),
+                              boxShadow: i < _pin.length
+                                  ? [
+                                      BoxShadow(
+                                          color: KidsVisualTheme.trailGreen
+                                              .withValues(alpha: 0.35),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3))
+                                    ]
+                                  : null,
+                            ),
+                            child: Center(
+                                child: Text(i < _pin.length ? '•' : '○',
+                                    style: TextStyle(
+                                        color: i < _pin.length
+                                            ? Colors.white
+                                            : Colors.grey.shade500,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800))),
+                          )),
                 ),
                 const SizedBox(height: 20),
                 ...['123', '456', '789'].map((row) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: row.split('').map((d) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Material(
-                        color: Colors.grey.shade100,
-                        shape: const CircleBorder(),
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () => _press(d),
-                          child: SizedBox(width: 64, height: 64, child: Center(child: Text(d, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)))),
-                        ),
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: row
+                            .split('')
+                            .map((d) => Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 6),
+                                  child: Material(
+                                    color: Colors.grey.shade100,
+                                    shape: const CircleBorder(),
+                                    child: InkWell(
+                                      customBorder: const CircleBorder(),
+                                      onTap: () => _press(d),
+                                      child: SizedBox(
+                                          width: 64,
+                                          height: 64,
+                                          child: Center(
+                                              child: Text(d,
+                                                  style: const TextStyle(
+                                                      fontSize: 26,
+                                                      fontWeight:
+                                                          FontWeight.w800)))),
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
                       ),
-                    )).toList(),
-                  ),
-                )),
+                    )),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -122,7 +167,14 @@ class _KidPinDialogState extends State<KidPinDialog> {
                       child: InkWell(
                         customBorder: const CircleBorder(),
                         onTap: () => _press('0'),
-                        child: const SizedBox(width: 64, height: 64, child: Center(child: Text('0', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)))),
+                        child: const SizedBox(
+                            width: 64,
+                            height: 64,
+                            child: Center(
+                                child: Text('0',
+                                    style: TextStyle(
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w800)))),
                       ),
                     ),
                     Padding(
@@ -133,7 +185,11 @@ class _KidPinDialogState extends State<KidPinDialog> {
                         child: InkWell(
                           customBorder: const CircleBorder(),
                           onTap: _delete,
-                          child: SizedBox(width: 64, height: 64, child: Icon(Icons.backspace_outlined, color: Colors.orange.shade800)),
+                          child: SizedBox(
+                              width: 64,
+                              height: 64,
+                              child: Icon(Icons.backspace_outlined,
+                                  color: Colors.orange.shade800)),
                         ),
                       ),
                     ),

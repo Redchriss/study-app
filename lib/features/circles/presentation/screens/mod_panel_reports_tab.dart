@@ -176,11 +176,27 @@ class _ReportCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 FilledButton.tonalIcon(
+                  onPressed: () => _approve(context, ref, post),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: const Text('Approve'),
+                  style: FilledButton.styleFrom(foregroundColor: Colors.green),
+                ),
+                const SizedBox(width: 4),
+                FilledButton.tonalIcon(
                   onPressed: () => _resolve(context, ref, 'REMOVE_CONTENT'),
                   icon: const Icon(Icons.delete_outline, size: 18),
                   label: const Text('Remove'),
                   style: FilledButton.styleFrom(foregroundColor: Colors.red),
                 ),
+                if (post != null) ...[
+                  const SizedBox(width: 4),
+                  TextButton.icon(
+                    onPressed: () => _banUser(context, ref, post),
+                    icon: const Icon(Icons.block, size: 18),
+                    label: const Text('Ban'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  ),
+                ],
               ],
             ),
           ],
@@ -214,10 +230,103 @@ class _ReportCard extends ConsumerWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(
-                action == 'IGNORE' ? 'Report ignored' : 'Content removed')),
+            content: Text(action == 'IGNORE'
+                ? 'Report ignored'
+                : action == 'REMOVE_CONTENT'
+                    ? 'Content removed'
+                    : 'Content approved')),
       );
     }
     onResolved();
+  }
+
+  Future<void> _approve(
+      BuildContext context, WidgetRef ref, Map<String, dynamic>? post) async {
+    if (post == null) return;
+    final client = ref.read(graphqlClientProvider);
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(kApprovePost),
+        variables: {'postId': post['id']},
+      ),
+    );
+    if (result.hasException) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(result.exception?.graphqlErrors.first.message ??
+                  'Failed to approve')),
+        );
+      }
+      return;
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Post approved')),
+      );
+    }
+    onResolved();
+  }
+
+  Future<void> _banUser(
+      BuildContext context, WidgetRef ref, Map<String, dynamic>? post) async {
+    if (post == null) return;
+    final author = post['author'] as Map<String, dynamic>?;
+    final username = author?['username']?.toString();
+    if (username == null || username.isEmpty) return;
+
+    final reason = await _promptBanReason(context);
+    if (reason == null) return;
+
+    final client = ref.read(graphqlClientProvider);
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(kBanUser),
+        variables: {
+          'communitySlug': communitySlug,
+          'username': username,
+          'reason': reason,
+        },
+      ),
+    );
+    if (result.hasException) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(result.exception?.graphqlErrors.first.message ??
+                  'Failed to ban user')),
+        );
+      }
+      return;
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('u/$username has been banned')),
+      );
+    }
+    onResolved();
+  }
+
+  Future<String?> _promptBanReason(BuildContext context) async {
+    final ctrl = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Ban user'),
+        content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            decoration: const InputDecoration(
+                hintText: 'Reason for ban', labelText: 'Ban reason')),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text),
+              child: const Text('Confirm Ban')),
+        ],
+      ),
+    );
+    return result?.trim().isEmpty == true ? null : result;
   }
 }

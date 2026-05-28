@@ -23,7 +23,8 @@ class KidsMultiQuizPanel extends StatefulWidget {
   State<KidsMultiQuizPanel> createState() => _KidsMultiQuizPanelState();
 }
 
-class _KidsMultiQuizPanelState extends State<KidsMultiQuizPanel> with SingleTickerProviderStateMixin {
+class _KidsMultiQuizPanelState extends State<KidsMultiQuizPanel>
+    with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> _questions = [];
   int _current = 0;
   int? _selected;

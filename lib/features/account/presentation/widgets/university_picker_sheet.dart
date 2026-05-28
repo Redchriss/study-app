@@ -37,9 +37,12 @@ class _UniversityPickerSheetState extends State<UniversityPickerSheet> {
               padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
               child: Row(
                 children: [
-                  Text('Choose institution', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Choose institution',
+                      style: Theme.of(context).textTheme.titleLarge),
                   const Spacer(),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                  IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context)),
                 ],
               ),
             ),
@@ -50,12 +53,15 @@ class _UniversityPickerSheetState extends State<UniversityPickerSheet> {
                 decoration: InputDecoration(
                   hintText: 'Search name, city, acronym…',
                   prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   isDense: true,
                 ),
                 textInputAction: TextInputAction.search,
-                onChanged: (value) => setState(() => _appliedQuery = value.trim()),
-                onSubmitted: (_) => setState(() => _appliedQuery = _searchCtrl.text.trim()),
+                onChanged: (value) =>
+                    setState(() => _appliedQuery = value.trim()),
+                onSubmitted: (_) =>
+                    setState(() => _appliedQuery = _searchCtrl.text.trim()),
               ),
             ),
             Padding(
@@ -79,7 +85,8 @@ class _UniversityPickerSheetState extends State<UniversityPickerSheet> {
                     onSelected: (_) => setState(() => _typeFilter = 'private'),
                   ),
                   TextButton(
-                    onPressed: () => setState(() => _appliedQuery = _searchCtrl.text.trim()),
+                    onPressed: () =>
+                        setState(() => _appliedQuery = _searchCtrl.text.trim()),
                     child: const Text('Search'),
                   ),
                 ],
@@ -98,13 +105,17 @@ class _UniversityPickerSheetState extends State<UniversityPickerSheet> {
                   if (result.isLoading) return const LoadingWidget();
                   if (result.hasException) {
                     return ErrorState(
-                      message: graphQLErrorMessage(result.exception, 'Could not load institutions.'),
+                      message: graphQLErrorMessage(
+                          result.exception, 'Could not load institutions.'),
                       onRetry: () => refetch?.call(),
                     );
                   }
                   final list = (result.data?['universities'] as List?) ?? [];
                   if (list.isEmpty) {
-                    return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No results. Try different words.')));
+                    return const Center(
+                        child: Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Text('No results. Try different words.')));
                   }
                   return ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -121,13 +132,18 @@ class _UniversityPickerSheetState extends State<UniversityPickerSheet> {
                       final selected = id == widget.selectedId;
                       return ListTile(
                         selected: selected,
-                        title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        title: Text(name,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Text(
-                          [if (short.isNotEmpty) short, loc, typ].where((e) => e.isNotEmpty).join(' · '),
+                          [if (short.isNotEmpty) short, loc, typ]
+                              .where((e) => e.isNotEmpty)
+                              .join(' · '),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        onTap: () => Navigator.pop(context, {'id': id, 'name': name}),
+                        onTap: () =>
+                            Navigator.pop(context, {'id': id, 'name': name}),
                         trailing: desc.isEmpty
                             ? null
                             : IconButton(
@@ -136,8 +152,13 @@ class _UniversityPickerSheetState extends State<UniversityPickerSheet> {
                                   context: context,
                                   builder: (ctx) => AlertDialog(
                                     title: Text(name),
-                                    content: SingleChildScrollView(child: Text(desc.isEmpty ? '—' : desc)),
-                                    actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+                                    content: SingleChildScrollView(
+                                        child: Text(desc.isEmpty ? '—' : desc)),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: () => Navigator.pop(ctx),
+                                          child: const Text('OK'))
+                                    ],
                                   ),
                                 ),
                               ),

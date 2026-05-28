@@ -32,11 +32,13 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
   final _cache = MaterialCacheService();
   var _aiActionBusy = false;
 
-  void _showResultSnackBar(ReaderServiceResult result, String onSuccess, String onFail) {
+  void _showResultSnackBar(
+      ReaderServiceResult result, String onSuccess, String onFail) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(result.success ? onSuccess : (result.message ?? onFail)),
-        backgroundColor: result.success ? DesignTokens.success : DesignTokens.error,
+        backgroundColor:
+            result.success ? DesignTokens.success : DesignTokens.error,
       ),
     );
   }
@@ -64,7 +66,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       color: draft.color,
     );
     if (!mounted) return;
-    _showResultSnackBar(result, 'Annotation saved', 'Could not save annotation.');
+    _showResultSnackBar(
+        result, 'Annotation saved', 'Could not save annotation.');
     if (result.success) refetch?.call();
   }
 
@@ -79,7 +82,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
           annotationId: annotation.id,
         );
         if (!mounted) return;
-        _showResultSnackBar(result, 'Annotation removed', 'Could not delete annotation.');
+        _showResultSnackBar(
+            result, 'Annotation removed', 'Could not delete annotation.');
         if (result.success) {
           Navigator.of(context).pop();
           refetch?.call();
@@ -111,7 +115,12 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         );
         if (!mounted) return;
         setState(() => _aiActionBusy = false);
-        _showResultSnackBar(result, 'Flashcards requested', result.message ?? result.errors.firstOrNull ?? 'Flashcard request failed.');
+        _showResultSnackBar(
+            result,
+            'Flashcards requested',
+            result.message ??
+                result.errors.firstOrNull ??
+                'Flashcard request failed.');
         if (result.success) refetch?.call();
       },
     );
@@ -164,7 +173,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       onSuccess: (reply) async {
         final quiz = parseQuickQuizPayload(reply);
         if (quiz == null || !mounted) {
-          _showErrorSnackBar('AI could not shape a mini quiz from this section right now.');
+          _showErrorSnackBar(
+              'AI could not shape a mini quiz from this section right now.');
           return;
         }
         await showReaderQuickQuizSheet(context, quiz: quiz);
@@ -187,7 +197,9 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     Navigator.of(context).pop();
 
     if (!result.success || result.data == null) {
-      _showErrorSnackBar(result.message ?? result.errors.firstOrNull ?? 'AI could not help right now.');
+      _showErrorSnackBar(result.message ??
+          result.errors.firstOrNull ??
+          'AI could not help right now.');
       return;
     }
 
@@ -210,7 +222,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         if (result.hasException && rawMaterial is! Map) {
           return MaterialReaderErrorHandler(
             slug: widget.slug,
-            errorMessage: graphQLErrorMessage(result.exception, 'Could not open this material.'),
+            errorMessage: graphQLErrorMessage(
+                result.exception, 'Could not open this material.'),
             onRetry: () => refetch?.call(),
             cache: _cache,
             onCachedData: (material) =>
@@ -234,8 +247,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     return MaterialReaderSelector(
       material: material,
       service: _service,
-      onOpenAnnotations: () =>
-          _openAnnotations(material.annotations, refetch),
+      onOpenAnnotations: () => _openAnnotations(material.annotations, refetch),
       onOpenFlashcards: () => _openFlashcards(material, refetch),
       onSaveAnnotation: (selection) => _saveAnnotation(selection, refetch),
       onQuickQuiz: (selection) =>

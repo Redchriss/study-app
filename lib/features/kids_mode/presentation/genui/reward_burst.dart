@@ -9,7 +9,8 @@ final rewardBurstSchema = S.object(
     'message': S.string(
       description: 'Short celebration message, max 5 words',
     ),
-    'stars_earned': S.integer(description: 'Number of stars to show (1, 2, or 3)'),
+    'stars_earned':
+        S.integer(description: 'Number of stars to show (1, 2, or 3)'),
     'dismissAction': A2uiSchemas.action(
       description: 'Fires automatically after 2.5 seconds',
     ),

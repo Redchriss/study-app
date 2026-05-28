@@ -34,7 +34,10 @@ class UploadSuccessSheet extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: dark
-                      ? [DesignTokens.darkSurface, DesignTokens.darkSurfaceVariant]
+                      ? [
+                          DesignTokens.darkSurface,
+                          DesignTokens.darkSurfaceVariant
+                        ]
                       : const [Color(0xFFF3E1A8), Color(0xFFCDEBE2)],
                 ),
                 borderRadius: BorderRadius.circular(24),
@@ -49,16 +52,23 @@ class UploadSuccessSheet extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.8),
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: const Icon(Icons.menu_book_rounded, color: DesignTokens.primary),
+                    child: const Icon(Icons.menu_book_rounded,
+                        color: DesignTokens.primary),
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    isApproved ? 'Material is ready to study' : 'Upload submitted for review',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                    isApproved
+                        ? 'Material is ready to study'
+                        : 'Upload submitted for review',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    result.message ?? 'Your material is now in the study pipeline.',
+                    result.message ??
+                        'Your material is now in the study pipeline.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: DesignTokens.textSecondary,
                           height: 1.5,
@@ -79,9 +89,13 @@ class UploadSuccessSheet extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: dark ? DesignTokens.darkSurfaceVariant : const Color(0xFFF8F7F1),
+                color: dark
+                    ? DesignTokens.darkSurfaceVariant
+                    : const Color(0xFFF8F7F1),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: dark ? DesignTokens.darkBorder : DesignTokens.border),
+                border: Border.all(
+                    color:
+                        dark ? DesignTokens.darkBorder : DesignTokens.border),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,7 +105,8 @@ class UploadSuccessSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       describeAiReadiness(result.aiReadiness),
-                      style: const TextStyle(height: 1.5, color: DesignTokens.textSecondary),
+                      style: const TextStyle(
+                          height: 1.5, color: DesignTokens.textSecondary),
                     ),
                   ),
                 ],
@@ -108,7 +123,8 @@ class UploadSuccessSheet extends StatelessWidget {
                     router.push('/materials/${result.slug}/read');
                   },
                   icon: const Icon(Icons.chrome_reader_mode_rounded),
-                  label: Text(isApproved ? 'Open In Study Mode' : 'Preview Study Mode'),
+                  label: Text(
+                      isApproved ? 'Open In Study Mode' : 'Preview Study Mode'),
                 ),
               ),
             const SizedBox(height: 8),

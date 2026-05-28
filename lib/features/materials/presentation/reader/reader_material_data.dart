@@ -32,9 +32,12 @@ class ReaderMaterialData {
   final List<ReaderAnnotationData> annotations;
   final List<ReaderAiTaskData> aiTasks;
 
-  bool get isPdf => contentType == 'pdf' || fileUrl.toLowerCase().endsWith('.pdf');
-  bool get isReadableText => contentType == 'text' && contentText.trim().isNotEmpty;
-  bool get isVideo => contentType == 'video' && youtubeEmbedUrl.trim().isNotEmpty;
+  bool get isPdf =>
+      contentType == 'pdf' || fileUrl.toLowerCase().endsWith('.pdf');
+  bool get isReadableText =>
+      contentType == 'text' && contentText.trim().isNotEmpty;
+  bool get isVideo =>
+      contentType == 'video' && youtubeEmbedUrl.trim().isNotEmpty;
   bool get isImage => contentType == 'image' && fileUrl.trim().isNotEmpty;
 
   List<String> get textPages {
@@ -80,7 +83,8 @@ class ReaderMaterialData {
       if (decoded is! List) return const <ReaderFlashcardData>[];
       return decoded
           .whereType<Map>()
-          .map((item) => ReaderFlashcardData.fromMap(Map<String, dynamic>.from(item)))
+          .map((item) =>
+              ReaderFlashcardData.fromMap(Map<String, dynamic>.from(item)))
           .where((item) => item.front.isNotEmpty && item.back.isNotEmpty)
           .toList();
     } catch (_) {
@@ -108,15 +112,18 @@ class ReaderMaterialData {
       aiSummary: map['aiSummary']?.toString() ?? '',
       aiFlashcardsJson: map['aiFlashcardsJson']?.toString() ?? '',
       progress: map['myProgress'] is Map
-          ? ReaderProgressData.fromMap(Map<String, dynamic>.from(map['myProgress'] as Map))
+          ? ReaderProgressData.fromMap(
+              Map<String, dynamic>.from(map['myProgress'] as Map))
           : null,
       annotations: ((map['myAnnotations'] as List?) ?? const [])
           .whereType<Map>()
-          .map((item) => ReaderAnnotationData.fromMap(Map<String, dynamic>.from(item)))
+          .map((item) =>
+              ReaderAnnotationData.fromMap(Map<String, dynamic>.from(item)))
           .toList(),
       aiTasks: ((map['aiTasks'] as List?) ?? const [])
           .whereType<Map>()
-          .map((item) => ReaderAiTaskData.fromMap(Map<String, dynamic>.from(item)))
+          .map((item) =>
+              ReaderAiTaskData.fromMap(Map<String, dynamic>.from(item)))
           .toList(),
     );
   }

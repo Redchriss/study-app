@@ -24,15 +24,17 @@ class ParentKidsProgressScreen extends StatelessWidget {
           return Scaffold(
             appBar: AppBar(title: const Text('Kids Progress')),
             body: ErrorState(
-              message: graphQLErrorMessage(result.exception, 'Could not load child progress.'),
+              message: graphQLErrorMessage(
+                  result.exception, 'Could not load child progress.'),
               onRetry: () => refetch?.call(),
             ),
           );
         }
-        final summaries = ((result.data?['parentKidOverview'] as List?) ?? const [])
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList();
+        final summaries =
+            ((result.data?['parentKidOverview'] as List?) ?? const [])
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList();
         return Scaffold(
           appBar: AppBar(
             title: const Text('Kids Progress'),
@@ -67,12 +69,15 @@ class ParentKidsProgressScreen extends StatelessWidget {
                             children: [
                               Text(
                                 'Parent Guide',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.w800),
                               ),
                               SizedBox(height: 8),
                               Text(
                                 'Celebrate effort, review together when a child has topics ready, and ask them to explain one idea back to you.',
-                                style: TextStyle(color: DesignTokens.textSecondary, height: 1.4),
+                                style: TextStyle(
+                                    color: DesignTokens.textSecondary,
+                                    height: 1.4),
                               ),
                             ],
                           ),

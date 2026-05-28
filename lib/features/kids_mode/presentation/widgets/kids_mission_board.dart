@@ -52,17 +52,33 @@ class KidsMissionBoard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: _MissionPill(label: 'Review now', value: '$readyReviewCount', color: const Color(0xFFF39C12))),
+              Expanded(
+                  child: _MissionPill(
+                      label: 'Review now',
+                      value: '$readyReviewCount',
+                      color: const Color(0xFFF39C12))),
               const SizedBox(width: 10),
-              Expanded(child: _MissionPill(label: 'Mastered', value: '$masteredCount', color: const Color(0xFF2ECC71))),
+              Expanded(
+                  child: _MissionPill(
+                      label: 'Mastered',
+                      value: '$masteredCount',
+                      color: const Color(0xFF2ECC71))),
             ],
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: _MissionPill(label: 'In progress', value: '$inProgressCount', color: KidsVisualTheme.pathBlue)),
+              Expanded(
+                  child: _MissionPill(
+                      label: 'In progress',
+                      value: '$inProgressCount',
+                      color: KidsVisualTheme.pathBlue)),
               const SizedBox(width: 10),
-              Expanded(child: _MissionPill(label: 'New topics', value: '$untouchedCount', color: const Color(0xFF9B59B6))),
+              Expanded(
+                  child: _MissionPill(
+                      label: 'New topics',
+                      value: '$untouchedCount',
+                      color: const Color(0xFF9B59B6))),
             ],
           ),
           const SizedBox(height: 14),
@@ -147,7 +163,8 @@ class _MissionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: onTap == null ? Colors.grey.shade200 : color.withValues(alpha: 0.14),
+      color:
+          onTap == null ? Colors.grey.shade200 : color.withValues(alpha: 0.14),
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),

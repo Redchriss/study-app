@@ -56,7 +56,9 @@ class _StepDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color ring = active || done ? KidsVisualTheme.trailGreen : KidsVisualTheme.inkMuted.withValues(alpha: 0.25);
+    final Color ring = active || done
+        ? KidsVisualTheme.trailGreen
+        : KidsVisualTheme.inkMuted.withValues(alpha: 0.25);
     return Column(
       children: [
         Container(
@@ -84,7 +86,9 @@ class _StepDot extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w900,
-                      color: active ? KidsVisualTheme.trailGreen : KidsVisualTheme.inkMuted,
+                      color: active
+                          ? KidsVisualTheme.trailGreen
+                          : KidsVisualTheme.inkMuted,
                       height: 1,
                     ),
                   ),
@@ -96,7 +100,8 @@ class _StepDot extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w700,
-            color: active || done ? KidsVisualTheme.ink : KidsVisualTheme.inkMuted,
+            color:
+                active || done ? KidsVisualTheme.ink : KidsVisualTheme.inkMuted,
           ),
         ),
       ],

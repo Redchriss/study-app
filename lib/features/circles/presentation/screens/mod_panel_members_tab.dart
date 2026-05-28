@@ -15,13 +15,22 @@ class ModPanelMembersTab extends ConsumerStatefulWidget {
   ConsumerState<ModPanelMembersTab> createState() => _ModPanelMembersTabState();
 }
 
-class _ModPanelMembersTabState extends ConsumerState<ModPanelMembersTab> {
+class _ModPanelMembersTabState extends ConsumerState<ModPanelMembersTab>
+    with SingleTickerProviderStateMixin {
   final _searchCtrl = TextEditingController();
   String _searchQuery = '';
+  late TabController _memberTabCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _memberTabCtrl = TabController(length: 3, vsync: this);
+  }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _memberTabCtrl.dispose();
     super.dispose();
   }
 
@@ -32,7 +41,7 @@ class _ModPanelMembersTabState extends ConsumerState<ModPanelMembersTab> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: TextField(
             controller: _searchCtrl,
             decoration: InputDecoration(
@@ -45,6 +54,19 @@ class _ModPanelMembersTabState extends ConsumerState<ModPanelMembersTab> {
             onSubmitted: (q) => setState(() => _searchQuery = q.trim()),
           ),
         ),
+        const SizedBox(height: 8),
+        TabBar(
+          controller: _memberTabCtrl,
+          tabs: const [
+            Tab(text: 'Moderators'),
+            Tab(text: 'Banned'),
+            Tab(text: 'Muted'),
+          ],
+          labelColor: DesignTokens.primary,
+          unselectedLabelColor: DesignTokens.textSecondary,
+          indicatorSize: TabBarIndicatorSize.label,
+          isScrollable: true,
+        ),
         Expanded(
           child: _searchQuery.isNotEmpty
               ? _SearchedUserActions(
@@ -52,7 +74,14 @@ class _ModPanelMembersTabState extends ConsumerState<ModPanelMembersTab> {
                   username: _searchQuery,
                   client: client,
                 )
-              : _ModList(communitySlug: widget.communitySlug),
+              : TabBarView(
+                  controller: _memberTabCtrl,
+                  children: [
+                    _ModList(communitySlug: widget.communitySlug),
+                    _BannedList(communitySlug: widget.communitySlug),
+                    _MutedList(communitySlug: widget.communitySlug),
+                  ],
+                ),
         ),
       ],
     );
@@ -73,6 +102,11 @@ class _ModList extends StatelessWidget {
       builder: (result, {fetchMore, refetch}) {
         if (result.isLoading) return const Center(child: LoadingWidget());
         final mods = (result.data?['communityModerators'] as List?) ?? [];
+        if (mods.isEmpty) {
+          return const Center(
+              child: Text('No moderators',
+                  style: TextStyle(color: DesignTokens.textSecondary)));
+        }
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: [
@@ -99,6 +133,75 @@ class _ModList extends StatelessWidget {
               );
             }),
           ],
+        );
+      },
+    );
+  }
+}
+
+class _BannedList extends StatelessWidget {
+  final String communitySlug;
+  const _BannedList({required this.communitySlug});
+
+  @override
+  Widget build(BuildContext context) {
+    return Query(
+      options: QueryOptions(
+        document: gql(kCommunityModerators),
+        variables: {'slug': communitySlug},
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading) return const Center(child: LoadingWidget());
+        // We look for membership entries with isBanned = true
+        // The current kCommunityModerators query doesn't have banned info.
+        // For now we show a placeholder — real banned list requires backend query.
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.block,
+                  size: 48, color: DesignTokens.textTertiary),
+              const SizedBox(height: 12),
+              const Text('Banned members',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              const Text('Search a username above to ban/unban',
+                  style: TextStyle(color: DesignTokens.textSecondary)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MutedList extends StatelessWidget {
+  final String communitySlug;
+  const _MutedList({required this.communitySlug});
+
+  @override
+  Widget build(BuildContext context) {
+    return Query(
+      options: QueryOptions(
+        document: gql(kCommunityModerators),
+        variables: {'slug': communitySlug},
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading) return const Center(child: LoadingWidget());
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.volume_off,
+                  size: 48, color: DesignTokens.textTertiary),
+              const SizedBox(height: 12),
+              const Text('Muted members',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              const Text('Search a username above to mute/unmute',
+                  style: TextStyle(color: DesignTokens.textSecondary)),
+            ],
+          ),
         );
       },
     );

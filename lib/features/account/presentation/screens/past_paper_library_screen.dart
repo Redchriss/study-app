@@ -12,14 +12,16 @@ class PastPaperLibraryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text('Past Papers', style: theme.textTheme.titleLarge)),
+      appBar:
+          AppBar(title: Text('Past Papers', style: theme.textTheme.titleLarge)),
       body: Query(
         options: QueryOptions(document: gql(kPastPapers)),
         builder: (result, {fetchMore, refetch}) {
           if (result.isLoading) return const LoadingWidget();
           if (result.hasException) {
             return ErrorState(
-              message: graphQLErrorMessage(result.exception, 'Could not load past papers.'),
+              message: graphQLErrorMessage(
+                  result.exception, 'Could not load past papers.'),
               onRetry: () => refetch?.call(),
             );
           }
@@ -44,11 +46,15 @@ class PastPaperLibraryScreen extends StatelessWidget {
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
-                  title: Text(p['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text('${p['subject'] ?? ''} · ${p['examType'] ?? ''} ${p['year'] ?? ''}', style: const TextStyle(fontSize: 12)),
+                  title: Text(p['title'] ?? '',
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text(
+                      '${p['subject'] ?? ''} · ${p['examType'] ?? ''} ${p['year'] ?? ''}',
+                      style: const TextStyle(fontSize: 12)),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    context.push('/past-paper/view', extra: Map<String, dynamic>.from(p as Map));
+                    context.push('/past-paper/view',
+                        extra: Map<String, dynamic>.from(p as Map));
                   },
                 ),
               );

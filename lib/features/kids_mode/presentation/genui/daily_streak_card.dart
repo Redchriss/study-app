@@ -9,7 +9,8 @@ final dailyStreakCardSchema = S.object(
     'streak_days': S.integer(description: 'Current streak in days'),
     'child_name':
         S.string(description: 'Child first name for personalised message'),
-    'message': S.string(description: 'Short encouraging message about the streak'),
+    'message':
+        S.string(description: 'Short encouraging message about the streak'),
   },
   required: ['component', 'streak_days', 'message'],
 );
@@ -89,9 +90,8 @@ class _DailyStreakCardWidgetState extends State<_DailyStreakCardWidget>
   @override
   Widget build(BuildContext context) {
     final d = widget.data;
-    final greeting = d.childName.isNotEmpty
-        ? 'Hey ${d.childName}!'
-        : 'Great job!';
+    final greeting =
+        d.childName.isNotEmpty ? 'Hey ${d.childName}!' : 'Great job!';
     final dayWord = d.streakDays == 1 ? 'day' : 'days';
 
     return SlideTransition(
@@ -165,7 +165,8 @@ class _DayDots extends StatelessWidget {
           height: 12,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: i < filled ? Colors.white : Colors.white.withValues(alpha: 0.3),
+            color:
+                i < filled ? Colors.white : Colors.white.withValues(alpha: 0.3),
           ),
         );
       }),

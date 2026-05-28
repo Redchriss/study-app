@@ -34,7 +34,10 @@ class ProfileHero extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [levelColor.withValues(alpha: 0.85), levelColor.withValues(alpha: 0.55)],
+          colors: [
+            levelColor.withValues(alpha: 0.85),
+            levelColor.withValues(alpha: 0.55)
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -46,14 +49,20 @@ class ProfileHero extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 68, height: 68,
+                width: 68,
+                height: 68,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.25),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 2),
+                  border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.6), width: 2),
                 ),
                 child: Center(
-                  child: Text(initials, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white)),
+                  child: Text(initials,
+                      style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white)),
                 ),
               ),
               const SizedBox(width: 14),
@@ -61,9 +70,17 @@ class ProfileHero extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(username, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+                    Text(username,
+                        style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white)),
                     const SizedBox(height: 2),
-                    Text(email, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.75)), overflow: TextOverflow.ellipsis),
+                    Text(email,
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.75)),
+                        overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -80,11 +97,23 @@ class ProfileHero extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              StatPill(icon: Icons.local_fire_department, value: '$streak', label: 'Streak', color: Colors.orange),
+              StatPill(
+                  icon: Icons.local_fire_department,
+                  value: '$streak',
+                  label: 'Streak',
+                  color: Colors.orange),
               const SizedBox(width: 8),
-              StatPill(icon: Icons.stars_rounded, value: '$points', label: 'Points', color: Colors.amber),
+              StatPill(
+                  icon: Icons.stars_rounded,
+                  value: '$points',
+                  label: 'Points',
+                  color: Colors.amber),
               const SizedBox(width: 8),
-              StatPill(icon: Icons.bolt_rounded, value: '$credits', label: 'Credits', color: Colors.white),
+              StatPill(
+                  icon: Icons.bolt_rounded,
+                  value: '$credits',
+                  label: 'Credits',
+                  color: Colors.white),
             ],
           ),
         ],
@@ -94,9 +123,12 @@ class ProfileHero extends StatelessWidget {
 
   static String _levelLabel(String level) {
     switch (level) {
-      case 'primary': return 'Primary';
-      case 'tertiary': return 'Tertiary';
-      default: return 'Secondary';
+      case 'primary':
+        return 'Primary';
+      case 'tertiary':
+        return 'Tertiary';
+      default:
+        return 'Secondary';
     }
   }
 }
@@ -117,8 +149,15 @@ class HeroBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[Icon(icon, size: 11, color: Colors.amber), const SizedBox(width: 4)],
-          Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11)),
+          if (icon != null) ...[
+            Icon(icon, size: 11, color: Colors.amber),
+            const SizedBox(width: 4)
+          ],
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11)),
         ],
       ),
     );
@@ -126,7 +165,12 @@ class HeroBadge extends StatelessWidget {
 }
 
 class StatPill extends StatelessWidget {
-  const StatPill({super.key, required this.icon, required this.value, required this.label, required this.color});
+  const StatPill(
+      {super.key,
+      required this.icon,
+      required this.value,
+      required this.label,
+      required this.color});
   final IconData icon;
   final String value, label;
   final Color color;
@@ -144,8 +188,14 @@ class StatPill extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 18),
             const SizedBox(height: 4),
-            Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
-            Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 10)),
+            Text(value,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16)),
+            Text(label,
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.75), fontSize: 10)),
           ],
         ),
       ),

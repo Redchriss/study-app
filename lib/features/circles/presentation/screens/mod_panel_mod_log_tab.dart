@@ -5,59 +5,123 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/domain/community_queries.dart';
 import '../../../../core/widgets/error_state.dart';
 
-class ModPanelModLogTab extends ConsumerWidget {
+final _actionFilters = [
+  'All',
+  'Remove',
+  'Approve',
+  'Pin',
+  'Lock',
+  'Ban',
+];
+
+class ModPanelModLogTab extends ConsumerStatefulWidget {
   final String communitySlug;
 
   const ModPanelModLogTab({super.key, required this.communitySlug});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Query(
-      options: QueryOptions(
-        document: gql(kModLogQuery),
-        variables: {'communitySlug': communitySlug},
-        fetchPolicy: FetchPolicy.networkOnly,
-      ),
-      builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (result.hasException) {
-          return ErrorState(
-            message: result.exception?.graphqlErrors.first.message ?? 'Failed to load mod log',
-            onRetry: () => refetch?.call(),
-          );
-        }
-        final entries = result.data?['modLog'] as List<dynamic>? ?? [];
-        if (entries.isEmpty) {
-          return ListView(
-            children: [
-              SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-              const Center(
-                child: Column(
+  ConsumerState<ModPanelModLogTab> createState() => _ModPanelModLogTabState();
+}
+
+class _ModPanelModLogTabState extends ConsumerState<ModPanelModLogTab> {
+  String _filter = 'All';
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Filter row
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: SizedBox(
+            height: 36,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _actionFilters.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              itemBuilder: (_, i) {
+                final f = _actionFilters[i];
+                final selected = _filter == f;
+                return ChoiceChip(
+                  label: Text(f,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: selected ? Colors.white : Colors.grey)),
+                  selected: selected,
+                  selectedColor: Theme.of(context).colorScheme.primary,
+                  onSelected: (_) => setState(() => _filter = f),
+                  visualDensity: VisualDensity.compact,
+                );
+              },
+            ),
+          ),
+        ),
+        Expanded(
+          child: Query(
+            options: QueryOptions(
+              document: gql(kModLogQuery),
+              variables: {'communitySlug': widget.communitySlug},
+              fetchPolicy: FetchPolicy.networkOnly,
+            ),
+            builder: (result, {fetchMore, refetch}) {
+              if (result.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (result.hasException) {
+                return ErrorState(
+                  message: result.exception?.graphqlErrors.first.message ??
+                      'Failed to load mod log',
+                  onRetry: () => refetch?.call(),
+                );
+              }
+              final entries = result.data?['modLog'] as List<dynamic>? ?? [];
+
+              // Apply local filter
+              final filtered = _filter == 'All'
+                  ? entries
+                  : entries.where((e) {
+                      final action =
+                          (e as Map<String, dynamic>)['action'] as String? ??
+                              '';
+                      return action
+                          .toLowerCase()
+                          .contains(_filter.toLowerCase());
+                    }).toList();
+
+              if (filtered.isEmpty) {
+                return ListView(
                   children: [
-                    Icon(Icons.history, size: 64, color: Colors.grey),
-                    SizedBox(height: 16),
-                    Text('No moderation actions yet', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                    const Center(
+                      child: Column(
+                        children: [
+                          Icon(Icons.history, size: 64, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text('No moderation actions yet',
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
                   ],
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: () async => refetch?.call(),
+                child: ListView.separated(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, i) {
+                    final e = filtered[i] as Map<String, dynamic>;
+                    return _ModLogTile(entry: e);
+                  },
                 ),
-              ),
-            ],
-          );
-        }
-        return RefreshIndicator(
-          onRefresh: () async => refetch?.call(),
-          child: ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: entries.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, i) {
-              final e = entries[i] as Map<String, dynamic>;
-              return _ModLogTile(entry: e);
+              );
             },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }
@@ -103,7 +167,10 @@ class _ModLogTile extends StatelessWidget {
       leading: Icon(_iconForAction(action), size: 20),
       title: Text(
         action.replaceAll('_', ' '),
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        style: Theme.of(context)
+            .textTheme
+            .bodyMedium
+            ?.copyWith(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
         [
@@ -116,7 +183,8 @@ class _ModLogTile extends StatelessWidget {
       ),
       trailing: Text(
         _formatTime(createdAt),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+        style:
+            Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
       ),
     );
   }

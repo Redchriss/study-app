@@ -22,7 +22,8 @@ class ShimmerBox extends StatefulWidget {
   State<ShimmerBox> createState() => _ShimmerBoxState();
 }
 
-class _ShimmerBoxState extends State<ShimmerBox> with SingleTickerProviderStateMixin {
+class _ShimmerBoxState extends State<ShimmerBox>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -54,7 +55,10 @@ class _ShimmerBoxState extends State<ShimmerBox> with SingleTickerProviderStateM
         height: widget.height,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(widget.radius),
-          color: (widget.baseColor ?? (dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant))
+          color: (widget.baseColor ??
+                  (dark
+                      ? DesignTokens.darkSurfaceVariant
+                      : DesignTokens.surfaceVariant))
               .withValues(alpha: _animation.value),
         ),
       ),

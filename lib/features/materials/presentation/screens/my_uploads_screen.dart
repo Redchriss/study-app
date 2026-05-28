@@ -26,9 +26,12 @@ class MyUploadsScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Remove upload?'),
-        content: Text('Delete "$title"? This only works while the material is still pending review.'),
+        content: Text(
+            'Delete "$title"? This only works while the material is still pending review.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: DesignTokens.error),
@@ -60,7 +63,9 @@ class MyUploadsScreen extends ConsumerWidget {
     final errs = (payload?['errors'] as List?)?.cast<String>().join(' ') ?? '';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok ? 'Upload removed.' : (errs.isNotEmpty ? errs : 'Could not delete.')),
+        content: Text(ok
+            ? 'Upload removed.'
+            : (errs.isNotEmpty ? errs : 'Could not delete.')),
         backgroundColor: ok ? DesignTokens.success : DesignTokens.error,
       ),
     );
@@ -72,7 +77,9 @@ class MyUploadsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('My uploads', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+        title: Text('My uploads',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.w700)),
         centerTitle: true,
       ),
       body: Query(
@@ -84,7 +91,8 @@ class MyUploadsScreen extends ConsumerWidget {
           if (result.isLoading) return const LoadingWidget();
           if (result.hasException) {
             return ErrorState(
-              message: graphQLErrorMessage(result.exception, 'Could not load uploads.'),
+              message: graphQLErrorMessage(
+                  result.exception, 'Could not load uploads.'),
               onRetry: () => refetch?.call(),
             );
           }
@@ -97,17 +105,22 @@ class MyUploadsScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.upload_file, size: 56, color: DesignTokens.textTertiary.withValues(alpha: 0.6)),
+                    Icon(Icons.upload_file,
+                        size: 56,
+                        color:
+                            DesignTokens.textTertiary.withValues(alpha: 0.6)),
                     const SizedBox(height: DesignTokens.spMd),
                     Text(
                       'No uploads yet',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: DesignTokens.spXs),
                     Text(
                       'Submit study notes or resources for review. They appear here until approved.',
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(color: DesignTokens.textSecondary),
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: DesignTokens.textSecondary),
                     ),
                     const SizedBox(height: DesignTokens.spLg),
                     FilledButton.icon(
@@ -129,7 +142,10 @@ class MyUploadsScreen extends ConsumerWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (_, i) {
                 if (i == 0) {
-                  final liveCount = items.where((item) => (item as Map<String, dynamic>)['isApproved'] == true).length;
+                  final liveCount = items
+                      .where((item) =>
+                          (item as Map<String, dynamic>)['isApproved'] == true)
+                      .length;
                   final pendingCount = items.length - liveCount;
                   return UploadsSummaryCard(
                     totalCount: items.length,
@@ -146,7 +162,8 @@ class MyUploadsScreen extends ConsumerWidget {
                   material: m,
                   onDelete: slug.isEmpty
                       ? null
-                      : () => _deletePending(context, ref, slug, title, () => refetch?.call()),
+                      : () => _deletePending(
+                          context, ref, slug, title, () => refetch?.call()),
                 );
               },
             ),

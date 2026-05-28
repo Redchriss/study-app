@@ -73,7 +73,8 @@ class _VideoMaterialReaderState extends State<VideoMaterialReader> {
     if (_controller == null) {
       return ReaderScaffold(
         title: widget.material.title,
-        child: const Center(child: Text('This video could not be opened in study mode.')),
+        child: const Center(
+            child: Text('This video could not be opened in study mode.')),
       );
     }
 
@@ -81,20 +82,27 @@ class _VideoMaterialReaderState extends State<VideoMaterialReader> {
       title: widget.material.title,
       trailing: const ReaderPageBadge(label: 'Video lesson'),
       actions: [
-        IconButton(icon: const Icon(Icons.sticky_note_2_outlined), onPressed: widget.onOpenAnnotations),
-        IconButton(icon: const Icon(Icons.style_outlined), onPressed: widget.onOpenFlashcards),
+        IconButton(
+            icon: const Icon(Icons.sticky_note_2_outlined),
+            onPressed: widget.onOpenAnnotations),
+        IconButton(
+            icon: const Icon(Icons.style_outlined),
+            onPressed: widget.onOpenFlashcards),
       ],
       bottomBar: ReaderActionBar(
         onNote: () => widget.onSaveAnnotation(_selection()),
         onQuickQuiz: () => widget.onQuickQuiz(_selection()),
         onFlashcards: widget.onOpenFlashcards,
-        onAskAi: widget.onAskAi == null ? null : () => widget.onAskAi!(_selection()),
+        onAskAi:
+            widget.onAskAi == null ? null : () => widget.onAskAi!(_selection()),
       ),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           if (widget.material.subjectName.isNotEmpty) ...[
-            Align(alignment: Alignment.centerLeft, child: ReaderTag(label: widget.material.subjectName)),
+            Align(
+                alignment: Alignment.centerLeft,
+                child: ReaderTag(label: widget.material.subjectName)),
             const SizedBox(height: 12),
           ],
           ClipRRect(
@@ -102,7 +110,9 @@ class _VideoMaterialReaderState extends State<VideoMaterialReader> {
             child: YoutubePlayer(controller: _controller!, aspectRatio: 16 / 9),
           ),
           const SizedBox(height: 16),
-          const ReaderTip(text: 'Watch inside the app, then use quick quiz, flashcards, or AI help without leaving study mode.'),
+          const ReaderTip(
+              text:
+                  'Watch inside the app, then use quick quiz, flashcards, or AI help without leaving study mode.'),
         ],
       ),
     );

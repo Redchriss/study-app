@@ -34,7 +34,9 @@ class KidsStoryChunkCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected ? KidsVisualTheme.pathBlue : KidsVisualTheme.ink.withValues(alpha: 0.08),
+              color: selected
+                  ? KidsVisualTheme.pathBlue
+                  : KidsVisualTheme.ink.withValues(alpha: 0.08),
               width: selected ? 2 : 1.5,
             ),
           ),

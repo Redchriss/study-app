@@ -9,7 +9,8 @@ final tapAndLearnSchema = S.object(
     'component': S.string(enumValues: ['TapAndLearn']),
     'emoji': S.string(description: 'Emoji representing the object to learn'),
     'word': S.string(description: 'The word to teach'),
-    'word_in_chichewa': S.string(description: 'Chichewa translation of the word'),
+    'word_in_chichewa':
+        S.string(description: 'Chichewa translation of the word'),
     'learnAction': A2uiSchemas.action(
       description: 'Fired after child taps and hears the word',
     ),
@@ -156,7 +157,8 @@ class _TapAndLearnWidgetState extends State<_TapAndLearnWidget>
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.touch_app, size: 18, color: KidsVisualTheme.ink),
+                      Icon(Icons.touch_app,
+                          size: 18, color: KidsVisualTheme.ink),
                       SizedBox(width: 6),
                       Text(
                         'Tap to learn!',

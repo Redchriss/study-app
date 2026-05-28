@@ -31,7 +31,8 @@ class MaterialReaderService {
 
   final _progressStore = StudyProgressStore();
 
-  String _errorMessage(QueryResult result, [String fallback = 'Something went wrong.']) {
+  String _errorMessage(QueryResult result,
+      [String fallback = 'Something went wrong.']) {
     return graphQLErrorMessage(result.exception, fallback);
   }
 
@@ -51,13 +52,15 @@ class MaterialReaderService {
 
   Future<int> loadSavedPage(String slug, {bool textMode = false}) async {
     final prefs = await SharedPreferences.getInstance();
-    final key = textMode ? '$_textProgressPrefix$slug' : '$_pageProgressPrefix$slug';
+    final key =
+        textMode ? '$_textProgressPrefix$slug' : '$_pageProgressPrefix$slug';
     return prefs.getInt(key) ?? 0;
   }
 
   Future<void> savePage(String slug, int page, {bool textMode = false}) async {
     final prefs = await SharedPreferences.getInstance();
-    final key = textMode ? '$_textProgressPrefix$slug' : '$_pageProgressPrefix$slug';
+    final key =
+        textMode ? '$_textProgressPrefix$slug' : '$_pageProgressPrefix$slug';
     await prefs.setInt(key, page);
   }
 
@@ -121,9 +124,11 @@ class MaterialReaderService {
       );
       final payload = result.data?['saveMaterialAnnotation'];
       if (result.hasException || payload?['success'] != true) {
-        final message = (payload?['errors'] as List?)?.firstOrNull?.toString() ??
-            _errorMessage(result, 'Could not save annotation.');
-        return ReaderServiceResult<void>(success: false, errors: <String>[message], message: message);
+        final message =
+            (payload?['errors'] as List?)?.firstOrNull?.toString() ??
+                _errorMessage(result, 'Could not save annotation.');
+        return ReaderServiceResult<void>(
+            success: false, errors: <String>[message], message: message);
       }
       return const ReaderServiceResult<void>(success: true);
     } catch (_) {
@@ -148,9 +153,11 @@ class MaterialReaderService {
       );
       final payload = result.data?['deleteMaterialAnnotation'];
       if (result.hasException || payload?['success'] != true) {
-        final message = (payload?['errors'] as List?)?.firstOrNull?.toString() ??
-            _errorMessage(result, 'Could not delete annotation.');
-        return ReaderServiceResult<void>(success: false, errors: <String>[message], message: message);
+        final message =
+            (payload?['errors'] as List?)?.firstOrNull?.toString() ??
+                _errorMessage(result, 'Could not delete annotation.');
+        return ReaderServiceResult<void>(
+            success: false, errors: <String>[message], message: message);
       }
       return const ReaderServiceResult<void>(success: true);
     } catch (_) {
@@ -176,13 +183,16 @@ class MaterialReaderService {
       );
       final payload = result.data?['requestAiTask'];
       if (result.hasException || payload?['success'] != true) {
-        final message = (payload?['errors'] as List?)?.firstOrNull?.toString() ??
-            _errorMessage(result, 'AI request failed.');
-        return ReaderServiceResult<void>(success: false, errors: <String>[message], message: message);
+        final message =
+            (payload?['errors'] as List?)?.firstOrNull?.toString() ??
+                _errorMessage(result, 'AI request failed.');
+        return ReaderServiceResult<void>(
+            success: false, errors: <String>[message], message: message);
       }
       return ReaderServiceResult<void>(
         success: true,
-        message: 'AI ${taskType.toLowerCase()} started. It will appear when ready.',
+        message:
+            'AI ${taskType.toLowerCase()} started. It will appear when ready.',
       );
     } catch (_) {
       return const ReaderServiceResult<void>(
@@ -205,7 +215,9 @@ class MaterialReaderService {
           variables: {'materialId': materialId},
         ),
       );
-      final sessionId = sessionResult.data?['createChatSession']?['session']?['id']?.toString();
+      final sessionId = sessionResult.data?['createChatSession']?['session']
+              ?['id']
+          ?.toString();
       if (sessionId == null || sessionId.isEmpty) {
         return const ReaderServiceResult<String>(
           success: false,
@@ -223,11 +235,14 @@ class MaterialReaderService {
           },
         ),
       );
-      final reply = response.data?['sendMessage']?['message']?['messageText']?.toString();
+      final reply =
+          response.data?['sendMessage']?['message']?['messageText']?.toString();
       final payloadError = response.data?['sendMessage']?['error']?.toString();
       if (response.hasException || reply == null || reply.isEmpty) {
-        final message = payloadError ?? _errorMessage(response, 'AI could not answer right now.');
-        return ReaderServiceResult<String>(success: false, errors: <String>[message], message: message);
+        final message = payloadError ??
+            _errorMessage(response, 'AI could not answer right now.');
+        return ReaderServiceResult<String>(
+            success: false, errors: <String>[message], message: message);
       }
 
       return ReaderServiceResult<String>(success: true, data: reply);

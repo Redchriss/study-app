@@ -46,18 +46,15 @@ class _AnimatedPressState extends State<AnimatedPress>
   }
 
   void _onTapDown(_) {
-    
     _ctrl.forward();
   }
 
   void _onTapUp(_) {
-    
     _ctrl.reverse();
     widget.onTap?.call();
   }
 
   void _onTapCancel() {
-    
     _ctrl.reverse();
   }
 

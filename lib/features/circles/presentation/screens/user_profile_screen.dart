@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -364,10 +365,13 @@ class _ProfileHeader extends StatelessWidget {
                             width: 72,
                             height: 72,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.person,
-                                size: 36, color: DesignTokens.primary)),
+                            errorBuilder: (_, __, ___) => const Icon(
+                                Icons.person,
+                                size: 36,
+                                color: DesignTokens.primary)),
                       )
-                    : const Icon(Icons.person, size: 36, color: DesignTokens.primary),
+                    : const Icon(Icons.person,
+                        size: 36, color: DesignTokens.primary),
               ),
             ),
           ],
@@ -433,6 +437,19 @@ class _ProfileHeader extends StatelessWidget {
                                 fontSize: 12,
                                 color: DesignTokens.textSecondary)),
                       ),
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: () => context.push('/inbox'),
+                      icon: const Icon(Icons.message_outlined, size: 14),
+                      label:
+                          const Text('Message', style: TextStyle(fontSize: 12)),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        foregroundColor: DesignTokens.primary,
+                      ),
+                    ),
                   ],
                 ),
               ],

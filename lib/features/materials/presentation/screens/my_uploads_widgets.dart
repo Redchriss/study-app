@@ -35,7 +35,10 @@ class UploadsSummaryCard extends StatelessWidget {
         children: [
           Text(
             'Your material pipeline',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -45,11 +48,15 @@ class UploadsSummaryCard extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: _UploadsMetric(label: 'Total', value: '$totalCount')),
+              Expanded(
+                  child: _UploadsMetric(label: 'Total', value: '$totalCount')),
               const SizedBox(width: 10),
-              Expanded(child: _UploadsMetric(label: 'Live', value: '$liveCount')),
+              Expanded(
+                  child: _UploadsMetric(label: 'Live', value: '$liveCount')),
               const SizedBox(width: 10),
-              Expanded(child: _UploadsMetric(label: 'Pending', value: '$pendingCount')),
+              Expanded(
+                  child:
+                      _UploadsMetric(label: 'Pending', value: '$pendingCount')),
             ],
           ),
         ],
@@ -77,12 +84,16 @@ class _UploadsMetric extends StatelessWidget {
         children: [
           Text(
             value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(color: DesignTokens.textSecondary, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+                color: DesignTokens.textSecondary, fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -116,7 +127,8 @@ class MyUploadMaterialCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: dark ? DesignTokens.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: DesignTokens.primary.withValues(alpha: 0.15)),
+          border:
+              Border.all(color: DesignTokens.primary.withValues(alpha: 0.15)),
           boxShadow: DesignTokens.shadowSm(dark),
         ),
         child: Row(
@@ -125,13 +137,15 @@ class MyUploadMaterialCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: approved 
-                    ? DesignTokens.success.withValues(alpha: 0.1) 
+                color: approved
+                    ? DesignTokens.success.withValues(alpha: 0.1)
                     : DesignTokens.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
-                approved ? Icons.cloud_done_rounded : Icons.pending_actions_rounded,
+                approved
+                    ? Icons.cloud_done_rounded
+                    : Icons.pending_actions_rounded,
                 color: approved ? DesignTokens.success : DesignTokens.warning,
                 size: 24,
               ),
@@ -142,38 +156,49 @@ class MyUploadMaterialCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title, 
-                    maxLines: 2, 
+                    title,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 15),
                   ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
                       if (subject.isNotEmpty) ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: dark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.shade100,
+                            color: dark
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             subject,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: DesignTokens.textSecondary),
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: DesignTokens.textSecondary),
                           ),
                         ),
                         const SizedBox(width: 8),
                       ],
                       if (type.isNotEmpty) ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: DesignTokens.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             type,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: DesignTokens.primary),
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: DesignTokens.primary),
                           ),
                         ),
                       ],
@@ -185,7 +210,8 @@ class MyUploadMaterialCard extends StatelessWidget {
             const SizedBox(width: 8),
             if (!approved)
               IconButton(
-                icon: const Icon(Icons.delete_outline_rounded, color: DesignTokens.error),
+                icon: const Icon(Icons.delete_outline_rounded,
+                    color: DesignTokens.error),
                 tooltip: 'Delete pending upload',
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -194,7 +220,8 @@ class MyUploadMaterialCard extends StatelessWidget {
             else
               const Padding(
                 padding: EdgeInsets.only(top: 8.0),
-                child: Icon(Icons.chevron_right_rounded, color: DesignTokens.textTertiary),
+                child: Icon(Icons.chevron_right_rounded,
+                    color: DesignTokens.textTertiary),
               ),
           ],
         ),

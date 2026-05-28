@@ -38,11 +38,14 @@ class ProfileScreen extends ConsumerWidget {
         if (result.hasException && me == null) {
           return Scaffold(
             appBar: AppBar(
-              title: Text('Profile', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+              title: Text('Profile',
+                  style: theme.textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w700)),
               centerTitle: true,
             ),
             body: ErrorState(
-              message: graphQLErrorMessage(result.exception, 'Could not load profile.'),
+              message: graphQLErrorMessage(
+                  result.exception, 'Could not load profile.'),
               onRetry: () => refetch?.call(),
             ),
           );

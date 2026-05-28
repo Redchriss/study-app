@@ -73,31 +73,35 @@ class DesignTokens {
 
   // ── Shadows ──────────────────────────────────────────────────────────
   static List<BoxShadow> shadowSm(bool dark) => [
-    BoxShadow(
-      color: (dark ? Colors.black : Colors.black).withValues(alpha: dark ? 0.3 : 0.06),
-      blurRadius: 4,
-      offset: const Offset(0, 2),
-    ),
-  ];
+        BoxShadow(
+          color: (dark ? Colors.black : Colors.black)
+              .withValues(alpha: dark ? 0.3 : 0.06),
+          blurRadius: 4,
+          offset: const Offset(0, 2),
+        ),
+      ];
 
   static List<BoxShadow> shadowMd(bool dark) => [
-    BoxShadow(
-      color: (dark ? Colors.black : Colors.black).withValues(alpha: dark ? 0.4 : 0.08),
-      blurRadius: 12,
-      offset: const Offset(0, 4),
-    ),
-  ];
+        BoxShadow(
+          color: (dark ? Colors.black : Colors.black)
+              .withValues(alpha: dark ? 0.4 : 0.08),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ];
 
   static List<BoxShadow> shadowLg(bool dark) => [
-    BoxShadow(
-      color: (dark ? Colors.black : Colors.black).withValues(alpha: dark ? 0.5 : 0.1),
-      blurRadius: 24,
-      offset: const Offset(0, 8),
-    ),
-  ];
+        BoxShadow(
+          color: (dark ? Colors.black : Colors.black)
+              .withValues(alpha: dark ? 0.5 : 0.1),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
+        ),
+      ];
 
   // ── Glassmorphism ────────────────────────────────────────────────────
-  static BoxDecoration glassDecoration(bool dark, {double blur = 20, double opacity = 0.6}) {
+  static BoxDecoration glassDecoration(bool dark,
+      {double blur = 20, double opacity = 0.6}) {
     return BoxDecoration(
       borderRadius: BorderRadius.circular(radiusXl),
       color: (dark ? darkSurface : surface).withValues(alpha: opacity),

@@ -6,6 +6,7 @@ import 'onboarding_data.dart';
 import 'onboarding_last_page_actions.dart';
 import 'onboarding_next_button.dart';
 import 'onboarding_page.dart';
+
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
   @override
@@ -84,12 +85,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       CurvedAnimation(parent: _bgAnimCtrl, curve: Curves.easeInOut),
     );
   }
+
   @override
   void dispose() {
     _bgAnimCtrl.dispose();
     _controller.dispose();
     super.dispose();
   }
+
   void _next() {
     if (_page < _pages.length - 1) {
       _controller.nextPage(
@@ -98,6 +101,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       );
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final data = _pages[_page];

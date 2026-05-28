@@ -47,8 +47,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Future<QueryResult> _loadAdaptiveStudyPlan() {
     return ref.read(graphqlClientProvider).query(
-      QueryOptions(document: gql(kAdaptiveStudyPlan), fetchPolicy: FetchPolicy.networkOnly),
-    );
+          QueryOptions(
+              document: gql(kAdaptiveStudyPlan),
+              fetchPolicy: FetchPolicy.networkOnly),
+        );
   }
 
   Future<void> _refreshDashboard(Refetch? refetch) async {
@@ -76,7 +78,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         if (result.hasException) {
           return Scaffold(
             body: ErrorState(
-              message: graphQLErrorMessage(result.exception, 'Could not load dashboard.'),
+              message: graphQLErrorMessage(
+                  result.exception, 'Could not load dashboard.'),
               onRetry: () => refetch?.call(),
             ),
           );
@@ -84,28 +87,38 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
         final me = result.data?['me'];
         final profile = me?['profile'];
-        final recentMaterials = (result.data?['recentMaterials'] as List?) ?? [];
+        final recentMaterials =
+            (result.data?['recentMaterials'] as List?) ?? [];
         final latestMaterialProgress = StudyMaterialProgress.fromGraphQL(
           result.data?['latestMaterialProgress'] is Map
-              ? Map<String, dynamic>.from(result.data!['latestMaterialProgress'] as Map)
+              ? Map<String, dynamic>.from(
+                  result.data!['latestMaterialProgress'] as Map)
               : null,
         );
         final snap = result.data?['progressSnapshot'];
         final circles = (result.data?['myCircles'] as List?) ?? [];
-        final learningProfile = result.data?['learningProfile'] as Map<String, dynamic>?;
+        final learningProfile =
+            result.data?['learningProfile'] as Map<String, dynamic>?;
 
         final name = me?['username'] as String? ?? 'Student';
-        final educationLevel = profile?['educationLevel']?.toString() ?? 'secondary';
+        final educationLevel =
+            profile?['educationLevel']?.toString() ?? 'secondary';
         final streak = (profile?['studyStreak'] as num?)?.toInt() ?? 0;
         final points = (profile?['studyPoints'] as num?)?.toInt() ?? 0;
         final credits = (profile?['aiCredits'] as num?)?.toInt() ?? 0;
 
         final weakestTopics = _toStringList(snap?['weakestTopics']);
         final strongestTopics = _toStringList(snap?['strongestTopics']);
-        final strugglingTopics = ((learningProfile?['topicsStruggling'] as List?) ?? const [])
-            .map((e) => e.toString()).where((s) => s.trim().isNotEmpty).toList();
-        final masteredTopics = ((learningProfile?['topicsMastered'] as List?) ?? const [])
-            .map((e) => e.toString()).where((s) => s.trim().isNotEmpty).toList();
+        final strugglingTopics =
+            ((learningProfile?['topicsStruggling'] as List?) ?? const [])
+                .map((e) => e.toString())
+                .where((s) => s.trim().isNotEmpty)
+                .toList();
+        final masteredTopics =
+            ((learningProfile?['topicsMastered'] as List?) ?? const [])
+                .map((e) => e.toString())
+                .where((s) => s.trim().isNotEmpty)
+                .toList();
 
         _scheduleWeakTopicReminder(weakestTopics);
 
@@ -129,7 +142,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                 // Continue Studying
                 if (latestMaterialProgress != null)
-                  SliverToBoxAdapter(child: DashboardContinueStudyCard(progress: latestMaterialProgress).animate().fadeIn(delay: 200.ms))
+                  SliverToBoxAdapter(
+                      child: DashboardContinueStudyCard(
+                              progress: latestMaterialProgress)
+                          .animate()
+                          .fadeIn(delay: 200.ms))
                 else
                   SliverToBoxAdapter(
                     child: FutureBuilder<StudyMaterialProgress?>(
@@ -137,7 +154,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       builder: (_, snapshot) {
                         final saved = snapshot.data;
                         if (saved == null) return const SizedBox.shrink();
-                        return DashboardContinueStudyCard(progress: saved).animate().fadeIn(delay: 200.ms);
+                        return DashboardContinueStudyCard(progress: saved)
+                            .animate()
+                            .fadeIn(delay: 200.ms);
                       },
                     ),
                   ),
@@ -145,20 +164,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 // Quick Actions
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(DesignTokens.spMd, 0, DesignTokens.spMd, DesignTokens.spMd),
+                    padding: const EdgeInsets.fromLTRB(DesignTokens.spMd, 0,
+                        DesignTokens.spMd, DesignTokens.spMd),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SectionHeader(title: 'Quick Actions'),
                         const SizedBox(height: DesignTokens.spSm),
-                        DashboardQuickActions(educationLevel: educationLevel, circlesCount: circles.length),
+                        DashboardQuickActions(
+                            educationLevel: educationLevel,
+                            circlesCount: circles.length),
                       ],
                     ),
                   ).animate().fadeIn(delay: 300.ms),
                 ),
 
                 // Focus Coach
-                if (weakestTopics.isNotEmpty || strugglingTopics.isNotEmpty || masteredTopics.isNotEmpty)
+                if (weakestTopics.isNotEmpty ||
+                    strugglingTopics.isNotEmpty ||
+                    masteredTopics.isNotEmpty)
                   SliverToBoxAdapter(
                     child: DashboardFocusCoachCard(
                       weakestTopics: weakestTopics,
@@ -175,7 +199,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     builder: (_, snapshot) {
                       final plan = snapshot.data?.data?['adaptiveStudyPlan'];
                       if (plan is! Map) return const SizedBox.shrink();
-                      final tasks = ((plan['tasksJson'] as List?) ?? const []).whereType<Map>().toList();
+                      final tasks = ((plan['tasksJson'] as List?) ?? const [])
+                          .whereType<Map>()
+                          .toList();
                       return DashboardAdaptivePlanCard(
                         planSummary: plan['planSummary']?.toString() ?? '',
                         tasks: tasks,
@@ -200,8 +226,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 if (recentMaterials.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(DesignTokens.spMd, 0, DesignTokens.spMd, DesignTokens.spSm),
-                      child: SectionHeader(title: 'Recent Materials', actionLabel: 'See all', onAction: () => context.push('/materials')),
+                      padding: const EdgeInsets.fromLTRB(DesignTokens.spMd, 0,
+                          DesignTokens.spMd, DesignTokens.spSm),
+                      child: SectionHeader(
+                          title: 'Recent Materials',
+                          actionLabel: 'See all',
+                          onAction: () => context.push('/materials')),
                     ),
                   ),
                   SliverToBoxAdapter(
@@ -209,15 +239,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       height: 150,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.fromLTRB(DesignTokens.spMd, 0, DesignTokens.spMd, 0),
+                        padding: const EdgeInsets.fromLTRB(
+                            DesignTokens.spMd, 0, DesignTokens.spMd, 0),
                         itemCount: recentMaterials.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: DesignTokens.spSm),
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(width: DesignTokens.spSm),
                         itemBuilder: (_, i) {
                           final m = recentMaterials[i];
                           return DashboardRecentMaterialCard(
                             material: m,
                             dark: dark,
-                            onTap: () => context.push('/materials/${m['slug']}'),
+                            onTap: () =>
+                                context.push('/materials/${m['slug']}'),
                           );
                         },
                       ),
@@ -225,7 +258,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ],
 
-                const SliverToBoxAdapter(child: SizedBox(height: DesignTokens.spXxl * 2)),
+                const SliverToBoxAdapter(
+                    child: SizedBox(height: DesignTokens.spXxl * 2)),
               ],
             ),
           ),
@@ -233,5 +267,4 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       },
     );
   }
-
 }

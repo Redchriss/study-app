@@ -11,7 +11,8 @@ class AnalyticsService {
 
   static FirebaseAnalytics get instance {
     if (_instance == null && _isEnabled) {
-      throw Exception('Firebase Analytics not initialized. Call initialize() first.');
+      throw Exception(
+          'Firebase Analytics not initialized. Call initialize() first.');
     }
     return _instance!;
   }
@@ -31,7 +32,8 @@ class AnalyticsService {
     }
   }
 
-  static Future<void> logEvent(String name, {Map<String, Object>? parameters}) async {
+  static Future<void> logEvent(String name,
+      {Map<String, Object>? parameters}) async {
     if (!_isEnabled || _instance == null) return;
     try {
       await _instance!.logEvent(

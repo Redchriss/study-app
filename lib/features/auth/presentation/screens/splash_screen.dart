@@ -19,12 +19,13 @@ class SplashScreen extends StatelessWidget {
             Text(
               'Yaza',
               style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
             ),
             const SizedBox(height: 8),
-            const Text('Learn. Grow. Pass.', style: TextStyle(color: Colors.white70, fontSize: 16)),
+            const Text('Learn. Grow. Pass.',
+                style: TextStyle(color: Colors.white70, fontSize: 16)),
             const SizedBox(height: 48),
             const CircularProgressIndicator(color: Colors.white),
           ],

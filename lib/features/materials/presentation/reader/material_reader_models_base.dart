@@ -10,7 +10,8 @@ class ReaderStudySelection {
   final String selectedText;
 }
 
-typedef ReaderSelectionCallback = Future<void> Function(ReaderStudySelection selection);
+typedef ReaderSelectionCallback = Future<void> Function(
+    ReaderStudySelection selection);
 
 class ReaderProgressData {
   const ReaderProgressData({
@@ -52,9 +53,11 @@ class ReaderAnnotationData {
   final String noteText;
   final String color;
 
-  bool get isHighlight => noteText.trim().isEmpty && selectedText.trim().isNotEmpty;
+  bool get isHighlight =>
+      noteText.trim().isEmpty && selectedText.trim().isNotEmpty;
 
-  String get displayAnchor => anchorLabel.trim().isNotEmpty ? anchorLabel : 'Section ${unitIndex + 1}';
+  String get displayAnchor =>
+      anchorLabel.trim().isNotEmpty ? anchorLabel : 'Section ${unitIndex + 1}';
 
   factory ReaderAnnotationData.fromMap(Map<String, dynamic> map) {
     return ReaderAnnotationData(
@@ -130,7 +133,8 @@ class ReaderQuickQuizQuestion {
         .where((item) => item.isNotEmpty)
         .toList();
     final rawIndex = (map['answerIndex'] as num?)?.toInt() ?? 0;
-    final safeIndex = options.isEmpty ? 0 : rawIndex.clamp(0, options.length - 1).toInt();
+    final safeIndex =
+        options.isEmpty ? 0 : rawIndex.clamp(0, options.length - 1).toInt();
     return ReaderQuickQuizQuestion(
       question: map['question']?.toString().trim() ?? '',
       options: options,
@@ -149,7 +153,10 @@ class ReaderQuickQuizData {
   final String title;
   final List<ReaderQuickQuizQuestion> questions;
 
-  bool get isValid => questions.isNotEmpty && questions.every((item) => item.question.isNotEmpty && item.options.length >= 2);
+  bool get isValid =>
+      questions.isNotEmpty &&
+      questions.every(
+          (item) => item.question.isNotEmpty && item.options.length >= 2);
 
   factory ReaderQuickQuizData.fromMap(Map<String, dynamic> map) {
     return ReaderQuickQuizData(
@@ -158,7 +165,8 @@ class ReaderQuickQuizData {
           : 'Quick Revision Quiz',
       questions: ((map['questions'] as List?) ?? const [])
           .whereType<Map>()
-          .map((item) => ReaderQuickQuizQuestion.fromMap(Map<String, dynamic>.from(item)))
+          .map((item) =>
+              ReaderQuickQuizQuestion.fromMap(Map<String, dynamic>.from(item)))
           .where((item) => item.question.isNotEmpty && item.options.length >= 2)
           .toList(),
     );

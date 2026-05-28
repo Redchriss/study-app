@@ -40,7 +40,9 @@ class _DiscoverSuggestionCardState extends State<DiscoverSuggestionCard> {
             backgroundImage: icon.isNotEmpty ? NetworkImage(icon) : null,
             child: icon.isEmpty
                 ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: const TextStyle(color: DesignTokens.primary, fontWeight: FontWeight.w700))
+                    style: const TextStyle(
+                        color: DesignTokens.primary,
+                        fontWeight: FontWeight.w700))
                 : null,
           ),
           const SizedBox(width: 12),
@@ -49,13 +51,17 @@ class _DiscoverSuggestionCardState extends State<DiscoverSuggestionCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(displayName,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14)),
                 Text('y/$name • ${_formatCount(memberCount)} members',
-                    style: const TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
+                    style: const TextStyle(
+                        fontSize: 11, color: DesignTokens.textTertiary)),
                 if (description.isNotEmpty)
                   Text(description,
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 12, color: DesignTokens.textSecondary)),
               ],
             ),
           ),
@@ -66,12 +72,17 @@ class _DiscoverSuggestionCardState extends State<DiscoverSuggestionCard> {
               return SizedBox(
                 height: 32,
                 child: OutlinedButton(
-                  onPressed: _joining ? null : () {
-                    setState(() => _joining = true);
-                    run({'slug': name});
-                  },
+                  onPressed: _joining
+                      ? null
+                      : () {
+                          setState(() => _joining = true);
+                          run({'slug': name});
+                        },
                   child: _joining
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
                       : const Text('Join', style: TextStyle(fontSize: 12)),
                 ),
               );

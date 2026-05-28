@@ -9,7 +9,11 @@ extension _KidsColorShades on Color {
 }
 
 class KidsStreakChip extends StatelessWidget {
-  const KidsStreakChip({super.key, required this.streak, this.compact = false, this.quizMode = false});
+  const KidsStreakChip(
+      {super.key,
+      required this.streak,
+      this.compact = false,
+      this.quizMode = false});
   final int streak;
   final bool compact;
   final bool quizMode;
@@ -17,20 +21,34 @@ class KidsStreakChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: compact ? 6 : 8),
+      padding: EdgeInsets.symmetric(
+          horizontal: compact ? 10 : 14, vertical: compact ? 6 : 8),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [DesignTokens.warning, DesignTokens.warning.withValues(alpha: 0.85)]),
+        gradient: LinearGradient(colors: [
+          DesignTokens.warning,
+          DesignTokens.warning.withValues(alpha: 0.85)
+        ]),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: DesignTokens.warning.withValues(alpha: 0.35), offset: const Offset(0, 3), blurRadius: 0)],
+        boxShadow: [
+          BoxShadow(
+              color: DesignTokens.warning.withValues(alpha: 0.35),
+              offset: const Offset(0, 3),
+              blurRadius: 0)
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.local_fire_department_rounded, color: Colors.white.withValues(alpha: 0.95), size: compact ? 18 : 22),
+          Icon(Icons.local_fire_department_rounded,
+              color: Colors.white.withValues(alpha: 0.95),
+              size: compact ? 18 : 22),
           const SizedBox(width: 6),
           Text(
             quizMode ? '$streak quiz streak' : '$streak day streak',
-            style: TextStyle(fontSize: compact ? 12 : 14, fontWeight: FontWeight.w900, color: Colors.white.withValues(alpha: 0.98)),
+            style: TextStyle(
+                fontSize: compact ? 12 : 14,
+                fontWeight: FontWeight.w900,
+                color: Colors.white.withValues(alpha: 0.98)),
           ),
         ],
       ),
@@ -72,8 +90,12 @@ class KidsHeroCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
-          BoxShadow(color: KidsVisualTheme.pathBlue.withValues(alpha: 0.18), blurRadius: 0, offset: const Offset(0, 6)),
-          ...DesignTokens.shadowSm(Theme.of(context).brightness == Brightness.dark),
+          BoxShadow(
+              color: KidsVisualTheme.pathBlue.withValues(alpha: 0.18),
+              blurRadius: 0,
+              offset: const Offset(0, 6)),
+          ...DesignTokens.shadowSm(
+              Theme.of(context).brightness == Brightness.dark),
         ],
       ),
       child: Column(
@@ -86,14 +108,26 @@ class KidsHeroCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Hi, $childName!', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900, color: KidsVisualTheme.ink, letterSpacing: -0.5)),
+                    Text('Hi, $childName!',
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: KidsVisualTheme.ink,
+                                letterSpacing: -0.5)),
                     const SizedBox(height: 6),
-                    Text('$trackLabel \u00b7 Standard $standard', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: KidsVisualTheme.inkMuted)),
+                    Text('$trackLabel \u00b7 Standard $standard',
+                        style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: KidsVisualTheme.inkMuted)),
                   ],
                 ),
               ),
               if (summary != null) ...[
-                KidsDailyGoalRing(activities: act, goal: goal, size: 76, stroke: 8),
+                KidsDailyGoalRing(
+                    activities: act, goal: goal, size: 76, stroke: 8),
                 const SizedBox(width: 12),
               ],
               Column(
@@ -106,11 +140,18 @@ class KidsHeroCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       onTap: onStarsTap,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
                         child: Row(children: [
-                          Icon(Icons.star_rounded, color: KidsVisualTheme.sunGold.shade700, size: 26),
+                          Icon(Icons.star_rounded,
+                              color: KidsVisualTheme.sunGold.shade700,
+                              size: 26),
                           const SizedBox(width: 4),
-                          Text('$stars', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: KidsVisualTheme.sunGold.shade800)),
+                          Text('$stars',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 18,
+                                  color: KidsVisualTheme.sunGold.shade800)),
                         ]),
                       ),
                     ),
@@ -122,19 +163,30 @@ class KidsHeroCard extends StatelessWidget {
           if (cal > 0 || quizHotStreak > 0) ...[
             const SizedBox(height: 12),
             Wrap(
-              spacing: 8, runSpacing: 8,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 if (cal > 0)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: KidsVisualTheme.pathBlue.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                        color: KidsVisualTheme.pathBlue.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20)),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.wb_sunny_rounded, color: KidsVisualTheme.pathBlue, size: 18),
+                      const Icon(Icons.wb_sunny_rounded,
+                          color: KidsVisualTheme.pathBlue, size: 18),
                       const SizedBox(width: 6),
-                      Text('$cal learning days in a row', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: KidsVisualTheme.ink)),
+                      Text('$cal learning days in a row',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                              color: KidsVisualTheme.ink)),
                     ]),
                   ),
-                if (quizHotStreak > 0) KidsStreakChip(streak: quizHotStreak, compact: true, quizMode: true),
+                if (quizHotStreak > 0)
+                  KidsStreakChip(
+                      streak: quizHotStreak, compact: true, quizMode: true),
               ],
             ),
           ],

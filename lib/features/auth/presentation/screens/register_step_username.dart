@@ -33,7 +33,8 @@ class RegisterStepUsername extends StatelessWidget {
                 color: DesignTokens.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.person_outline_rounded, size: 40, color: DesignTokens.primary),
+              child: const Icon(Icons.person_outline_rounded,
+                  size: 40, color: DesignTokens.primary),
             ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
             const SizedBox(height: 24),
             Text(
@@ -47,7 +48,10 @@ class RegisterStepUsername extends StatelessWidget {
             const SizedBox(height: 12),
             const Text(
               'Your unique username on Yaza.',
-              style: TextStyle(fontSize: 15, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                  fontSize: 15,
+                  color: DesignTokens.textSecondary,
+                  fontWeight: FontWeight.w500),
             ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
             const SizedBox(height: 40),
             TextFormField(
@@ -59,14 +63,20 @@ class RegisterStepUsername extends StatelessWidget {
                 prefixIcon: const Icon(Icons.alternate_email_rounded),
                 hintText: 'e.g. kondwani265',
                 filled: true,
-                fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                fillColor: dark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.grey.shade100,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               ),
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => onContinue(),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Username is required';
+                if (v == null || v.trim().isEmpty)
+                  return 'Username is required';
                 if (v.trim().length < 3) return 'At least 3 characters';
                 if (v.trim().contains(' ')) return 'No spaces allowed';
                 return null;

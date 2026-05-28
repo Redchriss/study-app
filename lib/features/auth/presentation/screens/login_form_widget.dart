@@ -28,9 +28,9 @@ class _LoginFormWidgetState extends ConsumerState<LoginFormWidget> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     final ok = await ref.read(authProvider.notifier).login(
-      _usernameCtrl.text.trim(),
-      _passwordCtrl.text,
-    );
+          _usernameCtrl.text.trim(),
+          _passwordCtrl.text,
+        );
     if (mounted) setState(() => _loading = false);
     if (!mounted) return;
     if (ok) return;

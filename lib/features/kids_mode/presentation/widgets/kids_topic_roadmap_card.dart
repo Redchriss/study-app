@@ -32,7 +32,9 @@ class KidsTopicRoadmapCard extends StatelessWidget {
             ? const Color(0xFF2ECC71)
             : KidsVisualTheme.pathBlue;
     return Material(
-      color: selected ? accent.withValues(alpha: 0.18) : Colors.white.withValues(alpha: 0.94),
+      color: selected
+          ? accent.withValues(alpha: 0.18)
+          : Colors.white.withValues(alpha: 0.94),
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
@@ -53,7 +55,9 @@ class KidsTopicRoadmapCard extends StatelessWidget {
                   (index) => Padding(
                     padding: const EdgeInsets.only(right: 2),
                     child: Icon(
-                      index < masteryLevel ? Icons.star_rounded : Icons.star_outline_rounded,
+                      index < masteryLevel
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
                       size: 16,
                       color: accent,
                     ),
@@ -80,7 +84,8 @@ class KidsTopicRoadmapCard extends StatelessWidget {
                   color: accent,
                 ),
               ),
-              if (nextReviewLabel != null && nextReviewLabel!.trim().isNotEmpty) ...[
+              if (nextReviewLabel != null &&
+                  nextReviewLabel!.trim().isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
                   nextReviewLabel!,

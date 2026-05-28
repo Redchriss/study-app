@@ -1,6 +1,7 @@
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-String graphQLErrorMessage(OperationException? exception, [String fallback = 'Something went wrong']) {
+String graphQLErrorMessage(OperationException? exception,
+    [String fallback = 'Something went wrong']) {
   return exception?.graphqlErrors.firstOrNull?.message ??
       exception?.linkException?.toString() ??
       fallback;

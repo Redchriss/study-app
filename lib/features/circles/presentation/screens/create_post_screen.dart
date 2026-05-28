@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -12,7 +13,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   final String? communitySlug;
-  const CreatePostScreen({super.key, this.communitySlug});
+  final Map<String, dynamic>? crosspostOf;
+  const CreatePostScreen({super.key, this.communitySlug, this.crosspostOf});
 
   @override
   ConsumerState<CreatePostScreen> createState() => _CreatePostScreenState();
@@ -31,12 +33,23 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   String? _imagePath;
   String? _videoBase64;
   String? _videoPath;
+  String? _flairId;
+  String? _linkPreviewTitle;
+  String? _linkPreviewThumbnail;
+  String? _linkPreviewDescription;
+  int _pollDurationHours = 24;
+  Timer? _linkDebounce;
+
+  // Gallery state
+  final List<_GalleryItem> _galleryItems = [];
+
   final _pollOptions = <TextEditingController>[];
 
   final _postTypes = [
     {'key': 'text', 'icon': '📝', 'label': 'Text'},
     {'key': 'link', 'icon': '🔗', 'label': 'Link'},
     {'key': 'image', 'icon': '🖼', 'label': 'Image'},
+    {'key': 'gallery', 'icon': '🎠', 'label': 'Gallery'},
     {'key': 'video', 'icon': '🎬', 'label': 'Video'},
     {'key': 'poll', 'icon': '📊', 'label': 'Poll'},
   ];
@@ -45,6 +58,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   void initState() {
     super.initState();
     _communitySlug = widget.communitySlug;
+    _addPollOption();
+    _addPollOption();
+    if (widget.crosspostOf != null) {
+      _postType = 'crosspost';
+    }
   }
 
   @override
@@ -52,8 +70,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     _titleCtrl.dispose();
     _bodyCtrl.dispose();
     _urlCtrl.dispose();
+    _linkDebounce?.cancel();
     for (final c in _pollOptions) {
       c.dispose();
+    }
+    for (final g in _galleryItems) {
+      g.captionCtrl.dispose();
     }
     super.dispose();
   }
@@ -63,7 +85,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     if (_titleCtrl.text.trim().isEmpty) return false;
     if (_postType == 'link' && _urlCtrl.text.trim().isEmpty) return false;
     if (_postType == 'image' && _imageBase64 == null) return false;
+    if (_postType == 'gallery' && _galleryItems.isEmpty) return false;
     if (_postType == 'video' && _videoBase64 == null) return false;
+    if (_postType == 'poll' &&
+        _pollOptions.where((c) => c.text.trim().isNotEmpty).length < 2)
+      return false;
     return true;
   }
 
@@ -92,13 +118,87 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     });
   }
 
+  Future<void> _pickGalleryImages() async {
+    final picker = ImagePicker();
+    final files = await picker.pickMultiImage(imageQuality: 85, maxWidth: 1920);
+    if (files.isEmpty) return;
+    for (final file in files) {
+      final bytes = await file.readAsBytes();
+      final b64 = base64Encode(bytes);
+      setState(() {
+        _galleryItems.add(_GalleryItem(
+          imageBase64: b64,
+          imagePath: file.path,
+          captionCtrl: TextEditingController(),
+        ));
+      });
+    }
+  }
+
+  void _removeGalleryItem(int index) {
+    _galleryItems[index].captionCtrl.dispose();
+    setState(() => _galleryItems.removeAt(index));
+  }
+
+  void _onUrlChanged(String url) {
+    _linkDebounce?.cancel();
+    if (url.trim().isEmpty || _postType != 'link') {
+      setState(() {
+        _linkPreviewTitle = null;
+        _linkPreviewThumbnail = null;
+        _linkPreviewDescription = null;
+      });
+      return;
+    }
+    _linkDebounce = Timer(const Duration(milliseconds: 500), () async {
+      // Simple client-side link preview extraction
+      try {
+        final parsed = Uri.tryParse(url.trim());
+        if (parsed != null && parsed.host.isNotEmpty) {
+          setState(() {
+            _linkPreviewTitle = parsed.host.replaceFirst('www.', '');
+            _linkPreviewDescription = 'Loading preview...';
+          });
+          // Note: Full OG preview would use a backend extractLinkPreview mutation
+        }
+      } catch (_) {}
+    });
+  }
+
   void _addPollOption() {
+    if (_pollOptions.length >= 6) return;
     setState(() => _pollOptions.add(TextEditingController()));
   }
 
   void _removePollOption(int i) {
+    if (_pollOptions.length <= 2) return;
     _pollOptions[i].dispose();
     setState(() => _pollOptions.removeAt(i));
+  }
+
+  /// Insert markdown formatting around selected text
+  void _insertMarkdown(String prefix, String suffix) {
+    final selection = _bodyCtrl.selection;
+    final text = _bodyCtrl.text;
+    if (selection.isValid && selection.start != selection.end) {
+      final selected = text.substring(selection.start, selection.end);
+      final newText = text.replaceRange(
+          selection.start, selection.end, '$prefix$selected$suffix');
+      _bodyCtrl.text = newText;
+      _bodyCtrl.selection = TextSelection.collapsed(
+          offset: selection.start +
+              prefix.length +
+              selected.length +
+              suffix.length);
+    } else {
+      final cursorPos = selection.baseOffset;
+      final newText = '$prefix$suffix';
+      _bodyCtrl.text =
+          text.substring(0, cursorPos) + newText + text.substring(cursorPos);
+      _bodyCtrl.selection =
+          TextSelection.collapsed(offset: cursorPos + prefix.length);
+    }
+    setState(() {});
   }
 
   Future<void> _submit() async {
@@ -116,11 +216,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         'videoBase64': _postType == 'video' ? _videoBase64 : null,
         'isOc': _isOc,
         'isSpoiler': _isSpoiler,
+        if (_flairId != null) 'flairId': _flairId,
         if (_postType == 'poll')
           'pollOptions': _pollOptions
               .map((c) => c.text.trim())
               .where((s) => s.isNotEmpty)
               .toList(),
+        if (_postType == 'poll') 'pollDurationHours': _pollDurationHours,
       };
       final result = await client.mutate(MutationOptions(
         document: gql(kCreatePost),
@@ -186,6 +288,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             _CommunityPicker(
               selected: _communitySlug,
               onChanged: (v) => setState(() => _communitySlug = v),
+              onFlairChanged: (fid) => setState(() => _flairId = fid),
+              flairId: _flairId,
             ),
             const SizedBox(height: 16),
             Text('Post Type',
@@ -221,7 +325,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
-            if (_postType == 'link')
+            // LINK type: URL field + link preview
+            if (_postType == 'link') ...[
               TextField(
                 controller: _urlCtrl,
                 decoration: const InputDecoration(
@@ -229,9 +334,108 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                   border: OutlineInputBorder(),
                   hintText: 'https://...',
                 ),
-                onChanged: (_) => setState(() {}),
+                onChanged: (v) {
+                  setState(() {});
+                  _onUrlChanged(v);
+                },
               ),
-            if (_postType == 'text')
+              if (_linkPreviewTitle != null)
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: DesignTokens.border),
+                    color: DesignTokens.surfaceVariant,
+                  ),
+                  child: Row(
+                    children: [
+                      if (_linkPreviewThumbnail != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.network(_linkPreviewThumbnail!,
+                              width: 40, height: 40, fit: BoxFit.cover),
+                        ),
+                      if (_linkPreviewThumbnail != null)
+                        const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_linkPreviewTitle ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.w600)),
+                            if (_linkPreviewDescription != null)
+                              Text(_linkPreviewDescription!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: DesignTokens.textSecondary)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+            // TEXT type: body with markdown toolbar
+            if (_postType == 'text') ...[
+              // Markdown toolbar
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: DesignTokens.border),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _MarkdownToolbarButton(
+                        label: 'B',
+                        icon: Icons.format_bold,
+                        isBold: true,
+                        onTap: () => _insertMarkdown('**', '**'),
+                      ),
+                      _MarkdownToolbarButton(
+                        label: 'I',
+                        icon: Icons.format_italic,
+                        onTap: () => _insertMarkdown('*', '*'),
+                      ),
+                      _MarkdownToolbarButton(
+                        label: '',
+                        icon: Icons.link,
+                        onTap: () => _insertMarkdown('[', '](url)'),
+                      ),
+                      _MarkdownToolbarButton(
+                        label: '',
+                        icon: Icons.code,
+                        onTap: () => _insertMarkdown('`', '`'),
+                      ),
+                      _MarkdownToolbarButton(
+                        label: '',
+                        icon: Icons.format_quote,
+                        onTap: () => _insertMarkdown('> ', ''),
+                      ),
+                      _MarkdownToolbarButton(
+                        label: '',
+                        icon: Icons.format_list_bulleted,
+                        onTap: () => _insertMarkdown('- ', ''),
+                      ),
+                      _MarkdownToolbarButton(
+                        label: '',
+                        icon: Icons.visibility_off,
+                        onTap: () => _insertMarkdown('||', '||'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               TextField(
                 controller: _bodyCtrl,
                 decoration: const InputDecoration(
@@ -242,6 +446,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 maxLines: 8,
                 minLines: 4,
               ),
+            ],
+            // IMAGE type
             if (_postType == 'image') ...[
               const SizedBox(height: 8),
               if (_imagePath != null)
@@ -257,6 +463,52 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 label: Text(_imagePath != null ? 'Change Image' : 'Pick Image'),
               ),
             ],
+            // GALLERY type
+            if (_postType == 'gallery') ...[
+              const SizedBox(height: 8),
+              if (_galleryItems.isNotEmpty)
+                ..._galleryItems.asMap().entries.map((e) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(File(e.value.imagePath),
+                                width: 60, height: 60, fit: BoxFit.cover),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: e.value.captionCtrl,
+                              decoration: InputDecoration(
+                                labelText: 'Caption ${e.key + 1}',
+                                border: const OutlineInputBorder(),
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 8),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline,
+                                size: 20, color: DesignTokens.error),
+                            onPressed: () => _removeGalleryItem(e.key),
+                          ),
+                        ],
+                      ),
+                    )),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed:
+                    _galleryItems.length < 20 ? _pickGalleryImages : null,
+                icon: const Icon(Icons.add_photo_alternate_outlined),
+                label: Text(_galleryItems.isNotEmpty
+                    ? 'Add more (${_galleryItems.length}/20)'
+                    : 'Select images'),
+              ),
+            ],
+            // VIDEO type
             if (_postType == 'video') ...[
               const SizedBox(height: 8),
               OutlinedButton.icon(
@@ -272,6 +524,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                           fontSize: 12, color: DesignTokens.textSecondary)),
                 ),
             ],
+            // POLL type
             if (_postType == 'poll') ...[
               const SizedBox(height: 8),
               ..._pollOptions.asMap().entries.map((e) => Padding(
@@ -292,20 +545,41 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                         IconButton(
                           icon:
                               const Icon(Icons.remove_circle_outline, size: 20),
-                          onPressed: () => _removePollOption(e.key),
+                          onPressed: _pollOptions.length > 2
+                              ? () => _removePollOption(e.key)
+                              : null,
                         ),
                       ],
                     ),
                   )),
               OutlinedButton.icon(
-                onPressed: _pollOptions.length < 10 ? _addPollOption : null,
+                onPressed: _pollOptions.length < 6 ? _addPollOption : null,
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text('Add option'),
               ),
+              const SizedBox(height: 12),
+              // Poll duration selector
+              DropdownButtonFormField<int>(
+                value: _pollDurationHours,
+                decoration: const InputDecoration(
+                  labelText: 'Poll duration',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                items: const [
+                  DropdownMenuItem(value: 24, child: Text('1 day')),
+                  DropdownMenuItem(value: 72, child: Text('3 days')),
+                  DropdownMenuItem(value: 168, child: Text('7 days')),
+                ],
+                onChanged: (v) {
+                  if (v != null) setState(() => _pollDurationHours = v);
+                },
+              ),
             ],
-            if (_postType == 'text' ||
-                _postType == 'image' ||
-                _postType == 'video') ...[
+            // Body field for image/video/gallery posts
+            if (_postType == 'image' ||
+                _postType == 'video' ||
+                _postType == 'gallery') ...[
               const SizedBox(height: 12),
               TextField(
                 controller: _bodyCtrl,
@@ -318,7 +592,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 minLines: 2,
               ),
             ],
-            if (_postType != 'link') ...[
+            // OC / Spoiler toggles
+            if (_postType != 'link' && _postType != 'crosspost') ...[
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -344,10 +619,69 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 }
 
+class _GalleryItem {
+  final String imageBase64;
+  final String imagePath;
+  final TextEditingController captionCtrl;
+  _GalleryItem({
+    required this.imageBase64,
+    required this.imagePath,
+    required this.captionCtrl,
+  });
+}
+
+class _MarkdownToolbarButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isBold;
+  final VoidCallback onTap;
+  const _MarkdownToolbarButton({
+    required this.label,
+    required this.icon,
+    this.isBold = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border(right: BorderSide(color: DesignTokens.border)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: DesignTokens.textSecondary),
+            if (label.isNotEmpty) ...[
+              const SizedBox(width: 2),
+              Text(label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isBold ? FontWeight.w800 : FontWeight.normal,
+                    color: DesignTokens.textSecondary,
+                  )),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CommunityPicker extends StatelessWidget {
   final String? selected;
   final ValueChanged<String?> onChanged;
-  const _CommunityPicker({required this.selected, required this.onChanged});
+  final ValueChanged<String?>? onFlairChanged;
+  final String? flairId;
+  const _CommunityPicker({
+    required this.selected,
+    required this.onChanged,
+    this.onFlairChanged,
+    this.flairId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -355,20 +689,87 @@ class _CommunityPicker extends StatelessWidget {
       options: QueryOptions(document: gql(kMyCommunities)),
       builder: (result, {fetchMore, refetch}) {
         final communities = (result.data?['myCommunities'] as List?) ?? [];
-        return DropdownButtonFormField<String>(
-          initialValue: selected,
-          decoration: const InputDecoration(
-            labelText: 'Community',
-            border: OutlineInputBorder(),
+        final selectedCommunity = communities.firstWhere(
+          (c) => c['slug'] == selected,
+          orElse: () => null,
+        );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DropdownButtonFormField<String>(
+              initialValue: selected,
+              decoration: const InputDecoration(
+                labelText: 'Community',
+                border: OutlineInputBorder(),
+              ),
+              hint: const Text('Select community'),
+              items: communities.map((c) {
+                return DropdownMenuItem(
+                  value: c['slug']?.toString(),
+                  child: Text('y/${c['name'] ?? c['slug']}'),
+                );
+              }).toList(),
+              onChanged: onChanged,
+            ),
+            // Flair picker
+            if (selectedCommunity != null && onFlairChanged != null)
+              _FlairPicker(
+                communitySlug: selectedCommunity['slug']?.toString() ?? '',
+                selectedFlairId: flairId,
+                onChanged: onFlairChanged!,
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _FlairPicker extends StatelessWidget {
+  final String communitySlug;
+  final String? selectedFlairId;
+  final ValueChanged<String?> onChanged;
+  const _FlairPicker({
+    required this.communitySlug,
+    required this.selectedFlairId,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Query(
+      options: QueryOptions(
+        document: gql(kCommunityFlairs),
+        variables: {'slug': communitySlug},
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        final flairs = (result.data?['communityFlair'] as List?) ?? [];
+        if (flairs.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: DropdownButtonFormField<String>(
+            value: selectedFlairId,
+            decoration: const InputDecoration(
+              labelText: 'Flair',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+            hint: const Text('Select flair (optional)'),
+            items: [
+              const DropdownMenuItem(
+                value: null,
+                child: Text('None',
+                    style: TextStyle(color: DesignTokens.textTertiary)),
+              ),
+              ...flairs.map((f) {
+                return DropdownMenuItem(
+                  value: f['id']?.toString(),
+                  child: Text(f['text']?.toString() ?? ''),
+                );
+              }),
+            ],
+            onChanged: onChanged,
           ),
-          hint: const Text('Select community'),
-          items: communities.map((c) {
-            return DropdownMenuItem(
-              value: c['slug']?.toString(),
-              child: Text('y/${c['name'] ?? c['slug']}'),
-            );
-          }).toList(),
-          onChanged: onChanged,
         );
       },
     );

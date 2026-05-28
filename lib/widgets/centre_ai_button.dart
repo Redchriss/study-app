@@ -5,7 +5,8 @@ class CentreAiButton extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const CentreAiButton({super.key, required this.isSelected, required this.onTap});
+  const CentreAiButton(
+      {super.key, required this.isSelected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

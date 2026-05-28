@@ -38,11 +38,23 @@ class KidsProgressSnapshotCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: _Metric(label: 'Lessons', value: '$lessonsCompleted', color: KidsVisualTheme.pathBlue)),
+              Expanded(
+                  child: _Metric(
+                      label: 'Lessons',
+                      value: '$lessonsCompleted',
+                      color: KidsVisualTheme.pathBlue)),
               const SizedBox(width: 8),
-              Expanded(child: _Metric(label: 'Quizzes', value: '$quizzesTaken', color: const Color(0xFF9B59B6))),
+              Expanded(
+                  child: _Metric(
+                      label: 'Quizzes',
+                      value: '$quizzesTaken',
+                      color: const Color(0xFF9B59B6))),
               const SizedBox(width: 8),
-              Expanded(child: _Metric(label: 'Stars', value: '$starsEarned', color: const Color(0xFFF39C12))),
+              Expanded(
+                  child: _Metric(
+                      label: 'Stars',
+                      value: '$starsEarned',
+                      color: const Color(0xFFF39C12))),
             ],
           ),
           const SizedBox(height: 10),

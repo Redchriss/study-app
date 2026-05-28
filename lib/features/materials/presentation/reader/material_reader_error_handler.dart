@@ -41,7 +41,9 @@ class MaterialReaderErrorHandler extends StatelessWidget {
           children: [
             onCachedData(ReaderMaterialData.fromMap(slug, cached)),
             const Positioned(
-              top: 16, left: 16, right: 16,
+              top: 16,
+              left: 16,
+              right: 16,
               child: ReaderCacheBanner(),
             ),
           ],

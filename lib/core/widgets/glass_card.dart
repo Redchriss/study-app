@@ -28,7 +28,8 @@ class GlassCard extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: Container(
           padding: padding ?? const EdgeInsets.all(DesignTokens.spLg),
-          decoration: DesignTokens.glassDecoration(dark, blur: blur, opacity: opacity),
+          decoration:
+              DesignTokens.glassDecoration(dark, blur: blur, opacity: opacity),
           child: child,
         ),
       ),

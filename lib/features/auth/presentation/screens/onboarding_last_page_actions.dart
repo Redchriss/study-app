@@ -43,7 +43,11 @@ class OnboardingLastPageActions extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('What level are you?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
+              const Text('What level are you?',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15)),
               const SizedBox(height: 12),
               Row(
                 children: levels.map((item) {
@@ -56,15 +60,30 @@ class OnboardingLastPageActions extends StatelessWidget {
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: selected ? Colors.white : Colors.white.withValues(alpha: 0.1),
+                          color: selected
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: selected ? Colors.white : Colors.white.withValues(alpha: 0.2)),
+                          border: Border.all(
+                              color: selected
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.2)),
                         ),
                         child: Column(
                           children: [
-                            Icon(item.$3, size: 20, color: selected ? DesignTokens.primary : Colors.white.withValues(alpha: 0.7)),
+                            Icon(item.$3,
+                                size: 20,
+                                color: selected
+                                    ? DesignTokens.primary
+                                    : Colors.white.withValues(alpha: 0.7)),
                             const SizedBox(height: 4),
-                            Text(item.$2, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: selected ? DesignTokens.primary : Colors.white.withValues(alpha: 0.7))),
+                            Text(item.$2,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: selected
+                                        ? DesignTokens.primary
+                                        : Colors.white.withValues(alpha: 0.7))),
                           ],
                         ),
                       ),
@@ -73,7 +92,11 @@ class OnboardingLastPageActions extends StatelessWidget {
                 }).toList(),
               ),
               const SizedBox(height: 16),
-              const Text('What do you want first?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
+              const Text('What do you want first?',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15)),
               const SizedBox(height: 12),
               Row(
                 children: goals.map((item) {
@@ -86,15 +109,30 @@ class OnboardingLastPageActions extends StatelessWidget {
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: selected ? Colors.white : Colors.white.withValues(alpha: 0.1),
+                          color: selected
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: selected ? Colors.white : Colors.white.withValues(alpha: 0.2)),
+                          border: Border.all(
+                              color: selected
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.2)),
                         ),
                         child: Column(
                           children: [
-                            Icon(item.$3, size: 20, color: selected ? DesignTokens.primary : Colors.white.withValues(alpha: 0.7)),
+                            Icon(item.$3,
+                                size: 20,
+                                color: selected
+                                    ? DesignTokens.primary
+                                    : Colors.white.withValues(alpha: 0.7)),
                             const SizedBox(height: 4),
-                            Text(item.$2, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: selected ? DesignTokens.primary : Colors.white.withValues(alpha: 0.7))),
+                            Text(item.$2,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: selected
+                                        ? DesignTokens.primary
+                                        : Colors.white.withValues(alpha: 0.7))),
                           ],
                         ),
                       ),
@@ -107,21 +145,28 @@ class OnboardingLastPageActions extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         SizedBox(
-          width: double.infinity, height: 56,
+          width: double.infinity,
+          height: 56,
           child: ElevatedButton(
             onPressed: onGetStarted,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white, foregroundColor: DesignTokens.primary, elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              backgroundColor: Colors.white,
+              foregroundColor: DesignTokens.primary,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
-            child: const Text("Get Started — It's Free", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            child: const Text("Get Started — It's Free",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
           ),
         ),
         const SizedBox(height: 12),
         TextButton(
           onPressed: onLogin,
-          style: TextButton.styleFrom(foregroundColor: Colors.white.withValues(alpha: 0.8)),
-          child: const Text('Already have an account? Log in', style: TextStyle(fontWeight: FontWeight.w600)),
+          style: TextButton.styleFrom(
+              foregroundColor: Colors.white.withValues(alpha: 0.8)),
+          child: const Text('Already have an account? Log in',
+              style: TextStyle(fontWeight: FontWeight.w600)),
         ),
       ],
     );

@@ -26,7 +26,8 @@ class RetentionService {
     }
 
     final progress = await _progressStore.loadLastMaterial();
-    final title = progress == null ? 'Come back to Yaza' : 'Continue ${progress.title}';
+    final title =
+        progress == null ? 'Come back to Yaza' : 'Continue ${progress.title}';
     final body = weakTopic != null && weakTopic.trim().isNotEmpty
         ? 'Revise $weakTopic and keep your study habit going today.'
         : progress == null

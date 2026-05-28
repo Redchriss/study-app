@@ -35,8 +35,7 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
         child: Column(
           children: [
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -46,8 +45,8 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
                     onPressed: widget.onBack,
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFC107).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -69,17 +68,15 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
                       _flashOn
                           ? Icons.flash_on_rounded
                           : Icons.flash_off_rounded,
-                      color: _flashOn
-                          ? const Color(0xFFFFC107)
-                          : Colors.white,
+                      color: _flashOn ? const Color(0xFFFFC107) : Colors.white,
                       size: 28,
                     ),
                     onPressed: () async {
                       final ctrl =
                           ref.read(cameraControllerProvider).valueOrNull;
                       if (ctrl != null) {
-                        await ctrl
-                            .setFlashMode(_flashOn ? FlashMode.off : FlashMode.torch);
+                        await ctrl.setFlashMode(
+                            _flashOn ? FlashMode.off : FlashMode.torch);
                         setState(() => _flashOn = !_flashOn);
                       }
                     },
@@ -92,8 +89,7 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(32),
-                  border: Border.all(
-                      color: const Color(0xFFFFC107), width: 3),
+                  border: Border.all(color: const Color(0xFFFFC107), width: 3),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(29),
@@ -115,8 +111,8 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
                             child: Stack(
                               children: [
                                 Positioned.fill(
-                                    child: CustomPaint(
-                                        painter: CornerPainter())),
+                                    child:
+                                        CustomPaint(painter: CornerPainter())),
                                 const Center(
                                   child: Text(
                                     'Aim at a question to solve',
@@ -164,8 +160,7 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
                                   decoration: BoxDecoration(
                                     color: _zoom == z
                                         ? const Color(0xFFFFC107)
-                                        : Colors.white
-                                            .withValues(alpha: 0.2),
+                                        : Colors.white.withValues(alpha: 0.2),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(
@@ -194,9 +189,8 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
                       ),
                       GestureDetector(
                         onTap: () async {
-                          final ctrl = ref
-                              .read(cameraControllerProvider)
-                              .valueOrNull;
+                          final ctrl =
+                              ref.read(cameraControllerProvider).valueOrNull;
                           if (ctrl != null && ctrl.value.isInitialized) {
                             HapticFeedback.heavyImpact();
                             final xfile = await ctrl.takePicture();
@@ -215,8 +209,7 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
                             padding: const EdgeInsets.all(4),
                             child: Container(
                               decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle),
+                                  color: Colors.white, shape: BoxShape.circle),
                             ),
                           ),
                         ),
@@ -233,4 +226,3 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
     );
   }
 }
-

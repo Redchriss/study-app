@@ -54,8 +54,8 @@ class _ModmailCommunityList extends StatelessWidget {
             title: Text('y/${c['name']}',
                 style: const TextStyle(fontWeight: FontWeight.w600)),
             subtitle: Text('${c['memberCount']} members',
-                style:
-                    const TextStyle(color: DesignTokens.textSecondary, fontSize: 12)),
+                style: const TextStyle(
+                    color: DesignTokens.textSecondary, fontSize: 12)),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _openThreadList(context, c['slug'].toString()),
           ),

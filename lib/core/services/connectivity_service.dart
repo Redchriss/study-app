@@ -5,11 +5,10 @@ class ConnectivityService {
 
   static Future<bool> isConnected() async {
     final result = await _connectivity.checkConnectivity();
-    return result.any((status) => 
-      status == ConnectivityResult.wifi || 
-      status == ConnectivityResult.mobile ||
-      status == ConnectivityResult.ethernet
-    );
+    return result.any((status) =>
+        status == ConnectivityResult.wifi ||
+        status == ConnectivityResult.mobile ||
+        status == ConnectivityResult.ethernet);
   }
 
   static Future<bool> isOffline() async {

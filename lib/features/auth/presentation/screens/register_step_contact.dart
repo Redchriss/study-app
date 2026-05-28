@@ -35,7 +35,8 @@ class RegisterStepContact extends StatelessWidget {
                 color: DesignTokens.success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.mark_email_unread_rounded, size: 40, color: DesignTokens.success),
+              child: const Icon(Icons.mark_email_unread_rounded,
+                  size: 40, color: DesignTokens.success),
             ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
             const SizedBox(height: 24),
             Text(
@@ -49,7 +50,11 @@ class RegisterStepContact extends StatelessWidget {
             const SizedBox(height: 12),
             const Text(
               'We need this to secure your account and recover your password if you forget it.',
-              style: TextStyle(fontSize: 15, color: DesignTokens.textSecondary, fontWeight: FontWeight.w500, height: 1.4),
+              style: TextStyle(
+                  fontSize: 15,
+                  color: DesignTokens.textSecondary,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4),
             ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
             const SizedBox(height: 40),
             TextFormField(
@@ -62,14 +67,20 @@ class RegisterStepContact extends StatelessWidget {
                 prefixIcon: const Icon(Icons.email_outlined),
                 hintText: 'your@email.com',
                 filled: true,
-                fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                fillColor: dark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.grey.shade100,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               ),
               textInputAction: TextInputAction.next,
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Email is required';
-                if (!v.contains('@') || !v.contains('.')) return 'Enter a valid email';
+                if (!v.contains('@') || !v.contains('.'))
+                  return 'Enter a valid email';
                 return null;
               },
             ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
@@ -83,9 +94,14 @@ class RegisterStepContact extends StatelessWidget {
                 prefixIcon: const Icon(Icons.phone_outlined),
                 hintText: '+265 ...',
                 filled: true,
-                fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                fillColor: dark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.grey.shade100,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               ),
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => onContinue(),

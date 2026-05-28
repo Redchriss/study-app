@@ -59,7 +59,10 @@ class StudyMaterialProgress {
       contentType: material['contentType']?.toString() ?? '',
       currentUnit: (progress['currentUnit'] as num?)?.toInt() ?? 0,
       totalUnits: (progress['totalUnits'] as num?)?.toInt() ?? 0,
-      updatedAtEpochMs: DateTime.tryParse(progress['lastOpenedAt']?.toString() ?? '')?.millisecondsSinceEpoch ?? 0,
+      updatedAtEpochMs:
+          DateTime.tryParse(progress['lastOpenedAt']?.toString() ?? '')
+                  ?.millisecondsSinceEpoch ??
+              0,
     );
   }
 

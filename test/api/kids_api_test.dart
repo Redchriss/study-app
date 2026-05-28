@@ -25,7 +25,8 @@ void main() {
       }, token: token);
 
       expect(result['data']?['createChildProfile']?['success'], isTrue);
-      expect(result['data']?['createChildProfile']?['child']?['username'], isNotNull);
+      expect(result['data']?['createChildProfile']?['child']?['username'],
+          isNotNull);
     });
 
     test('Kid login with correct PIN succeeds', () async {
@@ -36,9 +37,12 @@ void main() {
             child { username }
           }
         }
-      ''', variables: {'name': 'LoginKid_$ts', 'standard': 5, 'pin': '1234'}, token: token);
+      ''',
+          variables: {'name': 'LoginKid_$ts', 'standard': 5, 'pin': '1234'},
+          token: token);
 
-      final username = createResult['data']?['createChildProfile']?['child']?['username'];
+      final username =
+          createResult['data']?['createChildProfile']?['child']?['username'];
       expect(username, isNotNull);
 
       final result = await gqlPost('''
@@ -59,9 +63,12 @@ void main() {
             child { username }
           }
         }
-      ''', variables: {'name': 'FailKid_$ts', 'standard': 5, 'pin': '1234'}, token: token);
+      ''',
+          variables: {'name': 'FailKid_$ts', 'standard': 5, 'pin': '1234'},
+          token: token);
 
-      final username = createResult['data']?['createChildProfile']?['child']?['username'];
+      final username =
+          createResult['data']?['createChildProfile']?['child']?['username'];
       expect(username, isNotNull);
 
       final result = await gqlPost('''

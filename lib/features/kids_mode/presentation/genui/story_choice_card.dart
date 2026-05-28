@@ -11,7 +11,8 @@ final storyChoiceCardSchema = S.object(
       description: 'Story paragraph, 2-3 short sentences, simple vocabulary',
     ),
     'choice_a': S.string(description: 'First story branch option, max 6 words'),
-    'choice_b': S.string(description: 'Second story branch option, max 6 words'),
+    'choice_b':
+        S.string(description: 'Second story branch option, max 6 words'),
     'choiceAction': A2uiSchemas.action(
       description: 'Dispatched when child taps a choice',
     ),

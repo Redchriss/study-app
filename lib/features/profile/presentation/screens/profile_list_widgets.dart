@@ -12,10 +12,10 @@ class SectionLabel extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: DesignTokens.textTertiary,
-          letterSpacing: 1.0,
-          fontWeight: FontWeight.w700,
-        ),
+              color: DesignTokens.textTertiary,
+              letterSpacing: 1.0,
+              fontWeight: FontWeight.w700,
+            ),
       ),
     );
   }
@@ -47,7 +47,8 @@ class NavRow extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 34, height: 34,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
                 color: DesignTokens.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
@@ -55,18 +56,27 @@ class NavRow extends StatelessWidget {
               child: Icon(icon, size: 16, color: DesignTokens.primary),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+            Expanded(
+                child: Text(label,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14))),
             if (badge != null)
               Container(
                 margin: const EdgeInsets.only(right: 6),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: (badgeColor ?? DesignTokens.primary).withValues(alpha: 0.12),
+                  color: (badgeColor ?? DesignTokens.primary)
+                      .withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(badge!, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: badgeColor ?? DesignTokens.primary)),
+                child: Text(badge!,
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: badgeColor ?? DesignTokens.primary)),
               ),
-            const Icon(Icons.chevron_right, size: 16, color: DesignTokens.textTertiary),
+            const Icon(Icons.chevron_right,
+                size: 16, color: DesignTokens.textTertiary),
           ],
         ),
       ),

@@ -28,6 +28,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   final _commentCtrl = TextEditingController();
   String _commentSort = 'best';
   bool _sending = false;
+  bool _saved = false;
+  bool _awarding = false;
 
   @override
   void dispose() {
@@ -58,6 +60,67 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       onRefetch?.call();
     } finally {
       if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _askAi(String postId, VoidCallback? onRefetch) async {
+    final client = ref.read(graphqlClientProvider);
+    final result = await client.mutate(MutationOptions(
+      document: gql(kAskAiOnPost),
+      variables: {'postId': postId},
+    ));
+    if (!mounted) return;
+    if (result.hasException) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            graphQLErrorMessage(result.exception, 'Could not ask AI tutor')),
+        backgroundColor: DesignTokens.error,
+      ));
+      return;
+    }
+    final comment = result.data?['askAiOnPost']?['comment'];
+    if (comment != null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('AI Tutor has replied to this post!'),
+        backgroundColor: DesignTokens.success,
+      ));
+      onRefetch?.call();
+    } else {
+      final errors =
+          (result.data?['askAiOnPost']?['errors'] as List?)?.join(', ');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(errors ?? 'AI Tutor is not available right now'),
+        backgroundColor: DesignTokens.warning,
+      ));
+    }
+  }
+
+  Future<void> _toggleSave(String postId) async {
+    final client = ref.read(graphqlClientProvider);
+    final doc = _saved ? gql(kUnsavePost) : gql(kSavePost);
+    await client
+        .mutate(MutationOptions(document: doc, variables: {'postId': postId}));
+    if (mounted) setState(() => _saved = !_saved);
+  }
+
+  Future<void> _giveAward(String postId) async {
+    setState(() => _awarding = true);
+    try {
+      final client = ref.read(graphqlClientProvider);
+      // Use a default award type ID since no picker is implemented
+      await client.mutate(MutationOptions(
+        document: gql(kGiveAward),
+        variables: {'postId': postId, 'awardTypeId': '1'},
+      ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Award given!'),
+              backgroundColor: DesignTokens.success),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _awarding = false);
     }
   }
 
@@ -106,6 +169,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         final isRemoved = post['isRemoved'] == true;
         final isMod = community?['isModerator'] == true;
         final postId = post['id'].toString();
+        final isBookmarked = post['isBookmarked'] == true || _saved;
 
         return Scaffold(
           appBar: AppBar(
@@ -113,6 +177,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 style: theme.textTheme.titleSmall
                     ?.copyWith(fontWeight: FontWeight.w700)),
             actions: [
+              // Ask AI button
+              IconButton(
+                icon:
+                    const Icon(Icons.auto_awesome, color: DesignTokens.primary),
+                tooltip: 'Ask AI Tutor',
+                onPressed: () => _askAi(postId, () => refetch?.call()),
+              ),
+              // Share button
               IconButton(
                 icon: const Icon(Icons.share_outlined),
                 onPressed: () {
@@ -129,6 +201,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 isPinned: isPinned,
                 isLocked: isLocked,
                 isRemoved: isRemoved,
+                post: post,
                 onRefetch: () => refetch?.call(),
               ),
             ],
@@ -142,6 +215,77 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     PostDetailHeader(post: post, dark: dark),
                     const SizedBox(height: 8),
                     PostDetailStats(post: post),
+                    // Action bar with Award and Save/Saved
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      child: Row(
+                        children: [
+                          // Award button
+                          _awarding
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2))
+                              : TextButton.icon(
+                                  onPressed: () => _giveAward(postId),
+                                  icon: const Icon(Icons.card_giftcard_outlined,
+                                      size: 18, color: DesignTokens.warning),
+                                  label: const Text('Award',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: DesignTokens.warning)),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                          const SizedBox(width: 8),
+                          // Save/Saved toggle
+                          TextButton.icon(
+                            onPressed: () => _toggleSave(postId),
+                            icon: Icon(
+                              isBookmarked
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_outline,
+                              size: 18,
+                              color: isBookmarked
+                                  ? DesignTokens.warning
+                                  : DesignTokens.textSecondary,
+                            ),
+                            label: Text(
+                              isBookmarked ? 'Saved' : 'Save',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isBookmarked
+                                    ? DesignTokens.warning
+                                    : DesignTokens.textSecondary,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                          const Spacer(),
+                          // Comment count
+                          Icon(Icons.chat_bubble_outline_rounded,
+                              size: 16, color: DesignTokens.textTertiary),
+                          const SizedBox(width: 4),
+                          Text(
+                              '${(post['commentCount'] as num?)?.toInt() ?? 0}',
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: DesignTokens.textTertiary)),
+                        ],
+                      ),
+                    ),
                     const Divider(),
                     CommentSortBar(
                       sort: _commentSort,

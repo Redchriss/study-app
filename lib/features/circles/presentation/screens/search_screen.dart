@@ -40,7 +40,8 @@ class _SearchScreenState extends State<SearchScreen> {
         title: TextField(
           controller: _ctrl,
           autofocus: true,
-          decoration: const InputDecoration(hintText: 'Search posts...', border: InputBorder.none),
+          decoration: const InputDecoration(
+              hintText: 'Search posts...', border: InputBorder.none),
           onSubmitted: (q) => setState(() => _query = q.trim()),
         ),
         actions: [
@@ -51,8 +52,9 @@ class _SearchScreenState extends State<SearchScreen> {
         ],
       ),
       body: _query.isEmpty
-          ? const Center(child: Text('Type a query to search',
-              style: TextStyle(color: DesignTokens.textSecondary)))
+          ? const Center(
+              child: Text('Type a query to search',
+                  style: TextStyle(color: DesignTokens.textSecondary)))
           : Query(
               key: ValueKey('search_$_query'),
               options: QueryOptions(
@@ -79,13 +81,17 @@ class _SearchScreenState extends State<SearchScreen> {
                 }
                 final data = result.data?['searchPosts'];
                 final edges = (data?['edges'] as List?) ?? [];
-                final posts = edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+                final posts = edges
+                    .map((e) => e['node'] as Map<String, dynamic>)
+                    .toList();
 
                 if (posts.isEmpty) {
-                  return Center(child: Padding(
+                  return Center(
+                      child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: Text('No results for "$_query"',
-                        style: const TextStyle(color: DesignTokens.textSecondary)),
+                        style:
+                            const TextStyle(color: DesignTokens.textSecondary)),
                   ));
                 }
 
@@ -97,7 +103,8 @@ class _SearchScreenState extends State<SearchScreen> {
                     onTap: () {
                       final c = posts[i]['community'];
                       if (c != null) {
-                        context.push('/y/${c['slug']}/post/${posts[i]['slug']}');
+                        context
+                            .push('/y/${c['slug']}/post/${posts[i]['slug']}');
                       }
                     },
                   ),
