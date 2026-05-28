@@ -10,6 +10,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import 'post_detail_header.dart';
 import 'post_detail_comments.dart';
 import 'post_detail_actions.dart';
+import 'post_detail_action_bar.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
   final String communitySlug;
@@ -107,7 +108,6 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     setState(() => _awarding = true);
     try {
       final client = ref.read(graphqlClientProvider);
-      // Use a default award type ID since no picker is implemented
       await client.mutate(MutationOptions(
         document: gql(kGiveAward),
         variables: {'postId': postId, 'awardTypeId': '1'},
@@ -215,76 +215,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     PostDetailHeader(post: post, dark: dark),
                     const SizedBox(height: 8),
                     PostDetailStats(post: post),
-                    // Action bar with Award and Save/Saved
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      child: Row(
-                        children: [
-                          // Award button
-                          _awarding
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2))
-                              : TextButton.icon(
-                                  onPressed: () => _giveAward(postId),
-                                  icon: const Icon(Icons.card_giftcard_outlined,
-                                      size: 18, color: DesignTokens.warning),
-                                  label: const Text('Award',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: DesignTokens.warning)),
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8),
-                                    minimumSize: Size.zero,
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                ),
-                          const SizedBox(width: 8),
-                          // Save/Saved toggle
-                          TextButton.icon(
-                            onPressed: () => _toggleSave(postId),
-                            icon: Icon(
-                              isBookmarked
-                                  ? Icons.bookmark
-                                  : Icons.bookmark_outline,
-                              size: 18,
-                              color: isBookmarked
-                                  ? DesignTokens.warning
-                                  : DesignTokens.textSecondary,
-                            ),
-                            label: Text(
-                              isBookmarked ? 'Saved' : 'Save',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isBookmarked
-                                    ? DesignTokens.warning
-                                    : DesignTokens.textSecondary,
-                              ),
-                            ),
-                            style: TextButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                          const Spacer(),
-                          // Comment count
-                          Icon(Icons.chat_bubble_outline_rounded,
-                              size: 16, color: DesignTokens.textTertiary),
-                          const SizedBox(width: 4),
-                          Text(
-                              '${(post['commentCount'] as num?)?.toInt() ?? 0}',
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: DesignTokens.textTertiary)),
-                        ],
-                      ),
+                    PostDetailActionBar(
+                      postId: postId,
+                      isBookmarked: isBookmarked,
+                      awarding: _awarding,
+                      commentCount: (post['commentCount'] as num?)?.toInt() ?? 0,
+                      onToggleSave: () => _toggleSave(postId),
+                      onGiveAward: () => _giveAward(postId),
                     ),
                     const Divider(),
                     CommentSortBar(
