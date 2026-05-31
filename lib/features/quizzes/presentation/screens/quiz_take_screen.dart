@@ -10,14 +10,12 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import 'quiz_question_card.dart';
 import 'quiz_timer_widget.dart';
-
 class QuizTakeScreen extends ConsumerStatefulWidget {
   final String slug;
   const QuizTakeScreen({super.key, required this.slug});
   @override
   ConsumerState<QuizTakeScreen> createState() => _QuizTakeScreenState();
 }
-
 class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
     with WidgetsBindingObserver {
   final Map<String, String?> _answers = {};
@@ -27,21 +25,18 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
   bool _startingAttempt = false;
   Timer? _timer;
   bool _paused = false;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
-
   @override
   void dispose() {
     _timer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
@@ -51,12 +46,10 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
       _paused = false;
     }
   }
-
   void _tick() {
     if (!mounted || _submitting || _paused || _timer == null) return;
     setState(() => _time++);
   }
-
   Future<void> _startAttempt(String quizId, GraphQLClient client) async {
     if (_startingAttempt || _attemptId != null) return;
     _startingAttempt = true;
@@ -81,7 +74,6 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
       _startingAttempt = false;
     }
   }
-
   Future<void> _submit(GraphQLClient client) async {
     if (_submitting || _attemptId == null) return;
     setState(() => _submitting = true);
@@ -139,7 +131,6 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

@@ -6,6 +6,7 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import 'notification_item.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -13,7 +14,6 @@ class NotificationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
     final client = ref.read(graphqlClientProvider);
 
     return Query(
@@ -121,106 +121,13 @@ class NotificationsScreen extends ConsumerWidget {
                     itemCount: items.length,
                     itemBuilder: (_, i) {
                       final n = items[i];
-                      final bool isRead = n['isRead'] == true;
-                      final String type =
-                          n['notificationType'] as String? ?? '';
-                      final IconData icon = _iconForType(type);
-                      final Color color = _colorForType(type);
-
-                      return AnimatedPress(
-                        onTap: () {
-                          // Mark as read if not already, then potentially navigate
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color:
-                                dark ? DesignTokens.darkSurface : Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: isRead
-                                ? null
-                                : Border.all(
-                                    color: color.withValues(alpha: 0.3)),
-                            boxShadow: isRead
-                                ? null
-                                : [
-                                    BoxShadow(
-                                      color: color.withValues(alpha: 0.08),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: isRead
-                                      ? (dark
-                                          ? Colors.white.withValues(alpha: 0.05)
-                                          : Colors.grey.shade100)
-                                      : color.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Icon(
-                                  icon,
-                                  color: isRead
-                                      ? DesignTokens.textTertiary
-                                      : color,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      n['message'] ?? '',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: isRead
-                                            ? FontWeight.w500
-                                            : FontWeight.w700,
-                                        color: isRead
-                                            ? DesignTokens.textSecondary
-                                            : DesignTokens.textPrimary,
-                                        height: 1.3,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      _timeAgo(n['createdAt'] as String? ?? ''),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: isRead
-                                            ? DesignTokens.textTertiary
-                                            : color.withValues(alpha: 0.8),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (!isRead) ...[
-                                const SizedBox(width: 12),
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  margin: const EdgeInsets.only(top: 6),
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
+                      final type = n['notificationType'] as String? ?? '';
+                      return NotificationItem(
+                        notification: n,
+                        isRead: n['isRead'] == true,
+                        type: type,
+                        icon: NotificationItem.iconForType(type),
+                        color: NotificationItem.colorForType(type),
                       );
                     },
                   ),
@@ -230,51 +137,4 @@ class NotificationsScreen extends ConsumerWidget {
     );
   }
 
-  IconData _iconForType(String type) {
-    switch (type) {
-      case 'reply':
-        return Icons.reply_rounded;
-      case 'upvote':
-        return Icons.arrow_upward_rounded;
-      case 'circle_invite':
-        return Icons.group_add_rounded;
-      case 'quiz_result':
-        return Icons.quiz_rounded;
-      case 'ai_credits':
-        return Icons.auto_awesome_rounded;
-      default:
-        return Icons.notifications_rounded;
-    }
-  }
-
-  Color _colorForType(String type) {
-    switch (type) {
-      case 'reply':
-        return const Color(0xFF389E75); // Green
-      case 'upvote':
-        return const Color(0xFFE87E5E); // Orange
-      case 'circle_invite':
-        return const Color(0xFF5A6BB2); // Purple/Blue
-      case 'quiz_result':
-        return const Color(0xFFE5B300); // Gold
-      case 'ai_credits':
-        return const Color(0xFF6B48FF); // Deep Purple
-      default:
-        return DesignTokens.primary;
-    }
-  }
-
-  String _timeAgo(String iso) {
-    try {
-      final dt = DateTime.parse(iso);
-      final diff = DateTime.now().difference(dt);
-      if (diff.inMinutes < 1) return 'Just now';
-      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-      if (diff.inHours < 24) return '${diff.inHours}h ago';
-      if (diff.inDays < 7) return '${diff.inDays}d ago';
-      return '${(diff.inDays / 7).floor()}w ago';
-    } catch (_) {
-      return '';
-    }
-  }
 }

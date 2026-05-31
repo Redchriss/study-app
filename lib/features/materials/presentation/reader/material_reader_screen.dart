@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/material_cache_service.dart';
@@ -17,21 +16,16 @@ import 'reader_flashcards_sheet.dart';
 import 'reader_loading.dart';
 import 'reader_not_found.dart';
 import 'reader_quiz_sheet.dart';
-
 class MaterialReaderScreen extends StatefulWidget {
   const MaterialReaderScreen({super.key, required this.slug});
-
   final String slug;
-
   @override
   State<MaterialReaderScreen> createState() => _MaterialReaderScreenState();
 }
-
 class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
   final _service = MaterialReaderService();
   final _cache = MaterialCacheService();
   var _aiActionBusy = false;
-
   void _showResultSnackBar(
       ReaderServiceResult result, String onSuccess, String onFail) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -42,7 +36,6 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       ),
     );
   }
-
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -51,13 +44,11 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       ),
     );
   }
-
   Future<void> _saveAnnotation(
       ReaderStudySelection selection, VoidCallback? refetch) async {
     final draft =
         await showReaderAnnotationComposer(context, selection: selection);
     if (draft == null || !mounted) return;
-
     final result = await _service.saveAnnotation(
       context: context,
       materialSlug: widget.slug,
@@ -70,7 +61,6 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         result, 'Annotation saved', 'Could not save annotation.');
     if (result.success) refetch?.call();
   }
-
   Future<void> _openAnnotations(
       List<ReaderAnnotationData> annotations, VoidCallback? refetch) async {
     await showReaderAnnotationsSheet(
@@ -91,7 +81,6 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       },
     );
   }
-
   Future<void> _openFlashcards(
       ReaderMaterialData material, VoidCallback? refetch) async {
     final task = material.taskFor('flashcards');
@@ -125,14 +114,12 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       },
     );
   }
-
   Future<void> _askReaderAi({
     required ReaderMaterialData material,
     required ReaderStudySelection selection,
   }) async {
     final action = await showReaderAiActionSheet(context);
     if (action == null || material.id.isEmpty || !mounted) return;
-
     final prompt = switch (action) {
       'summary' => 'Summarize this study section into short revision bullets.',
       'memory' =>
@@ -142,7 +129,6 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     };
     final message =
         '$prompt\n\nMaterial: ${material.title}\nAnchor: ${selection.anchorLabel}\n\nCurrent section:\n---\n${selection.selectedText.trim().isEmpty ? 'Use the material context available for this section.' : selection.selectedText.trim()}\n---';
-
     await _runAiAction<String>(
       action: () => _service.askAi(
           context: context, materialId: material.id, message: message),
@@ -154,7 +140,6 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       ),
     );
   }
-
   Future<void> _runQuickQuiz({
     required ReaderMaterialData material,
     required ReaderStudySelection selection,
@@ -181,7 +166,6 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       },
     );
   }
-
   Future<void> _runAiAction<T>({
     required Future<ReaderServiceResult<T>> Function() action,
     required Future<void> Function(T data) onSuccess,
@@ -191,21 +175,17 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       barrierDismissible: false,
       builder: (_) => const LoadingWidget(),
     );
-
     final result = await action();
     if (!mounted) return;
     Navigator.of(context).pop();
-
     if (!result.success || result.data == null) {
       _showErrorSnackBar(result.message ??
           result.errors.firstOrNull ??
           'AI could not help right now.');
       return;
     }
-
     await onSuccess(result.data as T);
   }
-
   @override
   Widget build(BuildContext context) {
     return Query(
@@ -241,7 +221,6 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       },
     );
   }
-
   Widget _buildReaderForMaterial(
       ReaderMaterialData material, VoidCallback? refetch) {
     return MaterialReaderSelector(

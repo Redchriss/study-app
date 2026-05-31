@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,32 +18,26 @@ import '../widgets/dashboard_adaptive_plan_card.dart';
 import '../widgets/dashboard_progress_snapshot_card.dart';
 import '../widgets/dashboard_material_cards.dart';
 import '../widgets/dashboard_loading.dart';
-
 List<String> _toStringList(dynamic raw) => ((raw as List?) ?? const [])
     .map((e) => e is Map ? (e['name']?.toString() ?? '') : e.toString())
     .where((s) => s.trim().isNotEmpty)
     .cast<String>()
     .toList();
-
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
-
   @override
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
-
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final StudyProgressStore _progressStore = StudyProgressStore();
   final RetentionService _retention = RetentionService();
   late Future<QueryResult> _adaptivePlanFuture;
   String? _lastReminderTopic;
-
   @override
   void initState() {
     super.initState();
     _adaptivePlanFuture = _loadAdaptiveStudyPlan();
   }
-
   Future<QueryResult> _loadAdaptiveStudyPlan() {
     return ref.read(graphqlClientProvider).query(
           QueryOptions(
@@ -52,12 +45,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               fetchPolicy: FetchPolicy.networkOnly),
         );
   }
-
   Future<void> _refreshDashboard(Refetch? refetch) async {
     refetch?.call();
     setState(() => _adaptivePlanFuture = _loadAdaptiveStudyPlan());
   }
-
   void _scheduleWeakTopicReminder(List<String> weakestTopics) {
     if (weakestTopics.isEmpty) return;
     final nextTopic = weakestTopics.first;
@@ -65,12 +56,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     _lastReminderTopic = nextTopic;
     unawaited(_retention.refreshStudyReminder(weakTopic: nextTopic));
   }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-
     return Query(
       options: QueryOptions(document: gql(kDashboard)),
       builder: (result, {fetchMore, refetch}) {
@@ -84,7 +73,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           );
         }
-
         final me = result.data?['me'];
         final profile = me?['profile'];
         final recentMaterials =
@@ -99,14 +87,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final circles = (result.data?['myCircles'] as List?) ?? [];
         final learningProfile =
             result.data?['learningProfile'] as Map<String, dynamic>?;
-
         final name = me?['username'] as String? ?? 'Student';
         final educationLevel =
             profile?['educationLevel']?.toString() ?? 'secondary';
         final streak = (profile?['studyStreak'] as num?)?.toInt() ?? 0;
         final points = (profile?['studyPoints'] as num?)?.toInt() ?? 0;
         final credits = (profile?['aiCredits'] as num?)?.toInt() ?? 0;
-
         final weakestTopics = _toStringList(snap?['weakestTopics']);
         final strongestTopics = _toStringList(snap?['strongestTopics']);
         final strugglingTopics =
@@ -119,9 +105,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 .map((e) => e.toString())
                 .where((s) => s.trim().isNotEmpty)
                 .toList();
-
         _scheduleWeakTopicReminder(weakestTopics);
-
         return Scaffold(
           body: RefreshIndicator(
             onRefresh: () => _refreshDashboard(refetch),
@@ -139,7 +123,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     onAiTutor: () => context.push('/ai-tutor'),
                   ),
                 ),
-
                 // Continue Studying
                 if (latestMaterialProgress != null)
                   SliverToBoxAdapter(
@@ -160,7 +143,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       },
                     ),
                   ),
-
                 // Quick Actions
                 SliverToBoxAdapter(
                   child: Padding(
@@ -178,7 +160,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ).animate().fadeIn(delay: 300.ms),
                 ),
-
                 // Focus Coach
                 if (weakestTopics.isNotEmpty ||
                     strugglingTopics.isNotEmpty ||
@@ -191,7 +172,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       masteredTopics: masteredTopics,
                     ).animate().fadeIn(delay: 350.ms),
                   ),
-
                 // Adaptive Study Plan
                 SliverToBoxAdapter(
                   child: FutureBuilder<QueryResult>(

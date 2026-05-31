@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:genui/genui.dart' hide TextPart;
-import 'package:genui/genui.dart' as genui;
 import '../../../../core/storage/secure_storage.dart';
+import '../providers/ai_tutor_utils.dart';
 import '../genui/tutor_catalog.dart';
 import '../providers/ai_tutor_state.dart';
 export '../providers/ai_tutor_state.dart'
@@ -19,13 +19,11 @@ class AiTutorManager {
   late AiTutorDataService _dataService;
   late AiTutorStreamService _streamService;
 
-  // GenUI Controllers
   late SurfaceController controller;
   late A2uiTransportAdapter _transport;
   late Conversation conversation;
   late Catalog catalog;
   List<ConversationItem> conversationItems = [];
-
   String? sessionId;
   bool sending = false;
   String studyMode = 'coach';
@@ -85,17 +83,9 @@ class AiTutorManager {
       });
 
   Future<void> _sendAndReceive(ChatMessage msg) async {
-    final buffer = StringBuffer();
-    for (final part in msg.parts) {
-      if (part.isUiInteractionPart) {
-        buffer.write(part.asUiInteractionPart!.interaction);
-      } else if (part is genui.TextPart) {
-        buffer.write(part.text);
-      }
-    }
-    if (buffer.isEmpty) return;
+    final text = extractMessageText(msg);
+    if (text.isEmpty) return;
 
-    final text = buffer.toString();
     final token = await SecureStorage.getToken();
     if (token == null) {
       _resetStream();
@@ -105,35 +95,32 @@ class AiTutorManager {
     final promptBuilder = PromptBuilder.chat(catalog: catalog);
     final clientInstructions = promptBuilder.systemPromptJoined();
 
-    try {
-      await _streamService.sendStream(
-        text: text,
-        sessionId: sessionId,
-        studyMode: studyMode,
-        token: token,
-        clientInstructions: clientInstructions,
-        httpClient: http.Client(),
-        onToken: (t) {
-          _transport.addChunk(t);
-        },
-        onAddMessage: (fullText) {
+    final httpClient = http.Client();
+    await sendTutorStream(
+      text: text,
+      sessionId: sessionId,
+      studyMode: studyMode,
+      token: token,
+      clientInstructions: clientInstructions,
+      streamService: _streamService,
+      transport: _transport,
+      httpClient: httpClient,
+      onToken: (t) {
+        _transport.addChunk(t);
+      },
+      onAddMessage: (fullText) {
+        _resetStream();
+        loadTutorSnapshot();
+      },
+      onSessionId: (id) => sessionId = id,
+      onError: (msg) {
+        if (_isMounted()) {
           _resetStream();
-          loadTutorSnapshot();
-        },
-        onSessionId: (id) => sessionId = id,
-        onError: (msg) {
-          if (_isMounted()) {
-            _resetStream();
-            _onShowError(msg);
-          }
-        },
-        onScrollDown: _onScrollDown,
-      );
-    } catch (_) {
-      if (!_isMounted()) return;
-      _resetStream();
-      _onShowError.call('Connection lost. Please try again.');
-    }
+          _onShowError(msg);
+        }
+      },
+      onScrollDown: _onScrollDown,
+    );
   }
 
   Future<void> send(String text, http.Client httpClient) async {
@@ -160,29 +147,22 @@ class AiTutorManager {
     });
   }
 
-  Future<void> loadTutorSnapshot() async {
-    try {
-      final snapshot = await _dataService.loadTutorSnapshot();
-      if (!_isMounted() || snapshot == null) return;
-      _setState(() {
-        topicStates = ((snapshot['topicStates'] as List?) ?? const [])
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList();
-        memories = ((snapshot['memories'] as List?) ?? const [])
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList();
-        activePlan = snapshot['latestPlan'] is Map
-            ? Map<String, dynamic>.from(snapshot['latestPlan'] as Map)
-            : null;
-        reviewCount = (snapshot['reviewCount'] as num?)?.toInt() ?? 0;
-        snapshotLoading = false;
-      });
-    } catch (_) {
-      if (_isMounted()) _setState(() => snapshotLoading = false);
-    }
-  }
+  Future<void> loadTutorSnapshot() => handleLoadManagerTutorSnapshot(
+        dataService: _dataService,
+        isMounted: _isMounted,
+        onSnapshot: (topicStates, memories, activePlan, reviewCount) {
+          _setState(() {
+            this.topicStates = topicStates;
+            this.memories = memories;
+            this.activePlan = activePlan;
+            this.reviewCount = reviewCount;
+            snapshotLoading = false;
+          });
+        },
+        onError: () {
+          if (_isMounted()) _setState(() => snapshotLoading = false);
+        },
+      );
 
   Future<void> loadChatHistory() async {
     final sessions = await _dataService.loadChatHistory();
@@ -240,35 +220,23 @@ class AiTutorManager {
     required bool prefersStepByStep,
     required int detailLevel,
   }) async {
-    _setState(() => profileSaving = true);
-    try {
-      final payload = await _dataService.saveLearningProfile(
-        learningStyle: learningStyle,
-        prefersExamples: prefersExamples,
-        prefersStepByStep: prefersStepByStep,
-        detailLevel: detailLevel,
-      );
-      if (payload?['success'] != true) {
-        final errMsg =
-            (payload?['errors'] as List?)?.map((e) => e.toString()).join(', ');
-        if (_isMounted()) {
-          _onShowError(errMsg?.isNotEmpty == true
-              ? errMsg!
-              : 'Could not save preferences.');
-        }
-        return;
-      }
-      if (!_isMounted()) return;
-      _setState(() {
+    await handleSaveManagerLearningProfile(
+      dataService: _dataService,
+      learningStyle: learningStyle,
+      prefersExamples: prefersExamples,
+      prefersStepByStep: prefersStepByStep,
+      detailLevel: detailLevel,
+      isMounted: _isMounted,
+      onStart: () => _setState(() => profileSaving = true),
+      onSuccess: () => _setState(() {
         this.learningStyle = learningStyle;
         this.prefersExamples = prefersExamples;
         this.prefersStepByStep = prefersStepByStep;
         this.detailLevel = detailLevel;
-      });
-      _onShowError.call('Tutor preferences updated.');
-    } finally {
-      if (_isMounted()) _setState(() => profileSaving = false);
-    }
+      }),
+      onShowError: _onShowError,
+      onFinally: () => _setState(() => profileSaving = false),
+    );
   }
 
   void setStudyMode(String mode) => _setState(() => studyMode = mode);

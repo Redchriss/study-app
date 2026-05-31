@@ -12,13 +12,13 @@ import '../../../../core/storage/secure_storage.dart';
 import '../screens/ai_tutor_data_service.dart';
 import '../screens/ai_tutor_stream_service.dart';
 import '../genui/tutor_catalog.dart' as tutor_catalog;
+import 'ai_tutor_data_mixin.dart';
 
 final aiTutorProvider = NotifierProvider<AiTutorNotifier, AiTutorState>(
   AiTutorNotifier.new,
 );
 
-class AiTutorNotifier extends Notifier<AiTutorState> {
-  late AiTutorDataService _dataService;
+class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
   late AiTutorStreamService _streamService;
 
   late final SurfaceController surfaceController;
@@ -29,7 +29,7 @@ class AiTutorNotifier extends Notifier<AiTutorState> {
 
   @override
   AiTutorState build() {
-    _dataService = AiTutorDataService(ref as WidgetRef);
+    dataService = AiTutorDataService(ref as WidgetRef);
     _streamService = AiTutorStreamService();
 
     catalog = tutor_catalog.catalogForStudyMode(state.studyMode);
@@ -171,124 +171,4 @@ class AiTutorNotifier extends Notifier<AiTutorState> {
   }
 
   void clearError() => state = state.copyWith(error: null);
-
-  Future<void> loadLearningProfile() async {
-    try {
-      final profile = await _dataService.loadLearningProfile();
-      if (profile == null) return;
-      state = state.copyWith(
-        learningStyle:
-            (profile['learningStyle']?.toString().trim().isNotEmpty == true)
-                ? profile['learningStyle'].toString()
-                : 'mixed',
-        prefersExamples: profile['prefersExamples'] as bool? ?? true,
-        prefersStepByStep: profile['prefersStepByStep'] as bool? ?? true,
-        detailLevel: profile['detailLevel'] as int? ?? 2,
-      );
-    } catch (_) {}
-  }
-
-  Future<void> loadTutorSnapshot() async {
-    try {
-      final snapshot = await _dataService.loadTutorSnapshot();
-      if (snapshot == null) return;
-      state = state.copyWith(
-        topicStates: ((snapshot['topicStates'] as List?) ?? const [])
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList(),
-        memories: ((snapshot['memories'] as List?) ?? const [])
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList(),
-        activePlan: snapshot['latestPlan'] is Map
-            ? Map<String, dynamic>.from(snapshot['latestPlan'] as Map)
-            : null,
-        reviewCount: (snapshot['reviewCount'] as num?)?.toInt() ?? 0,
-        snapshotLoading: false,
-      );
-    } catch (_) {
-      state = state.copyWith(snapshotLoading: false);
-    }
-  }
-
-  Future<void> loadChatHistory() async {
-    try {
-      final sessions = await _dataService.loadChatHistory();
-      state = state.copyWith(
-        chatHistory: sessions
-            .whereType<Map>()
-            .map((s) => Map<String, dynamic>.from(s))
-            .toList(),
-      );
-    } catch (_) {}
-  }
-
-  Future<void> restoreSession(String id) async {
-    try {
-      final msgs = await _dataService.restoreSession(id);
-      final newItems = <ConversationItem>[];
-      for (final m in msgs.whereType<Map>()) {
-        newItems.add(TextItem(
-            text: m['messageText'] as String? ?? '',
-            isUser: m['isUser'] as bool? ?? false));
-      }
-      state = state.copyWith(
-        sessionId: id,
-        conversationItems: newItems,
-      );
-    } catch (_) {}
-  }
-
-  Future<void> createAdaptivePlan(String? goalText) async {
-    final payload = await _dataService.createAdaptivePlan(
-      goal: (goalText?.trim().isEmpty ?? true) ? null : goalText?.trim(),
-      subjectName: state.topicStates.isNotEmpty
-          ? state.topicStates.first['subjectName']?.toString()
-          : null,
-      studyMode: state.studyMode,
-    );
-    if (payload?['success'] == true && payload?['plan'] is Map) {
-      state = state.copyWith(
-        activePlan: Map<String, dynamic>.from(payload!['plan'] as Map),
-      );
-      loadTutorSnapshot();
-      return;
-    }
-    final errMsg = (payload?['errors'] as List?)?.cast<String>().join(', ');
-    state = state.copyWith(
-      error: errMsg?.isNotEmpty == true ? errMsg : 'Could not build a plan.',
-    );
-  }
-
-  Future<void> saveLearningProfile({
-    required String learningStyle,
-    required bool prefersExamples,
-    required bool prefersStepByStep,
-    required int detailLevel,
-  }) async {
-    state = state.copyWith(profileSaving: true);
-    try {
-      final payload = await _dataService.saveLearningProfile(
-        learningStyle: learningStyle,
-        prefersExamples: prefersExamples,
-        prefersStepByStep: prefersStepByStep,
-        detailLevel: detailLevel,
-      );
-      if (payload?['success'] == true) {
-        state = state.copyWith(
-          learningStyle: learningStyle,
-          prefersExamples: prefersExamples,
-          prefersStepByStep: prefersStepByStep,
-          detailLevel: detailLevel,
-        );
-      }
-    } finally {
-      state = state.copyWith(profileSaving: false);
-    }
-  }
-
-  void setMessageFeedback(int index, String? feedback) {
-    // Left unimplemented for GenUI currently, as we use conversationItems
-  }
 }

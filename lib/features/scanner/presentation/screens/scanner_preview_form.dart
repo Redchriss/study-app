@@ -5,7 +5,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../providers/scanner_subjects_provider.dart';
-import 'scanner_shared_widgets.dart';
+import 'scanner_level_chips.dart';
 import 'scanner_submit_service.dart';
 
 class ScannerDetailsForm extends ConsumerStatefulWidget {
@@ -102,58 +102,6 @@ class _ScannerDetailsFormState extends ConsumerState<ScannerDetailsForm> {
     );
   }
 
-  Row _buildLevelChips() {
-    return Row(
-      children: [
-        LevelChip(
-            label: 'Primary',
-            icon: Icons.child_care_rounded,
-            selected: _educationLevel == 'primary',
-            onTap: () {
-              setState(() {
-                _educationLevel = 'primary';
-                _subject = null;
-                _examType = _examTypeDefault();
-                _examTypeCtrl.text = _examTypeDefault();
-              });
-              ref.read(scannerSubjectsProvider.notifier).load(level: 'primary');
-            }),
-        const SizedBox(width: 8),
-        LevelChip(
-            label: 'Secondary',
-            icon: Icons.menu_book_rounded,
-            selected: _educationLevel == 'secondary',
-            onTap: () {
-              setState(() {
-                _educationLevel = 'secondary';
-                _subject = null;
-                _examType = _examTypeDefault();
-                _examTypeCtrl.text = _examTypeDefault();
-              });
-              ref
-                  .read(scannerSubjectsProvider.notifier)
-                  .load(level: 'secondary');
-            }),
-        const SizedBox(width: 8),
-        LevelChip(
-            label: 'Tertiary',
-            icon: Icons.account_balance_rounded,
-            selected: _educationLevel == 'tertiary',
-            onTap: () {
-              setState(() {
-                _educationLevel = 'tertiary';
-                _subject = null;
-                _examType = _examTypeDefault();
-                _examTypeCtrl.text = _examTypeDefault();
-              });
-              ref
-                  .read(scannerSubjectsProvider.notifier)
-                  .load(level: 'tertiary');
-            }),
-      ],
-    );
-  }
-
   Widget _buildSubjectField() {
     final subjectsState = ref.watch(scannerSubjectsProvider);
     if (subjectsState.loading) return const LoadingWidget();
@@ -237,7 +185,18 @@ class _ScannerDetailsFormState extends ConsumerState<ScannerDetailsForm> {
         const Text('Help the AI understand what it is looking at.',
             style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
         const SizedBox(height: 20),
-        _buildLevelChips(),
+        ScannerLevelChips(
+          educationLevel: _educationLevel,
+          onLevelChanged: (level) {
+            setState(() {
+              _educationLevel = level;
+              _subject = null;
+              _examType = _examTypeDefault();
+              _examTypeCtrl.text = _examTypeDefault();
+            });
+            ref.read(scannerSubjectsProvider.notifier).load(level: level);
+          },
+        ),
         const SizedBox(height: 20),
         _buildSubjectField(),
         const SizedBox(height: 16),

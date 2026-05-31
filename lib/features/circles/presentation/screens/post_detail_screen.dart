@@ -168,10 +168,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         final isPinned = post['isPinned'] == true;
         final isRemoved = post['isRemoved'] == true;
         final isMod = community?['isModerator'] == true;
-        final postId = post['id'].toString();
-        final isBookmarked = post['isBookmarked'] == true || _saved;
-
-        return Scaffold(
+    final postId = post['id'].toString();
+    final isBookmarked = post['isBookmarked'] == true || _saved;
+    return Scaffold(
           appBar: AppBar(
             title: Text('y/${community?['name'] ?? ''}',
                 style: theme.textTheme.titleSmall

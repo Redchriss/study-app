@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
-import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 
 class PostDetailActionBar extends StatelessWidget {
   final String postId;

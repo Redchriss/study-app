@@ -1,36 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../core/graphql/queries/queries.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/errors/app_exception.dart';
+import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/widgets/widgets.dart';
-
+import '../../../../core/errors/app_exception.dart';
+import 'contact_card.dart';
 /// Generic screen that fetches and renders any [SitePage] by slug.
 /// Used for: terms, privacy, faq, support, community-guidelines, cookies.
 class SitePageScreen extends StatelessWidget {
   /// The slug that matches [SitePage.slug] on the backend.
   final String slug;
-
   /// Shown in the AppBar while loading or if backend has no content yet.
   final String fallbackTitle;
-
   /// Shown as markdown content if the backend returns nothing.
   final String fallbackContent;
-
   const SitePageScreen({
     super.key,
     required this.slug,
     required this.fallbackTitle,
     required this.fallbackContent,
   });
-
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-
     return Query(
       options: QueryOptions(
         document: gql(kSitePage),
@@ -53,7 +48,6 @@ class SitePageScreen extends StatelessWidget {
         final version = page?['version'] as String?;
         final lastUpdated = page?['lastUpdated'] as String?;
         final isLoading = result.isLoading && page == null;
-
         return Scaffold(
           backgroundColor:
               dark ? DesignTokens.darkBackground : DesignTokens.background,
@@ -118,7 +112,6 @@ class SitePageScreen extends StatelessWidget {
                             ],
                           ),
                         ).animate().fadeIn(duration: 300.ms),
-
                       // Markdown content
                       MarkdownBody(
                         data: content,
@@ -183,11 +176,10 @@ class SitePageScreen extends StatelessWidget {
                           .animate()
                           .fadeIn(duration: 400.ms)
                           .slideY(begin: 0.03, end: 0),
-
                       // Contact CTA for support page
                       if (slug == 'support') ...[
                         const SizedBox(height: 28),
-                        _ContactCard(dark: dark),
+                        ContactCard(dark: dark),
                       ],
                     ],
                   ),
@@ -198,70 +190,3 @@ class SitePageScreen extends StatelessWidget {
   }
 }
 
-// ── Contact card shown on the support page ─────────────────────────────────────
-class _ContactCard extends StatelessWidget {
-  final bool dark;
-  const _ContactCard({required this.dark});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B6CA8), Color(0xFF2EC4B6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Get in Touch',
-            style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'We respond to every message within 24 hours.',
-            style: TextStyle(fontSize: 13, color: Colors.white70),
-          ),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: () async {
-              final uri = Uri.parse('mailto:support@yaza.app');
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri);
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.mail_rounded,
-                      color: DesignTokens.primary, size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'support@yaza.app',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: DesignTokens.primary,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
-  }
-}

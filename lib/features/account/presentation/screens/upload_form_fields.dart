@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import 'upload_material_labels.dart';
 import 'upload_material_manager.dart';
 
 class UploadFormFields extends StatelessWidget {
@@ -23,7 +24,7 @@ class UploadFormFields extends StatelessWidget {
             controller: manager.titleCtrl,
             decoration: InputDecoration(
               labelText: 'Title',
-              hintText: manager.titlePlaceholder(),
+              hintText: UploadMaterialLabels.titlePlaceholder(manager.contentType, manager.educationLevel),
             ),
             textInputAction: TextInputAction.next,
           ),
@@ -56,7 +57,7 @@ class UploadFormFields extends StatelessWidget {
             controller: manager.descCtrl,
             decoration: InputDecoration(
               labelText: 'Description',
-              hintText: manager.descPlaceholder(),
+              hintText: UploadMaterialLabels.descPlaceholder(manager.educationLevel),
             ),
             maxLines: 3,
             textInputAction: TextInputAction.next,

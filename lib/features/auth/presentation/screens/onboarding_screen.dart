@@ -6,13 +6,11 @@ import 'onboarding_data.dart';
 import 'onboarding_last_page_actions.dart';
 import 'onboarding_next_button.dart';
 import 'onboarding_page.dart';
-
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
-
 class _OnboardingScreenState extends State<OnboardingScreen>
     with TickerProviderStateMixin {
   final _preferences = AppPreferencesService();
@@ -22,7 +20,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   String _preferredGoal = 'read';
   late final AnimationController _bgAnimCtrl;
   late final Animation<double> _bgAnim;
-
   static const _pages = [
     OnboardingData(
       title: 'Your AI Study\nPartner',
@@ -85,14 +82,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       CurvedAnimation(parent: _bgAnimCtrl, curve: Curves.easeInOut),
     );
   }
-
   @override
   void dispose() {
     _bgAnimCtrl.dispose();
     _controller.dispose();
     super.dispose();
   }
-
   void _next() {
     if (_page < _pages.length - 1) {
       _controller.nextPage(
@@ -101,7 +96,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final data = _pages[_page];
