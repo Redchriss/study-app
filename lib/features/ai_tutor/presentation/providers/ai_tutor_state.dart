@@ -3,7 +3,8 @@ sealed class ConversationItem {}
 class TextItem extends ConversationItem {
   final String text;
   final bool isUser;
-  TextItem({required this.text, this.isUser = false});
+  final String? id;
+  TextItem({required this.text, this.isUser = false, this.id});
 }
 
 class SurfaceItem extends ConversationItem {

@@ -42,23 +42,36 @@ class KidsSubjectPickerSection extends StatelessWidget {
             onStarsTap: onStarsTap,
           ),
           const SizedBox(height: 12),
-          KidsMascotHint(message: kidsMascotMessage(state.dailySummary, auth)),
+          Semantics(
+            label: kidsMascotMessage(state.dailySummary, auth),
+            child: KidsMascotHint(
+                message: kidsMascotMessage(state.dailySummary, auth)),
+          ),
           const SizedBox(height: 12),
           if (state.dailySummary != null)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: KidsDailyChestChip(
-                available: state.dailySummary!['chestAvailable'] == true,
-                claimed: state.dailySummary!['chestClaimed'] == true,
-                onClaim: onClaimDailyChest,
+            Semantics(
+              button: true,
+              label: state.dailySummary!['chestAvailable'] == true
+                  ? 'Daily chest available, claim it'
+                  : 'Daily chest ${state.dailySummary!['chestClaimed'] == true ? 'claimed' : 'not available yet'}',
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: KidsDailyChestChip(
+                  available: state.dailySummary!['chestAvailable'] == true,
+                  claimed: state.dailySummary!['chestClaimed'] == true,
+                  onClaim: onClaimDailyChest,
+                ),
               ),
             ),
           const SizedBox(height: 20),
-          Text(
-            'Pick a path',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: KidsVisualTheme.ink,
+          Semantics(
+            header: true,
+            child: Text(
+              'Pick a path',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: KidsVisualTheme.ink,
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -78,13 +91,18 @@ class KidsSubjectPickerSection extends StatelessWidget {
               final name = s['name'] as String? ?? '';
               final c = kidsSubjectColor(name);
               final icon = kidsSubjectIcon(name);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: KidsSubjectCard(
-                  name: name,
-                  accent: c,
-                  icon: icon,
-                  onTap: () => onSubjectSelected(Map<String, dynamic>.from(s)),
+              return Semantics(
+                button: true,
+                label: 'Subject: $name',
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: KidsSubjectCard(
+                    name: name,
+                    accent: c,
+                    icon: icon,
+                    onTap: () =>
+                        onSubjectSelected(Map<String, dynamic>.from(s)),
+                  ),
                 ),
               );
             }),

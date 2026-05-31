@@ -29,6 +29,8 @@ class KidSessionManager {
       barrierDismissible: false,
       builder: (_) => KidPinDialog(
         kidName: kid['childName'] as String? ?? 'Kid',
+        graphical:
+            (kid['standard'] as int?) != null && (kid['standard'] as int) <= 2,
         onSubmit: (pin) async {
           Navigator.pop(mgr.context);
           final result = await _buildClient().mutate(MutationOptions(

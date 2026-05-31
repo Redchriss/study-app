@@ -4,6 +4,16 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/theme/design_tokens.dart';
 
+String sanitizeStreamingMarkdown(String text) {
+  final codeFences = '```'.allMatches(text).length;
+  if (codeFences.isOdd) text += '\n```';
+  final boldMarkers = '**'.allMatches(text).length;
+  if (boldMarkers.isOdd) text += '**';
+  final italicMarkers = '_'.allMatches(text).length;
+  if (italicMarkers.isOdd) text += '_';
+  return text;
+}
+
 class AiUserBubble extends StatelessWidget {
   final String text;
   const AiUserBubble({super.key, required this.text});
@@ -99,7 +109,9 @@ class AiAssistantBubble extends StatelessWidget {
                       : Stack(
                           children: [
                             MarkdownBody(
-                              data: text,
+                              data: streaming
+                                  ? sanitizeStreamingMarkdown(text)
+                                  : text,
                               styleSheet: MarkdownStyleSheet(
                                 p: const TextStyle(fontSize: 14, height: 1.55),
                                 code: TextStyle(

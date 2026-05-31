@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 
 import 'ai_tutor_state.dart';
 import '../screens/ai_tutor_data_service.dart';
+import '../../../../core/graphql/queries/domain/ai_queries.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 mixin AiTutorDataMixin on Notifier<AiTutorState> {
   late AiTutorDataService dataService;
@@ -67,7 +70,8 @@ mixin AiTutorDataMixin on Notifier<AiTutorState> {
       for (final m in msgs.whereType<Map>()) {
         newItems.add(TextItem(
             text: m['messageText'] as String? ?? '',
-            isUser: m['isUser'] as bool? ?? false));
+            isUser: m['isUser'] as bool? ?? false,
+            id: m['id']?.toString()));
       }
       state = state.copyWith(
         sessionId: id,
@@ -124,5 +128,17 @@ mixin AiTutorDataMixin on Notifier<AiTutorState> {
     }
   }
 
-  void setMessageFeedback(int index, String? feedback) {}
+  Future<void> setMessageFeedback(int index, String? feedback) async {
+    if (index < 0 || index >= state.conversationItems.length) return;
+    final item = state.conversationItems[index];
+    if (item is! TextItem) return;
+    final client = ref.read(graphqlClientProvider);
+    await client.mutate(MutationOptions(
+      document: gql(kSetMessageFeedback),
+      variables: {
+        'messageId': item.id,
+        'feedback': feedback,
+      },
+    ));
+  }
 }

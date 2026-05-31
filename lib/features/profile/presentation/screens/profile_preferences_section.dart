@@ -9,8 +9,32 @@ import '../../../../main.dart';
 import 'profile_list_widgets.dart';
 import 'profile_preference_switch.dart';
 
+final _themeLabel = <ThemeMode, String>{
+  ThemeMode.system: 'System',
+  ThemeMode.light: 'Light',
+  ThemeMode.dark: 'Dark',
+};
+
+final _themeIcon = <ThemeMode, IconData>{
+  ThemeMode.system: Icons.brightness_auto_outlined,
+  ThemeMode.light: Icons.light_mode_outlined,
+  ThemeMode.dark: Icons.dark_mode_outlined,
+};
+
 class ProfilePreferencesSection extends ConsumerWidget {
   const ProfilePreferencesSection({super.key});
+
+  void _setTheme(WidgetRef ref, ThemeMode mode) {
+    ref.read(themeModeProvider.notifier).state = mode;
+    SharedPreferences.getInstance().then((p) {
+      final value = switch (mode) {
+        ThemeMode.dark => 'dark',
+        ThemeMode.light => 'light',
+        ThemeMode.system => 'system',
+      };
+      p.setString('theme_mode', value);
+    });
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,45 +47,62 @@ class ProfilePreferencesSection extends ConsumerWidget {
         GlassCard(
           child: Column(
             children: [
-              ListTile(
-                leading: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: (themeMode == ThemeMode.dark
-                            ? DesignTokens.warning
-                            : DesignTokens.primary)
-                        .withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                  ),
-                  child: Icon(
-                    themeMode == ThemeMode.dark
-                        ? Icons.light_mode_outlined
-                        : Icons.dark_mode_outlined,
-                    size: 18,
-                    color: themeMode == ThemeMode.dark
-                        ? DesignTokens.warning
-                        : DesignTokens.primary,
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: DesignTokens.info.withValues(alpha: 0.1),
+                        borderRadius:
+                            BorderRadius.circular(DesignTokens.radiusSm),
+                      ),
+                      child: Icon(_themeIcon[themeMode],
+                          size: 16, color: DesignTokens.info),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text('Appearance',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 14)),
+                    ),
+                    Text(_themeLabel[themeMode] ?? 'System',
+                        style: const TextStyle(
+                            fontSize: 13, color: DesignTokens.textSecondary)),
+                  ],
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<ThemeMode>(
+                    segments: const [
+                      ButtonSegment(
+                          value: ThemeMode.system,
+                          label: Text('System'),
+                          icon: Icon(Icons.brightness_auto_outlined, size: 16)),
+                      ButtonSegment(
+                          value: ThemeMode.light,
+                          label: Text('Light'),
+                          icon: Icon(Icons.light_mode_outlined, size: 16)),
+                      ButtonSegment(
+                          value: ThemeMode.dark,
+                          label: Text('Dark'),
+                          icon: Icon(Icons.dark_mode_outlined, size: 16)),
+                    ],
+                    selected: {themeMode},
+                    onSelectionChanged: (v) => _setTheme(ref, v.first),
+                    style: const ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                   ),
                 ),
-                title: Text(
-                    themeMode == ThemeMode.dark ? 'Light Mode' : 'Dark Mode',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14)),
-                trailing: const Icon(Icons.chevron_right,
-                    size: 18, color: DesignTokens.textTertiary),
-                onTap: () {
-                  final current = ref.read(themeModeProvider);
-                  final next = current == ThemeMode.dark
-                      ? ThemeMode.light
-                      : ThemeMode.dark;
-                  ref.read(themeModeProvider.notifier).state = next;
-                  SharedPreferences.getInstance().then((p) => p.setString(
-                      'theme_mode', next == ThemeMode.dark ? 'dark' : 'light'));
-                },
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                visualDensity: VisualDensity.compact,
               ),
               const SectionDivider(),
               AsyncPreferenceSwitch(

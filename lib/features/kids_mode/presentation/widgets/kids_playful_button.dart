@@ -29,49 +29,57 @@ class _KidsPlayfulPrimaryButtonState extends State<KidsPlayfulPrimaryButton> {
   Widget build(BuildContext context) {
     final active = widget.enabled && widget.onTap != null;
     final translate = _down && active ? 2.0 : 0.0;
-    return GestureDetector(
-      onTapDown: (_) => active ? setState(() => _down = true) : null,
-      onTapUp: (_) => setState(() => _down = false),
-      onTapCancel: () => setState(() => _down = false),
-      onTap: () {
-        if (!active) return;
-        HapticFeedback.lightImpact();
-        widget.onTap!();
-      },
-      child: Transform.translate(
-        offset: Offset(0, translate),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 90),
-          curve: Curves.easeOut,
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            gradient: active ? KidsVisualTheme.ctaGradient : null,
-            color: active ? null : Colors.grey.shade400,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: active
-                ? KidsVisualTheme.chunkyShadow(const Color(0xFF2A8F4A),
-                    dy: _down ? 1 : 4)
-                : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (widget.icon != null) ...[
-                Icon(widget.icon, color: Colors.white, size: 22),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                widget.label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.2,
+    return Semantics(
+      button: true,
+      label: widget.label,
+      enabled: active,
+      child: GestureDetector(
+        onTapDown: (_) => active ? setState(() => _down = true) : null,
+        onTapUp: (_) => setState(() => _down = false),
+        onTapCancel: () => setState(() => _down = false),
+        onTap: () {
+          if (!active) return;
+          HapticFeedback.lightImpact();
+          widget.onTap!();
+        },
+        child: Transform.translate(
+          offset: Offset(0, translate),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 90),
+            curve: Curves.easeOut,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              gradient: active ? KidsVisualTheme.ctaGradient : null,
+              color: active ? null : Colors.grey.shade400,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: active
+                  ? KidsVisualTheme.chunkyShadow(const Color(0xFF2A8F4A),
+                      dy: _down ? 1 : 4)
+                  : null,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (widget.icon != null) ...[
+                  Semantics(
+                    excludeSemantics: true,
+                    child: Icon(widget.icon, color: Colors.white, size: 22),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  widget.label,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.2,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -96,41 +104,51 @@ class KidsPlayfulSecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = onTap != null;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: active
-            ? () {
-                HapticFeedback.selectionClick();
-                onTap!();
-              }
-            : null,
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          decoration: BoxDecoration(
-            color: active
-                ? color.withValues(alpha: 0.14)
-                : color.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-                color: color.withValues(alpha: active ? 0.45 : 0.15), width: 2),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon,
-                  color: color.withValues(alpha: active ? 1 : 0.45), size: 22),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: color.withValues(alpha: active ? 1 : 0.45),
+    return Semantics(
+      button: true,
+      label: label,
+      enabled: active,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: active
+              ? () {
+                  HapticFeedback.selectionClick();
+                  onTap!();
+                }
+              : null,
+          borderRadius: BorderRadius.circular(18),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            decoration: BoxDecoration(
+              color: active
+                  ? color.withValues(alpha: 0.14)
+                  : color.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                  color: color.withValues(alpha: active ? 0.45 : 0.15),
+                  width: 2),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Semantics(
+                  excludeSemantics: true,
+                  child: Icon(icon,
+                      color: color.withValues(alpha: active ? 1 : 0.45),
+                      size: 22),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: color.withValues(alpha: active ? 1 : 0.45),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

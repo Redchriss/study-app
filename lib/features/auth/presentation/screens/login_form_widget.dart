@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/services/biometric_service.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 
@@ -33,7 +34,32 @@ class _LoginFormWidgetState extends ConsumerState<LoginFormWidget> {
         );
     if (mounted) setState(() => _loading = false);
     if (!mounted) return;
-    if (ok) return;
+    if (ok) {
+      final biometricService = BiometricService();
+      final bioAvailable = await biometricService.isAvailable();
+      final bioEnabled = await biometricService.isEnabled();
+      if (bioAvailable && !bioEnabled && mounted) {
+        final enable = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Enable Face ID?'),
+            content: const Text('Log in faster next time with Face ID.'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Skip')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Enable')),
+            ],
+          ),
+        );
+        if (enable == true) {
+          await biometricService.setEnabled(true);
+        }
+      }
+      return;
+    }
     final error = ref.read(authProvider).error ?? 'Login failed.';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

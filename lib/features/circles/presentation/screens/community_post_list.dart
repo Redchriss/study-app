@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../providers/pending_posts_provider.dart';
 import '../widgets/post_card.dart';
 
 class CommunityPostList extends StatefulWidget {
@@ -36,6 +39,84 @@ class _CommunityPostListState extends State<CommunityPostList> {
   void dispose() {
     _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  Widget _pendingPostCard(PendingEntry entry, BuildContext context) {
+    final isSubmitting = entry.status == PendingStatus.submitting;
+    final hasFailed = entry.status == PendingStatus.failed;
+    final post = entry.data;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: (Theme.of(context).brightness == Brightness.dark
+                ? DesignTokens.darkSurface
+                : DesignTokens.surface)
+            .withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+        border: Border.all(
+          color: hasFailed
+              ? DesignTokens.error.withValues(alpha: 0.5)
+              : (Theme.of(context).brightness == Brightness.dark
+                  ? DesignTokens.darkBorder
+                  : DesignTokens.border),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isSubmitting)
+              const SizedBox(
+                width: double.infinity,
+                child: LinearProgressIndicator(),
+              ),
+            if (hasFailed)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline,
+                        size: 14, color: DesignTokens.error),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(entry.error ?? 'Post failed',
+                          style: const TextStyle(
+                              fontSize: 11, color: DesignTokens.error)),
+                    ),
+                  ],
+                ),
+              ),
+            Row(
+              children: [
+                if (isSubmitting)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(strokeWidth: 1.5)),
+                  ),
+                Expanded(
+                  child: Text(post['title']?.toString() ?? '',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                ),
+              ],
+            ),
+            if (post['body'] != null && post['body'].toString().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(post['body'].toString(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 12, color: DesignTokens.textSecondary)),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _onScroll(ScrollNotification info, FetchMore? fetchMore,
@@ -125,29 +206,38 @@ class _CommunityPostListState extends State<CommunityPostList> {
           );
         }
 
-        return NotificationListener<ScrollNotification>(
-          onNotification: (info) {
-            _onScroll(info, fetchMore, data);
-            return false;
+        return Consumer(
+          builder: (context, ref, _) {
+            final pendings = ref
+                .watch(pendingPostsProvider)
+                .where((e) => e.groupKey == widget.slug && e.type == 'post')
+                .toList();
+            return NotificationListener<ScrollNotification>(
+              onNotification: (info) {
+                _onScroll(info, fetchMore, data);
+                return false;
+              },
+              child: Column(
+                children: [
+                  ...pendings.map((e) => _pendingPostCard(e, context)),
+                  ...posts.map((p) => PostCard(
+                        post: p,
+                        onTap: () =>
+                            context.push('/y/${widget.slug}/post/${p['slug']}'),
+                      )),
+                  if (_loadingMore)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                ],
+              ),
+            );
           },
-          child: Column(
-            children: [
-              ...posts.map((p) => PostCard(
-                    post: p,
-                    onTap: () =>
-                        context.push('/y/${widget.slug}/post/${p['slug']}'),
-                  )),
-              if (_loadingMore)
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-            ],
-          ),
         );
       },
     );

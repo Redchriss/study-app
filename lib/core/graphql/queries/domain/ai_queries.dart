@@ -97,6 +97,15 @@ query AdaptiveStudyPlan {
 }
 ''';
 
+const String kSetMessageFeedback = r'''
+mutation SetMessageFeedback($messageId: ID!, $feedback: String) {
+  setMessageFeedback(messageId: $messageId, feedback: $feedback) {
+    success
+    errors
+  }
+}
+''';
+
 const String kCreateAdaptiveStudyPlan = r'''
 mutation CreateAdaptiveStudyPlan($goal: String, $subjectName: String, $studyMode: String) {
   createAdaptiveStudyPlan(goal: $goal, subjectName: $subjectName, studyMode: $studyMode) {

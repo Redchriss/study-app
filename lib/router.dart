@@ -39,7 +39,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
       final isKidsRoute = location == '/kids' || location.startsWith('/kids/');
 
-      if (auth.isLoading) {
+      if (auth.isLoading || auth.biometricRequired) {
         return location == '/splash' || isKidsRoute ? null : '/splash';
       }
 

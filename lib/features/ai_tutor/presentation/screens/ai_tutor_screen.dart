@@ -113,20 +113,39 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   }
 
   Widget _buildBody() {
-    final st = ref.watch(aiTutorProvider);
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final studyMode = ref.watch(aiTutorProvider.select((s) => s.studyMode));
+    final snapshotLoading =
+        ref.watch(aiTutorProvider.select((s) => s.snapshotLoading));
+    final topicStates =
+        ref.watch(aiTutorProvider.select((s) => s.topicStates));
+    final memories = ref.watch(aiTutorProvider.select((s) => s.memories));
+    final activePlan =
+        ref.watch(aiTutorProvider.select((s) => s.activePlan));
+    final reviewCount =
+        ref.watch(aiTutorProvider.select((s) => s.reviewCount));
+    final showInsights =
+        ref.watch(aiTutorProvider.select((s) => s.showInsights));
+    final items =
+        ref.watch(aiTutorProvider.select((s) => s.conversationItems));
+    final streaming =
+        ref.watch(aiTutorProvider.select((s) => s.streaming));
+    final streamingText =
+        ref.watch(aiTutorProvider.select((s) => s.streamingText));
+    final sending = ref.watch(aiTutorProvider.select((s) => s.sending));
+
     return Column(
       children: [
         AiTutorHeader(
-          studyMode: st.studyMode,
+          studyMode: studyMode,
           modes: _modes,
-          modeHint: modeHint(st.studyMode),
-          snapshotLoading: st.snapshotLoading,
-          topicStates: st.topicStates,
-          memories: st.memories,
-          activePlan: st.activePlan,
-          reviewCount: st.reviewCount,
-          showInsights: st.showInsights,
+          modeHint: modeHint(studyMode),
+          snapshotLoading: snapshotLoading,
+          topicStates: topicStates,
+          memories: memories,
+          activePlan: activePlan,
+          reviewCount: reviewCount,
+          showInsights: showInsights,
           onModeSelect: ref.read(aiTutorProvider.notifier).setStudyMode,
           onGeneratePlan: () => ref
               .read(aiTutorProvider.notifier)
@@ -135,29 +154,27 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         ),
         Expanded(
           child: AiTutorMessageList(
-            conversationItems: st.conversationItems,
+            conversationItems: items,
             surfaceController:
                 ref.read(aiTutorProvider.notifier).surfaceController,
-            streaming: st.streaming,
-            streamingText: st.streamingText,
+            streaming: streaming,
+            streamingText: streamingText,
             cursorAnim: _cursorAnim,
             dark: dark,
             scrollCtrl: _scrollCtrl,
-            suggestions: st.conversationItems.isEmpty
-                ? suggestionsForMode(st.studyMode)
-                : const [],
+            suggestions:
+                items.isEmpty ? suggestionsForMode(studyMode) : const [],
             onSuggestion: _send,
             onFeedback: ref.read(aiTutorProvider.notifier).setMessageFeedback,
           ),
         ),
-        if (st.sending) const AiTypingIndicator(),
+        if (sending) const AiTypingIndicator(),
         AiTutorInputBar(
           ctrl: _msgCtrl,
-          sending: st.sending,
-          placeholder: modePlaceholder(st.studyMode),
-          suggestions: st.conversationItems.isEmpty
-              ? suggestionsForMode(st.studyMode)
-              : const [],
+          sending: sending,
+          placeholder: modePlaceholder(studyMode),
+          suggestions:
+              items.isEmpty ? suggestionsForMode(studyMode) : const [],
           onSend: _send,
         ),
       ],

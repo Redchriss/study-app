@@ -37,6 +37,9 @@ dependencies:
   cached_network_image: ^3.3.1
   lottie: ^3.1.0
 
+  # Biometric auth
+  local_auth: ^2.3.0
+
   # TTS
   flutter_tts: ^4.2.5
 
@@ -49,6 +52,7 @@ dependencies:
 
   # Notifications
   flutter_local_notifications: ^17.2.2
+  firebase_messaging: ^16.2.2
 
   # Utils
   intl: ^0.20.2

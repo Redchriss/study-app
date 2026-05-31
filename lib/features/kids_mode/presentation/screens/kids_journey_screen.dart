@@ -130,62 +130,75 @@ class _KidsJourneyScreenState extends ConsumerState<KidsJourneyScreen> {
               child: _loading
                   ? const LoadingWidget()
                   : _error != null
-                      ? ListView(
-                          padding: const EdgeInsets.all(24),
-                          children: [
-                            Text(
-                              _error!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                          ],
-                        )
-                      : ListView(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                          children: [
-                            if (_rewardProfile != null) ...[
-                              KidsRewardPanel(
-                                rewardProfile: _rewardProfile!,
-                                onCompanionTap: _equipCompanion,
+                      ? Semantics(
+                          label: 'Error: $_error',
+                          child: ListView(
+                            padding: const EdgeInsets.all(24),
+                            children: [
+                              Text(
+                                _error!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700),
                               ),
-                              const SizedBox(height: 16),
                             ],
-                            Container(
-                              padding: const EdgeInsets.all(18),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.95),
-                                borderRadius: BorderRadius.circular(24),
+                          ),
+                        )
+                      : Semantics(
+                          label: 'Journey screen for ${widget.subjectName}',
+                          child: ListView(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                            children: [
+                              if (_rewardProfile != null) ...[
+                                KidsRewardPanel(
+                                  rewardProfile: _rewardProfile!,
+                                  onCompanionTap: _equipCompanion,
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                              Semantics(
+                                label: 'World Map',
+                                child: Container(
+                                  padding: const EdgeInsets.all(18),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.95),
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Semantics(
+                                        header: true,
+                                        child: const Text(
+                                          'World Map',
+                                          style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w900,
+                                              color: KidsVisualTheme.ink),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      const Text(
+                                        'Finish each stop, return for review, and unlock the next world.',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: KidsVisualTheme.inkMuted),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      KidsWorldMap(
+                                        worlds: _worlds,
+                                        onTopicTap: (topicId) {
+                                          context.pop({'topicId': topicId});
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'World Map',
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w900,
-                                        color: KidsVisualTheme.ink),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    'Finish each stop, return for review, and unlock the next world.',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: KidsVisualTheme.inkMuted),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  KidsWorldMap(
-                                    worlds: _worlds,
-                                    onTopicTap: (topicId) {
-                                      context.pop({'topicId': topicId});
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
             ),
           ),

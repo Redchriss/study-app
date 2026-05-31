@@ -40,44 +40,53 @@ class _EmojiStoryCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x15000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: KidsVisualTheme.pathBlue, width: 3),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            data.emoji,
-            style: const TextStyle(fontSize: 64),
-          )
-              .animate()
-              .scale(duration: 400.ms, curve: Curves.easeOutBack)
-              .rotate(begin: -0.1, end: 0, duration: 400.ms),
-          const SizedBox(height: 16),
-          Text(
-            data.text,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: KidsVisualTheme.ink,
-              height: 1.3,
+    return Semantics(
+      label: 'Story: ${data.text}',
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x15000000),
+              blurRadius: 10,
+              offset: Offset(0, 4),
             ),
-          ),
-        ],
+          ],
+          border: Border.all(color: KidsVisualTheme.pathBlue, width: 3),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Semantics(
+              excludeSemantics: true,
+              child: Text(
+                data.emoji,
+                style: const TextStyle(fontSize: 64),
+              )
+                  .animate()
+                  .scale(duration: 400.ms, curve: Curves.easeOutBack)
+                  .rotate(begin: -0.1, end: 0, duration: 400.ms),
+            ),
+            const SizedBox(height: 16),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                data.text,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: KidsVisualTheme.ink,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,10 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/biometric_service.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../providers/auth_provider.dart';
 
-/// Splash screen — pure UI only.
-/// Navigation is handled entirely by GoRouter.redirect in router.dart.
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends ConsumerState<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _listen());
+  }
+
+  void _listen() {
+    ref.listen(authProvider, (prev, next) {
+      if (!next.biometricRequired) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _doBiometric());
+    });
+  }
+
+  Future<void> _doBiometric() async {
+    final authenticated = await BiometricService().authenticate();
+    if (!mounted) return;
+    if (authenticated) {
+      await ref.read(authProvider.notifier).completeBiometric();
+    } else {
+      await ref.read(authProvider.notifier).failBiometric();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

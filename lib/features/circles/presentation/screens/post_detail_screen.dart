@@ -7,6 +7,7 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../providers/pending_posts_provider.dart';
 import 'post_detail_header.dart';
 import 'post_detail_comments.dart';
 import 'post_detail_actions.dart';
@@ -15,10 +16,12 @@ import 'post_detail_action_bar.dart';
 class PostDetailScreen extends ConsumerStatefulWidget {
   final String communitySlug;
   final String postSlug;
+  final String? commentId;
   const PostDetailScreen({
     super.key,
     required this.communitySlug,
     required this.postSlug,
+    this.commentId,
   });
 
   @override
@@ -42,6 +45,40 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final body = _commentCtrl.text.trim();
     if (body.isEmpty || _sending) return;
     setState(() => _sending = true);
+
+    final user = ref.read(authProvider).user;
+    final tempId = DateTime.now().millisecondsSinceEpoch.toString();
+    final pendings = ref.read(pendingPostsProvider.notifier);
+    pendings.add(PendingEntry(
+      tempId: tempId,
+      type: 'comment',
+      groupKey: postId,
+      data: {
+        'id': tempId,
+        'body': body,
+        'bodyHtml': body,
+        'author': {
+          'id': user?['id']?.toString() ?? '',
+          'username': user?['username']?.toString() ?? 'me',
+        },
+        'createdAt': DateTime.now().toIso8601String(),
+        'depth': 0,
+        'isDeleted': false,
+        'isEdited': false,
+        'isPinned': false,
+        'isAnswer': false,
+        'isCollapsed': false,
+        'repliesCount': 0,
+        'isPending': true,
+        'upvoteCount': 0,
+        'downvoteCount': 0,
+        'score': 0,
+        'fuzzedUpvotes': 0,
+        'fuzzedDownvotes': 0,
+        'fuzzedScore': 0,
+      },
+    ));
+
     try {
       final client = ref.read(graphqlClientProvider);
       final result = await client.mutate(MutationOptions(
@@ -50,12 +87,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       ));
       if (!mounted) return;
       if (result.hasException) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              graphQLErrorMessage(result.exception, 'Could not add comment')),
-          backgroundColor: DesignTokens.error,
-        ));
+        pendings.fail(tempId, 'Could not add comment');
+        setState(() => _sending = false);
         return;
+      }
+      final commentData = result.data?['addComment']?['comment'];
+      if (commentData != null) {
+        pendings.confirm(tempId, Map<String, dynamic>.from(commentData));
+      } else {
+        pendings.remove(tempId);
       }
       _commentCtrl.clear();
       onRefetch?.call();
@@ -168,9 +208,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         final isPinned = post['isPinned'] == true;
         final isRemoved = post['isRemoved'] == true;
         final isMod = community?['isModerator'] == true;
-    final postId = post['id'].toString();
-    final isBookmarked = post['isBookmarked'] == true || _saved;
-    return Scaffold(
+        final postId = post['id'].toString();
+        final isBookmarked = post['isBookmarked'] == true || _saved;
+        return Scaffold(
           appBar: AppBar(
             title: Text('y/${community?['name'] ?? ''}',
                 style: theme.textTheme.titleSmall
@@ -218,7 +258,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       postId: postId,
                       isBookmarked: isBookmarked,
                       awarding: _awarding,
-                      commentCount: (post['commentCount'] as num?)?.toInt() ?? 0,
+                      commentCount:
+                          (post['commentCount'] as num?)?.toInt() ?? 0,
                       onToggleSave: () => _toggleSave(postId),
                       onGiveAward: () => _giveAward(postId),
                     ),
@@ -231,6 +272,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       key: ValueKey('comments_$postId$_commentSort'),
                       postId: postId,
                       sort: _commentSort,
+                      scrollToCommentId: widget.commentId,
                     ),
                   ],
                 ),

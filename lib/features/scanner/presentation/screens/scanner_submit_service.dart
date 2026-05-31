@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/services/hive_service.dart';
 import '../../../../core/services/scanner_stream_service.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -88,12 +89,19 @@ class ScannerSubmitService {
       if (!context.mounted) return;
       context.push('/scanner/results', extra: {'solutions': solutions});
     } catch (e) {
+      HiveService.enqueueScanSubmission({
+        'imagePath': image.path,
+        'subject': subject,
+        'educationLevel': educationLevel,
+        'examType': examType,
+        'year': year,
+      });
       if (context.mounted) {
         onSolvingEnd();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: DesignTokens.error,
+          const SnackBar(
+            content: Text('Submission saved — will retry when connected'),
+            backgroundColor: DesignTokens.warning,
           ),
         );
       }

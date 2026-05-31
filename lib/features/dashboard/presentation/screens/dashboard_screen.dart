@@ -66,10 +66,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         if (result.isLoading) return const Scaffold(body: DashboardLoading());
         if (result.hasException) {
           return Scaffold(
-            body: ErrorState(
-              message: graphQLErrorMessage(
-                  result.exception, 'Could not load dashboard.'),
-              onRetry: () => refetch?.call(),
+            body: RefreshIndicator(
+              onRefresh: () async => refetch?.call(),
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: DashboardHeroHeader(
+                      name: 'Student',
+                      educationLevel: 'secondary',
+                      streak: 0,
+                      points: 0,
+                      credits: 0,
+                      dark: dark,
+                      onNotification: () => context.go('/notifications'),
+                      onAiTutor: () => context.push('/ai-tutor'),
+                    ),
+                  ),
+                  SliverFillRemaining(
+                    child: ErrorState(
+                      message: graphQLErrorMessage(
+                          result.exception, 'Could not load dashboard.'),
+                      onRetry: () => refetch?.call(),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -84,7 +105,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               : null,
         );
         final snap = result.data?['progressSnapshot'];
-        final circles = (result.data?['myCircles'] as List?) ?? [];
         final learningProfile =
             result.data?['learningProfile'] as Map<String, dynamic>?;
         final name = me?['username'] as String? ?? 'Student';
@@ -106,6 +126,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 .where((s) => s.trim().isNotEmpty)
                 .toList();
         _scheduleWeakTopicReminder(weakestTopics);
+        final bool allSectionsEmpty = latestMaterialProgress == null &&
+            recentMaterials.isEmpty &&
+            weakestTopics.isEmpty &&
+            strugglingTopics.isEmpty &&
+            masteredTopics.isEmpty &&
+            snap?['hasData'] != true;
         return Scaffold(
           body: RefreshIndicator(
             onRefresh: () => _refreshDashboard(refetch),
@@ -135,6 +161,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     child: FutureBuilder<StudyMaterialProgress?>(
                       future: _progressStore.loadLastMaterial(),
                       builder: (_, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: DesignTokens.spMd),
+                            child: ShimmerBox(height: 90, radius: 16),
+                          );
+                        }
+                        if (snapshot.hasError) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: DesignTokens.spMd),
+                            child: ErrorState(
+                              message: 'Could not load saved progress.',
+                            ),
+                          );
+                        }
                         final saved = snapshot.data;
                         if (saved == null) return const SizedBox.shrink();
                         return DashboardContinueStudyCard(progress: saved)
@@ -153,9 +196,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       children: [
                         const SectionHeader(title: 'Quick Actions'),
                         const SizedBox(height: DesignTokens.spSm),
-                        DashboardQuickActions(
-                            educationLevel: educationLevel,
-                            circlesCount: circles.length),
+                        const DashboardQuickActions(),
                       ],
                     ),
                   ).animate().fadeIn(delay: 300.ms),
@@ -177,11 +218,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: FutureBuilder<QueryResult>(
                     future: _adaptivePlanFuture,
                     builder: (_, snapshot) {
-                      final plan = snapshot.data?.data?['adaptiveStudyPlan'];
+                      if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: DesignTokens.spMd),
+                          child: ShimmerBox(height: 120, radius: 16),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: DesignTokens.spMd),
+                          child: ErrorState(
+                            message: 'Could not load study plan.',
+                            onRetry: () => setState(() =>
+                                _adaptivePlanFuture =
+                                    _loadAdaptiveStudyPlan()),
+                          ),
+                        );
+                      }
+                      final plan =
+                          snapshot.data?.data?['adaptiveStudyPlan'];
                       if (plan is! Map) return const SizedBox.shrink();
-                      final tasks = ((plan['tasksJson'] as List?) ?? const [])
-                          .whereType<Map>()
-                          .toList();
+                      final tasks =
+                          ((plan['tasksJson'] as List?) ?? const [])
+                              .whereType<Map>()
+                              .toList();
                       return DashboardAdaptivePlanCard(
                         planSummary: plan['planSummary']?.toString() ?? '',
                         tasks: tasks,
@@ -238,6 +301,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ],
 
+                if (allSectionsEmpty)
+                  SliverFillRemaining(
+                    child: EmptyState(
+                      icon: Icons.auto_stories_rounded,
+                      title: 'Welcome to Yaza!',
+                      subtitle:
+                          'Start your first lesson to begin your study journey.',
+                      actionLabel: 'Browse Materials',
+                      onAction: () => context.push('/materials'),
+                    ),
+                  ),
                 const SliverToBoxAdapter(
                     child: SizedBox(height: DesignTokens.spXxl * 2)),
               ],

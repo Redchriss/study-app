@@ -10,7 +10,7 @@ import 'kids_lesson_actions.dart';
 import '../genui/kids_catalog.dart';
 import 'kids_home_screen_fetcher.dart';
 import '../../../ai_tutor/presentation/screens/ai_tutor_stream_service.dart';
-import '../../../ai_tutor/presentation/screens/ai_tutor_manager.dart';
+import '../../../ai_tutor/presentation/providers/ai_tutor_state.dart';
 
 class KidsHomeScreenManager {
   final WidgetRef ref;

@@ -5,17 +5,20 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/client.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/services/biometric_service.dart';
 import '../../../../core/storage/secure_storage.dart';
 
 class AuthState {
   final bool isAuthenticated;
   final bool isLoading;
+  final bool biometricRequired;
   final Map<String, dynamic>? user;
   final String? error;
 
   const AuthState({
     required this.isAuthenticated,
     required this.isLoading,
+    this.biometricRequired = false,
     this.user,
     this.error,
   });
@@ -90,6 +93,18 @@ class AuthNotifier extends Notifier<AuthState> {
       if (result.hasException || result.data?['me'] == null) {
         await SecureStorage.clearTokens();
         state = const AuthState(isAuthenticated: false, isLoading: false);
+        return;
+      }
+
+      final biometricService = BiometricService();
+      if (await biometricService.isEnabled() &&
+          await biometricService.isAvailable()) {
+        state = AuthState(
+          isAuthenticated: false,
+          isLoading: false,
+          biometricRequired: true,
+          user: result.data!['me'],
+        );
         return;
       }
 
@@ -198,10 +213,56 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  Future<void> completeBiometric() async {
+    state = AuthState(
+      isAuthenticated: true,
+      isLoading: false,
+      biometricRequired: false,
+      user: state.user,
+    );
+    _scheduleRefresh();
+  }
+
+  Future<void> failBiometric() async {
+    await SecureStorage.clearTokens();
+    state = const AuthState(
+      isAuthenticated: false,
+      isLoading: false,
+      biometricRequired: false,
+    );
+  }
+
   Future<void> logout() async {
     _refreshTimer?.cancel();
     await SecureStorage.clearTokens();
     state = const AuthState(isAuthenticated: false, isLoading: false);
+  }
+
+  Future<String?> deleteAccount(String password) async {
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.mutate(MutationOptions(
+        document: gql(kDeleteAccount),
+        variables: {'password': password},
+      ));
+
+      if (result.hasException) {
+        return graphQLErrorMessage(
+            result.exception, 'Could not delete account.');
+      }
+
+      final data = result.data?['deleteAccount'];
+      if (data == null || data['success'] != true) {
+        final errors =
+            (data?['errors'] as List?)?.join(', ') ?? 'Could not delete account.';
+        return errors;
+      }
+
+      await logout();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
   }
 
   /// Reload `me` after profile / education updates (e.g. Edit profile).

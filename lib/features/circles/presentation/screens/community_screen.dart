@@ -19,7 +19,7 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
-  int _sortIdx = 0;
+  int _sortIdx = 1;
   String _timeFilter = 'all';
   String? _postType;
   String? _flairId;
@@ -147,5 +147,3 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 }
-
-

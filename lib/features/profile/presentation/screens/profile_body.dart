@@ -8,7 +8,7 @@ import 'profile_content_section.dart';
 import 'profile_family_section.dart';
 import 'profile_preferences_section.dart';
 import 'profile_about_section.dart';
-import 'profile_logout_button.dart';
+import 'profile_danger_zone.dart';
 
 class ProfileBody extends ConsumerWidget {
   const ProfileBody({super.key, required this.me, required this.refetch});
@@ -77,7 +77,8 @@ class ProfileBody extends ConsumerWidget {
                   const SizedBox(height: 16),
                   const ProfileAboutSection().animate(delay: 200.ms).fadeIn(),
                   const SizedBox(height: 20),
-                  const ProfileLogoutButton().animate(delay: 220.ms).fadeIn(),
+                  const ProfileDangerZone().animate(delay: 220.ms).fadeIn(),
+                  const SizedBox(height: 32),
                 ]),
               ),
             ),

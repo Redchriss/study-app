@@ -9,7 +9,10 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/design_tokens.dart';
 import 'core/config/app_config.dart';
+import 'core/graphql/client.dart';
 import 'core/services/analytics_service.dart';
+import 'core/services/connectivity_service.dart';
+import 'core/services/hive_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/retention_service.dart';
 import 'core/widgets/widgets.dart';
@@ -65,6 +68,8 @@ Future<void> _runApp() async {
   try {
     await Hive.initFlutter();
     await HiveStore.openBox(HiveStore.defaultBoxName);
+    await Hive.openBox<String>('post_drafts');
+    await HiveService.initialize();
   } catch (e, st) {
     debugPrint('Hive init failed, falling back to in-memory cache: $e');
     await Sentry.captureException(e, stackTrace: st);
@@ -99,6 +104,34 @@ Future<void> _initializePostLaunchServices() async {
     debugPrint('RetentionService init failed: $e');
     await Sentry.captureException(e, stackTrace: st);
   }
+
+  // Retry pending submissions (Issues 2 & 3)
+  ConnectivityService.onConnectivityChanged.listen((_) async {
+    if (await ConnectivityService.isConnected()) {
+      try {
+        final client = buildGraphQLClient();
+        await HiveService.retryPendingQuizSubmissions(client);
+        await HiveService.retryPendingScans();
+      } catch (e, st) {
+        debugPrint('Pending submission retry failed: $e');
+        await Sentry.captureException(e, stackTrace: st);
+      }
+    }
+  });
+
+  // Also retry on first launch after a brief delay
+  Future.delayed(const Duration(seconds: 3), () async {
+    if (await ConnectivityService.isConnected()) {
+      try {
+        final client = buildGraphQLClient();
+        await HiveService.retryPendingQuizSubmissions(client);
+        await HiveService.retryPendingScans();
+      } catch (e, st) {
+        debugPrint('Initial pending submission retry failed: $e');
+        await Sentry.captureException(e, stackTrace: st);
+      }
+    }
+  });
 }
 
 class StudyApp extends ConsumerWidget {

@@ -21,6 +21,7 @@ List<GoRoute> get communityRoutes => [
             builder: (_, state) => PostDetailScreen(
               communitySlug: state.pathParameters['slug']!,
               postSlug: state.pathParameters['postSlug']!,
+              commentId: state.uri.queryParameters['commentId'],
             ),
           ),
           GoRoute(

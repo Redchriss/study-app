@@ -4,18 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/services/hive_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import 'quiz_question_card.dart';
 import 'quiz_timer_widget.dart';
+
 class QuizTakeScreen extends ConsumerStatefulWidget {
   final String slug;
   const QuizTakeScreen({super.key, required this.slug});
   @override
   ConsumerState<QuizTakeScreen> createState() => _QuizTakeScreenState();
 }
+
 class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
     with WidgetsBindingObserver {
   final Map<String, String?> _answers = {};
@@ -25,31 +28,107 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
   bool _startingAttempt = false;
   Timer? _timer;
   bool _paused = false;
+  bool _resumeChecked = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _tryRestoreSession());
   }
+
   @override
   void dispose() {
     _timer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    _persistState();
     super.dispose();
   }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       _paused = true;
+      _persistState();
     } else if (state == AppLifecycleState.resumed && _paused) {
       _paused = false;
     }
   }
+
+  void _persistState() {
+    if (_answers.isNotEmpty) {
+      HiveService.saveQuizAttempt(
+        widget.slug,
+        answers: _answers,
+        time: _time,
+        attemptId: _attemptId,
+      );
+    }
+  }
+
+  Future<void> _tryRestoreSession() async {
+    if (_resumeChecked || !mounted) return;
+    _resumeChecked = true;
+    final saved = HiveService.getSavedQuizAttempt(widget.slug);
+    if (saved == null || !mounted) return;
+
+    final resume = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Resume Quiz?'),
+        content: const Text(
+          'You have a partially completed quiz. Continue where you left off?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Start Fresh'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Resume'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    if (resume == true) {
+      final rawAnswers = saved['answers'] as Map? ?? {};
+      final restoredAnswers = rawAnswers.map<String, String?>(
+        (k, v) => MapEntry(k.toString(), v?.toString()),
+      );
+      restoredAnswers.removeWhere((_, v) => v == null || v.isEmpty);
+      final restoredAttemptId = saved['attemptId'] as String?;
+      final restoredTime = saved['time'] as int? ?? 0;
+      setState(() {
+        _answers.addAll(restoredAnswers);
+        _time = restoredTime;
+        if (restoredAttemptId != null && restoredAttemptId.isNotEmpty) {
+          _attemptId = restoredAttemptId;
+        }
+      });
+    } else {
+      HiveService.clearQuizAttempt(widget.slug);
+    }
+  }
+
   void _tick() {
     if (!mounted || _submitting || _paused || _timer == null) return;
     setState(() => _time++);
   }
+
+  void _onAnswer(String qId, String? optId) {
+    setState(() => _answers[qId] = optId);
+    HiveService.saveQuizAttempt(
+      widget.slug,
+      answers: _answers,
+      time: _time,
+      attemptId: _attemptId,
+    );
+  }
+
   Future<void> _startAttempt(String quizId, GraphQLClient client) async {
     if (_startingAttempt || _attemptId != null) return;
     _startingAttempt = true;
@@ -70,10 +149,12 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
         return;
       }
       setState(() => _attemptId = attemptId);
+      _persistState();
     } finally {
       _startingAttempt = false;
     }
   }
+
   Future<void> _submit(GraphQLClient client) async {
     if (_submitting || _attemptId == null) return;
     setState(() => _submitting = true);
@@ -95,6 +176,21 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
       if (mounted) {
         setState(() => _submitting = false);
         if (result.hasException) {
+          if (_isNetworkError(result.exception)) {
+            HiveService.enqueueQuizSubmission({
+              'attemptId': _attemptId,
+              'answers': answers,
+              'timeTakenSeconds': _time,
+            });
+            HiveService.clearQuizAttempt(widget.slug);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Submission saved — will retry when connected'),
+                backgroundColor: DesignTokens.warning,
+              ),
+            );
+            return;
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content:
@@ -109,6 +205,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
         if (submitted?['success'] == true &&
             attemptId != null &&
             attemptId.isNotEmpty) {
+          HiveService.clearQuizAttempt(widget.slug);
           context.pushReplacement('/quiz-results/$attemptId');
           return;
         }
@@ -122,15 +219,29 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
         );
       }
     } catch (e) {
+      HiveService.enqueueQuizSubmission({
+        'attemptId': _attemptId,
+        'answers': answers,
+        'timeTakenSeconds': _time,
+      });
+      HiveService.clearQuizAttempt(widget.slug);
       if (mounted) {
         setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Error: $e'), backgroundColor: DesignTokens.error),
+          const SnackBar(
+            content: Text('Submission saved — will retry when connected'),
+            backgroundColor: DesignTokens.warning,
+          ),
         );
       }
     }
   }
+
+  bool _isNetworkError(OperationException? e) {
+    if (e == null) return false;
+    return e.linkException != null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -197,6 +308,28 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
                     : DesignTokens.primary,
                 minHeight: 4,
               ),
+            if (HiveService.hasPendingQuizSubmissions())
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: DesignTokens.warning.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(children: [
+                  const Icon(Icons.cloud_upload_outlined,
+                      size: 16, color: DesignTokens.warning),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${HiveService.pendingQuizCount()} submission${HiveService.pendingQuizCount() == 1 ? '' : 's'} pending — will retry when connected.',
+                      style: const TextStyle(
+                          fontSize: 12, color: DesignTokens.warning),
+                    ),
+                  ),
+                ]),
+              ),
             const SizedBox(height: 8),
             Expanded(
               child: ListView.builder(
@@ -211,7 +344,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
                     questionText: q['questionText'] ?? '',
                     options: (q['answers'] as List?) ?? [],
                     selectedAnswerId: _answers[qId],
-                    onSelect: (optId) => setState(() => _answers[qId] = optId),
+                    onSelect: (optId) => _onAnswer(qId, optId),
                   );
                 },
               ),
