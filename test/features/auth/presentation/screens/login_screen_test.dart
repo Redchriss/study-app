@@ -2,7 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:studyapp/features/auth/presentation/providers/auth_provider.dart';
 import 'package:studyapp/features/auth/presentation/screens/login_screen.dart';
+
+class _TestAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() {
+    return const AuthState(isAuthenticated: false, isLoading: false);
+  }
+
+  @override
+  Future<bool> login(String username, String password) async {
+    state = const AuthState(
+      isAuthenticated: false,
+      isLoading: false,
+      error: 'Invalid test credentials',
+    );
+    return false;
+  }
+}
 
 void main() {
   group('LoginScreen Widget Tests', () {
@@ -15,6 +33,9 @@ void main() {
         ],
       );
       return ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+        ],
         child: MaterialApp.router(
           routerConfig: router,
         ),
@@ -45,6 +66,7 @@ void main() {
       await tester.pumpWidget(createApp());
 
       final loginButton = find.text('Log In');
+      await tester.ensureVisible(loginButton);
       await tester.tap(loginButton);
       await tester.pump();
 
@@ -61,9 +83,10 @@ void main() {
         ],
       ));
 
-      await tester.tap(find.text("Don't have an account? Sign up"));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      final signUpLink = find.textContaining('Sign up', findRichText: true);
+      await tester.ensureVisible(signUpLink);
+      await tester.tap(signUpLink);
+      await tester.pumpAndSettle();
 
       expect(find.text('Register Page'), findsOneWidget);
     });

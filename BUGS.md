@@ -15,6 +15,13 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-034] GitHub Actions release blocked by stale Flutter tests and missing CI .env
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Location:** `.github/workflows/build.yml`, `test/core/config/app_config_test.dart`, `test/features/auth/presentation/screens/login_screen_test.dart`
+**Root cause:** The CI test job still ran tests written before the June 1 login UI/auth refactor and before `.env` was removed from committed assets. `app_config_test.dart` depended on a real `.env`, while `login_screen_test.dart` allowed the real `authProvider` bootstrap to run, leaving pending timers and loading-state assertions.
+**Fix:** Config tests now load an in-memory dotenv fixture and explicitly verify fallback behavior when `.env` is absent. Login screen tests override `authProvider` with an idle fake notifier. GitHub Actions now creates `.env` in both test and release jobs from repository variables/secrets with safe production defaults.
+**Verified:** `flutter test test/widget_test.dart test/features test/core --coverage` passes locally with 21 tests.
+
 ### [BUG-031] API test — false failures from wrong auth header prefix (JWT vs Bearer)
 **Priority:** ✅ NO BUG (false alarm)
 **Location:** `lib/core/graphql/client.dart:17`
