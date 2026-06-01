@@ -23,6 +23,9 @@ import '../../features/quizzes/presentation/screens/quizzes_screen.dart';
 import '../../features/quizzes/presentation/screens/quiz_take_screen.dart';
 import '../../features/quizzes/presentation/screens/quiz_results_screen.dart';
 import '../../features/materials/presentation/screens/my_uploads_screen.dart';
+import '../../features/materials/presentation/screens/materials_screen.dart';
+import '../../features/materials/presentation/screens/material_detail_screen.dart';
+import '../../features/materials/presentation/reader/material_reader_screen.dart';
 import '../../features/profile/presentation/screens/settings_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 
@@ -117,6 +120,28 @@ List<GoRoute> get appRoutes => [
           path: '/upload-material',
           builder: (_, __) => const UploadMaterialScreen()),
       GoRoute(path: '/my-uploads', builder: (_, __) => const MyUploadsScreen()),
+
+      // Materials
+      GoRoute(
+        path: '/materials',
+        builder: (_, __) => const MaterialsScreen(),
+        routes: [
+          GoRoute(
+            path: ':slug',
+            builder: (_, state) => MaterialDetailScreen(
+              slug: state.pathParameters['slug']!,
+            ),
+            routes: [
+              GoRoute(
+                path: 'read',
+                builder: (_, state) => MaterialReaderScreen(
+                  slug: state.pathParameters['slug']!,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
 
       // Legal / About
       GoRoute(path: '/about', builder: (_, __) => const AboutScreen()),
