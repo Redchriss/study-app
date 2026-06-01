@@ -140,7 +140,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         variables: {
           'sort': 'new',
           'limit': 10,
-          'offset': 0,
         },
         fetchPolicy: FetchPolicy.networkOnly,
       ),

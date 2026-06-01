@@ -74,11 +74,12 @@ query Dashboard {
     topicsMastered
     topicsStruggling
   }
-  myCircles {
+  myCommunities {
     id
     name
     slug
     memberCount
+    displayName
   }
 }
 ''';
