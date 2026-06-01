@@ -5,6 +5,8 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
+const String kUserPosts = r'''query UserPosts { __typename }''';
+
 class ProfilePostsTab extends StatelessWidget {
   final String username;
   const ProfilePostsTab({super.key, required this.username});

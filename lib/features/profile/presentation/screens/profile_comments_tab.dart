@@ -4,6 +4,8 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
+const String kUserComments = r'''query UserComments { __typename }''';
+
 class ProfileCommentsTab extends StatelessWidget {
   final String username;
   const ProfileCommentsTab({super.key, required this.username});

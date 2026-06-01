@@ -8,6 +8,12 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
+const String kModmailThreads = r'''query ModmailThreads { __typename }''';
+const String kSendModmail = r'''mutation SendModmail { __typename }''';
+const String kArchiveModmailThread = r'''mutation ArchiveModmailThread { __typename }''';
+const String kModmailThread = r'''query ModmailThread { __typename }''';
+const String kReplyModmail = r'''mutation ReplyModmail { __typename }''';
+
 class ModPanelModmailTab extends ConsumerWidget {
   final String communitySlug;
   const ModPanelModmailTab({super.key, required this.communitySlug});

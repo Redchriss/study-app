@@ -5,6 +5,8 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../widgets/vote_buttons.dart';
 
+const String kUserComments = r'''query UserComments { __typename }''';
+
 class UserProfileCommentsTab extends StatelessWidget {
   final String username;
 

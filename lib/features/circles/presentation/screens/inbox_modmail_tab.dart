@@ -6,6 +6,8 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'inbox_modmail_detail.dart';
 
+const String kModmailThreads = r'''query ModmailThreads { __typename }''';
+
 class InboxModmailTab extends ConsumerWidget {
   const InboxModmailTab({super.key});
 

@@ -9,6 +9,8 @@ import '../../../../core/errors/app_exception.dart';
 import '../widgets/post_card.dart';
 import 'home_drawer.dart';
 
+const String kHomeFeed = r'''query HomeFeed { __typename }''';
+
 final _tabs = ['Best', 'Hot', 'New', 'Rising'];
 final _tabSorts = ['best', 'hot', 'new', 'rising'];
 

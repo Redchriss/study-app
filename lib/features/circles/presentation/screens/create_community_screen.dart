@@ -7,6 +7,8 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
+const String kCreateCommunity = r'''mutation CreateCommunity { __typename }''';
+
 class CreateCommunityScreen extends ConsumerStatefulWidget {
   const CreateCommunityScreen({super.key});
 

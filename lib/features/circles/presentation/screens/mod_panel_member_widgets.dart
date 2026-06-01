@@ -6,6 +6,8 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
+const String kCommunityModerators = r'''query CommunityModerators { __typename }''';
+
 class ModList extends StatelessWidget {
   final String communitySlug;
   const ModList({super.key, required this.communitySlug});

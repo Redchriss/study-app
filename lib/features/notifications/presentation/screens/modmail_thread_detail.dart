@@ -6,6 +6,10 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
+const String kModmailThread = r'''query ModmailThread($threadId: ID!) { __typename }''';
+const String kReplyModmail = r'''mutation ReplyModmail { __typename }''';
+const String kArchiveModmailThread = r'''mutation ArchiveModmailThread { __typename }''';
+
 class ModmailThreadDetail extends ConsumerStatefulWidget {
   final String threadId;
   final String communitySlug;

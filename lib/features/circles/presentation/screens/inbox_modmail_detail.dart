@@ -4,6 +4,8 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
+const String kModmailThread = r'''query ModmailThread { __typename }''';
+
 class ModmailThreadDetail extends StatelessWidget {
   final String threadId;
   const ModmailThreadDetail({super.key, required this.threadId});

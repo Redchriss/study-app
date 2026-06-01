@@ -6,6 +6,8 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
+const String kModmailThreads = r'''query ModmailThreads { __typename }''';
+
 class ModmailThreadList extends ConsumerWidget {
   final String communitySlug;
   final String communityName;

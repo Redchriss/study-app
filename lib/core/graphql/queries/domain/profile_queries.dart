@@ -3,19 +3,17 @@ export 'package:graphql_flutter/graphql_flutter.dart' show gql;
 const String kProfile = r'''
 query Profile {
   me {
-    id username email firstName lastName
+    id username email
     profile {
-      id bio avatarUrl bannerUrl
-      postKarma commentKarma awardKarma totalKarma
-      studyStreak studyPoints aiCredits
       educationLevel
+      standard
+      form
+      term
       onboardingComplete
-      createdAt
-    }
-    achievements {
-      id
-      achievement { id slug name description iconUrl category }
-      earnedAt
+      aiCredits
+      studyStreak
+      studyPoints
+      avatarUrl
     }
   }
 }
@@ -41,8 +39,8 @@ mutation UpdateProfileAvatar($imageBase64: String!) {
 
 const String kUpdateProfileBio = r'''
 mutation UpdateProfileBio($bio: String!) {
-  updateProfile(bio: $bio) {
-    profile { id bio }
+  updateProfile(input: {bio: $bio}) {
+    success
     errors
   }
 }

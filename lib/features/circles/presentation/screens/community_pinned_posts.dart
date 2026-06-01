@@ -15,7 +15,7 @@ class PinnedPostsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Query(
       options: QueryOptions(
-        document: gql(kCommunityPosts),
+        document: gql(kCirclePosts),
         variables: {
           'slug': slug,
           'sort': 'hot',
