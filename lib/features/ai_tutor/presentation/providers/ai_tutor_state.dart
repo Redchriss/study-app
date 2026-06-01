@@ -4,12 +4,42 @@ class TextItem extends ConversationItem {
   final String text;
   final bool isUser;
   final String? id;
-  TextItem({required this.text, this.isUser = false, this.id});
+  final String? confidenceLabel;
+  final double? confidenceScore;
+  final String? feedback;
+
+  TextItem({
+    required this.text,
+    this.isUser = false,
+    this.id,
+    this.confidenceLabel,
+    this.confidenceScore,
+    this.feedback,
+  });
+
+  TextItem copyWith({
+    String? text,
+    bool? isUser,
+    String? id,
+    String? confidenceLabel,
+    double? confidenceScore,
+    String? feedback,
+  }) {
+    return TextItem(
+      text: text ?? this.text,
+      isUser: isUser ?? this.isUser,
+      id: id ?? this.id,
+      confidenceLabel: confidenceLabel ?? this.confidenceLabel,
+      confidenceScore: confidenceScore ?? this.confidenceScore,
+      feedback: feedback ?? this.feedback,
+    );
+  }
 }
 
 class SurfaceItem extends ConversationItem {
   final String surfaceId;
-  SurfaceItem({required this.surfaceId});
+  final bool mounted;
+  SurfaceItem({required this.surfaceId, this.mounted = false});
 }
 
 class AiTutorState {
@@ -32,6 +62,8 @@ class AiTutorState {
   final int reviewCount;
   final List<Map<String, dynamic>> chatHistory;
   final String? error;
+  final String? checkpointText;
+  final int retryCount;
 
   const AiTutorState({
     this.conversationItems = const [],
@@ -53,6 +85,8 @@ class AiTutorState {
     this.reviewCount = 0,
     this.chatHistory = const [],
     this.error,
+    this.checkpointText,
+    this.retryCount = 0,
   });
 
   AiTutorState copyWith({
@@ -75,6 +109,8 @@ class AiTutorState {
     int? reviewCount,
     List<Map<String, dynamic>>? chatHistory,
     String? error,
+    String? checkpointText,
+    int? retryCount,
   }) {
     return AiTutorState(
       conversationItems: conversationItems ?? this.conversationItems,
@@ -96,6 +132,14 @@ class AiTutorState {
       reviewCount: reviewCount ?? this.reviewCount,
       chatHistory: chatHistory ?? this.chatHistory,
       error: error ?? this.error,
+      checkpointText: checkpointText ?? this.checkpointText,
+      retryCount: retryCount ?? this.retryCount,
     );
+  }
+
+  static String generateTitle(String firstMessage) {
+    final cleaned = firstMessage.trim();
+    if (cleaned.length <= 48) return cleaned;
+    return '${cleaned.substring(0, 45)}...';
   }
 }

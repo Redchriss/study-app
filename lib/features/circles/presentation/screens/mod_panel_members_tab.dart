@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/theme/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import 'mod_panel_member_widgets.dart';
@@ -21,7 +22,7 @@ class _ModPanelMembersTabState extends ConsumerState<ModPanelMembersTab>
   @override
   void initState() {
     super.initState();
-    _memberTabCtrl = TabController(length: 3, vsync: this);
+    _memberTabCtrl = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -44,7 +45,8 @@ class _ModPanelMembersTabState extends ConsumerState<ModPanelMembersTab>
             decoration: InputDecoration(
               hintText: 'Search username...',
               prefixIcon: const Icon(Icons.search_rounded),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               isDense: true,
             ),
             onSubmitted: (q) => setState(() => _searchQuery = q.trim()),
@@ -53,7 +55,12 @@ class _ModPanelMembersTabState extends ConsumerState<ModPanelMembersTab>
         const SizedBox(height: 8),
         TabBar(
           controller: _memberTabCtrl,
-          tabs: const [Tab(text: 'Moderators'), Tab(text: 'Banned'), Tab(text: 'Muted')],
+          tabs: const [
+            Tab(text: 'Moderators'),
+            Tab(text: 'Banned'),
+            Tab(text: 'Muted'),
+            Tab(text: 'Approved'),
+          ],
           labelColor: DesignTokens.primary,
           unselectedLabelColor: DesignTokens.textSecondary,
           indicatorSize: TabBarIndicatorSize.label,
@@ -61,13 +68,17 @@ class _ModPanelMembersTabState extends ConsumerState<ModPanelMembersTab>
         ),
         Expanded(
           child: _searchQuery.isNotEmpty
-              ? SearchedUserActions(communitySlug: widget.communitySlug, username: _searchQuery, client: client)
+              ? SearchedUserActions(
+                  communitySlug: widget.communitySlug,
+                  username: _searchQuery,
+                  client: client)
               : TabBarView(
                   controller: _memberTabCtrl,
                   children: [
                     ModList(communitySlug: widget.communitySlug),
                     BannedList(communitySlug: widget.communitySlug),
                     MutedList(communitySlug: widget.communitySlug),
+                    ApprovedList(communitySlug: widget.communitySlug),
                   ],
                 ),
         ),

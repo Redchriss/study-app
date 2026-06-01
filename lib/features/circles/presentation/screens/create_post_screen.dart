@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,8 +39,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   String? _linkPreviewDescription;
   int _pollDurationHours = 24;
   Timer? _linkDebounce;
-  final List<GalleryItem> _galleryItems = [];
+  final _galleryItems = <GalleryItem>[];
   final _pollOptions = <TextEditingController>[];
+
+  static const _draftKey = 'create_post_draft';
+  Timer? _draftTimer;
 
   @override
   void initState() {
@@ -72,9 +76,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     }
     super.dispose();
   }
-
-  Timer? _draftTimer;
-  String get _draftKey => 'create_post_draft';
 
   void _onDraftChanged() {
     _draftTimer?.cancel();
@@ -193,6 +194,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     });
   }
 
+  void _onReorderGallery(int oldI, int newI) {
+    setState(() {
+      final item = _galleryItems.removeAt(oldI);
+      _galleryItems.insert(newI, item);
+    });
+  }
+
   void _onUrlChanged(String url) {
     _linkDebounce?.cancel();
     if (url.trim().isEmpty || _postType != 'link') {
@@ -254,37 +262,152 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
     try {
       await submitPost(
-          ref: ref,
-          context: context,
-          communitySlug: _communitySlug,
-          title: _titleCtrl.text.trim(),
-          body: _bodyCtrl.text.trim(),
-          postType: _postType,
-          url: _urlCtrl.text.trim(),
-          imageBase64: _imageBase64,
-          videoBase64: _videoBase64,
-          isOc: _isOc,
-          isSpoiler: _isSpoiler,
-          flairId: _flairId,
-          pollOptions: _pollOptions.map((c) => c.text.trim()).toList(),
-          pollDurationHours: _pollDurationHours,
-          onError: (msg) {
-            if (!mounted) return;
-            pendings.fail(tempId, msg);
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(msg), backgroundColor: DesignTokens.error));
-          },
-          onSuccess: () {
-            pendings.remove(tempId);
-            _clearDraft();
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('Post created!'),
-                backgroundColor: DesignTokens.success));
-            context.pop();
-          });
+        ref: ref,
+        context: context,
+        communitySlug: _communitySlug,
+        title: _titleCtrl.text.trim(),
+        body: _bodyCtrl.text.trim(),
+        postType: _postType,
+        url: _urlCtrl.text.trim(),
+        imageBase64: _imageBase64,
+        videoBase64: _videoBase64,
+        isOc: _isOc,
+        isSpoiler: _isSpoiler,
+        flairId: _flairId,
+        galleryItems: _galleryItems
+            .map((g) => (base64: g.imageBase64, caption: g.captionCtrl.text))
+            .toList(),
+        pollOptions: _pollOptions.map((c) => c.text.trim()).toList(),
+        pollDurationHours: _pollDurationHours,
+        crosspostOf: widget.crosspostOf,
+        onError: (msg) {
+          if (!mounted) return;
+          pendings.fail(tempId, msg);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(msg), backgroundColor: DesignTokens.error));
+        },
+        onSuccess: () {
+          pendings.remove(tempId);
+          _clearDraft();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Post created!'),
+              backgroundColor: DesignTokens.success));
+          context.pop();
+        },
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Widget buildPostTypeBody({
+    required String postType,
+    required TextEditingController urlCtrl,
+    required ValueChanged<String> onUrlChanged,
+    required String? previewTitle,
+    required String? previewThumbnail,
+    required String? previewDescription,
+    required TextEditingController bodyCtrl,
+    required void Function(String, String) onInsertMarkdown,
+    required String? imagePath,
+    required VoidCallback onPickImage,
+    required List<GalleryItem> galleryItems,
+    required VoidCallback onPickGalleryImages,
+    required ValueChanged<int> onRemoveGalleryItem,
+    required void Function(int, int)? onReorderGallery,
+    required String? videoPath,
+    required VoidCallback onPickVideo,
+    required List<TextEditingController> pollOptions,
+    required int pollDurationHours,
+    required VoidCallback onAddPollOption,
+    required ValueChanged<int> onRemovePollOption,
+    required ValueChanged<int> onDurationChanged,
+    required bool isOc,
+    required ValueChanged<bool> onOcChanged,
+    required bool isSpoiler,
+    required ValueChanged<bool> onSpoilerChanged,
+  }) {
+    switch (postType) {
+      case 'link':
+        return LinkPreviewFetcher(
+          urlCtrl: urlCtrl,
+          onUrlChanged: onUrlChanged,
+          previewTitle: previewTitle,
+          previewThumbnail: previewThumbnail,
+          previewDescription: previewDescription,
+        );
+      case 'image':
+        return Column(
+          children: [
+            if (imagePath != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(File(imagePath),
+                    height: 200, width: double.infinity, fit: BoxFit.cover),
+              ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: onPickImage,
+              icon: const Icon(Icons.image_outlined),
+              label: Text(imagePath != null ? 'Change image' : 'Select image'),
+            ),
+          ],
+        );
+      case 'gallery':
+        return GalleryPicker(
+          items: galleryItems,
+          onPick: onPickGalleryImages,
+          onRemove: onRemoveGalleryItem,
+          onReorder: onReorderGallery,
+        );
+      case 'video':
+        return Column(
+          children: [
+            if (videoPath != null)
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Icon(Icons.videocam_rounded,
+                      size: 48, color: DesignTokens.textTertiary),
+                ),
+              ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: onPickVideo,
+              icon: const Icon(Icons.videocam_outlined),
+              label: Text(videoPath != null ? 'Change video' : 'Select video'),
+            ),
+          ],
+        );
+      case 'poll':
+        return PollDurationSelector(
+          options: pollOptions,
+          duration: pollDurationHours,
+          onAddOption: onAddPollOption,
+          onRemoveOption: onRemovePollOption,
+          onDurationChanged: onDurationChanged,
+        );
+      default:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            MarkdownToolbar(onInsert: onInsertMarkdown),
+            TextField(
+              controller: bodyCtrl,
+              maxLines: 8,
+              decoration: const InputDecoration(
+                hintText: 'Write your post body (Markdown supported)...',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.all(12),
+              ),
+            ),
+          ],
+        );
     }
   }
 
@@ -311,6 +434,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           _galleryItems[i].captionCtrl.dispose();
           setState(() => _galleryItems.removeAt(i));
         },
+        onReorderGallery: _onReorderGallery,
         videoPath: _videoPath,
         onPickVideo: () => _pickMedia(video: true),
         pollOptions: _pollOptions,
@@ -330,50 +454,109 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         onOcChanged: (v) => setState(() => _isOc = v),
         isSpoiler: _isSpoiler,
         onSpoilerChanged: (v) => setState(() => _isSpoiler = v));
-    final appBar = AppBar(title: const Text('Create Post'), actions: [
-      TextButton(
-          onPressed: _submitting ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2))
-              : Text('Post',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: _isValid
-                          ? DesignTokens.primary
-                          : DesignTokens.textTertiary)))
-    ]);
+
     return Scaffold(
-        appBar: appBar,
-        body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              CommunityPicker(
-                  selected: _communitySlug,
-                  onChanged: (v) => setState(() => _communitySlug = v),
-                  onFlairChanged: (fid) => setState(() => _flairId = fid),
-                  flairId: _flairId),
-              const SizedBox(height: 16),
-              Text('Post Type',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              PostTypeSelector(
-                  postTypes: kPostTypes,
-                  selected: _postType,
-                  onChanged: (v) => setState(() => _postType = v)),
-              const SizedBox(height: 16),
-              TextField(
-                  controller: _titleCtrl,
-                  decoration: const InputDecoration(
-                      labelText: 'Title', border: OutlineInputBorder()),
-                  maxLength: 300,
-                  onChanged: (_) => setState(() {})),
-              const SizedBox(height: 12),
-              postBody
-            ])));
+      appBar: AppBar(
+        title: const Text('Create Post'),
+        actions: [
+          TextButton(
+            onPressed: _submitting ? null : _submit,
+            child: _submitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : Text('Post',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _isValid
+                            ? DesignTokens.primary
+                            : DesignTokens.textTertiary)),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.crosspostOf != null)
+              _CrosspostBanner(post: widget.crosspostOf!),
+            CommunityPicker(
+                selected: _communitySlug,
+                onChanged: (v) => setState(() => _communitySlug = v),
+                onFlairChanged: (fid) => setState(() => _flairId = fid),
+                flairId: _flairId),
+            const SizedBox(height: 16),
+            Text('Post Type',
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            PostTypeSelector(
+                postTypes: kPostTypes,
+                selected: _postType,
+                onChanged: (v) => setState(() => _postType = v)),
+            const SizedBox(height: 16),
+            TextField(
+                controller: _titleCtrl,
+                decoration: const InputDecoration(
+                    labelText: 'Title', border: OutlineInputBorder()),
+                maxLength: 300,
+                onChanged: (_) => setState(() {})),
+            const SizedBox(height: 12),
+            postBody,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CrosspostBanner extends StatelessWidget {
+  final Map<String, dynamic> post;
+  const _CrosspostBanner({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    final author = post['author'] as Map<String, dynamic>?;
+    final community = post['community'] as Map<String, dynamic>?;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: DesignTokens.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: DesignTokens.primary.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.repeat_rounded,
+              size: 20, color: DesignTokens.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Crossposting',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: DesignTokens.primary)),
+                const SizedBox(height: 2),
+                Text(post['title']?.toString() ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13)),
+                Text(
+                    'by u/${author?['username'] ?? 'unknown'} in y/${community?['name'] ?? ''}',
+                    style: const TextStyle(
+                        fontSize: 11, color: DesignTokens.textTertiary)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -13,6 +13,10 @@ import '../features/circles/presentation/screens/discover_screen.dart';
 import '../features/circles/presentation/screens/inbox_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/notifications/presentation/screens/notifications_screen.dart';
+import '../features/notifications/presentation/screens/modmail_thread_list.dart';
+import '../features/notifications/presentation/screens/modmail_thread_detail.dart';
+import '../features/notifications/presentation/screens/send_modmail_screen.dart';
+import '../features/notifications/presentation/screens/notification_preferences_screen.dart';
 import 'shell.dart';
 import 'routes/community_routes.dart';
 import 'routes/app_routes.dart';
@@ -118,6 +122,38 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+
+      // Notification & modmail routes (outside shell)
+      GoRoute(
+        path: '/modmail-list/:communitySlug',
+        builder: (context, state) {
+          final extra = state.extra as Map? ?? {};
+          return ModmailThreadList(
+            communitySlug: state.pathParameters['communitySlug']!,
+            communityName: extra['communityName'] as String? ??
+                state.pathParameters['communitySlug']!,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/modmail/:threadId',
+        builder: (context, state) {
+          final extra = state.extra as Map? ?? {};
+          return ModmailThreadDetail(
+            threadId: state.pathParameters['threadId']!,
+            communitySlug: extra['communitySlug'] as String? ?? '',
+            communityName: extra['communityName'] as String? ?? '',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/send-modmail',
+        builder: (_, __) => const SendModmailScreen(),
+      ),
+      GoRoute(
+        path: '/notification-preferences',
+        builder: (_, __) => const NotificationPreferencesScreen(),
       ),
 
       ...communityRoutes,

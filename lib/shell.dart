@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/design_tokens.dart';
 import 'widgets/nav_item.dart';
 import 'widgets/centre_post_button.dart';
 import 'features/circles/presentation/screens/create_post_screen.dart';
+import 'features/notifications/presentation/providers/unread_count_provider.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
   const MainShell({super.key, required this.navigationShell});
 
@@ -29,8 +31,9 @@ class MainShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = navigationShell.currentIndex;
+    final unreadCount = ref.watch(unreadCountProvider);
     final dark = Theme.of(context).brightness == Brightness.dark;
 
     return PopScope(
@@ -108,12 +111,39 @@ class MainShell extends StatelessWidget {
                   CentrePostButton(
                     onTap: () => _onPostTap(context),
                   ),
-                  NavItem(
-                    icon: Icons.inbox_outlined,
-                    activeIcon: Icons.inbox_rounded,
-                    label: 'Inbox',
-                    isSelected: currentIndex == 2,
-                    onTap: () => _onDestinationSelected(context, 2),
+                  Stack(
+                    children: [
+                      NavItem(
+                        icon: Icons.inbox_outlined,
+                        activeIcon: Icons.inbox_rounded,
+                        label: 'Inbox',
+                        isSelected: currentIndex == 2,
+                        onTap: () => _onDestinationSelected(context, 2),
+                      ),
+                      if (unreadCount > 0)
+                        Positioned(
+                          right: 4,
+                          top: 2,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: DesignTokens.error,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                                minWidth: 18, minHeight: 18),
+                            child: Text(
+                              unreadCount > 99 ? '99+' : '$unreadCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   NavItem(
                     icon: Icons.person_outline_rounded,

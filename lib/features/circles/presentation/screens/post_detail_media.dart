@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
@@ -38,18 +39,24 @@ class _GalleryCarouselState extends State<GalleryCarousel> {
                 final item = widget.galleryItems[i] as Map<String, dynamic>?;
                 final imageUrl = item?['imageUrl']?.toString() ?? '';
                 final caption = item?['caption']?.toString() ?? '';
+                final linkUrl = item?['linkUrl']?.toString() ?? '';
                 return Column(
                   children: [
                     Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(imageUrl,
-                            fit: BoxFit.contain,
-                            width: double.infinity,
-                            loadingBuilder: (_, child, progress) =>
-                                progress == null
-                                    ? child
-                                    : const ShimmerBox(height: 260)),
+                      child: GestureDetector(
+                        onTap: linkUrl.isNotEmpty
+                            ? () => launchUrl(Uri.parse(linkUrl))
+                            : null,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(imageUrl,
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              loadingBuilder: (_, child, progress) =>
+                                  progress == null
+                                      ? child
+                                      : const ShimmerBox(height: 260)),
+                        ),
                       ),
                     ),
                     if (caption.isNotEmpty)
@@ -95,13 +102,20 @@ class VideoPlayerPlaceholder extends StatelessWidget {
   const VideoPlayerPlaceholder(
       {super.key, required this.videoUrl, this.videoDuration});
 
+  Future<void> _playVideo(BuildContext context) async {
+    final uri = Uri.tryParse(videoUrl);
+    if (uri != null) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final durationStr = videoDuration?.toString() ?? '';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: GestureDetector(
-        onTap: () {},
+        onTap: () => _playVideo(context),
         child: AspectRatio(
           aspectRatio: 16 / 9,
           child: Container(
@@ -137,8 +151,22 @@ class VideoPlayerPlaceholder extends StatelessWidget {
                   child: Text(videoUrl,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          const TextStyle(color: Colors.white54, fontSize: 10)),
+                      style: const TextStyle(
+                          color: Colors.white54, fontSize: 10)),
+                ),
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text('▶ Tap to play',
+                        style: TextStyle(color: Colors.white, fontSize: 11)),
+                  ),
                 ),
               ],
             ),
@@ -161,6 +189,8 @@ class CrosspostCard extends StatelessWidget {
     final slug = crosspost['slug']?.toString() ?? '';
     final authorName = author?['username']?.toString() ?? 'unknown';
     final communitySlug = community?['slug']?.toString() ?? '';
+    final imageUrl = crosspost['imageUrl']?.toString() ?? '';
+    final postType = crosspost['postType']?.toString() ?? 'text';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -180,6 +210,7 @@ class CrosspostCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Icon(Icons.repeat_rounded,
                     size: 20, color: DesignTokens.textSecondary),
@@ -188,15 +219,41 @@ class CrosspostCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13)),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 13)),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 4),
-                      Text('Posted by u/$authorName',
-                          style: const TextStyle(
-                              fontSize: 11, color: DesignTokens.textTertiary)),
+                      Row(
+                        children: [
+                          Text('Posted by u/$authorName',
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  color: DesignTokens.textTertiary)),
+                          const SizedBox(width: 8),
+                          _PostTypeBadge(postType: postType),
+                        ],
+                      ),
+                      if (imageUrl.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.network(imageUrl,
+                                height: 80,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    const SizedBox.shrink()),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -207,6 +264,26 @@ class CrosspostCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PostTypeBadge extends StatelessWidget {
+  final String postType;
+  const _PostTypeBadge({required this.postType});
+
+  @override
+  Widget build(BuildContext context) {
+    final typeLabel = postType[0].toUpperCase() + postType.substring(1);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(
+        color: DesignTokens.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Text(typeLabel,
+          style: const TextStyle(
+              fontSize: 9, color: DesignTokens.primary, fontWeight: FontWeight.w600)),
     );
   }
 }

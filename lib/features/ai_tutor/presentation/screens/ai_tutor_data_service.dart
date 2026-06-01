@@ -85,4 +85,29 @@ class AiTutorDataService {
         );
     return result.data?['updateLearningProfile'] as Map<String, dynamic>?;
   }
+
+  Future<void> reportIncorrect(String? messageText, String? messageId) async {
+    await _ref.read(graphqlClientProvider).mutate(
+          MutationOptions(
+            document: gql(kReportIncorrect),
+            variables: {
+              'messageId': messageId,
+              'messageText': messageText,
+            },
+          ),
+        );
+  }
+
+  void updateLastChatTitle(String? sessionId, String title) {
+    if (sessionId == null) return;
+    _ref.read(graphqlClientProvider).mutate(
+          MutationOptions(
+            document: gql(kUpdateChatSessionTitle),
+            variables: {
+              'sessionId': sessionId,
+              'title': title,
+            },
+          ),
+        );
+  }
 }

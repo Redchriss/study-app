@@ -4,7 +4,9 @@ fragment PostFields on PostType {
   imageUrl
   upvoteCount downvoteCount score commentCount
   fuzzedUpvotes fuzzedDownvotes fuzzedScore
-  isOc isSpoiler isPinned isLocked
+  isOc isSpoiler isPinned isLocked isRemoved isDeleted isEdited isNsfw
+  shareCount viewCount awardCount
+  voteDirection isSaved
   author { id username }
   community { id name slug displayName icon }
   flairText
@@ -48,19 +50,20 @@ query Post($communitySlug: String!, $postSlug: String!) {
     bodyHtml
     isPinned isLocked isRemoved isDeleted isEdited
     url urlDomain urlThumbnail
+    urlTitle urlDescription
     videoUrl videoDuration
     isOc isSpoiler
-    flairText
-    awardCount
+    flairText flairEmoji flairColor
+    isBookmarked awardCount viewCount shareCount
     editedAt
     community { id name slug displayName icon isMember isModerator }
     poll {
-      id closesAt allowAddOption
+      id closesAt allowAddOption voteCount
       options { id text order voteCount }
-      userVote { id text }
+      userVote { id optionId text }
     }
     galleryItems { id imageUrl caption linkUrl order }
-    crosspostInfo { id title slug author { username } community { slug } }
+    crosspostInfo { id title slug postType imageUrl author { id username } community { id slug name } }
   }
 }
 ''';
@@ -132,6 +135,46 @@ query SearchPosts(
 }
 ''';
 
+const String kSearch = r'''
+fragment SearchPostFields on PostType {
+  id title slug body postType
+  imageUrl
+  upvoteCount downvoteCount score commentCount
+  fuzzedUpvotes fuzzedDownvotes fuzzedScore
+  isOc isSpoiler isPinned isLocked
+  author { id username }
+  community { id name slug displayName icon }
+  flairText
+  createdAt
+}
+query Search(
+  $query: String!, $type: SearchTypeEnum, $communitySlug: String,
+  $sort: SearchSortEnum, $timeFilter: TimeFilterEnum,
+  $limit: Int, $after: String
+) {
+  search(
+    query: $query, type: $type, communitySlug: $communitySlug,
+    sort: $sort, timeFilter: $timeFilter,
+    limit: $limit, after: $after
+  ) {
+    posts {
+      edges { cursor node { ...SearchPostFields } }
+      pageInfo { hasNextPage endCursor }
+      totalCount
+    }
+    communities {
+      id name slug displayName description icon banner
+      memberCount postCount communityType
+    }
+    users {
+      user { id username }
+      avatarUrl bannerUrl bio
+      postKarma commentKarma awardKarma totalKarma
+    }
+  }
+}
+''';
+
 const String kUserProfile = r'''
 query UserProfile($username: String!) {
   userProfile(username: $username) {
@@ -186,13 +229,15 @@ const String kCreatePost = r'''
 mutation CreatePost(
   $communitySlug: String!, $title: String!, $body: String,
   $postType: PostTypeEnum!, $url: String, $imageBase64: String,
-  $videoBase64: String, $flairId: ID, $isOc: Boolean, $isSpoiler: Boolean,
+  $videoBase64: String, $galleryItems: [GalleryItemInput],
+  $flairId: ID, $isOc: Boolean, $isSpoiler: Boolean,
   $pollOptions: [String], $pollDurationHours: Int
 ) {
   createPost(
     communitySlug: $communitySlug, title: $title, body: $body,
     postType: $postType, url: $url, imageBase64: $imageBase64,
-    videoBase64: $videoBase64, flairId: $flairId,
+    videoBase64: $videoBase64, galleryItems: $galleryItems,
+    flairId: $flairId,
     isOc: $isOc, isSpoiler: $isSpoiler,
     pollOptions: $pollOptions, pollDurationHours: $pollDurationHours
   ) {
@@ -214,5 +259,14 @@ mutation EditPost($postId: ID!, $title: String, $body: String) {
 const String kDeletePost = r'''
 mutation DeletePost($postId: ID!) {
   deletePost(postId: $postId) { success }
+}
+''';
+
+const String kCrosspost = r'''
+mutation Crosspost($originalPostId: ID!, $communitySlug: String!, $title: String) {
+  crosspost(originalPostId: $originalPostId, communitySlug: $communitySlug, title: $title) {
+    post { id slug title }
+    errors
+  }
 }
 ''';

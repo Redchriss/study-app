@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -6,13 +7,26 @@ import 'post_detail_link_preview.dart';
 import 'post_detail_media.dart';
 import 'post_detail_poll.dart';
 
-class PostDetailHeader extends StatelessWidget {
+class PostDetailHeader extends StatefulWidget {
   final Map<String, dynamic> post;
   final bool dark;
   const PostDetailHeader({super.key, required this.post, required this.dark});
 
   @override
+  State<PostDetailHeader> createState() => _PostDetailHeaderState();
+}
+
+class _PostDetailHeaderState extends State<PostDetailHeader> {
+  bool _spoilerRevealed = false;
+  bool _nsfwRevealed = false;
+
+  bool get _isBlurred =>
+      (widget.post['isSpoiler'] == true && !_spoilerRevealed) ||
+      (widget.post['isNsfw'] == true && !_nsfwRevealed);
+
+  @override
   Widget build(BuildContext context) {
+    final post = widget.post;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -20,47 +34,152 @@ class PostDetailHeader extends StatelessWidget {
         if (post['bodyHtml'] != null && post['bodyHtml'].toString().isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: PostMarkdownBody(bodyHtml: post['bodyHtml'].toString()),
+            child: _isBlurred
+                ? _SpoilerBlurOverlay(
+                    isSpoiler: post['isSpoiler'] == true,
+                    isNsfw: post['isNsfw'] == true,
+                    onReveal: () => setState(() {
+                      if (post['isSpoiler'] == true) _spoilerRevealed = true;
+                      if (post['isNsfw'] == true) _nsfwRevealed = true;
+                    }),
+                    child:
+                        PostMarkdownBody(bodyHtml: post['bodyHtml'].toString()),
+                  )
+                : PostMarkdownBody(bodyHtml: post['bodyHtml'].toString()),
           ),
-        // IMAGE type — tappable fullscreen
+        _PostMediaSection(
+          post: post,
+          dark: widget.dark,
+          isBlurred: _isBlurred,
+          onReveal: () => setState(() {
+            if (post['isSpoiler'] == true) _spoilerRevealed = true;
+            if (post['isNsfw'] == true) _nsfwRevealed = true;
+          }),
+        ),
+        if (post['isSpoiler'] == true && _spoilerRevealed)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: SpoilerRevealedChip(),
+          ),
+      ],
+    );
+  }
+}
+
+class _PostMediaSection extends StatelessWidget {
+  final Map<String, dynamic> post;
+  final bool dark, isBlurred;
+  final VoidCallback onReveal;
+
+  const _PostMediaSection({
+    required this.post,
+    required this.dark,
+    required this.isBlurred,
+    required this.onReveal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
         if (post['imageUrl'] != null && post['imageUrl'].toString().isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: GestureDetector(
-              onTap: () =>
-                  _showFullscreenImage(context, post['imageUrl'].toString()),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(post['imageUrl'].toString(),
-                    fit: BoxFit.contain,
-                    width: double.infinity,
-                    loadingBuilder: (_, child, progress) => progress == null
-                        ? child
-                        : const ShimmerBox(height: 200)),
-              ),
-            ),
-          ),
-        // POLL type
+          _buildImage(context),
         if (post['poll'] != null)
           PollWidget(poll: post['poll'] as Map<String, dynamic>, dark: dark),
-        // GALLERY type
-        if (post['galleryItems'] != null)
-          GalleryCarousel(galleryItems: post['galleryItems'] as List),
-        // VIDEO type
+        if (post['galleryItems'] != null) _buildGallery(context),
         if (post['videoUrl'] != null && post['videoUrl'].toString().isNotEmpty)
-          VideoPlayerPlaceholder(
-            videoUrl: post['videoUrl'].toString(),
-            videoDuration: post['videoDuration'],
-          ),
-        // CROSSPOST type
-        if (post['crosspostInfo'] != null)
-          CrosspostCard(
-              crosspost: post['crosspostInfo'] as Map<String, dynamic>),
-        // LINK type
+          _buildVideo(context),
+        if (post['crosspostInfo'] != null) _buildCrosspost(context),
         if (post['url'] != null && post['url'].toString().isNotEmpty)
           PostLinkPreview(post: post),
       ],
     );
+  }
+
+  Widget _buildImage(BuildContext context) {
+    final imageUrl = post['imageUrl'].toString();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: GestureDetector(
+        onTap: isBlurred
+            ? onReveal
+            : () => _showFullscreenImage(context, imageUrl),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: isBlurred
+              ? _SpoilerMediaOverlay(
+                  imageUrl: imageUrl,
+                  isSpoiler: post['isSpoiler'] == true,
+                  isNsfw: post['isNsfw'] == true,
+                  onReveal: onReveal,
+                )
+              : Image.network(imageUrl,
+                  fit: BoxFit.contain,
+                  width: double.infinity,
+                  loadingBuilder: (_, child, progress) =>
+                      progress == null ? child : const ShimmerBox(height: 200)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGallery(BuildContext context) {
+    final items = post['galleryItems'] as List;
+    if (isBlurred) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: _SpoilerBlurOverlay(
+          isSpoiler: post['isSpoiler'] == true,
+          isNsfw: post['isNsfw'] == true,
+          onReveal: onReveal,
+          child: GalleryCarousel(galleryItems: items),
+        ),
+      );
+    }
+    return GalleryCarousel(galleryItems: items);
+  }
+
+  Widget _buildVideo(BuildContext context) {
+    final videoUrl = post['videoUrl'].toString();
+    if (isBlurred) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: _SpoilerBlurOverlay(
+          isSpoiler: post['isSpoiler'] == true,
+          isNsfw: post['isNsfw'] == true,
+          onReveal: onReveal,
+          child: IgnorePointer(
+            child: VideoPlayerPlaceholder(
+              videoUrl: videoUrl,
+              videoDuration: post['videoDuration'],
+            ),
+          ),
+        ),
+      );
+    }
+    return VideoPlayerPlaceholder(
+      videoUrl: videoUrl,
+      videoDuration: post['videoDuration'],
+    );
+  }
+
+  Widget _buildCrosspost(BuildContext context) {
+    if (isBlurred) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: _SpoilerBlurOverlay(
+          isSpoiler: post['isSpoiler'] == true,
+          isNsfw: post['isNsfw'] == true,
+          onReveal: onReveal,
+          child: IgnorePointer(
+            child: CrosspostCard(
+                crosspost: post['crosspostInfo'] as Map<String, dynamic>),
+          ),
+        ),
+      );
+    }
+    return CrosspostCard(
+        crosspost: post['crosspostInfo'] as Map<String, dynamic>);
   }
 
   void _showFullscreenImage(BuildContext context, String imageUrl) {
@@ -116,11 +235,23 @@ class _PostHeaderInfo extends StatelessWidget {
                 color: DesignTokens.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(post['flairText'].toString(),
-                  style: const TextStyle(
-                      fontSize: 10,
-                      color: DesignTokens.primary,
-                      fontWeight: FontWeight.w700)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (post['flairEmoji'] != null &&
+                      post['flairEmoji'].toString().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Text(post['flairEmoji'].toString(),
+                          style: const TextStyle(fontSize: 12)),
+                    ),
+                  Text(post['flairText'].toString(),
+                      style: TextStyle(
+                          fontSize: 10,
+                          color: DesignTokens.primary,
+                          fontWeight: FontWeight.w700)),
+                ],
+              ),
             ),
           Row(
             children: [
@@ -243,6 +374,148 @@ class PostMarkdownBody extends StatelessWidget {
           h3: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
+    );
+  }
+}
+
+class _SpoilerBlurOverlay extends StatelessWidget {
+  final bool isSpoiler, isNsfw;
+  final VoidCallback onReveal;
+  final Widget child;
+  const _SpoilerBlurOverlay({
+    required this.isSpoiler,
+    required this.isNsfw,
+    required this.onReveal,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: ImageFiltered(
+              imageFilter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: child,
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: onReveal,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isNsfw
+                        ? Icons.warning_amber_rounded
+                        : Icons.visibility_off_rounded,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isNsfw ? 'NSFW — Tap to view' : 'Spoiler — Tap to view',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SpoilerMediaOverlay extends StatelessWidget {
+  final String imageUrl;
+  final bool isSpoiler, isNsfw;
+  final VoidCallback onReveal;
+  const _SpoilerMediaOverlay({
+    required this.imageUrl,
+    required this.isSpoiler,
+    required this.isNsfw,
+    required this.onReveal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 200,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: ImageFiltered(
+              imageFilter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Image.network(imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+            ),
+          ),
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: onReveal,
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isNsfw
+                          ? Icons.warning_amber_rounded
+                          : Icons.visibility_off_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isNsfw ? 'NSFW — Tap to view' : 'Spoiler — Tap to view',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class SpoilerRevealedChip extends StatelessWidget {
+  const SpoilerRevealedChip({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: DesignTokens.warning.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: const Text('SPOILER',
+          style: TextStyle(
+              fontSize: 9,
+              color: DesignTokens.warning,
+              fontWeight: FontWeight.w700)),
     );
   }
 }

@@ -20,17 +20,21 @@ final aiTutorProvider = NotifierProvider<AiTutorNotifier, AiTutorState>(
 
 class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
   late AiTutorStreamService _streamService;
-
-  late final SurfaceController surfaceController;
+  late SurfaceController surfaceController;
+  bool _disposed = false;
   late final A2uiTransportAdapter _transport;
   late final Conversation conversation;
-  late final Catalog catalog;
+  late Catalog catalog;
   StreamSubscription? _convSub;
+  String _partialBuffer = '';
+  static const int _maxRetries = 2;
 
   @override
   AiTutorState build() {
     dataService = AiTutorDataService(ref as WidgetRef);
     _streamService = AiTutorStreamService();
+
+    ref.onDispose(() => _disposed = true);
 
     catalog = tutor_catalog.catalogForStudyMode(state.studyMode);
     surfaceController = SurfaceController(catalogs: [catalog]);
@@ -50,7 +54,7 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
       if (event is ConversationSurfaceAdded) {
         state = state.copyWith(conversationItems: [
           ...state.conversationItems,
-          SurfaceItem(surfaceId: event.surfaceId)
+          SurfaceItem(surfaceId: event.surfaceId, mounted: false),
         ]);
       } else if (event is ConversationSurfaceRemoved) {
         final newItems = state.conversationItems
@@ -61,12 +65,22 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
       } else if (event is ConversationContentReceived) {
         state = state.copyWith(conversationItems: [
           ...state.conversationItems,
-          TextItem(text: event.text, isUser: false)
+          TextItem(text: event.text, isUser: false),
         ]);
       } else if (event is ConversationError) {
         state = state.copyWith(error: event.error.toString());
       }
     });
+  }
+
+  void mountSurface(String surfaceId) {
+    final newItems = state.conversationItems.map((item) {
+      if (item is SurfaceItem && item.surfaceId == surfaceId) {
+        return SurfaceItem(surfaceId: surfaceId, mounted: true);
+      }
+      return item;
+    }).toList();
+    state = state.copyWith(conversationItems: newItems);
   }
 
   void setStudyMode(String mode) {
@@ -84,6 +98,9 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
   void newConversation() => state = state.copyWith(
         conversationItems: const [],
         sessionId: null,
+        error: null,
+        checkpointText: null,
+        retryCount: 0,
       );
 
   Future<void> _sendAndReceive(ChatMessage msg) async {
@@ -108,6 +125,9 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
     final clientInstructions = promptBuilder.systemPromptJoined();
 
     final httpClient = http.Client();
+    _partialBuffer = '';
+    String currentStreamingText = '';
+
     try {
       await _streamService.sendStream(
         text: text,
@@ -115,46 +135,96 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
         studyMode: state.studyMode,
         token: token,
         clientInstructions: clientInstructions,
+        checkpointText: state.checkpointText,
         httpClient: httpClient,
         onToken: (t) {
+          _partialBuffer += t;
+          currentStreamingText += t;
           state = state.copyWith(
             streaming: true,
-            streamingText: state.streamingText + t,
+            streamingText: currentStreamingText,
           );
           _transport.addChunk(t);
         },
         onAddMessage: (msg) {
+          _partialBuffer = '';
+          currentStreamingText = '';
           state = state.copyWith(
             sending: false,
             streaming: false,
             streamingText: '',
+            checkpointText: null,
+            retryCount: 0,
           );
           loadTutorSnapshot();
         },
-        onSessionId: (id) => state = state.copyWith(sessionId: id),
-        onError: (msg) {
+        onSessionId: (id) {
+          state = state.copyWith(sessionId: id);
+          _generateChatTitle(text);
+        },
+        onError: (errMsg) {
           state = state.copyWith(
             sending: false,
             streaming: false,
-            error: msg,
+            error: errMsg,
           );
         },
         onScrollDown: () {},
       );
 
-      state = state.copyWith(
-        sending: false,
-        streaming: false,
-      );
+      if (state.streaming) {
+        state = state.copyWith(
+          sending: false,
+          streaming: false,
+          checkpointText: null,
+          retryCount: 0,
+        );
+      }
+    } on http.ClientException catch (_) {
+      await _handleNetworkError(text);
     } catch (_) {
       state = state.copyWith(
         sending: false,
         streaming: false,
         error: 'Connection lost. Please try again.',
+        checkpointText: _partialBuffer.isNotEmpty ? _partialBuffer : null,
       );
     } finally {
       httpClient.close();
     }
+  }
+
+  Future<void> _handleNetworkError(String originalText) async {
+    final currentRetry = state.retryCount;
+    if (currentRetry >= _maxRetries) {
+      state = state.copyWith(
+        sending: false,
+        streaming: false,
+        error: 'Connection lost after ${_maxRetries + 1} attempts.',
+        checkpointText: _partialBuffer.isNotEmpty ? _partialBuffer : null,
+        retryCount: 0,
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      retryCount: currentRetry + 1,
+      checkpointText: _partialBuffer.isNotEmpty ? _partialBuffer : null,
+    );
+    await Future.delayed(Duration(seconds: 2 * (currentRetry + 1)));
+    if (_disposed) return;
+    await send(originalText, http.Client());
+  }
+
+  void _generateChatTitle(String firstMessage) {
+    final items = state.conversationItems;
+    final userText = items
+        .whereType<TextItem>()
+        .where((t) => t.isUser)
+        .map((t) => t.text)
+        .firstOrNull;
+    final title = AiTutorState.generateTitle(userText ?? firstMessage);
+    dataService.updateLastChatTitle(state.sessionId, title);
   }
 
   Future<void> send(String text, http.Client httpClient) async {
@@ -163,12 +233,32 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
     state = state.copyWith(
       conversationItems: [
         ...state.conversationItems,
-        TextItem(text: text, isUser: true)
+        TextItem(text: text, isUser: true),
       ],
       sending: true,
+      streaming: false,
+      streamingText: '',
+      error: null,
     );
     await conversation.sendRequest(ChatMessage.user(text));
   }
 
-  void clearError() => state = state.copyWith(error: null);
+  Future<void> retry() async {
+    final cp = state.checkpointText;
+    state = state.copyWith(
+      sending: true,
+      streaming: false,
+      streamingText: cp ?? '',
+      error: null,
+      checkpointText: null,
+      retryCount: 0,
+    );
+    await conversation.sendRequest(ChatMessage.user(''));
+  }
+
+  void clearError() => state = state.copyWith(
+        error: null,
+        checkpointText: null,
+        retryCount: 0,
+      );
 }

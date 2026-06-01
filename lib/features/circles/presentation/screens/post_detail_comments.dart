@@ -5,43 +5,7 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../providers/pending_posts_provider.dart';
-import '../widgets/vote_buttons.dart';
 import 'comment_item.dart';
-
-class PostDetailStats extends StatelessWidget {
-  final Map<String, dynamic> post;
-  const PostDetailStats({super.key, required this.post});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const SizedBox(width: 12),
-        VoteButtons(
-          postId: post['id'].toString(),
-          upvotes: (post['fuzzedUpvotes'] as num?)?.toInt() ?? 0,
-          downvotes: (post['fuzzedDownvotes'] as num?)?.toInt() ?? 0,
-          score: (post['fuzzedScore'] as num?)?.toInt() ?? 0,
-        ),
-        const SizedBox(width: 16),
-        const Icon(Icons.chat_bubble_outline_rounded,
-            size: 18, color: DesignTokens.textTertiary),
-        const SizedBox(width: 4),
-        Text('${(post['commentCount'] as num?)?.toInt() ?? 0}',
-            style: const TextStyle(
-                fontSize: 13, color: DesignTokens.textTertiary)),
-        const Spacer(),
-        const Icon(Icons.bookmark_outline_rounded,
-            size: 18, color: DesignTokens.textTertiary),
-        const SizedBox(width: 4),
-        Text('${(post['awardCount'] as num?)?.toInt() ?? 0} awards',
-            style: const TextStyle(
-                fontSize: 12, color: DesignTokens.textTertiary)),
-        const SizedBox(width: 16),
-      ],
-    );
-  }
-}
 
 class PostCommentsList extends StatefulWidget {
   final String postId;
@@ -86,107 +50,103 @@ class _PostCommentsListState extends State<PostCommentsList> {
         final edges = (data?['edges'] as List?) ?? [];
         final comments =
             edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+        final hasNextPage = data?['pageInfo']?['hasNextPage'] == true;
+        final endCursor = data?['pageInfo']?['endCursor']?.toString();
 
-        return Consumer(
-          builder: (context, ref, _) {
-            final pendingComments = ref
-                .watch(pendingPostsProvider)
-                .where(
-                    (e) => e.groupKey == widget.postId && e.type == 'comment')
-                .toList();
+        return Consumer(builder: (context, ref, _) {
+          final pendingComments = ref
+              .watch(pendingPostsProvider)
+              .where((e) => e.groupKey == widget.postId && e.type == 'comment')
+              .toList();
 
-            if (comments.isEmpty && pendingComments.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(
-                  child: Text('No comments yet',
-                      style: TextStyle(color: DesignTokens.textSecondary)),
-                ),
-              );
-            }
-
-            final commentKeys = <String, GlobalKey>{};
-            for (final c in comments) {
-              commentKeys[c['id'].toString()] = GlobalKey();
-            }
-
-            if (widget.scrollToCommentId != null &&
-                !_hasScrolled &&
-                comments.isNotEmpty) {
-              final targetKey = commentKeys[widget.scrollToCommentId];
-              if (targetKey?.currentContext != null) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!mounted || _hasScrolled) return;
-                  _hasScrolled = true;
-                  Scrollable.ensureVisible(
-                    targetKey!.currentContext!,
-                    alignment: 0.3,
-                    duration: const Duration(milliseconds: 300),
-                  );
-                });
-              }
-            }
-
-            return Column(
-              children: [
-                ...pendingComments.map((e) => CommentItem(
-                      key: ValueKey('pending_${e.tempId}'),
-                      comment: e.data,
-                      postId: widget.postId,
-                      onRefetch: refetch,
-                      isPending: e.status == PendingStatus.submitting,
-                      onRetry: e.status == PendingStatus.failed
-                          ? () {
-                              ref
-                                  .read(pendingPostsProvider.notifier)
-                                  .remove(e.tempId);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Please try posting again')),
-                              );
-                            }
-                          : null,
-                    )),
-                ...comments.map((c) => CommentItem(
-                      key: commentKeys[c['id'].toString()],
-                      comment: c,
-                      postId: widget.postId,
-                      onRefetch: refetch,
-                    )),
-                if (data?['pageInfo']?['hasNextPage'] == true)
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: TextButton(
-                      onPressed: () {
-                        fetchMore?.call(FetchMoreOptions(
-                          variables: {'after': data['pageInfo']['endCursor']},
-                          updateQuery: (prev, next) {
-                            if (next?['postComments'] == null) return prev;
-                            final merged =
-                                Map<String, dynamic>.from(prev ?? {});
-                            final prevData = Map<String, dynamic>.from(
-                                prev?['postComments'] ?? {});
-                            final nextData = Map<String, dynamic>.from(
-                                next!['postComments']);
-                            final prevEdges =
-                                (prevData['edges'] as List?) ?? [];
-                            final nextEdges =
-                                (nextData['edges'] as List?) ?? [];
-                            merged['postComments'] = {
-                              ...nextData,
-                              'edges': [...prevEdges, ...nextEdges],
-                            };
-                            return merged;
-                          },
-                        ));
-                      },
-                      child: const Text('Load more comments'),
-                    ),
-                  ),
-              ],
+          if (comments.isEmpty && pendingComments.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: Text('No comments yet',
+                    style: TextStyle(color: DesignTokens.textSecondary)),
+              ),
             );
-          },
-        );
+          }
+
+          final commentKeys = <String, GlobalKey>{};
+          for (final c in comments) {
+            commentKeys[c['id'].toString()] = GlobalKey();
+          }
+
+          if (widget.scrollToCommentId != null &&
+              !_hasScrolled &&
+              comments.isNotEmpty) {
+            final targetKey = commentKeys[widget.scrollToCommentId];
+            if (targetKey?.currentContext != null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted || _hasScrolled) return;
+                _hasScrolled = true;
+                Scrollable.ensureVisible(
+                  targetKey!.currentContext!,
+                  alignment: 0.3,
+                  duration: const Duration(milliseconds: 300),
+                );
+              });
+            }
+          }
+
+          return Column(
+            children: [
+              ...pendingComments.map((e) => CommentItem(
+                    key: ValueKey('pending_${e.tempId}'),
+                    comment: e.data,
+                    postId: widget.postId,
+                    onRefetch: refetch,
+                    isPending: e.status == PendingStatus.submitting,
+                    onRetry: e.status == PendingStatus.failed
+                        ? () {
+                            ref
+                                .read(pendingPostsProvider.notifier)
+                                .remove(e.tempId);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Please try posting again')),
+                            );
+                          }
+                        : null,
+                  )),
+              ...comments.map((c) => CommentItem(
+                    key: commentKeys[c['id'].toString()],
+                    comment: c,
+                    postId: widget.postId,
+                    onRefetch: refetch,
+                  )),
+              if (hasNextPage)
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: TextButton(
+                    onPressed: () {
+                      fetchMore?.call(FetchMoreOptions(
+                        variables: {'after': endCursor},
+                        updateQuery: (prev, next) {
+                          if (next?['postComments'] == null) return prev;
+                          final merged = Map<String, dynamic>.from(prev ?? {});
+                          final prevData = Map<String, dynamic>.from(
+                              prev?['postComments'] ?? {});
+                          final nextData =
+                              Map<String, dynamic>.from(next!['postComments']);
+                          final prevEdges = (prevData['edges'] as List?) ?? [];
+                          final nextEdges = (nextData['edges'] as List?) ?? [];
+                          merged['postComments'] = {
+                            ...nextData,
+                            'edges': [...prevEdges, ...nextEdges],
+                          };
+                          return merged;
+                        },
+                      ));
+                    },
+                    child: const Text('Load more comments'),
+                  ),
+                ),
+            ],
+          );
+        });
       },
     );
   }

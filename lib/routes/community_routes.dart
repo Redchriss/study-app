@@ -7,7 +7,6 @@ import '../../features/circles/presentation/screens/create_community_screen.dart
 import '../../features/circles/presentation/screens/search_screen.dart';
 import '../../features/circles/presentation/screens/mod_panel_screen.dart';
 import '../../features/circles/presentation/screens/user_profile_screen.dart';
-import '../../features/circles/presentation/screens/inbox_screen.dart';
 import '../../features/circles/presentation/screens/community_sidebar_screen.dart';
 
 List<GoRoute> get communityRoutes => [
@@ -47,12 +46,13 @@ List<GoRoute> get communityRoutes => [
         builder: (_, state) =>
             UserProfileScreen(username: state.pathParameters['username']!),
       ),
-      GoRoute(path: '/inbox', builder: (_, __) => const InboxScreen()),
       GoRoute(path: '/discover', builder: (_, __) => const DiscoverScreen()),
       GoRoute(
         path: '/search',
-        builder: (_, state) =>
-            SearchScreen(initialQuery: state.uri.queryParameters['q']),
+        builder: (_, state) => SearchScreen(
+          initialQuery: state.uri.queryParameters['q'],
+          communitySlug: state.uri.queryParameters['c'],
+        ),
       ),
       GoRoute(
           path: '/create-community',

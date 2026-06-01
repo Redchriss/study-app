@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
 import '../../../../core/constants/api_endpoints.dart';
 
 class AiTutorStreamService {
@@ -11,6 +13,7 @@ class AiTutorStreamService {
     required String studyMode,
     required String token,
     String? clientInstructions,
+    String? checkpointText,
     required http.Client httpClient,
     required void Function(String) onToken,
     required void Function(String) onAddMessage,
@@ -25,12 +28,16 @@ class AiTutorStreamService {
     request.headers['Authorization'] = 'Bearer $token';
     request.headers['Content-Type'] = 'application/json';
     request.headers['Accept'] = 'text/event-stream';
-    request.sink.add(utf8.encode(jsonEncode({
+
+    final body = <String, dynamic>{
       'message': text,
       'session_id': sessionId,
       'study_mode': studyMode,
       if (clientInstructions != null) 'client_instructions': clientInstructions,
-    })));
+      if (checkpointText != null && checkpointText.isNotEmpty)
+        'checkpoint': checkpointText,
+    };
+    request.sink.add(utf8.encode(jsonEncode(body)));
     request.sink.close();
 
     final response = await httpClient.send(request);

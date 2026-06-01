@@ -34,6 +34,12 @@ mutation SaveComment($commentId: ID!) {
 }
 ''';
 
+const String kUnsaveComment = r'''
+mutation UnsaveComment($commentId: ID!) {
+  unsaveComment(commentId: $commentId) { success }
+}
+''';
+
 const String kReportPost = r'''
 mutation ReportPost($postId: ID!, $reason: String!) {
   reportPost(postId: $postId, reason: $reason) { success }

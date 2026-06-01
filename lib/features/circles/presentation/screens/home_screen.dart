@@ -65,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -98,6 +99,28 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _layoutLoaded
           ? Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                  child: TextField(
+                    onTap: () => context.push('/search'),
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      hintText: 'Search posts, communities, users...',
+                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                      filled: true,
+                      fillColor: dark
+                          ? DesignTokens.darkSurfaceVariant
+                          : DesignTokens.surfaceVariant,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      isDense: true,
+                    ),
+                  ),
+                ),
                 TabBar(
                   tabs: _tabs.map((t) => Tab(text: t)).toList(),
                   isScrollable: false,

@@ -49,6 +49,8 @@ class PollWidget extends StatelessWidget {
         children: [
           Row(
             children: [
+              const Icon(Icons.bar_chart_rounded, size: 16),
+              const SizedBox(width: 6),
               Text('Poll${closed ? " (closed)" : ""}',
                   style: const TextStyle(fontWeight: FontWeight.w700)),
               const Spacer(),
@@ -63,11 +65,11 @@ class PollWidget extends StatelessWidget {
                     )),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           ...options.map((o) {
             final count = (o['voteCount'] as num?)?.toInt() ?? 0;
             final pct = total > 0 ? count / total : 0.0;
-            final isSelected = hasVoted && userVote['id'] == o['id'];
+            final isSelected = hasVoted && userVote['optionId'] == o['id'];
             final pollId = poll['id'].toString();
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -141,10 +143,18 @@ class PollWidget extends StatelessWidget {
               ),
             );
           }),
-          if (hasVoted || closed)
-            Text('$total total votes',
-                style: const TextStyle(
-                    fontSize: 11, color: DesignTokens.textTertiary)),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Text('$total total votes',
+                  style: const TextStyle(
+                      fontSize: 11, color: DesignTokens.textTertiary)),
+              const Spacer(),
+              Text('${options.length} options',
+                  style: const TextStyle(
+                      fontSize: 11, color: DesignTokens.textTertiary)),
+            ],
+          ),
         ],
       ),
     );

@@ -4,11 +4,16 @@ query Notifications($onlyUnread: Boolean, $notifType: String, $limit: Int, $afte
     edges {
       cursor
       node {
-        id notifType isRead bodyPreview
-        community { slug name }
-        post { id slug }
+        id
+        notifType
+        isRead
+        bodyPreview
+        sender { id username }
+        community { id slug name icon }
+        post { id slug title }
         comment { id }
         createdAt
+        readAt
       }
     }
     pageInfo { hasNextPage endCursor }
@@ -35,6 +40,10 @@ query ModmailThreads($communitySlug: String!, $archived: Boolean) {
   modmailThreads(communitySlug: $communitySlug, archived: $archived) {
     id subject isArchived isInternal createdAt lastUpdated
     community { slug name }
+    messages {
+      id body isInternal createdAt
+      author { id username }
+    }
   }
 }
 ''';
@@ -77,5 +86,21 @@ mutation ArchiveModmailThread($threadId: ID!) {
 const String kRegisterDeviceToken = r'''
 mutation RegisterDeviceToken($token: String!, $platform: String!) {
   registerDeviceToken(token: $token, platform: $platform) { success }
+}
+''';
+
+const String kNotificationPreferences = r'''
+query NotificationPreferences {
+  notificationPreferences {
+    postReply commentReply postMention commentMention
+    upvoteMilestone award modAction modmail
+    pushEnabled soundEnabled
+  }
+}
+''';
+
+const String kUpdateNotificationPreferences = r'''
+mutation UpdateNotificationPreferences($input: NotificationPreferencesInput!) {
+  updateNotificationPreferences(input: $input) { success }
 }
 ''';

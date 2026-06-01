@@ -6,7 +6,6 @@ import 'mod_panel_members_tab.dart';
 import 'mod_panel_modmail_tab.dart';
 import 'mod_panel_mod_log_tab.dart';
 import 'mod_panel_settings_tab.dart';
-import 'mod_panel_rules_tab.dart';
 
 class ModPanelScreen extends ConsumerWidget {
   final String communitySlug;
@@ -16,7 +15,7 @@ class ModPanelScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 6,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text('y/$communitySlug mod'),
@@ -24,22 +23,20 @@ class ModPanelScreen extends ConsumerWidget {
             isScrollable: true,
             tabs: [
               Tab(text: 'Queue', icon: Icon(Icons.flag_outlined)),
-              Tab(text: 'Rules', icon: Icon(Icons.rule_outlined)),
-              Tab(text: 'Members', icon: Icon(Icons.people_outline)),
-              Tab(text: 'Modmail', icon: Icon(Icons.mail_outline)),
-              Tab(text: 'Settings', icon: Icon(Icons.settings)),
               Tab(text: 'Mod Log', icon: Icon(Icons.history)),
+              Tab(text: 'Members', icon: Icon(Icons.people_outline)),
+              Tab(text: 'Settings', icon: Icon(Icons.settings)),
+              Tab(text: 'Modmail', icon: Icon(Icons.mail_outline)),
             ],
           ),
         ),
         body: TabBarView(
           children: [
             ModPanelReportsTab(communitySlug: communitySlug),
-            ModPanelRulesTab(communitySlug: communitySlug),
-            ModPanelMembersTab(communitySlug: communitySlug),
-            ModPanelModmailTab(communitySlug: communitySlug),
-            ModPanelSettingsTab(communitySlug: communitySlug),
             ModPanelModLogTab(communitySlug: communitySlug),
+            ModPanelMembersTab(communitySlug: communitySlug),
+            ModPanelSettingsTab(communitySlug: communitySlug),
+            ModPanelModmailTab(communitySlug: communitySlug),
           ],
         ),
       ),

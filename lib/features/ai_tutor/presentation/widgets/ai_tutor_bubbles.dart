@@ -9,9 +9,25 @@ String sanitizeStreamingMarkdown(String text) {
   if (codeFences.isOdd) text += '\n```';
   final boldMarkers = '**'.allMatches(text).length;
   if (boldMarkers.isOdd) text += '**';
-  final italicMarkers = '_'.allMatches(text).length;
-  if (italicMarkers.isOdd) text += '_';
+  final italicMarkers = RegExp(r'(?<!\*)\*(?!\*)').allMatches(text).length;
+  if (italicMarkers.isOdd) text += ' _';
+  final tableSep = RegExp(r'\|[-| ]+\|').allMatches(text).length;
+  if (tableSep > 0 && !text.endsWith('|\n')) text += '\n';
   return text;
+}
+
+String _extractConfidenceLabel(String text) {
+  final match = RegExp(r'\[confidence:\s*(\d+(?:\.\d+)?)\s*\]')
+      .firstMatch(text);
+  if (match == null) return '';
+  final score = double.tryParse(match.group(1) ?? '') ?? 1.0;
+  return score >= 0.9
+      ? ''
+      : score >= 0.7
+          ? 'Likely'
+          : score >= 0.5
+              ? 'Uncertain'
+              : 'Low confidence';
 }
 
 class AiUserBubble extends StatelessWidget {
@@ -28,8 +44,8 @@ class AiUserBubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10, left: 48),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: const BoxDecoration(
-          gradient:
-              LinearGradient(colors: [Color(0xFF1B6CA8), Color(0xFF7C4DFF)]),
+          gradient: LinearGradient(
+              colors: [Color(0xFF1B6CA8), Color(0xFF7C4DFF)]),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(18),
             topRight: Radius.circular(18),
@@ -52,6 +68,7 @@ class AiAssistantBubble extends StatelessWidget {
   final bool dark;
   final String? feedback;
   final void Function(String?)? onFeedback;
+  final VoidCallback? onRetry;
 
   const AiAssistantBubble({
     super.key,
@@ -61,10 +78,16 @@ class AiAssistantBubble extends StatelessWidget {
     required this.dark,
     this.feedback,
     this.onFeedback,
+    this.onRetry,
   });
 
   @override
   Widget build(BuildContext context) {
+    final confidenceLabel = !streaming ? _extractConfidenceLabel(text) : '';
+    final displayText = !streaming
+        ? text.replaceAll(RegExp(r'\s*\[confidence:\s*[\d.]+\s*\]\s*'), '')
+        : text;
+
     return Align(
       alignment: Alignment.centerLeft,
       child: Row(
@@ -79,8 +102,18 @@ class AiAssistantBubble extends StatelessWidget {
                   colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.auto_awesome_rounded,
-                color: Colors.white, size: 14),
+            child: streaming
+                ? const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: Padding(
+                      padding: EdgeInsets.all(7),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 1.5, color: Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.auto_awesome_rounded,
+                    color: Colors.white, size: 14),
           ),
           Flexible(
             child: Column(
@@ -110,8 +143,8 @@ class AiAssistantBubble extends StatelessWidget {
                           children: [
                             MarkdownBody(
                               data: streaming
-                                  ? sanitizeStreamingMarkdown(text)
-                                  : text,
+                                  ? sanitizeStreamingMarkdown(displayText)
+                                  : displayText,
                               styleSheet: MarkdownStyleSheet(
                                 p: const TextStyle(fontSize: 14, height: 1.55),
                                 code: TextStyle(
@@ -131,54 +164,78 @@ class AiAssistantBubble extends StatelessWidget {
                               Positioned(
                                 bottom: 0,
                                 right: 0,
-                                child: FadeTransition(
-                                  opacity: cursorAnim,
-                                  child: Container(
+                                child: ScaleTransition(
+                                  scale: cursorAnim,
+                                  child: FadeTransition(
+                                    opacity: cursorAnim,
+                                    child: Container(
                                       width: 8,
                                       height: 16,
                                       decoration: BoxDecoration(
-                                          color: const Color(0xFF7C4DFF),
-                                          borderRadius:
-                                              BorderRadius.circular(2))),
+                                        color: const Color(0xFF7C4DFF),
+                                        borderRadius:
+                                            BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                           ],
                         ),
                 ),
-                if (!streaming && text.isNotEmpty)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _FeedbackButton(
-                        icon: Icons.thumb_up_alt_rounded,
-                        isActive: feedback == 'like',
-                        onTap: () => onFeedback
-                            ?.call(feedback == 'like' ? null : 'like'),
-                      ),
-                      _FeedbackButton(
-                        icon: Icons.thumb_down_alt_rounded,
-                        isActive: feedback == 'dislike',
-                        onTap: () => onFeedback
-                            ?.call(feedback == 'dislike' ? null : 'dislike'),
-                      ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        iconSize: 14,
-                        icon: const Icon(Icons.copy_rounded),
-                        color: DesignTokens.textTertiary,
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: text));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: const Text('Copied to clipboard'),
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                                duration: const Duration(seconds: 1)),
-                          );
-                        },
-                      ),
-                    ],
+                if (!streaming && displayText.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (confidenceLabel.isNotEmpty)
+                          _ConfidenceBadge(label: confidenceLabel),
+                        if (confidenceLabel.isNotEmpty) const SizedBox(width: 6),
+                        _FeedbackButton(
+                          icon: Icons.thumb_up_alt_rounded,
+                          isActive: feedback == 'like',
+                          onTap: () =>
+                              onFeedback?.call(feedback == 'like' ? null : 'like'),
+                        ),
+                        const SizedBox(width: 2),
+                        _FeedbackButton(
+                          icon: Icons.thumb_down_alt_rounded,
+                          isActive: feedback == 'dislike',
+                          onTap: () => onFeedback
+                              ?.call(feedback == 'dislike' ? null : 'dislike'),
+                        ),
+                        const SizedBox(width: 2),
+                        _FeedbackButton(
+                          icon: Icons.feedback_rounded,
+                          isActive: feedback == 'report',
+                          onTap: () => _showReportOption(context),
+                        ),
+                        const SizedBox(width: 4),
+                        SizedBox(
+                          height: 28,
+                          width: 28,
+                          child: IconButton(
+                            iconSize: 14,
+                            icon: const Icon(Icons.copy_rounded),
+                            color: DesignTokens.textTertiary,
+                            padding: EdgeInsets.zero,
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: displayText));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: const Text('Copied to clipboard'),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    duration: const Duration(seconds: 1)),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),
@@ -186,6 +243,119 @@ class AiAssistantBubble extends StatelessWidget {
         ],
       ),
     ).animate().fadeIn(duration: 200.ms).slideX(begin: -0.05);
+  }
+
+  void _showReportOption(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 32,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: DesignTokens.textTertiary.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Report this response',
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              Text('What\'s wrong?',
+                  style: TextStyle(
+                      fontSize: 13, color: DesignTokens.textSecondary)),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: const Icon(Icons.error_outline),
+                title: const Text('Factually incorrect'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onFeedback?.call('report');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.school_outlined),
+                title: const Text('Not helpful for learning'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onFeedback?.call('report');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.shield_outlined),
+                title: const Text('Inappropriate'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onFeedback?.call('report');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.more_horiz),
+                title: const Text('Other issue'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onFeedback?.call('report');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConfidenceBadge extends StatelessWidget {
+  final String label;
+  const _ConfidenceBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final isLow = label == 'Low confidence' || label == 'Uncertain';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: (isLow ? DesignTokens.warning : DesignTokens.info)
+            .withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: (isLow ? DesignTokens.warning : DesignTokens.info)
+              .withValues(alpha: 0.3),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isLow ? Icons.help_outline : Icons.check_circle_outline,
+            size: 10,
+            color: isLow ? DesignTokens.warning : DesignTokens.info,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: isLow ? DesignTokens.warning : DesignTokens.info,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

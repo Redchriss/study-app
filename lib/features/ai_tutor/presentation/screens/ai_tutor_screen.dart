@@ -24,6 +24,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   late final http.Client _httpClient;
   late final AnimationController _cursorCtrl;
   late final Animation<double> _cursorAnim;
+  late final Animation<double> _breathAnim;
 
   static const _modes = [
     ('coach', 'Coach', Icons.school_rounded),
@@ -39,9 +40,14 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     _httpClient = http.Client();
     _cursorCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    _cursorAnim = Tween<double>(begin: 0, end: 1).animate(_cursorCtrl);
+    _cursorAnim = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(parent: _cursorCtrl, curve: Curves.easeInOutSine),
+    );
+    _breathAnim = Tween<double>(begin: 0.85, end: 1.15).animate(
+      CurvedAnimation(parent: _cursorCtrl, curve: Curves.easeInOutSine),
+    );
   }
 
   @override
@@ -112,6 +118,77 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     );
   }
 
+  void _openErrorSheet(String error) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 32,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: DesignTokens.textTertiary.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Icon(Icons.wifi_off_rounded,
+                      color: DesignTokens.error),
+                  const SizedBox(width: 8),
+                  Text('Connection lost',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(error,
+                  style: const TextStyle(
+                      color: DesignTokens.textSecondary, fontSize: 13)),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    ref.read(aiTutorProvider.notifier).clearError();
+                    ref.read(aiTutorProvider.notifier).retry();
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Retry'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    ref.read(aiTutorProvider.notifier).clearError();
+                  },
+                  child: const Text('Dismiss'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildBody() {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final studyMode = ref.watch(aiTutorProvider.select((s) => s.studyMode));
@@ -160,23 +237,35 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
             streaming: streaming,
             streamingText: streamingText,
             cursorAnim: _cursorAnim,
+            breathAnim: _breathAnim,
             dark: dark,
             scrollCtrl: _scrollCtrl,
             suggestions:
                 items.isEmpty ? suggestionsForMode(studyMode) : const [],
             onSuggestion: _send,
             onFeedback: ref.read(aiTutorProvider.notifier).setMessageFeedback,
+            onRetry: ref.read(aiTutorProvider.notifier).retry,
+            onMountSurface:
+                ref.read(aiTutorProvider.notifier).mountSurface,
           ),
         ),
         if (sending) const AiTypingIndicator(),
-        AiTutorInputBar(
-          ctrl: _msgCtrl,
-          sending: sending,
-          placeholder: modePlaceholder(studyMode),
-          suggestions:
-              items.isEmpty ? suggestionsForMode(studyMode) : const [],
-          onSend: _send,
-        ),
+        if (!sending && !streaming && items.isNotEmpty)
+          AiTutorInputBar(
+            ctrl: _msgCtrl,
+            sending: sending,
+            placeholder: modePlaceholder(studyMode),
+            suggestions: const [],
+            onSend: _send,
+          ),
+        if (items.isEmpty)
+          AiTutorInputBar(
+            ctrl: _msgCtrl,
+            sending: sending,
+            placeholder: modePlaceholder(studyMode),
+            suggestions: suggestionsForMode(studyMode),
+            onSend: _send,
+          ),
       ],
     );
   }
@@ -186,17 +275,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     ref.listen<String?>(aiTutorProvider.select((s) => s.error), (_, error) {
       if (error == null) return;
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: DesignTokens.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-      ref.read(aiTutorProvider.notifier).clearError();
+      _openErrorSheet(error);
     });
 
     return Scaffold(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
-export 'post_actions_menu.dart';
 
 class CommentSortBar extends StatelessWidget {
   final String sort;
@@ -20,7 +19,9 @@ class CommentSortBar extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.only(right: 6),
             child: ChoiceChip(
-              label: Text(s.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+              label: Text(s.toUpperCase(),
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w700)),
               selected: sel,
               onSelected: (_) => onChanged(s),
             ),
@@ -35,7 +36,11 @@ class CommentInput extends StatelessWidget {
   final TextEditingController ctrl;
   final bool sending;
   final VoidCallback onSubmit;
-  const CommentInput({super.key, required this.ctrl, required this.sending, required this.onSubmit});
+  const CommentInput(
+      {super.key,
+      required this.ctrl,
+      required this.sending,
+      required this.onSubmit});
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +48,8 @@ class CommentInput extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+        border:
+            Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: SafeArea(
         top: false,
@@ -55,7 +61,8 @@ class CommentInput extends StatelessWidget {
                 decoration: const InputDecoration(
                   hintText: 'Add a comment...',
                   border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   isDense: true,
                 ),
                 maxLines: 3,
@@ -67,8 +74,12 @@ class CommentInput extends StatelessWidget {
             const SizedBox(width: 8),
             IconButton(
               icon: sending
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.send_rounded, color: DesignTokens.primary),
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.send_rounded,
+                      color: DesignTokens.primary),
               onPressed: sending ? null : onSubmit,
             ),
           ],

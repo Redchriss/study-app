@@ -57,10 +57,16 @@ mutation LockPost($postId: ID!, $locked: Boolean!) {
 }
 ''';
 
+const String kDistinguishPost = r'''
+mutation DistinguishPost($postId: ID!) {
+  distinguishPost(postId: $postId) { post { id } errors }
+}
+''';
+
 const String kBanUser = r'''
-mutation BanUser($communitySlug: String!, $username: String!, $reason: String!) {
-  banUser(communitySlug: $communitySlug, username: $username, reason: $reason) {
-    membership { id isBanned }
+mutation BanUser($communitySlug: String!, $username: String!, $reason: String!, $isPermanent: Boolean, $durationDays: Int, $modNote: String) {
+  banUser(communitySlug: $communitySlug, username: $username, reason: $reason, isPermanent: $isPermanent, durationDays: $durationDays, modNote: $modNote) {
+    membership { id isBanned banReason banExpiresAt }
     errors
   }
 }
@@ -73,10 +79,46 @@ mutation UnbanUser($communitySlug: String!, $username: String!) {
 ''';
 
 const String kMuteUser = r'''
-mutation MuteUser($communitySlug: String!, $username: String!, $durationDays: Int!) {
-  muteUser(communitySlug: $communitySlug, username: $username, durationDays: $durationDays) {
-    membership { id }
+mutation MuteUser($communitySlug: String!, $username: String!, $durationDays: Int!, $modNote: String) {
+  muteUser(communitySlug: $communitySlug, username: $username, durationDays: $durationDays, modNote: $modNote) {
+    membership { id isMuted muteExpiresAt }
     errors
+  }
+}
+''';
+
+const String kUnmuteUser = r'''
+mutation UnmuteUser($communitySlug: String!, $username: String!) {
+  unmuteUser(communitySlug: $communitySlug, username: $username) { success }
+}
+''';
+
+const String kBannedMembers = r'''
+query BannedMembers($slug: String!) {
+  bannedMembers(slug: $slug) {
+    id role
+    isBanned banReason banExpiresAt
+    user { id username }
+  }
+}
+''';
+
+const String kMutedMembers = r'''
+query MutedMembers($slug: String!) {
+  mutedMembers(slug: $slug) {
+    id role
+    isMuted muteExpiresAt
+    user { id username }
+  }
+}
+''';
+
+const String kApprovedUsers = r'''
+query ApprovedUsers($slug: String!) {
+  approvedUsers(slug: $slug) {
+    id role
+    user { id username }
+    joinedAt
   }
 }
 ''';

@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../../../../core/graphql/queries/domain/community_queries_community.dart';
-import '../../../../core/widgets/error_state.dart';
+import '../../../../core/graphql/queries/domain/community_queries.dart';
+import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/widgets/widgets.dart';
+
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class ModPanelSettingsTab extends ConsumerStatefulWidget {
@@ -29,6 +32,7 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
   bool _allowCrossposts = true;
   bool _spoilersEnabled = false;
   bool _over18 = false;
+  bool _initialized = false;
   bool _saving = false;
 
   @override
@@ -44,16 +48,7 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
   Widget build(BuildContext context) {
     return Query(
       options: QueryOptions(
-        document: gql(r'''
-          query CommunityForSettings($slug: String!) {
-            community(slug: $slug) {
-              id slug name displayName description sidebar
-              communityType allowImages allowVideos allowPolls
-              allowLinks allowGalleries allowCrossposts
-              minAccountAgeDays minKarmaToPost spoilersEnabled over18
-            }
-          }
-        '''),
+        document: gql(_communityForSettings),
         variables: {'slug': widget.communitySlug},
       ),
       builder: (QueryResult result,
@@ -70,15 +65,117 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
         }
         final c = result.data?['community'] as Map<String, dynamic>?;
         if (c == null) return const Center(child: Text('Community not found'));
-        _initFrom(c);
-        return _buildForm();
+        if (!_initialized) _initFrom(c);
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _section('Community Type'),
+            DropdownButtonFormField<String>(
+              value: _communityType,
+              items: const [
+                DropdownMenuItem(value: 'public', child: Text('Public')),
+                DropdownMenuItem(
+                    value: 'restricted', child: Text('Restricted')),
+                DropdownMenuItem(value: 'private', child: Text('Private')),
+              ],
+              onChanged: (v) => setState(() => _communityType = v ?? 'public'),
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+            _section('Description'),
+            TextFormField(
+              controller: _descriptionCtrl,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Community description'),
+            ),
+            const SizedBox(height: 16),
+            _section('Sidebar (Markdown)'),
+            TextFormField(
+              controller: _sidebarCtrl,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: 'Sidebar content'),
+            ),
+            const SizedBox(height: 16),
+            _section('Posting Controls'),
+            Row(children: [
+              Expanded(
+                  child: TextField(
+                controller: _minAgeCtrl,
+                decoration: const InputDecoration(
+                    labelText: 'Min account age (days)',
+                    border: OutlineInputBorder(),
+                    isDense: true),
+                keyboardType: TextInputType.number,
+              )),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: TextField(
+                controller: _minKarmaCtrl,
+                decoration: const InputDecoration(
+                    labelText: 'Min karma to post',
+                    border: OutlineInputBorder(),
+                    isDense: true),
+                keyboardType: TextInputType.number,
+              )),
+            ]),
+            const SizedBox(height: 16),
+            _section('Media & Content'),
+            _switch('Allow images', _allowImages,
+                (v) => setState(() => _allowImages = v)),
+            _switch('Allow videos', _allowVideos,
+                (v) => setState(() => _allowVideos = v)),
+            _switch('Allow polls', _allowPolls,
+                (v) => setState(() => _allowPolls = v)),
+            _switch('Allow links', _allowLinks,
+                (v) => setState(() => _allowLinks = v)),
+            _switch('Allow galleries', _allowGalleries,
+                (v) => setState(() => _allowGalleries = v)),
+            _switch('Allow crossposts', _allowCrossposts,
+                (v) => setState(() => _allowCrossposts = v)),
+            _switch('Spoilers enabled', _spoilersEnabled,
+                (v) => setState(() => _spoilersEnabled = v)),
+            const SizedBox(height: 8),
+            _section('Safety'),
+            _switch('Over 18 community', _over18,
+                (v) => setState(() => _over18 = v)),
+            const SizedBox(height: 16),
+            _section('Rules'),
+            _RulesSection(communitySlug: widget.communitySlug),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _saving ? null : _save,
+              icon: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.save),
+              label: Text(_saving ? 'Saving...' : 'Save Settings'),
+            ),
+            const SizedBox(height: 80),
+          ],
+        );
       },
     );
   }
 
+  static const String _communityForSettings = r'''
+    query CommunityForSettings($slug: String!) {
+      community(slug: $slug) {
+        id slug name displayName description sidebarMarkdown
+        communityType allowImages allowVideos allowPolls
+        allowLinks allowGalleries allowCrossposts
+        minAccountAgeDays minKarmaToPost spoilersEnabled over18
+      }
+    }
+  ''';
+
   void _initFrom(Map<String, dynamic> c) {
     _descriptionCtrl.text = c['description']?.toString() ?? '';
-    _sidebarCtrl.text = c['sidebar']?.toString() ?? '';
+    _sidebarCtrl.text = c['sidebarMarkdown']?.toString() ?? '';
     _communityType = c['communityType']?.toString() ?? 'public';
     _allowImages = c['allowImages'] == true;
     _allowVideos = c['allowVideos'] == true;
@@ -90,95 +187,7 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
     _over18 = c['over18'] == true;
     _minAgeCtrl.text = (c['minAccountAgeDays'] as num?)?.toString() ?? '0';
     _minKarmaCtrl.text = (c['minKarmaToPost'] as num?)?.toString() ?? '0';
-  }
-
-  Widget _buildForm() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _section('Community Type'),
-        DropdownButtonFormField<String>(
-          initialValue: _communityType,
-          items: const [
-            DropdownMenuItem(value: 'public', child: Text('Public')),
-            DropdownMenuItem(value: 'restricted', child: Text('Restricted')),
-            DropdownMenuItem(value: 'private', child: Text('Private')),
-          ],
-          onChanged: (v) => setState(() => _communityType = v ?? 'public'),
-        ),
-        const SizedBox(height: 16),
-        _section('Description'),
-        TextFormField(
-          controller: _descriptionCtrl,
-          maxLines: 3,
-          decoration: const InputDecoration(
-              border: OutlineInputBorder(), hintText: 'Community description'),
-        ),
-        const SizedBox(height: 16),
-        _section('Sidebar (Markdown)'),
-        TextFormField(
-          controller: _sidebarCtrl,
-          maxLines: 4,
-          decoration: const InputDecoration(
-              border: OutlineInputBorder(), hintText: 'Sidebar content'),
-        ),
-        const SizedBox(height: 16),
-        _section('Posting Controls'),
-        Row(children: [
-          Expanded(
-              child: TextField(
-            controller: _minAgeCtrl,
-            decoration: const InputDecoration(
-                labelText: 'Min account age (days)',
-                border: OutlineInputBorder(),
-                isDense: true),
-            keyboardType: TextInputType.number,
-          )),
-          const SizedBox(width: 12),
-          Expanded(
-              child: TextField(
-            controller: _minKarmaCtrl,
-            decoration: const InputDecoration(
-                labelText: 'Min karma to post',
-                border: OutlineInputBorder(),
-                isDense: true),
-            keyboardType: TextInputType.number,
-          )),
-        ]),
-        const SizedBox(height: 16),
-        _section('Media & Content'),
-        _switch('Allow images', _allowImages,
-            (v) => setState(() => _allowImages = v)),
-        _switch('Allow videos', _allowVideos,
-            (v) => setState(() => _allowVideos = v)),
-        _switch(
-            'Allow polls', _allowPolls, (v) => setState(() => _allowPolls = v)),
-        _switch(
-            'Allow links', _allowLinks, (v) => setState(() => _allowLinks = v)),
-        _switch('Allow galleries', _allowGalleries,
-            (v) => setState(() => _allowGalleries = v)),
-        _switch('Allow crossposts', _allowCrossposts,
-            (v) => setState(() => _allowCrossposts = v)),
-        _switch('Spoilers enabled', _spoilersEnabled,
-            (v) => setState(() => _spoilersEnabled = v)),
-        const SizedBox(height: 8),
-        _section('Safety'),
-        _switch(
-            'Over 18 community', _over18, (v) => setState(() => _over18 = v)),
-        const SizedBox(height: 24),
-        FilledButton.icon(
-          onPressed: _saving ? null : _save,
-          icon: _saving
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2))
-              : const Icon(Icons.save),
-          label: Text(_saving ? 'Saving...' : 'Save Settings'),
-        ),
-        const SizedBox(height: 80),
-      ],
-    );
+    _initialized = true;
   }
 
   Widget _section(String title) {
@@ -204,7 +213,6 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
 
   Future<void> _save() async {
     final messenger = ScaffoldMessenger.of(context);
-    final themeColor = Theme.of(context).colorScheme.error;
     setState(() => _saving = true);
     final client = ref.read(graphqlClientProvider);
     final result = await client.mutate(MutationOptions(
@@ -229,7 +237,189 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
     setState(() => _saving = false);
     messenger.showSnackBar(SnackBar(
       content: Text(result.hasException ? 'Failed to save' : 'Settings saved'),
-      backgroundColor: result.hasException ? themeColor : null,
+      backgroundColor: result.hasException ? DesignTokens.error : null,
     ));
+  }
+}
+
+class _RulesSection extends ConsumerStatefulWidget {
+  final String communitySlug;
+  const _RulesSection({required this.communitySlug});
+
+  @override
+  ConsumerState<_RulesSection> createState() => _RulesSectionState();
+}
+
+class _RulesSectionState extends ConsumerState<_RulesSection> {
+  @override
+  Widget build(BuildContext context) {
+    return Query(
+      options: QueryOptions(
+        document: gql(kCommunityRules),
+        variables: {'slug': widget.communitySlug},
+        fetchPolicy: FetchPolicy.networkOnly,
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading)
+          return const SizedBox(
+              height: 40, child: Center(child: LoadingWidget()));
+        final rules = (result.data?['communityRules'] as List?) ?? [];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('${rules.length} rules',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(fontWeight: FontWeight.w600)),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () => _addRule(context, refetch),
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add', style: TextStyle(fontSize: 12)),
+                ),
+              ],
+            ),
+            if (rules.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text('No rules yet. Add rules to guide your community.',
+                    style: TextStyle(
+                        color: DesignTokens.textSecondary, fontSize: 12)),
+              )
+            else
+              ...rules.asMap().entries.map((entry) {
+                final r = entry.value as Map<String, dynamic>;
+                final i = entry.key;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: DesignTokens.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text('${i + 1}',
+                            style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: DesignTokens.primary)),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(r['title']?.toString() ?? '',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 13)),
+                            if (r['description']?.toString().isNotEmpty == true)
+                              Text(r['description'].toString(),
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: DesignTokens.textSecondary),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline,
+                            size: 16, color: DesignTokens.error),
+                        onPressed: () => _deleteRule(context, r, refetch),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                );
+              }),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addRule(BuildContext context, VoidCallback? refetch) async {
+    final titleCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Rule'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleCtrl,
+              autofocus: true,
+              decoration: const InputDecoration(
+                  labelText: 'Rule title', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descCtrl,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                  labelText: 'Description (optional)',
+                  border: OutlineInputBorder()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Add')),
+        ],
+      ),
+    );
+    if (result != true || titleCtrl.text.trim().isEmpty) return;
+    final client = ref.read(graphqlClientProvider);
+    await client.mutate(MutationOptions(
+      document: gql(kAddRule),
+      variables: {
+        'slug': widget.communitySlug,
+        'title': titleCtrl.text.trim(),
+        'description': descCtrl.text.trim(),
+      },
+    ));
+    refetch?.call();
+  }
+
+  Future<void> _deleteRule(BuildContext context, Map<String, dynamic> rule,
+      VoidCallback? refetch) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete rule?'),
+        content: Text('Delete "${rule['title']}"?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete',
+                style: TextStyle(color: DesignTokens.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final client = ref.read(graphqlClientProvider);
+    await client.mutate(MutationOptions(
+      document: gql(kDeleteRule),
+      variables: {'ruleId': rule['id']},
+    ));
+    refetch?.call();
   }
 }

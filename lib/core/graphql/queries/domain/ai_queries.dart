@@ -125,3 +125,21 @@ mutation CreateAdaptiveStudyPlan($goal: String, $subjectName: String, $studyMode
   }
 }
 ''';
+
+const String kReportIncorrect = r'''
+mutation ReportIncorrect($messageId: ID, $messageText: String) {
+  reportIncorrect(messageId: $messageId, messageText: $messageText) {
+    success
+    errors
+  }
+}
+''';
+
+const String kUpdateChatSessionTitle = r'''
+mutation UpdateChatSessionTitle($sessionId: ID!, $title: String!) {
+  updateChatSessionTitle(sessionId: $sessionId, title: $title) {
+    success
+    errors
+  }
+}
+''';

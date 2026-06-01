@@ -4,19 +4,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
-import 'discover_trending_card.dart';
-import 'discover_suggestion_card.dart';
-
-final _categoryPills = [
-  'All',
-  'Education',
-  'Technology',
-  'Entertainment',
-  'Sports',
-  'Health',
-  'Science',
-  'Arts',
-];
+import 'community_card_widget.dart';
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
@@ -63,6 +51,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 fillColor: dark
                     ? DesignTokens.darkSurfaceVariant
                     : DesignTokens.surfaceVariant,
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  tooltip: 'Create Community',
+                  onPressed: () => context.push('/create-community'),
+                ),
               ),
               onSubmitted: (q) {
                 if (q.trim().isNotEmpty) {
@@ -71,155 +64,149 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               },
             ),
             const SizedBox(height: 12),
-            // Category pills
-            SizedBox(
-              height: 36,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _categoryPills.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 6),
-                itemBuilder: (_, i) {
-                  final cat = _categoryPills[i];
-                  final selected = _selectedCategory == cat;
-                  return FilterChip(
-                    label: Text(cat,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: selected
-                                ? Colors.white
-                                : DesignTokens.textSecondary)),
-                    selected: selected,
-                    selectedColor: DesignTokens.primary,
-                    checkmarkColor: Colors.white,
-                    showCheckmark: false,
-                    onSelected: (_) => setState(() => _selectedCategory = cat),
-                    visualDensity: VisualDensity.compact,
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text('Trending',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 12),
-            Query(
-              options: QueryOptions(
-                document: gql(kTrendingCommunities),
-                variables: const {'limit': 10},
-              ),
-              builder: (result, {fetchMore, refetch}) {
-                if (result.isLoading) {
-                  return const Row(
-                    children: [
-                      ShimmerBox(width: 140, height: 120, radius: 12),
-                      SizedBox(width: 8),
-                      ShimmerBox(width: 140, height: 120, radius: 12),
-                    ],
-                  );
-                }
-                final communities =
-                    (result.data?['trendingCommunities'] as List?) ?? [];
-                if (communities.isEmpty) return const SizedBox.shrink();
-                return SizedBox(
-                  height: 130,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: communities.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (_, i) => DiscoverTrendingCard(
-                      community: communities[i] as Map<String, dynamic>,
-                      dark: dark,
-                    ),
-                  ),
-                );
-              },
-            ),
+            _buildTrendingSection(dark),
             const SizedBox(height: 24),
-            // New & growing section
             Text('New & Growing',
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 12),
-            Query(
-              options: QueryOptions(
-                document: gql(kTrendingCommunities),
-                variables: const {'limit': 10},
-              ),
-              builder: (result, {fetchMore, refetch}) {
-                if (result.isLoading) {
-                  return const Row(
-                    children: [
-                      ShimmerBox(width: 140, height: 120, radius: 12),
-                      SizedBox(width: 8),
-                      ShimmerBox(width: 140, height: 120, radius: 12),
-                    ],
-                  );
-                }
-                final communities =
-                    (result.data?['trendingCommunities'] as List?) ?? [];
-                // Take last 3 (lowest rank = newest / up-and-coming)
-                final newest = communities.length >= 3
-                    ? communities.sublist(communities.length - 3)
-                    : communities;
-                if (newest.isEmpty) return const SizedBox.shrink();
-                return SizedBox(
-                  height: 130,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: newest.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (_, i) => DiscoverTrendingCard(
-                      community: newest[i] as Map<String, dynamic>,
-                      dark: dark,
-                    ),
-                  ),
-                );
-              },
-            ),
+            _buildNewGrowingSection(),
             const SizedBox(height: 24),
             Text('Suggested for You',
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 12),
-            Query(
-              options: QueryOptions(
-                document: gql(kSuggestedCommunities),
-                variables: const {'limit': 20},
-              ),
-              builder: (result, {fetchMore, refetch}) {
-                if (result.isLoading) {
-                  return const Column(
-                    children: [
-                      ShimmerBox(height: 80, radius: 12),
-                      SizedBox(height: 8),
-                      ShimmerBox(height: 80, radius: 12),
-                    ],
-                  );
-                }
-                final communities =
-                    (result.data?['suggestedCommunities'] as List?) ?? [];
-                if (communities.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(
-                      child: Text('No suggestions yet',
-                          style: TextStyle(color: DesignTokens.textSecondary)),
-                    ),
-                  );
-                }
-                return Column(
-                  children: communities
-                      .map((c) => DiscoverSuggestionCard(
-                            community: c as Map<String, dynamic>,
-                          ))
-                      .toList(),
-                );
-              },
-            ),
+            _buildSuggestedSection(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTrendingSection(bool dark) {
+    final searchParam = _selectedCategory == 'All' ? null : _selectedCategory;
+    return Query(
+      options: QueryOptions(
+        document: gql(kTrendingCommunities),
+        variables: {'limit': 10},
+        fetchPolicy: FetchPolicy.networkOnly,
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading) {
+          return const Row(
+            children: [
+              ShimmerBox(width: 140, height: 130, radius: 12),
+              SizedBox(width: 8),
+              ShimmerBox(width: 140, height: 130, radius: 12),
+            ],
+          );
+        }
+        List communities = (result.data?['trendingCommunities'] as List?) ?? [];
+        if (searchParam != null) {
+          communities = communities
+              .where((c) =>
+                  (c['displayName']?.toString() ?? '')
+                      .toLowerCase()
+                      .contains(searchParam.toLowerCase()) ||
+                  (c['name']?.toString() ?? '')
+                      .toLowerCase()
+                      .contains(searchParam.toLowerCase()) ||
+                  (c['description']?.toString() ?? '')
+                      .toLowerCase()
+                      .contains(searchParam.toLowerCase()))
+              .toList();
+        }
+        if (communities.isEmpty) return const SizedBox.shrink();
+        return SizedBox(
+          height: 140,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: communities.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (_, i) => CommunityCardWidget(
+              community: communities[i] as Map<String, dynamic>,
+              compact: true,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNewGrowingSection() {
+    return Query(
+      options: QueryOptions(
+        document: gql(kCommunities),
+        variables: {
+          'sort': 'new',
+          'limit': 10,
+          'offset': 0,
+        },
+        fetchPolicy: FetchPolicy.networkOnly,
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading) {
+          return const Row(
+            children: [
+              ShimmerBox(width: 140, height: 130, radius: 12),
+              SizedBox(width: 8),
+              ShimmerBox(width: 140, height: 130, radius: 12),
+            ],
+          );
+        }
+        final communities = (result.data?['communities'] as List?) ?? [];
+        if (communities.isEmpty) return const SizedBox.shrink();
+        return SizedBox(
+          height: 140,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: communities.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (_, i) => CommunityCardWidget(
+              community: communities[i] as Map<String, dynamic>,
+              compact: true,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSuggestedSection() {
+    return Query(
+      options: QueryOptions(
+        document: gql(kSuggestedCommunities),
+        variables: {'limit': 20},
+        fetchPolicy: FetchPolicy.networkOnly,
+      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.isLoading) {
+          return const Column(
+            children: [
+              ShimmerBox(height: 80, radius: 12),
+              SizedBox(height: 8),
+              ShimmerBox(height: 80, radius: 12),
+            ],
+          );
+        }
+        final communities =
+            (result.data?['suggestedCommunities'] as List?) ?? [];
+        if (communities.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text('No suggestions yet',
+                  style: TextStyle(color: DesignTokens.textSecondary)),
+            ),
+          );
+        }
+        return Column(
+          children: communities
+              .map((c) =>
+                  CommunityCardWidget(community: c as Map<String, dynamic>))
+              .toList(),
+        );
+      },
     );
   }
 }

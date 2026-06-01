@@ -70,7 +70,7 @@ query CommunityRules($slug: String!) {
 const String kCommunityFlairs = r'''
 query CommunityFlairs($slug: String!) {
   communityFlair(slug: $slug) {
-    id text backgroundColor textColor
+    id text color textColor emoji modOnly order
   }
 }
 ''';

@@ -1,204 +1,191 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-class ProfileHero extends StatelessWidget {
-  const ProfileHero({
+class ProfileHeader extends StatelessWidget {
+  final String? avatarUrl, bannerUrl;
+  final String username;
+  final String? bio;
+  final int postKarma, commentKarma, awardKarma, totalKarma;
+  final String? createdAt;
+  final bool isOwnProfile;
+  final int followers, following;
+  final VoidCallback? onFollow, onBlock;
+
+  const ProfileHeader({
     super.key,
-    required this.initials,
+    this.avatarUrl,
+    this.bannerUrl,
     required this.username,
-    required this.email,
-    required this.level,
-    required this.plan,
-    required this.streak,
-    required this.points,
-    required this.credits,
-    required this.dark,
+    this.bio,
+    required this.postKarma,
+    required this.commentKarma,
+    required this.awardKarma,
+    required this.totalKarma,
+    this.createdAt,
+    required this.isOwnProfile,
+    this.followers = 0,
+    this.following = 0,
+    this.onFollow,
+    this.onBlock,
   });
-
-  final String initials, username, email, level, plan;
-  final dynamic streak, points, credits;
-  final bool dark;
-
-  static const _levelColors = {
-    'primary': Color(0xFF27AE60),
-    'secondary': Color(0xFF1B6CA8),
-    'tertiary': Color(0xFF7A4D9E),
-  };
 
   @override
   Widget build(BuildContext context) {
-    final levelColor = _levelColors[level] ?? DesignTokens.primary;
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            levelColor.withValues(alpha: 0.85),
-            levelColor.withValues(alpha: 0.55)
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(DesignTokens.radiusXxl),
-        boxShadow: DesignTokens.shadowMd(dark),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
+    final theme = Theme.of(context);
+    return SliverAppBar(
+      expandedHeight: 200,
+      pinned: true,
+      stretch: true,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          children: [
+            if (bannerUrl != null && bannerUrl!.isNotEmpty)
+              Positioned.fill(
+                child: Image.network(bannerUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                        color: DesignTokens.primary.withValues(alpha: 0.2))),
+              )
+            else
               Container(
-                width: 68,
-                height: 68,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.6), width: 2),
-                ),
-                child: Center(
-                  child: Text(initials,
-                      style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white)),
+                  gradient: LinearGradient(
+                    colors: [
+                      DesignTokens.primary.withValues(alpha: 0.3),
+                      DesignTokens.primary.withValues(alpha: 0.05),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            Positioned(
+              left: 16,
+              bottom: 60,
+              child: CircleAvatar(
+                radius: 40,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                child: CircleAvatar(
+                  radius: 37,
+                  backgroundColor: DesignTokens.surface,
+                  backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
+                      ? NetworkImage(avatarUrl!)
+                      : null,
+                  child: avatarUrl == null || avatarUrl!.isEmpty
+                      ? Text(username.isNotEmpty
+                            ? username[0].toUpperCase()
+                            : 'U',
+                          style: const TextStyle(
+                              fontSize: 32, fontWeight: FontWeight.w800,
+                              color: DesignTokens.primary))
+                      : null,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(160),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
+              Text('u/$username',
+                  style: theme.textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  _KarmaChip(label: 'Post', value: postKarma),
+                  const SizedBox(width: 6),
+                  _KarmaChip(label: 'Comment', value: commentKarma),
+                  const SizedBox(width: 6),
+                  _KarmaChip(label: 'Award', value: awardKarma),
+                  const Spacer(),
+                  Text('$totalKarma karma',
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w700,
+                          color: DesignTokens.primary)),
+                ],
+              ),
+              if (followers > 0 || following > 0) ...[
+                const SizedBox(height: 6),
+                Row(
                   children: [
-                    Text(username,
+                    Text('$followers followers',
                         style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white)),
-                    const SizedBox(height: 2),
-                    Text(email,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.75)),
-                        overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        HeroBadge(label: _levelLabel(level)),
-                        const SizedBox(width: 6),
-                        HeroBadge(label: plan, icon: Icons.star_rounded),
-                      ],
-                    ),
+                            fontSize: 12, color: DesignTokens.textSecondary)),
+                    const SizedBox(width: 12),
+                    Text('$following following',
+                        style: const TextStyle(
+                            fontSize: 12, color: DesignTokens.textSecondary)),
                   ],
                 ),
-              ),
+              ],
+              if (bio != null && bio!.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(bio!,
+                    style: const TextStyle(
+                        fontSize: 13, color: DesignTokens.textSecondary)),
+              ],
+              if (createdAt != null) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today,
+                        size: 12, color: DesignTokens.textTertiary),
+                    const SizedBox(width: 4),
+                    Text('Joined ${_formatDate(createdAt!)}',
+                        style: const TextStyle(
+                            fontSize: 11, color: DesignTokens.textTertiary)),
+                  ],
+                ),
+              ],
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              StatPill(
-                  icon: Icons.local_fire_department,
-                  value: '$streak',
-                  label: 'Streak',
-                  color: Colors.orange),
-              const SizedBox(width: 8),
-              StatPill(
-                  icon: Icons.stars_rounded,
-                  value: '$points',
-                  label: 'Points',
-                  color: Colors.amber),
-              const SizedBox(width: 8),
-              StatPill(
-                  icon: Icons.bolt_rounded,
-                  value: '$credits',
-                  label: 'Credits',
-                  color: Colors.white),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  static String _levelLabel(String level) {
-    switch (level) {
-      case 'primary':
-        return 'Primary';
-      case 'tertiary':
-        return 'Tertiary';
-      default:
-        return 'Secondary';
+  String _formatDate(String iso) {
+    try {
+      final dt = DateTime.parse(iso);
+      final months = [
+        'Jan','Feb','Mar','Apr','May','Jun',
+        'Jul','Aug','Sep','Oct','Nov','Dec'
+      ];
+      return '${months[dt.month - 1]} ${dt.year}';
+    } catch (_) {
+      return '';
     }
   }
 }
 
-class HeroBadge extends StatelessWidget {
-  const HeroBadge({super.key, required this.label, this.icon});
+class _KarmaChip extends StatelessWidget {
   final String label;
-  final IconData? icon;
+  final int value;
+  const _KarmaChip({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(999),
+        color: DesignTokens.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 11, color: Colors.amber),
-            const SizedBox(width: 4)
-          ],
-          Text(label,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11)),
-        ],
-      ),
-    );
-  }
-}
-
-class StatPill extends StatelessWidget {
-  const StatPill(
-      {super.key,
-      required this.icon,
-      required this.value,
-      required this.label,
-      required this.color});
-  final IconData icon;
-  final String value, label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(height: 4),
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16)),
-            Text(label,
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75), fontSize: 10)),
-          ],
-        ),
-      ),
+      child: Text('$label: $value',
+          style: const TextStyle(
+              fontSize: 11, fontWeight: FontWeight.w600,
+              color: DesignTokens.primary)),
     );
   }
 }

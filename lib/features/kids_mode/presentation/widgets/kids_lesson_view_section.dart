@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:genui/genui.dart';
+import 'kids_companion_character.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../ai_tutor/presentation/providers/ai_tutor_state.dart';
@@ -20,6 +21,7 @@ class KidsLessonViewSection extends StatelessWidget {
     required this.state,
     required this.mgr,
     required this.burstCtrl,
+    this.companionMood,
     required this.onBack,
     required this.onTopicTap,
     required this.onReviewTap,
@@ -40,6 +42,7 @@ class KidsLessonViewSection extends StatelessWidget {
   final KidsHomeState state;
   final KidsHomeScreenManager mgr;
   final AnimationController burstCtrl;
+  final CompanionMood? companionMood;
   final VoidCallback onBack;
   final ValueChanged<String> onTopicTap;
   final VoidCallback onReviewTap;

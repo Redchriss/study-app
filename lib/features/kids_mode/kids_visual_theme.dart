@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/design_tokens.dart';
+import '../../core/theme/design_tokens.dart' show DesignTokens;
 
 /// Visual language for Yaza Kids: short sessions, obvious progress, large tap targets.
 /// Influenced by bite-sized learning apps (clear hierarchy, “3D” CTAs, reward chips)

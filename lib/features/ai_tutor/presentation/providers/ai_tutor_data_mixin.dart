@@ -132,6 +132,17 @@ mixin AiTutorDataMixin on Notifier<AiTutorState> {
     if (index < 0 || index >= state.conversationItems.length) return;
     final item = state.conversationItems[index];
     if (item is! TextItem) return;
+
+    final updated = item.copyWith(feedback: feedback);
+    final newItems = [...state.conversationItems];
+    newItems[index] = updated;
+    state = state.copyWith(conversationItems: newItems);
+
+    if (feedback == 'report') {
+      await dataService.reportIncorrect(item.text, item.id);
+      return;
+    }
+
     final client = ref.read(graphqlClientProvider);
     await client.mutate(MutationOptions(
       document: gql(kSetMessageFeedback),

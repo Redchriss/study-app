@@ -5,13 +5,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../kids_visual_theme.dart';
 import '../widgets/kid_auth_widgets.dart';
+import '../widgets/kids_companion_character.dart';
 import '../widgets/kids_home_app_bar.dart';
 import '../widgets/kids_home_screen_manager.dart';
 import '../widgets/kids_home_state_provider.dart';
 import '../widgets/kids_lesson_view_section.dart';
+import '../widgets/kids_offline_banner.dart';
+import '../widgets/kids_session_overlay.dart';
 import '../widgets/kids_subject_picker_section.dart';
 import 'kids_home_builders.dart';
 
@@ -28,6 +32,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
   bool _redirectScheduled = false;
   late final AnimationController _burstCtrl;
   Timer? _sessionTimer;
+  bool _isOffline = false;
+  bool _showWarningOverlay = false;
 
   @override
   void initState() {
@@ -52,6 +58,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
     if (auth.isAuthenticated && auth.token != null) {
       ref.read(kidsHomeStateProvider.notifier).setChildId(auth.token ?? '');
     }
+    _checkConnectivity();
   }
 
   @override
@@ -61,6 +68,16 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
     _tts.stop();
     _tts.setCompletionHandler(() {});
     super.dispose();
+  }
+
+  Future<void> _checkConnectivity() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastOnline = prefs.getBool('_last_online') ?? true;
+      if (mounted) setState(() => _isOffline = !lastOnline);
+    } catch (_) {
+      if (mounted) setState(() => _isOffline = true);
+    }
   }
 
   void _startSessionTimer() {
@@ -73,14 +90,35 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
         _sessionTimer?.cancel();
         return;
       }
-      ref.read(kidsHomeStateProvider.notifier).tickSession();
+      final notifier = ref.read(kidsHomeStateProvider.notifier);
+      notifier.tickSession();
+      final state = ref.read(kidsHomeStateProvider);
+      if (state.sessionWarningShown && !_showWarningOverlay) {
+        setState(() => _showWarningOverlay = true);
+      }
+      if (state.sessionExpired) {
+        _sessionTimer?.cancel();
+      }
     });
   }
 
   void _stopSessionTimer() {
     _sessionTimer?.cancel();
     _sessionTimer = null;
+    setState(() => _showWarningOverlay = false);
     ref.read(kidsHomeStateProvider.notifier).endSession();
+  }
+
+  void _extendSession() {
+    setState(() => _showWarningOverlay = false);
+    final notifier = ref.read(kidsHomeStateProvider.notifier);
+    notifier.apply((s) => s.copyWith(
+          sessionWarningShown: false,
+          sessionRemaining: (s.sessionRemaining + 300)
+              .clamp(0, s.sessionDuration + 300),
+          sessionDuration: s.sessionDuration + 300,
+        ));
+    HapticFeedback.lightImpact();
   }
 
   Future<void> _speak(String text) async {
@@ -99,7 +137,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
             .apply((s) => s.copyWith(isSpeaking: false));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Reading aloud is not available on this device'),
+              content:
+                  Text('Reading aloud is not available on this device'),
               backgroundColor: DesignTokens.error),
         );
       }
@@ -238,8 +277,19 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
       return KidsHomeLoading(onFetchSubjects: () => _mgr.fetchSubjects());
     }
     if (state.sessionExpired) {
-      return _SessionExpiredScreen(onDismiss: _onDismissSessionExpired);
+      final starsEarned = state.stars;
+      return KidsSessionEndedScreen(
+        starsEarned: starsEarned,
+        onDismiss: _onDismissSessionExpired,
+      );
     }
+    final companionMood = state.showCorrectBurst
+        ? CompanionMood.celebration
+        : state.sessionWarningShown
+            ? CompanionMood.encouraging
+            : state.inQuiz
+                ? CompanionMood.happy
+                : CompanionMood.idle;
     return Theme(
       data: KidsVisualTheme.overlayOn(theme),
       child: Container(
@@ -249,140 +299,107 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
           appBar: KidsHomeAppBar(
             remainingSeconds:
                 state.sessionActive ? state.sessionRemaining : null,
+            durationSeconds:
+                state.sessionActive ? state.sessionDuration : null,
           ),
-          body: SafeArea(
-            child: AnimatedSwitcher(
-              duration: DesignTokens.durNormal,
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              child: state.selectedSubject == null
-                  ? KidsSubjectPickerSection(
-                      key: const ValueKey('picker'),
-                      auth: auth,
-                      state: state,
-                      onStarsTap: _onStarsTap,
-                      onClaimDailyChest: _mgr.actions.claimDailyChest,
-                      onSubjectSelected: _onSubjectPicked,
-                    )
-                  : KidsLessonViewSection(
-                      key: const ValueKey('lesson'),
-                      auth: auth,
-                      state: state,
-                      mgr: _mgr,
-                      burstCtrl: _burstCtrl,
-                      onBack: () {
-                        _stopSessionTimer();
-                        ref
-                            .read(kidsHomeStateProvider.notifier)
-                            .clearSavedState();
-                        ref.read(kidsHomeStateProvider.notifier).apply((s) => s
-                            .copyWith(
-                                selectedSubject: null,
-                                selectedTopic: null,
-                                currentLesson: null,
-                                subjectProgress: null,
-                                topics: []));
-                      },
-                      onTopicTap: _onTopicTap,
-                      onReviewTap: () => _mgr.actions.openRoadmapTopicById(
-                          state.roadmapSummary?['reviewTopicId']?.toString()),
-                      onNextTap: () => _mgr.actions.openRoadmapTopicById(
-                          state.roadmapSummary?['nextTopicId']?.toString()),
-                      onJourneyTap: () => _mgr.actions.openJourney(auth),
-                      onTapTopic: (tid) =>
-                          _mgr.actions.openRoadmapTopicById(tid),
-                      onTopicRoadmapTap: (tid) =>
-                          _mgr.actions.openRoadmapTopicById(tid),
-                      onChunkTap: _onChunkTap,
-                      onListenTap: _onListenTap,
-                      onStartQuiz: _onStartQuiz,
-                      onNextLesson: _onNextLesson,
-                      onQuizBack: _onQuizBack,
-                      onQuizComplete: _onQuizComplete,
-                      onRetryFetchLesson: _onRetryFetchLesson,
+          body: Stack(
+            children: [
+              SafeArea(
+                child: Column(
+                  children: [
+                    KidsOfflineBanner(isOffline: _isOffline),
+                    if (state.sessionActive && state.sessionRemaining <= 300 && !_showWarningOverlay)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                        child: KidsSoftStopBanner(
+                          remainingSeconds: state.sessionRemaining,
+                          sessionDuration: state.sessionDuration,
+                          onExtend: _extendSession,
+                        ),
+                      ),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: DesignTokens.durNormal,
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        child: state.selectedSubject == null
+                            ? KidsSubjectPickerSection(
+                                key: const ValueKey('picker'),
+                                auth: auth,
+                                state: state,
+                                onStarsTap: _onStarsTap,
+                                onClaimDailyChest: _mgr.actions.claimDailyChest,
+                                onSubjectSelected: _onSubjectPicked,
+                              )
+                            : KidsLessonViewSection(
+                                key: const ValueKey('lesson'),
+                                auth: auth,
+                                state: state,
+                                mgr: _mgr,
+                                burstCtrl: _burstCtrl,
+                                companionMood: companionMood,
+                                onBack: () {
+                                  _stopSessionTimer();
+                                  ref
+                                      .read(kidsHomeStateProvider.notifier)
+                                      .clearSavedState();
+                                  ref
+                                      .read(kidsHomeStateProvider.notifier)
+                                      .apply((s) => s.copyWith(
+                                          selectedSubject: null,
+                                          selectedTopic: null,
+                                          currentLesson: null,
+                                          subjectProgress: null,
+                                          topics: []));
+                                },
+                                onTopicTap: _onTopicTap,
+                                onReviewTap: () =>
+                                    _mgr.actions.openRoadmapTopicById(
+                                        state.roadmapSummary?['reviewTopicId']
+                                            ?.toString()),
+                                onNextTap: () =>
+                                    _mgr.actions.openRoadmapTopicById(
+                                        state.roadmapSummary?['nextTopicId']
+                                            ?.toString()),
+                                onJourneyTap: () =>
+                                    _mgr.actions.openJourney(auth),
+                                onTapTopic: (tid) =>
+                                    _mgr.actions.openRoadmapTopicById(tid),
+                                onTopicRoadmapTap: (tid) =>
+                                    _mgr.actions.openRoadmapTopicById(tid),
+                                onChunkTap: _onChunkTap,
+                                onListenTap: _onListenTap,
+                                onStartQuiz: _onStartQuiz,
+                                onNextLesson: _onNextLesson,
+                                onQuizBack: _onQuizBack,
+                                onQuizComplete: _onQuizComplete,
+                                onRetryFetchLesson: _onRetryFetchLesson,
+                              ),
+                      ),
                     ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SessionExpiredScreen extends StatelessWidget {
-  final VoidCallback onDismiss;
-  const _SessionExpiredScreen({required this.onDismiss});
-
-  @override
-  Widget build(BuildContext context) {
-    return Theme(
-      data: KidsVisualTheme.overlayOn(Theme.of(context)),
-      child: Container(
-        decoration: BoxDecoration(gradient: KidsVisualTheme.backgroundGradient),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Semantics(
-                  label: 'Session ended screen',
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Semantics(
-                        excludeSemantics: true,
-                        child: const Text('⏰', style: TextStyle(fontSize: 80)),
-                      ),
-                      const SizedBox(height: 20),
-                      Semantics(
-                        header: true,
-                        child: const Text(
-                          'Time\u2019s up!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w900,
-                            color: KidsVisualTheme.ink,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Semantics(
-                        liveRegion: true,
-                        child: const Text(
-                          'Great job today!\nCome back tomorrow for more fun!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: KidsVisualTheme.inkMuted,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Semantics(
-                        button: true,
-                        label: 'Return to kids home',
-                        child: FilledButton.icon(
-                          onPressed: onDismiss,
-                          icon: const Icon(Icons.home_rounded),
-                          label: const Text(' Go home'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: KidsVisualTheme.pathBlue,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 32, vertical: 16),
-                            textStyle: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
-            ),
+              if (_showWarningOverlay)
+                KidsSessionWarningOverlay(
+                  onContinue: _extendSession,
+                  onStop: () {
+                    setState(() => _showWarningOverlay = false);
+                    _stopSessionTimer();
+                    ref
+                        .read(kidsHomeStateProvider.notifier)
+                        .clearSavedState();
+                    ref
+                        .read(kidsHomeStateProvider.notifier)
+                        .apply((s) => s.copyWith(
+                            selectedSubject: null,
+                            selectedTopic: null,
+                            currentLesson: null,
+                            subjectProgress: null,
+                            topics: []));
+                  },
+                ),
+            ],
           ),
         ),
       ),
