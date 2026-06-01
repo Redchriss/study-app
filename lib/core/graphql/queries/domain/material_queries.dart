@@ -29,7 +29,6 @@ query Material($slug: String!) {
     title
     description
     contentType
-    contentText
     youtubeEmbedUrl
     fileUrl
     aiSummary

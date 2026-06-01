@@ -3,19 +3,12 @@ export 'package:graphql_flutter/graphql_flutter.dart' show gql;
 const String kProfile = r'''
 query Profile {
   me {
-    id username email firstName lastName
+    id username email
     profile {
-      id bio avatarUrl bannerUrl
-      postKarma commentKarma awardKarma totalKarma
+      avatarUrl
       studyStreak studyPoints aiCredits
       educationLevel
       onboardingComplete
-      createdAt
-    }
-    achievements {
-      id
-      achievement { id slug name description iconUrl category }
-      earnedAt
     }
   }
 }
