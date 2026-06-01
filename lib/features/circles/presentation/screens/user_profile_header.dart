@@ -6,8 +6,6 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
 
-const String kSavedPosts = r'''query SavedPosts { __typename }''';
-
 class ProfileHeader extends StatelessWidget {
   final Map<String, dynamic> profile;
   final String username;

@@ -6,9 +6,6 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'community_card_widget.dart';
 
-const String kTrendingCommunities = r'''query TrendingCommunities { __typename }''';
-const String kSuggestedCommunities = r'''query SuggestedCommunities { __typename }''';
-
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
 

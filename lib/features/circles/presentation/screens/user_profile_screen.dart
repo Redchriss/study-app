@@ -10,8 +10,6 @@ import 'user_profile_posts_tab.dart';
 import 'user_profile_comments_tab.dart';
 import 'user_profile_header.dart';
 
-const String kUserProfile = r'''query UserProfile { __typename }''';
-
 class UserProfileScreen extends ConsumerStatefulWidget {
   final String username;
   const UserProfileScreen({super.key, required this.username});

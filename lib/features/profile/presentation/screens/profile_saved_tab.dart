@@ -5,8 +5,6 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
 
-const String kSavedPosts = r'''query SavedPosts { __typename }''';
-
 class ProfileSavedTab extends StatelessWidget {
   const ProfileSavedTab({super.key});
 

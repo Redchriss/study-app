@@ -7,8 +7,6 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-const String kCommunityRules = r'''query CommunityRules { __typename }''';
-
 class ModPanelRulesTab extends ConsumerStatefulWidget {
   final String communitySlug;
   const ModPanelRulesTab({super.key, required this.communitySlug});

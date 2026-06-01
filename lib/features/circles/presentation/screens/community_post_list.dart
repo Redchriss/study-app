@@ -154,7 +154,7 @@ class _CommunityPostListState extends State<CommunityPostList> {
   Widget build(BuildContext context) {
     return Query(
       options: QueryOptions(
-        document: gql(kCirclePosts),
+        document: gql(kCommunityPosts),
         variables: {
           'slug': widget.slug,
           'sort': widget.sort,

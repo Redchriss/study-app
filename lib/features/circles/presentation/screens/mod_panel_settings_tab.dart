@@ -9,9 +9,6 @@ import '../../../../core/widgets/widgets.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-const String kUpdateCommunity = r'''mutation UpdateCommunity { __typename }''';
-const String kCommunityRules = r'''query CommunityRules { __typename }''';
-
 class ModPanelSettingsTab extends ConsumerStatefulWidget {
   final String communitySlug;
   const ModPanelSettingsTab({super.key, required this.communitySlug});

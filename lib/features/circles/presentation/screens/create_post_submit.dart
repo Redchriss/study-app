@@ -6,8 +6,6 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-const String kCrosspost = r'''mutation Crosspost { __typename }''';
-
 Future<void> submitPost({
   required WidgetRef ref,
   required BuildContext context,

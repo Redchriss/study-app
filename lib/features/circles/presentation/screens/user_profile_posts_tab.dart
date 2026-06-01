@@ -6,8 +6,6 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../widgets/post_card.dart';
 
-const String kUserPosts = r'''query UserPosts { __typename }''';
-
 class UserProfilePostsTab extends StatelessWidget {
   final String username;
   final bool fullPage;

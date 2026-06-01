@@ -4,8 +4,6 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/graphql/queries/queries.dart';
 
-const String kCommunityFlairs = r'''query CommunityFlairs { __typename }''';
-
 class GalleryItem {
   final String imageBase64;
   final String imagePath;

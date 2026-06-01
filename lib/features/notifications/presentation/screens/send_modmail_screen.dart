@@ -6,8 +6,6 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-const String kSendModmail = r'''mutation SendModmail { __typename }''';
-
 class SendModmailScreen extends ConsumerStatefulWidget {
   const SendModmailScreen({super.key});
 

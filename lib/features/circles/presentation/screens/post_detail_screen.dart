@@ -183,7 +183,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     return Query(
       options: QueryOptions(
-        document: gql(kCirclePost),
+        document: gql(kPost),
         variables: {
           'communitySlug': widget.communitySlug,
           'postSlug': widget.postSlug

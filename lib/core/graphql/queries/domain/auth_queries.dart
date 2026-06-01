@@ -47,4 +47,11 @@ mutation UpdateProfile($input: ProfileInput!) {
 }
 ''';
 
-const String kDeleteAccount = r'''mutation Placeholder { __typename }''';
+const String kDeleteAccount = r'''
+mutation DeleteAccount($password: String!) {
+  deleteAccount(password: $password) {
+    success
+    errors
+  }
+}
+''';
