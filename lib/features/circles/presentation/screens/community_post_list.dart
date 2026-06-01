@@ -217,24 +217,32 @@ class _CommunityPostListState extends State<CommunityPostList> {
                 _onScroll(info, fetchMore, data);
                 return false;
               },
-              child: Column(
-                children: [
-                  ...pendings.map((e) => _pendingPostCard(e, context)),
-                  ...posts.map((p) => PostCard(
-                        post: p,
-                        onTap: () =>
-                            context.push('/y/${widget.slug}/post/${p['slug']}'),
-                      )),
-                  if (_loadingMore)
-                    const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                itemCount: pendings.length +
+                    posts.length +
+                    (_loadingMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index < pendings.length) {
+                    return _pendingPostCard(pendings[index], context);
+                  }
+                  final postIndex = index - pendings.length;
+                  if (postIndex < posts.length) {
+                    return PostCard(
+                      post: posts[postIndex],
+                      onTap: () => context.push(
+                          '/y/${widget.slug}/post/${posts[postIndex]['slug']}'),
+                    );
+                  }
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                ],
+                  );
+                },
               ),
             );
           },

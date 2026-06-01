@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,7 +34,7 @@ void main() async {
       (options) {
         options.dsn = AppConfig.sentryDsn;
         options.environment = AppConfig.sentryEnvironment;
-        options.tracesSampleRate = 1.0;
+        options.tracesSampleRate = 0.1;
       },
       appRunner: () async => _runApp(),
     );
@@ -142,6 +143,13 @@ class StudyApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     final client = ref.watch(graphqlClientProvider);
     final themeMode = ref.watch(themeModeProvider);
+
+    // Track screen views on route changes
+    ref.listen(routerProvider, (_, GoRouter next) {
+      final uri = next.routeInformationProvider.value.uri.toString();
+      AnalyticsService.logScreenView(uri);
+    });
+
     return GraphQLProvider(
       client: ValueNotifier(client),
       child: MaterialApp.router(

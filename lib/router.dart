@@ -17,9 +17,39 @@ import '../features/notifications/presentation/screens/modmail_thread_list.dart'
 import '../features/notifications/presentation/screens/modmail_thread_detail.dart';
 import '../features/notifications/presentation/screens/send_modmail_screen.dart';
 import '../features/notifications/presentation/screens/notification_preferences_screen.dart';
+import '../core/services/analytics_service.dart';
 import 'shell.dart';
 import 'routes/community_routes.dart';
 import 'routes/app_routes.dart';
+
+/// Logs screen views to analytics on every navigation.
+class _AnalyticsObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    final name = route.settings.name ?? route.settings.toString();
+    AnalyticsService.logScreenView(name);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    if (newRoute != null) {
+      final name = newRoute.settings.name ?? newRoute.settings.toString();
+      AnalyticsService.logScreenView(name);
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    if (previousRoute != null) {
+      final name =
+          previousRoute.settings.name ?? previousRoute.settings.toString();
+      AnalyticsService.logScreenView(name);
+    }
+  }
+}
 
 class _RouterRefresh extends ChangeNotifier {
   late final ProviderSubscription _sub;
@@ -34,8 +64,11 @@ class _RouterRefresh extends ChangeNotifier {
   }
 }
 
+final _analyticsObserver = _AnalyticsObserver();
+
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    observers: [_analyticsObserver],
     refreshListenable: _RouterRefresh(ref),
     initialLocation: '/splash',
     redirect: (context, state) {

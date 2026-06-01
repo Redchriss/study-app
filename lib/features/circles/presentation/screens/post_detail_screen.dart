@@ -306,6 +306,47 @@ class _PostDetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final headerWidgets = <Widget>[
+      if (isRemoved)
+        _buildRemovedBanner()
+      else ...[
+        PostDetailHeader(post: post, dark: dark),
+        const SizedBox(height: 8),
+        PostDetailActionBar(
+          postId: postId,
+          isBookmarked: isBookmarked,
+          awarding: awarding,
+          userVote: userVote,
+          score: (post['fuzzedScore'] as num?)?.toInt() ?? 0,
+          commentCount: (post['commentCount'] as num?)?.toInt() ?? 0,
+          onToggleSave: onToggleSave,
+          onGiveAward: onGiveAward,
+          onVote: onVote,
+        ),
+      ],
+      const Divider(),
+      if (!isLocked && !isDeleted)
+        CommentSortBar(
+          sort: commentSort,
+          onChanged: onCommentSortChanged,
+        ),
+      if (isLocked)
+        const Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(Icons.lock_rounded, size: 16,
+                  color: DesignTokens.textTertiary),
+              SizedBox(width: 8),
+              Text('Post is locked — no new comments',
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: DesignTokens.textSecondary)),
+            ],
+          ),
+        ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: Text('y/${community?['name'] ?? ''}',
@@ -341,55 +382,18 @@ class _PostDetailBody extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            child: ListView(
+            child: ListView.builder(
               padding: const EdgeInsets.only(bottom: 80),
-              children: [
-                if (isRemoved)
-                  _buildRemovedBanner()
-                else ...[
-                  PostDetailHeader(post: post, dark: dark),
-                  const SizedBox(height: 8),
-                  PostDetailActionBar(
-                    postId: postId,
-                    isBookmarked: isBookmarked,
-                    awarding: awarding,
-                    userVote: userVote,
-                    score: (post['fuzzedScore'] as num?)?.toInt() ?? 0,
-                    commentCount:
-                        (post['commentCount'] as num?)?.toInt() ?? 0,
-                    onToggleSave: onToggleSave,
-                    onGiveAward: onGiveAward,
-                    onVote: onVote,
-                  ),
-                ],
-                const Divider(),
-                if (!isLocked && !isDeleted)
-                  CommentSortBar(
-                    sort: commentSort,
-                    onChanged: onCommentSortChanged,
-                  ),
-                if (isLocked)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Icon(Icons.lock_rounded, size: 16,
-                            color: DesignTokens.textTertiary),
-                        SizedBox(width: 8),
-                        Text('Post is locked — no new comments',
-                            style: TextStyle(
-                                fontSize: 13,
-                                color: DesignTokens.textSecondary)),
-                      ],
-                    ),
-                  ),
-                PostCommentsList(
+              itemCount: headerWidgets.length + 1,
+              itemBuilder: (context, index) {
+                if (index < headerWidgets.length) return headerWidgets[index];
+                return PostCommentsList(
                   key: ValueKey('comments_$postId$commentSort'),
                   postId: postId,
                   sort: commentSort,
                   scrollToCommentId: commentId,
-                ),
-              ],
+                );
+              },
             ),
           ),
           if (!isLocked && !isDeleted)
