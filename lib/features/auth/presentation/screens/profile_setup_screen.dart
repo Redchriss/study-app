@@ -64,7 +64,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 ? 'Choose your school level. Younger learners use Kids mode from Profile after setup.'
                 : _manager.level == 'tertiary'
                     ? 'Pick your college or university, then your programme — same search as Edit profile.'
-                    : 'We use this to show the right materials, quizzes, and study circles for Malawi.',
+                    : 'We use this to show the right materials, quizzes, and communities for Malawi.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: DesignTokens.textSecondary,
                 ),
