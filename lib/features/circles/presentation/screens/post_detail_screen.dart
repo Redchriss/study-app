@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/graphql/queries/queries.dart';
@@ -335,13 +336,12 @@ class _PostDetailBody extends StatelessWidget {
           padding: EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.lock_rounded, size: 16,
-                  color: DesignTokens.textTertiary),
+              Icon(Icons.lock_rounded,
+                  size: 16, color: DesignTokens.textTertiary),
               SizedBox(width: 8),
               Text('Post is locked — no new comments',
                   style: TextStyle(
-                      fontSize: 13,
-                      color: DesignTokens.textSecondary)),
+                      fontSize: 13, color: DesignTokens.textSecondary)),
             ],
           ),
         ),
@@ -349,9 +349,39 @@ class _PostDetailBody extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('y/${community?['name'] ?? ''}',
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w700)),
+        title: GestureDetector(
+          onTap: () => context
+              .push('/y/${community?['slug'] ?? community?['name'] ?? ''}'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                radius: 12,
+                backgroundColor: DesignTokens.primary.withValues(alpha: 0.15),
+                backgroundImage:
+                    (community?['icon']?.toString() ?? '').isNotEmpty
+                        ? NetworkImage(community!['icon'].toString())
+                        : null,
+                child: (community?['icon']?.toString() ?? '').isEmpty
+                    ? Text(
+                        (community?['name']?.toString() ?? '?')[0]
+                            .toUpperCase(),
+                        style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: DesignTokens.primary),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'y/${community?['name'] ?? ''}',
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.auto_awesome, color: DesignTokens.primary),
@@ -422,8 +452,7 @@ class _PostDetailBody extends StatelessWidget {
                   color: DesignTokens.textSecondary)),
           const SizedBox(height: 4),
           Text('This post has been removed by moderators',
-              style: TextStyle(
-                  fontSize: 13, color: DesignTokens.textTertiary)),
+              style: TextStyle(fontSize: 13, color: DesignTokens.textTertiary)),
         ],
       ),
     );
