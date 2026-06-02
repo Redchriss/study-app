@@ -60,11 +60,12 @@ class _AuthErrorLink extends Link {
     try {
       await for (final response in forward!(req)) {
         final hasAuthError = response.errors?.any((e) {
-          final msg = e.message.toLowerCase();
-          return msg.contains('not authenticated') ||
-              msg.contains('token expired') ||
-              msg.contains('unauthorized');
-        }) == true;
+              final msg = e.message.toLowerCase();
+              return msg.contains('not authenticated') ||
+                  msg.contains('token expired') ||
+                  msg.contains('unauthorized');
+            }) ==
+            true;
 
         if (hasAuthError) {
           await _tryRefreshToken();
@@ -125,7 +126,8 @@ class _AuthErrorLink extends Link {
 
 GraphQLClient buildGraphQLClient() {
   final inner = HttpClient()
-    ..connectionTimeout = const Duration(seconds: 15);
+    ..connectionTimeout = const Duration(seconds: 15)
+    ..idleTimeout = const Duration(seconds: 10);
 
   final authLink = AuthLink(
     getToken: () async {

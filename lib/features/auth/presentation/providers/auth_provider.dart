@@ -253,8 +253,8 @@ class AuthNotifier extends Notifier<AuthState> {
 
       final data = result.data?['deleteAccount'];
       if (data == null || data['success'] != true) {
-        final errors =
-            (data?['errors'] as List?)?.join(', ') ?? 'Could not delete account.';
+        final errors = (data?['errors'] as List?)?.join(', ') ??
+            'Could not delete account.';
         return errors;
       }
 

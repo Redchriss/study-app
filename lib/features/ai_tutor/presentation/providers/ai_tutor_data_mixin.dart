@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
@@ -24,7 +25,9 @@ mixin AiTutorDataMixin on Notifier<AiTutorState> {
         prefersStepByStep: profile['prefersStepByStep'] as bool? ?? true,
         detailLevel: profile['detailLevel'] as int? ?? 2,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('AiTutorDataMixin.loadLearningProfile failed: $e');
+    }
   }
 
   Future<void> loadTutorSnapshot() async {
@@ -46,7 +49,8 @@ mixin AiTutorDataMixin on Notifier<AiTutorState> {
         reviewCount: (snapshot['reviewCount'] as num?)?.toInt() ?? 0,
         snapshotLoading: false,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('AiTutorDataMixin.loadTutorSnapshot failed: $e');
       state = state.copyWith(snapshotLoading: false);
     }
   }
@@ -60,7 +64,9 @@ mixin AiTutorDataMixin on Notifier<AiTutorState> {
             .map((s) => Map<String, dynamic>.from(s))
             .toList(),
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('AiTutorDataMixin.loadChatHistory failed: $e');
+    }
   }
 
   Future<void> restoreSession(String id) async {
@@ -77,7 +83,9 @@ mixin AiTutorDataMixin on Notifier<AiTutorState> {
         sessionId: id,
         conversationItems: newItems,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('AiTutorDataMixin.restoreSession failed: $e');
+    }
   }
 
   Future<void> createAdaptivePlan(String? goalText) async {

@@ -15,11 +15,15 @@ class HiveService {
   static late Box _quizAttemptBox;
   static late Box _pendingQuizBox;
   static late Box _pendingScanBox;
+  static bool _initialized = false;
+
+  static bool get isInitialized => _initialized;
 
   static Future<void> initialize() async {
     _quizAttemptBox = await Hive.openBox(_quizAttemptBoxName);
     _pendingQuizBox = await Hive.openBox(_pendingQuizBoxName);
     _pendingScanBox = await Hive.openBox(_pendingScanBoxName);
+    _initialized = true;
   }
 
   // ── Quiz attempt persistence (Issue 1) ──

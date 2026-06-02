@@ -36,7 +36,8 @@ class _DashboardRecommendationsPanelState
           fetchPolicy: FetchPolicy.cacheFirst,
         ),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('DashboardRecommendationsPanel._loadAdaptivePlan failed: $e');
       return null;
     }
   }
@@ -182,10 +183,8 @@ class _DashboardRecommendationsPanelState
                                       .withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: const Icon(
-                                    Icons.chevron_right_rounded,
-                                    size: 14,
-                                    color: DesignTokens.primary),
+                                child: const Icon(Icons.chevron_right_rounded,
+                                    size: 14, color: DesignTokens.primary),
                               ),
                               const SizedBox(width: 8),
                               Expanded(

@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/services/biometric_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../providers/auth_provider.dart';
@@ -16,6 +18,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final AnimationController _controller;
   late final Animation<double> _scaleAnim;
   late final Animation<double> _fadeAnim;
+  Timer? _timeoutTimer;
 
   @override
   void initState() {
@@ -36,16 +39,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
     _controller.forward();
     WidgetsBinding.instance.addPostFrameCallback((_) => _listen());
+
+    _timeoutTimer = Timer(const Duration(seconds: 20), () {
+      if (!mounted) return;
+      context.go('/onboarding');
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _timeoutTimer?.cancel();
     super.dispose();
   }
 
   void _listen() {
     ref.listen(authProvider, (prev, next) {
+      if (!next.isLoading && !next.biometricRequired) {
+        _timeoutTimer?.cancel();
+      }
       if (!next.biometricRequired) return;
       WidgetsBinding.instance.addPostFrameCallback((_) => _doBiometric());
     });

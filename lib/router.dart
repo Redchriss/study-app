@@ -51,28 +51,15 @@ class _AnalyticsObserver extends NavigatorObserver {
   }
 }
 
-class _RouterRefresh extends ChangeNotifier {
-  late final ProviderSubscription _sub;
-  _RouterRefresh(Ref ref) {
-    _sub = ref.listen(authProvider, (_, __) => notifyListeners());
-  }
-
-  @override
-  void dispose() {
-    _sub.close();
-    super.dispose();
-  }
-}
-
 final _analyticsObserver = _AnalyticsObserver();
 
 final routerProvider = Provider<GoRouter>((ref) {
+  final auth = ref.watch(authProvider);
+
   return GoRouter(
     observers: [_analyticsObserver],
-    refreshListenable: _RouterRefresh(ref),
     initialLocation: '/splash',
     redirect: (context, state) {
-      final auth = ref.read(authProvider);
       final location = state.matchedLocation;
       final isKidsRoute = location == '/kids' || location.startsWith('/kids/');
 

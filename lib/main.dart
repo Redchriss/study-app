@@ -52,6 +52,42 @@ Future<void> _runApp() async {
     Sentry.captureException(details.exception, stackTrace: details.stack);
   };
 
+  ErrorWidget.builder = (details) {
+    debugPrint('FATAL: ${details.exception}');
+    return Material(
+      child: Container(
+        color: const Color(0xFF0A2A44),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline,
+                    color: Colors.white54, size: 48),
+                const SizedBox(height: 16),
+                const Text(
+                  'Something went wrong',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Please restart the app or contact support.',
+                  style: TextStyle(color: Colors.white, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  };
+
   ThemeMode initialTheme = ThemeMode.system;
   try {
     final prefs = await SharedPreferences.getInstance();

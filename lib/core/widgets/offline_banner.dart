@@ -48,8 +48,13 @@ class _OfflineBannerState extends State<OfflineBanner> {
   }
 
   void _checkPending() {
-    final pending = HiveService.hasAnyPending();
-    if (mounted) setState(() => _hasPending = pending);
+    try {
+      if (!HiveService.isInitialized) return;
+      final pending = HiveService.hasAnyPending();
+      if (mounted) setState(() => _hasPending = pending);
+    } catch (_) {
+      // Hive not yet initialized — skip pending check
+    }
   }
 
   Future<void> _loadPreferences() async {

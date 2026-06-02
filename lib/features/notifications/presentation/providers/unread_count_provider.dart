@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
@@ -30,7 +31,9 @@ class UnreadCountNotifier extends Notifier<int> {
       if (result.hasException) return;
       final count = result.data?['unreadNotificationCount'] as int? ?? 0;
       state = count;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('UnreadCountNotifier._fetch failed: $e');
+    }
   }
 
   Future<void> markRead(String notificationId) async {
@@ -41,7 +44,9 @@ class UnreadCountNotifier extends Notifier<int> {
         variables: {'notificationId': notificationId},
       ));
       state = state > 0 ? state - 1 : 0;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('UnreadCountNotifier.markRead failed: $e');
+    }
   }
 
   Future<void> markAllRead() async {
@@ -51,7 +56,9 @@ class UnreadCountNotifier extends Notifier<int> {
         document: gql(kMarkAllNotificationsRead),
       ));
       state = 0;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('UnreadCountNotifier.markAllRead failed: $e');
+    }
   }
 
   void decrement() {
