@@ -18,6 +18,12 @@ mutation Register($username: String!, $email: String!, $password: String!, $phon
 }
 ''';
 
+const String kCheckUsername = r'''
+query CheckUsername($username: String!) {
+  checkUsername(username: $username)
+}
+''';
+
 const String kRefreshToken = r'''
 mutation RefreshToken($refreshToken: String!) {
   refreshToken(refreshToken: $refreshToken) {
