@@ -18,6 +18,16 @@ query PaymentHistory {
 }
 ''';
 
+const String kClaimDailyCredits = r'''
+mutation ClaimDailyCredits {
+  claimDailyCredits {
+    awarded
+    creditsGiven
+    newBalance
+  }
+}
+''';
+
 const String kInitializePayment = r'''
 mutation InitializePayment($packageCode: String!, $purchaseType: String!) {
   initializePayment(packageCode: $packageCode, purchaseType: $purchaseType) {

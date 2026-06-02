@@ -220,6 +220,8 @@ class AuthNotifier extends Notifier<AuthState> {
           isLoading: false,
           isSubmitting: false,
           user: result.data!['me']);
+      // Claim daily credits silently — fire and forget
+      unawaited(_claimDailyCredits());
     } catch (e) {
       debugPrint('Silent bootstrap failed: $e');
       state = const AuthState(
@@ -327,6 +329,17 @@ class AuthNotifier extends Notifier<AuthState> {
       isLoading: false,
       biometricRequired: false,
     );
+  }
+
+  Future<void> _claimDailyCredits() async {
+    try {
+      final client = ref.read(graphqlClientProvider);
+      await client.mutate(MutationOptions(
+        document: gql(kClaimDailyCredits),
+      ));
+    } catch (e) {
+      debugPrint('Daily credits claim failed (non-critical): $e');
+    }
   }
 
   Future<void> logout() async {
