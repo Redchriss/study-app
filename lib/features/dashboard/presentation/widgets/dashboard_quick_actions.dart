@@ -35,6 +35,26 @@ class DashboardQuickActions extends StatelessWidget {
             label: 'AI Tutor',
             color: const Color(0xFF7C4DFF),
             onTap: () => context.push('/ai-tutor')),
+        _ActionTile(
+            icon: Icons.emoji_events_rounded,
+            label: 'Ranks',
+            color: const Color(0xFFFFC107),
+            onTap: () => context.push('/leaderboard')),
+        _ActionTile(
+            icon: Icons.child_care_rounded,
+            label: 'Kids',
+            color: const Color(0xFFE87E5E),
+            onTap: () => context.push('/kids')),
+        _ActionTile(
+            icon: Icons.upload_file_rounded,
+            label: 'Upload',
+            color: DesignTokens.accent,
+            onTap: () => context.push('/upload-material')),
+        _ActionTile(
+            icon: Icons.groups_rounded,
+            label: 'Circles',
+            color: DesignTokens.info,
+            onTap: () => context.go('/circles')),
       ],
     );
   }
@@ -72,7 +92,6 @@ class _ActionTile extends StatelessWidget {
                         color: color.withValues(alpha: 0.2), width: 1.5)),
                 child: Icon(icon, color: color, size: 24),
               ),
-
             ],
           ),
           const SizedBox(height: 6),
