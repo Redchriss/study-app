@@ -6,6 +6,35 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 
+String _formatDate(dynamic raw) {
+  if (raw == null) return '';
+  try {
+    final dt = DateTime.parse(raw.toString()).toLocal();
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inDays == 0) return 'Today';
+    if (diff.inDays == 1) return 'Yesterday';
+    if (diff.inDays < 7) return '${diff.inDays} days ago';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+  } catch (_) {
+    return raw.toString();
+  }
+}
+
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
   @override
@@ -91,7 +120,7 @@ class HistoryScreen extends ConsumerWidget {
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700)),
                                 const SizedBox(height: 4),
-                                Text(t['createdAt'] ?? '',
+                                Text(_formatDate(t['createdAt']),
                                     style: const TextStyle(
                                         fontSize: 12,
                                         color: DesignTokens.textSecondary,
@@ -186,7 +215,7 @@ class HistoryScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  e['createdAt'] ?? '',
+                                  _formatDate(e['createdAt']),
                                   style: const TextStyle(
                                       fontSize: 12,
                                       color: DesignTokens.textSecondary,

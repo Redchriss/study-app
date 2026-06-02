@@ -16,12 +16,14 @@ import 'reader_flashcards_sheet.dart';
 import 'reader_loading.dart';
 import 'reader_not_found.dart';
 import 'reader_quiz_sheet.dart';
+
 class MaterialReaderScreen extends StatefulWidget {
   const MaterialReaderScreen({super.key, required this.slug});
   final String slug;
   @override
   State<MaterialReaderScreen> createState() => _MaterialReaderScreenState();
 }
+
 class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
   final _service = MaterialReaderService();
   final _cache = MaterialCacheService();
@@ -36,6 +38,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       ),
     );
   }
+
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -44,6 +47,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       ),
     );
   }
+
   Future<void> _saveAnnotation(
       ReaderStudySelection selection, VoidCallback? refetch) async {
     final draft =
@@ -61,6 +65,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         result, 'Annotation saved', 'Could not save annotation.');
     if (result.success) refetch?.call();
   }
+
   Future<void> _openAnnotations(
       List<ReaderAnnotationData> annotations, VoidCallback? refetch) async {
     await showReaderAnnotationsSheet(
@@ -81,6 +86,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       },
     );
   }
+
   Future<void> _openFlashcards(
       ReaderMaterialData material, VoidCallback? refetch) async {
     final task = material.taskFor('flashcards');
@@ -114,6 +120,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       },
     );
   }
+
   Future<void> _askReaderAi({
     required ReaderMaterialData material,
     required ReaderStudySelection selection,
@@ -140,6 +147,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       ),
     );
   }
+
   Future<void> _runQuickQuiz({
     required ReaderMaterialData material,
     required ReaderStudySelection selection,
@@ -166,6 +174,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       },
     );
   }
+
   Future<void> _runAiAction<T>({
     required Future<ReaderServiceResult<T>> Function() action,
     required Future<void> Function(T data) onSuccess,
@@ -173,7 +182,13 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const LoadingWidget(),
+      builder: (_) => const Center(
+        child: SizedBox(
+          width: 56,
+          height: 56,
+          child: CircularProgressIndicator(strokeWidth: 3),
+        ),
+      ),
     );
     final result = await action();
     if (!mounted) return;
@@ -186,6 +201,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     }
     await onSuccess(result.data as T);
   }
+
   @override
   Widget build(BuildContext context) {
     return Query(
@@ -221,6 +237,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       },
     );
   }
+
   Widget _buildReaderForMaterial(
       ReaderMaterialData material, VoidCallback? refetch) {
     return MaterialReaderSelector(

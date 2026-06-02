@@ -1,8 +1,38 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-class AiTypingIndicator extends StatelessWidget {
+class AiTypingIndicator extends StatefulWidget {
   const AiTypingIndicator({super.key});
+
+  @override
+  State<AiTypingIndicator> createState() => _AiTypingIndicatorState();
+}
+
+class _AiTypingIndicatorState extends State<AiTypingIndicator> {
+  int _seconds = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _seconds++);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String get _hint {
+    if (_seconds < 10) return 'Thinking...';
+    if (_seconds < 25) return 'Working on it...';
+    if (_seconds < 45) return 'Almost there...';
+    return 'Taking a bit longer than usual...';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,17 +63,17 @@ class AiTypingIndicator extends StatelessWidget {
                 bottomRight: Radius.circular(18),
               ),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AiBouncingDot(delay: 0),
-                SizedBox(width: 4),
-                AiBouncingDot(delay: 200),
-                SizedBox(width: 4),
-                AiBouncingDot(delay: 400),
-                SizedBox(width: 8),
-                Text('Thinking...',
-                    style: TextStyle(
+                const AiBouncingDot(delay: 0),
+                const SizedBox(width: 4),
+                const AiBouncingDot(delay: 200),
+                const SizedBox(width: 4),
+                const AiBouncingDot(delay: 400),
+                const SizedBox(width: 8),
+                Text(_hint,
+                    style: const TextStyle(
                         fontSize: 12,
                         color: DesignTokens.textSecondary,
                         fontStyle: FontStyle.italic)),
