@@ -15,6 +15,13 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-035] Login UX hides credential/server failures behind raw or unclear errors
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Location:** `lib/features/auth/presentation/providers/auth_provider.dart`, `lib/features/auth/presentation/screens/login_form.dart`, `lib/features/auth/presentation/screens/login_biometric_tile.dart`, `lib/core/graphql/queries/domain/auth_queries.dart`
+**Root cause:** Login used the global auth loading flag for submit state, did not clear old form errors while editing, surfaced raw GraphQL/link exceptions, and queried an unused `payload` field in `tokenAuth`. Biometric copy also implied a broad account-level Face ID feature instead of local quick unlock.
+**Fix:** Added explicit `isSubmitting`, mapped login failures to clear user-facing messages, added timeout handling, removed unused `payload` from `tokenAuth`, improved required-field messages, cleared errors on edit, and clarified biometric quick-unlock copy.
+**Verified:** `flutter test test/features/auth/presentation/screens/login_screen_test.dart` passes with coverage for incorrect credentials messaging; edited auth files pass analyzer.
+
 ### [BUG-034] GitHub Actions release blocked by stale Flutter tests and missing CI .env
 **Priority:** 🟡 HIGH → ✅ RESOLVED
 **Location:** `.github/workflows/build.yml`, `test/core/config/app_config_test.dart`, `test/features/auth/presentation/screens/login_screen_test.dart`

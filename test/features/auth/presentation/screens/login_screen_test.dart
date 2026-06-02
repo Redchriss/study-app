@@ -16,7 +16,7 @@ class _TestAuthNotifier extends AuthNotifier {
     state = const AuthState(
       isAuthenticated: false,
       isLoading: false,
-      error: 'Invalid test credentials',
+      error: 'That username or password is incorrect.',
     );
     return false;
   }
@@ -70,7 +70,27 @@ void main() {
       await tester.tap(loginButton);
       await tester.pump();
 
-      expect(find.text('Required'), findsNWidgets(2));
+      expect(find.text('Enter your username'), findsOneWidget);
+      expect(find.text('Enter your password'), findsOneWidget);
+    });
+
+    testWidgets('should show clear incorrect credentials message',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(createApp());
+
+      await tester.enterText(find.byType(TextFormField).first, 'wrong-user');
+      await tester.enterText(find.byType(TextFormField).last, 'wrong-pass');
+
+      final loginButton = find.text('Log In');
+      await tester.ensureVisible(loginButton);
+      await tester.tap(loginButton);
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text('That username or password is incorrect.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('should navigate to register on tap',

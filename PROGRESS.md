@@ -1,5 +1,13 @@
 # PROGRESS.md — Yaza Flutter App
 
+## 2026-06-02
+
+- Improved login UX so invalid credentials and server/network failures show clear user-facing messages.
+- Split auth bootstrap loading from login submission loading with `AuthState.isSubmitting`.
+- Removed unused `payload` from the `tokenAuth` GraphQL mutation.
+- Clarified biometric login copy as local quick unlock for supported phones only.
+- Added login widget coverage for incorrect credential messaging.
+
 ## 2026-06-01
 
 - Fixed GitHub Actions test failures caused by stale Flutter tests after the login/auth refactor.

@@ -25,7 +25,13 @@ class _LoginBiometricTileState extends ConsumerState<LoginBiometricTile> {
     final bio = BiometricService();
     final available = await bio.isAvailable();
     final enabled = await bio.isEnabled();
-    if (mounted) setState(() { _available = available; _enabled = enabled; _loading = false; });
+    if (mounted) {
+      setState(() {
+        _available = available;
+        _enabled = enabled;
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -46,17 +52,33 @@ class _LoginBiometricTileState extends ConsumerState<LoginBiometricTile> {
               Icon(
                 Icons.fingerprint_rounded,
                 size: 22,
-                color: _enabled ? DesignTokens.primary : DesignTokens.textTertiary,
+                color:
+                    _enabled ? DesignTokens.primary : DesignTokens.textTertiary,
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  'Face ID / Fingerprint',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _enabled ? DesignTokens.textPrimary : DesignTokens.textSecondary,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Unlock on this phone',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: _enabled
+                            ? DesignTokens.textPrimary
+                            : DesignTokens.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Use Face ID or fingerprint after login',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: DesignTokens.textTertiary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Switch(

@@ -21,7 +21,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
   String? _fieldError;
-  bool _hasInteracted = false;
 
   @override
   void dispose() {
@@ -32,13 +31,12 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _hasInteracted = true);
+    setState(() => _fieldError = null);
     final ok = await ref.read(authProvider.notifier).login(
           _usernameCtrl.text.trim(),
           _passwordCtrl.text,
         );
     if (!mounted) return;
-    setState(() => _hasInteracted = false);
     if (ok) {
       await _offerBiometric();
       return;
@@ -49,6 +47,11 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     setState(() => _fieldError = error);
   }
 
+  void _clearFieldError() {
+    if (_fieldError == null) return;
+    setState(() => _fieldError = null);
+  }
+
   Future<void> _offerBiometric() async {
     final biometricService = BiometricService();
     final bioAvailable = await biometricService.isAvailable();
@@ -57,8 +60,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     final enable = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Enable Face ID?'),
-        content: const Text('Log in faster next time with Face ID.'),
+        title: const Text('Enable quick unlock?'),
+        content: const Text(
+          'Use this phone\'s Face ID or fingerprint after you log in.',
+        ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -77,7 +82,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isLoading = ref.watch(authProvider).isLoading;
+    final isSubmitting = ref.watch(authProvider).isSubmitting;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -136,11 +141,14 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               decoration: const InputDecoration(
                 labelText: 'Username or Email',
                 prefixIcon: Icon(Icons.person_outline_rounded),
-                hintText: 'Enter your username...',
+                hintText: 'Enter your username or email',
               ),
               textInputAction: TextInputAction.next,
-              onChanged: _hasInteracted ? null : null,
-              validator: (v) => v!.isEmpty ? 'Required' : null,
+              autocorrect: false,
+              textCapitalization: TextCapitalization.none,
+              onChanged: (_) => _clearFieldError(),
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? 'Enter your username' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -157,8 +165,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                 ),
               ),
               textInputAction: TextInputAction.done,
+              onChanged: (_) => _clearFieldError(),
               onFieldSubmitted: (_) => _submit(),
-              validator: (v) => v!.isEmpty ? 'Required' : null,
+              validator: (v) =>
+                  v == null || v.isEmpty ? 'Enter your password' : null,
             ),
             const SizedBox(height: 4),
             Align(
@@ -178,11 +188,11 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               width: double.infinity,
               height: 54,
               child: ElevatedButton(
-                onPressed: isLoading ? null : _submit,
+                onPressed: isSubmitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14))),
-                child: isLoading
+                child: isSubmitting
                     ? const SizedBox(
                         height: 22,
                         width: 22,
