@@ -77,178 +77,194 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
+    final dark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Circles',
-            style: theme.textTheme.titleLarge
-                ?.copyWith(fontWeight: FontWeight.w800)),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            icon: Icon(
-              _layout == PostCardLayout.compact
-                  ? Icons.view_list_rounded
-                  : _layout == PostCardLayout.card
-                      ? Icons.grid_view_rounded
-                      : Icons.article_rounded,
-            ),
-            onPressed: () {
-              final next = _nextLayout(_layout);
-              setState(() => _layout = next);
-              _saveLayout(next);
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.inbox_outlined),
-            tooltip: 'Inbox',
-            onPressed: () => context.push('/circles/inbox'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.explore_outlined),
-            tooltip: 'Discover communities',
-            onPressed: () => context.push('/circles/discover'),
-          ),
-        ],
-      ),
       drawer: const CommunityDrawer(),
-      body: _layoutLoaded
-          ? Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-                  child: TextField(
-                    onTap: () => context.push('/search'),
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      hintText: 'Search posts, communities, users...',
-                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                      filled: true,
-                      fillColor: dark
-                          ? DesignTokens.darkSurfaceVariant
-                          : DesignTokens.surfaceVariant,
-                      border: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(DesignTokens.radiusMd),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                TabBar(
-                  controller: _tabCtrl,
-                  tabs: _tabs.map((t) => Tab(text: t)).toList(),
-                  isScrollable: false,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  labelColor: DesignTokens.primary,
-                  unselectedLabelColor: DesignTokens.textSecondary,
-                ),
-                Expanded(
-                  child: Query(
-                    key: ValueKey('home_$_tab'),
-                    options: QueryOptions(
-                      document: gql(_tab == 4 ? kPopularPosts : kHomeFeed),
-                      variables: _tab == 4
-                          ? {'limit': 25}
-                          : {'sort': _tabSorts[_tab], 'limit': 25},
-                      fetchPolicy: FetchPolicy.networkOnly,
-                    ),
-                    builder: (result, {fetchMore, refetch}) {
-                      if (result.isLoading) return const _FeedLoading();
-                      if (result.hasException) {
-                        return ErrorState(
-                          message: graphQLErrorMessage(
-                              result.exception, 'Could not load feed'),
-                          onRetry: () => refetch?.call(),
-                        );
-                      }
-
-                      final feedKey = _tab == 4 ? 'popularPosts' : 'homeFeed';
-                      final feed = result.data?[feedKey];
-                      final edges = (feed?['edges'] as List?) ?? [];
-                      final posts = edges
-                          .map((e) => e['node'] as Map<String, dynamic>)
-                          .toList();
-
-                      if (posts.isEmpty) {
-                        return EmptyState(
-                          icon: Icons.group_outlined,
-                          title: _tab == 4
-                              ? 'Nothing trending yet'
-                              : 'Join some communities',
-                          subtitle: _tab == 4
-                              ? 'Check back soon for popular posts.'
-                              : 'Your feed is empty. Discover communities to follow.',
-                          actionLabel: 'Discover',
-                          onAction: () => context.push('/circles/discover'),
-                        );
-                      }
-
-                      return RefreshIndicator(
-                        onRefresh: () async => refetch?.call(),
-                        child: NotificationListener<ScrollNotification>(
-                          onNotification: (scroll) {
-                            if (scroll is ScrollEndNotification &&
-                                scroll.metrics.pixels >=
-                                    scroll.metrics.maxScrollExtent - 200) {
-                              final pageInfo = feed?['pageInfo'];
-                              if (pageInfo?['hasNextPage'] == true) {
-                                fetchMore?.call(FetchMoreOptions(
-                                  variables: {'after': pageInfo['endCursor']},
-                                  updateQuery: (prev, next) {
-                                    if (next?[feedKey] == null) return prev;
-                                    final merged =
-                                        Map<String, dynamic>.from(prev ?? {});
-                                    final prevFeed = Map<String, dynamic>.from(
-                                        prev?[feedKey] ?? {});
-                                    final nextFeed = Map<String, dynamic>.from(
-                                        next![feedKey]);
-                                    final prevEdges =
-                                        (prevFeed['edges'] as List?) ?? [];
-                                    final nextEdges =
-                                        (nextFeed['edges'] as List?) ?? [];
-                                    merged[feedKey] = {
-                                      ...nextFeed,
-                                      'edges': [
-                                        ...prevEdges,
-                                        ...nextEdges,
-                                      ],
-                                    };
-                                    return merged;
-                                  },
-                                ));
-                              }
-                            }
-                            return false;
-                          },
-                          child: ListView.builder(
-                            padding: const EdgeInsets.only(top: 4, bottom: 80),
-                            itemCount: posts.length,
-                            itemBuilder: (_, i) => PostCard(
-                              post: posts[i],
-                              layout: _layout,
-                              onTap: () {
-                                final c = posts[i]['community'];
-                                if (c != null) {
-                                  context.push(
-                                      '/y/${c['slug']}/post/${posts[i]['slug']}');
-                                }
-                              },
+      body: !_layoutLoaded
+          ? const Center(child: LoadingWidget())
+          : SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  // ── Top bar: no AppBar, search bar like Reddit ──────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 8, 8, 0),
+                    child: Row(
+                      children: [
+                        Builder(
+                          builder: (ctx) => IconButton(
+                            icon: const Icon(Icons.menu_rounded),
+                            onPressed: () => Scaffold.of(ctx).openDrawer(),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => context.push('/search'),
+                            child: Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: dark
+                                    ? DesignTokens.darkSurfaceVariant
+                                    : DesignTokens.surfaceVariant,
+                                borderRadius: BorderRadius.circular(
+                                    DesignTokens.radiusMd),
+                              ),
+                              child: Row(
+                                children: [
+                                  const SizedBox(width: 10),
+                                  const Icon(Icons.search_rounded,
+                                      size: 18,
+                                      color: DesignTokens.textTertiary),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Search posts, communities...',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: dark
+                                          ? DesignTokens.darkTextTertiary
+                                          : DesignTokens.textTertiary,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      );
-                    },
+                        IconButton(
+                          icon: Icon(
+                            _layout == PostCardLayout.compact
+                                ? Icons.view_list_rounded
+                                : _layout == PostCardLayout.card
+                                    ? Icons.grid_view_rounded
+                                    : Icons.article_rounded,
+                          ),
+                          onPressed: () {
+                            final next = _nextLayout(_layout);
+                            setState(() => _layout = next);
+                            _saveLayout(next);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.explore_outlined),
+                          tooltip: 'Discover',
+                          onPressed: () => context.push('/circles/discover'),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            )
-          : const Center(child: LoadingWidget()),
+                  TabBar(
+                    controller: _tabCtrl,
+                    tabs: _tabs.map((t) => Tab(text: t)).toList(),
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    indicatorSize: TabBarIndicatorSize.label,
+                    labelColor: DesignTokens.primary,
+                    unselectedLabelColor: DesignTokens.textSecondary,
+                    dividerColor: Colors.transparent,
+                  ),
+                  Expanded(
+                    child: Query(
+                      key: ValueKey('home_$_tab'),
+                      options: QueryOptions(
+                        document: gql(_tab == 4 ? kPopularPosts : kHomeFeed),
+                        variables: _tab == 4
+                            ? {'limit': 25}
+                            : {'sort': _tabSorts[_tab], 'limit': 25},
+                        fetchPolicy: FetchPolicy.networkOnly,
+                      ),
+                      builder: (result, {fetchMore, refetch}) {
+                        if (result.isLoading) return const _FeedLoading();
+                        if (result.hasException) {
+                          return ErrorState(
+                            message: graphQLErrorMessage(
+                                result.exception, 'Could not load feed'),
+                            onRetry: () => refetch?.call(),
+                          );
+                        }
+
+                        final feedKey = _tab == 4 ? 'popularPosts' : 'homeFeed';
+                        final feed = result.data?[feedKey];
+                        final edges = (feed?['edges'] as List?) ?? [];
+                        final posts = edges
+                            .map((e) => e['node'] as Map<String, dynamic>)
+                            .toList();
+
+                        if (posts.isEmpty) {
+                          return EmptyState(
+                            icon: Icons.group_outlined,
+                            title: _tab == 4
+                                ? 'Nothing trending yet'
+                                : 'Join some communities',
+                            subtitle: _tab == 4
+                                ? 'Check back soon for popular posts.'
+                                : 'Your feed is empty. Discover communities to follow.',
+                            actionLabel: 'Discover',
+                            onAction: () => context.push('/circles/discover'),
+                          );
+                        }
+
+                        return RefreshIndicator(
+                          onRefresh: () async => refetch?.call(),
+                          child: NotificationListener<ScrollNotification>(
+                            onNotification: (scroll) {
+                              if (scroll is ScrollEndNotification &&
+                                  scroll.metrics.pixels >=
+                                      scroll.metrics.maxScrollExtent - 200) {
+                                final pageInfo = feed?['pageInfo'];
+                                if (pageInfo?['hasNextPage'] == true) {
+                                  fetchMore?.call(FetchMoreOptions(
+                                    variables: {'after': pageInfo['endCursor']},
+                                    updateQuery: (prev, next) {
+                                      if (next?[feedKey] == null) return prev;
+                                      final merged =
+                                          Map<String, dynamic>.from(prev ?? {});
+                                      final prevFeed =
+                                          Map<String, dynamic>.from(
+                                              prev?[feedKey] ?? {});
+                                      final nextFeed =
+                                          Map<String, dynamic>.from(
+                                              next![feedKey]);
+                                      merged[feedKey] = {
+                                        ...nextFeed,
+                                        'edges': [
+                                          ...((prevFeed['edges'] as List?) ??
+                                              []),
+                                          ...((nextFeed['edges'] as List?) ??
+                                              []),
+                                        ],
+                                      };
+                                      return merged;
+                                    },
+                                  ));
+                                }
+                              }
+                              return false;
+                            },
+                            child: ListView.builder(
+                              padding:
+                                  const EdgeInsets.only(top: 4, bottom: 80),
+                              itemCount: posts.length,
+                              itemBuilder: (_, i) => PostCard(
+                                post: posts[i],
+                                layout: _layout,
+                                onTap: () {
+                                  final c = posts[i]['community'];
+                                  if (c != null) {
+                                    context.push(
+                                        '/y/${c['slug']}/post/${posts[i]['slug']}');
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }
