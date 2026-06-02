@@ -21,152 +21,57 @@ class OnboardingLastPageActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const levels = [
-      ('primary', 'Primary', Icons.child_care_rounded),
-      ('secondary', 'Secondary', Icons.school_rounded),
-      ('tertiary', 'University', Icons.account_balance_rounded),
-    ];
-    const goals = [
-      ('read', 'Materials', Icons.menu_book_rounded),
-      ('quiz', 'Quizzes', Icons.quiz_rounded),
-      ('ai', 'AI Tutor', Icons.auto_awesome_rounded),
-    ];
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('What level are you?',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15)),
-              const SizedBox(height: 12),
-              Row(
-                children: levels.map((item) {
-                  final selected = preferredLevel == item.$1;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => onLevelSelected(item.$1),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: selected
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.2)),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(item.$3,
-                                size: 20,
-                                color: selected
-                                    ? DesignTokens.primary
-                                    : Colors.white.withValues(alpha: 0.7)),
-                            const SizedBox(height: 4),
-                            Text(item.$2,
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: selected
-                                        ? DesignTokens.primary
-                                        : Colors.white.withValues(alpha: 0.7))),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: onGetStarted,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: DesignTokens.primary,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text("Get Started — Free",
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                ),
               ),
-              const SizedBox(height: 16),
-              const Text('What do you want first?',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15)),
-              const SizedBox(height: 12),
-              Row(
-                children: goals.map((item) {
-                  final selected = preferredGoal == item.$1;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => onGoalSelected(item.$1),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: selected
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.2)),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(item.$3,
-                                size: 20,
-                                color: selected
-                                    ? DesignTokens.primary
-                                    : Colors.white.withValues(alpha: 0.7)),
-                            const SizedBox(height: 4),
-                            Text(item.$2,
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: selected
-                                        ? DesignTokens.primary
-                                        : Colors.white.withValues(alpha: 0.7))),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: onGetStarted,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: DesignTokens.primary,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
             ),
-            child: const Text("Get Started — It's Free",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: 56,
+                child: OutlinedButton(
+                  onPressed: onLogin,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side:
+                        BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('Log In',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
-        TextButton(
-          onPressed: onLogin,
-          style: TextButton.styleFrom(
-              foregroundColor: Colors.white.withValues(alpha: 0.8)),
-          child: const Text('Already have an account? Log in',
-              style: TextStyle(fontWeight: FontWeight.w600)),
+        Text(
+          '3 free AI credits on sign up · No card needed',
+          style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 12,
+              fontWeight: FontWeight.w500),
         ),
       ],
     );

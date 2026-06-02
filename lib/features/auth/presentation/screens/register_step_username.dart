@@ -113,7 +113,7 @@ class _RegisterStepUsernameState extends State<RegisterStepUsername> {
             ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
             const SizedBox(height: 12),
             const Text(
-              'Your unique username on Yaza.',
+              'Pick your Yaza name — this is how other students will see you.',
               style: TextStyle(
                   fontSize: 15,
                   color: DesignTokens.textSecondary,

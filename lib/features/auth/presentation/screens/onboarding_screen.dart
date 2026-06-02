@@ -17,11 +17,8 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen>
     with TickerProviderStateMixin {
-  final _preferences = AppPreferencesService();
   final _controller = PageController();
   int _page = 0;
-  String? _preferredLevel;
-  String _preferredGoal = 'read';
   late final AnimationController _bgAnimCtrl;
   late final Animation<double> _bgAnim;
 
@@ -162,18 +159,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                   child: isLast
                       ? OnboardingLastPageActions(
-                          preferredLevel: _preferredLevel,
-                          preferredGoal: _preferredGoal,
-                          onLevelSelected: (l) =>
-                              setState(() => _preferredLevel = l),
-                          onGoalSelected: (g) =>
-                              setState(() => _preferredGoal = g),
-                          onGetStarted: () async {
-                            await _preferences
-                                .setPreferredLevel(_preferredLevel);
-                            await _preferences.setPreferredGoal(_preferredGoal);
-                            if (context.mounted) context.go('/register');
-                          },
+                          preferredLevel: null,
+                          preferredGoal: 'read',
+                          onLevelSelected: (_) {},
+                          onGoalSelected: (_) {},
+                          onGetStarted: () => context.go('/register'),
                           onLogin: () => context.go('/login'),
                         )
                       : OnboardingNextButton(
