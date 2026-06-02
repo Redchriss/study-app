@@ -25,7 +25,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 6, vsync: this);
+    // Start with 5 tabs; rebuild with 6 once mod status is confirmed
+    _tabCtrl = TabController(length: 5, vsync: this);
     _tabCtrl.addListener(() {
       if (!_tabCtrl.indexIsChanging) {
         ref.read(unreadCountProvider.notifier).refresh();
@@ -45,6 +46,16 @@ class _InboxScreenState extends ConsumerState<InboxScreen>
       final communities = (result.data?['myCommunities'] as List?) ?? [];
       final isMod = communities
           .any((c) => (c as Map<String, dynamic>)['isModerator'] == true);
+      // Rebuild controller with correct length
+      final newLength = isMod ? 6 : 5;
+      final oldCtrl = _tabCtrl;
+      _tabCtrl = TabController(length: newLength, vsync: this)
+        ..addListener(() {
+          if (!_tabCtrl.indexIsChanging) {
+            ref.read(unreadCountProvider.notifier).refresh();
+          }
+        });
+      oldCtrl.dispose();
       setState(() {
         _isMod = isMod;
         _modCheckDone = true;
@@ -55,7 +66,6 @@ class _InboxScreenState extends ConsumerState<InboxScreen>
   }
 
   int get _tabLength => _isMod ? 6 : 5;
-
   @override
   void dispose() {
     _tabCtrl.dispose();
@@ -78,67 +88,63 @@ class _InboxScreenState extends ConsumerState<InboxScreen>
       );
     }
 
-    return DefaultTabController(
-      length: _tabLength,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Row(
-            children: [
-              Text('Inbox',
-                  style: theme.textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-              if (unread > 0) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: DesignTokens.error,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text('$unread',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700)),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings_outlined, size: 20),
-              tooltip: 'Notification preferences',
-              onPressed: () => context.push('/notification-preferences'),
-            ),
-          ],
-          bottom: TabBar(
-            controller: _tabCtrl,
-            isScrollable: true,
-            tabs: [
-              const Tab(text: 'All'),
-              const Tab(text: 'Unread'),
-              const Tab(text: 'Mentions'),
-              const Tab(text: 'Post replies'),
-              const Tab(text: 'Comment replies'),
-              if (_isMod) const Tab(text: 'Modmail'),
-            ],
-            labelColor: DesignTokens.primary,
-            unselectedLabelColor: DesignTokens.textSecondary,
-            indicatorSize: TabBarIndicatorSize.label,
-          ),
-        ),
-        body: TabBarView(
-          controller: _tabCtrl,
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
           children: [
-            InboxNotificationsTab(onlyUnread: false),
-            InboxNotificationsTab(onlyUnread: true),
-            InboxNotificationsTab(notifType: 'post_mention'),
-            InboxNotificationsTab(notifType: 'post_reply'),
-            InboxNotificationsTab(notifType: 'comment_reply'),
-            if (_isMod) _buildModmailTab(),
+            Text('Inbox',
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w800)),
+            if (unread > 0) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: DesignTokens.error,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text('$unread',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700)),
+              ),
+            ],
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, size: 20),
+            tooltip: 'Notification preferences',
+            onPressed: () => context.push('/notification-preferences'),
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabCtrl,
+          isScrollable: true,
+          tabs: [
+            const Tab(text: 'All'),
+            const Tab(text: 'Unread'),
+            const Tab(text: 'Mentions'),
+            const Tab(text: 'Post replies'),
+            const Tab(text: 'Comment replies'),
+            if (_isMod) const Tab(text: 'Modmail'),
+          ],
+          labelColor: DesignTokens.primary,
+          unselectedLabelColor: DesignTokens.textSecondary,
+          indicatorSize: TabBarIndicatorSize.label,
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabCtrl,
+        children: [
+          InboxNotificationsTab(onlyUnread: false),
+          InboxNotificationsTab(onlyUnread: true),
+          InboxNotificationsTab(notifType: 'post_mention'),
+          InboxNotificationsTab(notifType: 'post_reply'),
+          InboxNotificationsTab(notifType: 'comment_reply'),
+          if (_isMod) _buildModmailTab(),
+        ],
       ),
     );
   }
