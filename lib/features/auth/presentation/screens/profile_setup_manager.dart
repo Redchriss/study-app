@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../account/presentation/widgets/education_pickers.dart';
 import '../providers/auth_provider.dart';
@@ -154,8 +155,48 @@ class ProfileSetupManager {
         return;
       }
       await _ref.read(authProvider.notifier).refreshUser();
+      // Suggest Kids Mode for primary students
+      if (level == 'primary' && _context.mounted) {
+        await _suggestKidsMode();
+      }
     } finally {
       if (_isMounted()) _setState(() => saving = false);
+    }
+  }
+
+  Future<void> _suggestKidsMode() async {
+    final goKids = await showDialog<bool>(
+      context: _context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Row(
+          children: [
+            Text('🎮 ', style: TextStyle(fontSize: 28)),
+            Text('Try Kids Mode?',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          ],
+        ),
+        content: const Text(
+          'Yaza has a special learning mode for primary students — '
+          'big buttons, fun stories, games, and a companion character that '
+          'earns stars. A parent or guardian can set it up now.',
+          style: TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Maybe later'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Set up Kids Mode'),
+          ),
+        ],
+      ),
+    );
+    if (goKids == true && _context.mounted) {
+      GoRouter.of(_context).push('/kids');
     }
   }
 
