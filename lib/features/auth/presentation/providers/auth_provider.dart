@@ -174,7 +174,8 @@ class AuthNotifier extends Notifier<AuthState> {
         return false;
       }
       await SecureStorage.saveTokens(data['token'], data['refreshToken']);
-      await _bootstrap();
+      // Bootstrap silently — keep isSubmitting true so router doesn't redirect
+      await _bootstrapSilent();
       _scheduleRefresh();
       return state.isAuthenticated;
     } on TimeoutException {
@@ -192,6 +193,39 @@ class AuthNotifier extends Notifier<AuthState> {
         error: 'Could not log in right now. Please try again.',
       );
       return false;
+    }
+  }
+
+  /// Bootstrap without toggling isLoading (used after login/register so the
+  /// router doesn't flash back to /splash mid-submit).
+  Future<void> _bootstrapSilent() async {
+    try {
+      final token = await SecureStorage.getToken();
+      if (token == null) {
+        state = const AuthState(isAuthenticated: false, isLoading: false);
+        return;
+      }
+      final client = ref.read(graphqlClientProvider);
+      final result = await client
+          .query(QueryOptions(
+              document: gql(kMe), fetchPolicy: FetchPolicy.networkOnly))
+          .timeout(const Duration(seconds: 25));
+      if (result.hasException || result.data?['me'] == null) {
+        await SecureStorage.clearTokens();
+        state = const AuthState(isAuthenticated: false, isLoading: false);
+        return;
+      }
+      state = AuthState(
+          isAuthenticated: true,
+          isLoading: false,
+          isSubmitting: false,
+          user: result.data!['me']);
+    } catch (e) {
+      debugPrint('Silent bootstrap failed: $e');
+      state = const AuthState(
+          isAuthenticated: false,
+          isLoading: false,
+          error: 'Connection error. Check your network.');
     }
   }
 
@@ -265,7 +299,7 @@ class AuthNotifier extends Notifier<AuthState> {
         return false;
       }
       await SecureStorage.saveTokens(data['token'], data['refreshToken']);
-      await _bootstrap();
+      await _bootstrapSilent();
       _scheduleRefresh();
       return state.isAuthenticated;
     } catch (e) {
