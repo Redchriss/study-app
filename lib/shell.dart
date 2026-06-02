@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/design_tokens.dart';
 import 'widgets/nav_item.dart';
-import 'widgets/centre_post_button.dart';
-import 'features/circles/presentation/screens/create_post_screen.dart';
+import 'widgets/centre_ai_button.dart';
 import 'features/notifications/presentation/providers/unread_count_provider.dart';
 
 class MainShell extends ConsumerWidget {
@@ -13,21 +12,8 @@ class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.navigationShell});
 
   void _onDestinationSelected(BuildContext context, int index) {
-    navigationShell.goBranch(index);
-  }
-
-  void _onPostTap(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => const FractionallySizedBox(
-        heightFactor: 0.85,
-        child: CreatePostScreen(),
-      ),
-    );
+    navigationShell.goBranch(index,
+        initialLocation: index == navigationShell.currentIndex);
   }
 
   @override
@@ -45,12 +31,10 @@ class MainShell extends ConsumerWidget {
           router.pop();
           return;
         }
-
         if (currentIndex != 0) {
           navigationShell.goBranch(0);
           return;
         }
-
         final shouldExit = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
@@ -71,9 +55,7 @@ class MainShell extends ConsumerWidget {
             ],
           ),
         );
-        if (shouldExit == true) {
-          SystemNavigator.pop();
-        }
+        if (shouldExit == true) SystemNavigator.pop();
       },
       child: Scaffold(
         body: navigationShell,
@@ -95,28 +77,29 @@ class MainShell extends ConsumerWidget {
               child: Row(
                 children: [
                   NavItem(
-                    icon: Icons.home_outlined,
-                    activeIcon: Icons.home_rounded,
+                    icon: Icons.dashboard_outlined,
+                    activeIcon: Icons.dashboard_rounded,
                     label: 'Home',
                     isSelected: currentIndex == 0,
                     onTap: () => _onDestinationSelected(context, 0),
                   ),
                   NavItem(
-                    icon: Icons.explore_outlined,
-                    activeIcon: Icons.explore_rounded,
-                    label: 'Discover',
+                    icon: Icons.menu_book_outlined,
+                    activeIcon: Icons.menu_book_rounded,
+                    label: 'Study',
                     isSelected: currentIndex == 1,
                     onTap: () => _onDestinationSelected(context, 1),
                   ),
-                  CentrePostButton(
-                    onTap: () => _onPostTap(context),
+                  CentreAiButton(
+                    isSelected: false,
+                    onTap: () => context.push('/ai-tutor'),
                   ),
                   Stack(
                     children: [
                       NavItem(
-                        icon: Icons.inbox_outlined,
-                        activeIcon: Icons.inbox_rounded,
-                        label: 'Inbox',
+                        icon: Icons.groups_outlined,
+                        activeIcon: Icons.groups_rounded,
+                        label: 'Circles',
                         isSelected: currentIndex == 2,
                         onTap: () => _onDestinationSelected(context, 2),
                       ),
@@ -135,10 +118,9 @@ class MainShell extends ConsumerWidget {
                             child: Text(
                               unreadCount > 99 ? '99+' : '$unreadCount',
                               style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                              ),
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800),
                               textAlign: TextAlign.center,
                             ),
                           ),

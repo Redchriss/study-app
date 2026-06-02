@@ -15,6 +15,47 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-036] Bottom nav architecture — Dashboard buried, AI Tutor inaccessible from shell
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Fix:** Restructured shell to 4 study-first tabs (Dashboard, Study hub, Circles, Profile) with AI Tutor centre button.
+
+### [BUG-037] HomeScreen TabBar crash — no TabController
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Fix:** Added `SingleTickerProviderStateMixin` + `TabController` to `_HomeScreenState`.
+
+### [BUG-038] Dashboard notifications navigation broken (`/notifications` outside shell)
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Fix:** Changed `context.go('/notifications')` to `context.push('/home/notifications')`.
+
+### [BUG-039] Profile screen hardcoded followers/following = 0
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Fix:** Added `myFollowersCount`/`myFollowingCount` to backend and profile query.
+
+### [BUG-040] Leaderboard contributors tab showed quiz stats instead of karma
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Fix:** Fixed leaderboard schema and Flutter UI to show postKarma/commentKarma/totalKarma for contributors.
+
+### [BUG-041] Scanner landing page shows no credit cost before submission
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Fix:** Added "1 AI credit per submission" banner to ScannerLandingPage.
+
+### [BUG-042] DashboardHeroHeader > 250 lines (violates AGENTS.md rule)
+**Priority:** ⚪ LOW → ✅ RESOLVED
+**Fix:** Extracted HeroStatTile, DailyGoalRingTile, StreakDotsRow into `dashboard_hero_tiles.dart`.
+
+### [BUG-043] NotificationPreferencesScreen UI-only, no backend save
+**Priority:** 🟢 MEDIUM → ✅ RESOLVED
+**Fix:** Wired to `kProfileNotificationPreferences` query and `kUpdateProfileNotificationPreferences` mutation.
+
+### [BUG-044] No Study tab in bottom nav — Materials/Quizzes/Scanner buried behind dashboard
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Fix:** Created `StudyHubScreen` as Tab 1 with Materials (search+filter), Quizzes, and Tools sections.
+
+### [BUG-045] Stale route references (`/discover`, `/inbox`) after nav restructure
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Fix:** Updated all push calls to `/circles/discover` and `/circles/inbox`.
+
+
 ### [BUG-035] Login UX hides credential/server failures behind raw or unclear errors
 **Priority:** 🟡 HIGH → ✅ RESOLVED
 **Location:** `lib/features/auth/presentation/providers/auth_provider.dart`, `lib/features/auth/presentation/screens/login_form.dart`, `lib/features/auth/presentation/screens/login_biometric_tile.dart`, `lib/core/graphql/queries/domain/auth_queries.dart`

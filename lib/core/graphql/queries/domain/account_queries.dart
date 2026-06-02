@@ -7,7 +7,9 @@ query Leaderboard {
 const String kLeaderboardRankings = r'''
 query LeaderboardRankings($category: String, $limit: Int) {
   leaderboard(category: $category, limit: $limit) {
-    username score quizCount questionsCorrect
+    username avatarUrl score
+    quizCount questionsCorrect
+    postKarma commentKarma totalKarma helpfulAnswers
   }
 }
 ''';

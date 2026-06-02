@@ -41,7 +41,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         document: gql(kProfile),
         fetchPolicy: FetchPolicy.networkOnly,
       ),
-      builder: (QueryResult result, {VoidCallback? refetch, FetchMore? fetchMore}) {
+      builder: (QueryResult result,
+          {VoidCallback? refetch, FetchMore? fetchMore}) {
         if (result.isLoading) {
           return Scaffold(
             body: ListView(
@@ -60,7 +61,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           return Scaffold(
             appBar: AppBar(
               title: Text('Profile',
-                  style: Theme.of(context).textTheme.titleLarge
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
                       ?.copyWith(fontWeight: FontWeight.w700)),
               centerTitle: true,
             ),
@@ -81,10 +84,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         final postKarma = (profile?['postKarma'] as num?)?.toInt() ?? 0;
         final commentKarma = (profile?['commentKarma'] as num?)?.toInt() ?? 0;
         final awardKarma = (profile?['awardKarma'] as num?)?.toInt() ?? 0;
-        final totalKarma = (profile?['totalKarma'] as num?)?.toInt() ?? 0;
+        final totalKarma = postKarma + commentKarma + awardKarma;
         final createdAt = profile?['createdAt']?.toString();
-        final achievements = (result.data?['me']?['achievements'] as List?)
-                ?.cast<Map<String, dynamic>>() ?? [];
+        final followers =
+            (result.data?['myFollowersCount'] as num?)?.toInt() ?? 0;
+        final following =
+            (result.data?['myFollowingCount'] as num?)?.toInt() ?? 0;
+        final achievements =
+            (me?['achievements'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
         return Scaffold(
           body: CustomScrollView(
@@ -100,8 +107,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 totalKarma: totalKarma,
                 createdAt: createdAt,
                 isOwnProfile: true,
-                followers: 0,
-                following: 0,
+                followers: followers,
+                following: following,
               ),
               if (achievements.isNotEmpty)
                 SliverToBoxAdapter(
@@ -163,7 +170,8 @@ class _AchievementsRow extends StatelessWidget {
             child: Column(
               children: [
                 Container(
-                  width: 44, height: 44,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: DesignTokens.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -172,9 +180,13 @@ class _AchievementsRow extends StatelessWidget {
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: Image.network(iconUrl,
-                              width: 44, height: 44, fit: BoxFit.cover,
+                              width: 44,
+                              height: 44,
+                              fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => Icon(
-                                  _achIcon(category), color: DesignTokens.primary, size: 22)),
+                                  _achIcon(category),
+                                  color: DesignTokens.primary,
+                                  size: 22)),
                         )
                       : Icon(_achIcon(category),
                           color: DesignTokens.primary, size: 22),
@@ -182,7 +194,8 @@ class _AchievementsRow extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(name,
                     style: const TextStyle(fontSize: 10),
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
               ],
             ),
           );
@@ -193,11 +206,16 @@ class _AchievementsRow extends StatelessWidget {
 
   IconData _achIcon(String cat) {
     switch (cat) {
-      case 'community': return Icons.groups_rounded;
-      case 'content': return Icons.article_rounded;
-      case 'engagement': return Icons.chat_rounded;
-      case 'milestone': return Icons.emoji_events_rounded;
-      default: return Icons.auto_awesome_rounded;
+      case 'community':
+        return Icons.groups_rounded;
+      case 'content':
+        return Icons.article_rounded;
+      case 'engagement':
+        return Icons.chat_rounded;
+      case 'milestone':
+        return Icons.emoji_events_rounded;
+      default:
+        return Icons.auto_awesome_rounded;
     }
   }
 }

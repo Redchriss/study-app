@@ -19,7 +19,9 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabCtrl;
   int _tab = 0;
   PostCardLayout _layout = PostCardLayout.card;
   bool _layoutLoaded = false;
@@ -27,7 +29,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _tabCtrl = TabController(length: _tabs.length, vsync: this)
+      ..addListener(() {
+        if (_tabCtrl.indexIsChanging) return;
+        setState(() => _tab = _tabCtrl.index);
+      });
     _loadLayout();
+  }
+
+  @override
+  void dispose() {
+    _tabCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _loadLayout() async {
@@ -89,9 +102,14 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.dashboard_rounded),
-            tooltip: 'Study Dashboard',
-            onPressed: () => context.push('/dashboard'),
+            icon: const Icon(Icons.inbox_outlined),
+            tooltip: 'Inbox',
+            onPressed: () => context.push('/circles/inbox'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.explore_outlined),
+            tooltip: 'Discover communities',
+            onPressed: () => context.push('/circles/discover'),
           ),
         ],
       ),
@@ -112,7 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? DesignTokens.darkSurfaceVariant
                           : DesignTokens.surfaceVariant,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                        borderRadius:
+                            BorderRadius.circular(DesignTokens.radiusMd),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
@@ -122,10 +141,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 TabBar(
+                  controller: _tabCtrl,
                   tabs: _tabs.map((t) => Tab(text: t)).toList(),
                   isScrollable: false,
                   indicatorSize: TabBarIndicatorSize.label,
-                  onTap: (i) => setState(() => _tab = i),
                   labelColor: DesignTokens.primary,
                   unselectedLabelColor: DesignTokens.textSecondary,
                 ),
@@ -160,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           subtitle:
                               'Your feed is empty. Discover communities to follow.',
                           actionLabel: 'Discover',
-                          onAction: () => context.push('/discover'),
+                          onAction: () => context.push('/circles/discover'),
                         );
                       }
 

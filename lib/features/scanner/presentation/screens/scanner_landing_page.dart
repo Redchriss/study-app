@@ -44,6 +44,60 @@ class ScannerLandingPage extends StatelessWidget {
                     fontSize: 15,
                     height: 1.4),
               ),
+              const SizedBox(height: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF7C4DFF).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: const Color(0xFF7C4DFF).withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.bolt_rounded,
+                        size: 16, color: Color(0xFF7C4DFF)),
+                    SizedBox(width: 6),
+                    Text(
+                      'Costs 1 AI credit per submission',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF7C4DFF)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF7C4DFF).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: const Color(0xFF7C4DFF).withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.bolt_rounded,
+                        size: 16, color: Color(0xFF7C4DFF)),
+                    SizedBox(width: 6),
+                    Text(
+                      'Costs 1 AI credit per submission',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF7C4DFF)),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 48),
               Expanded(
                 child: AnimatedPress(

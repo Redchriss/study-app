@@ -6,11 +6,18 @@ query Profile {
     id username email
     profile {
       avatarUrl
+      bannerUrl
+      bio
+      createdAt
       studyStreak studyPoints aiCredits
       educationLevel
       onboardingComplete
+      postKarma commentKarma awardKarma
     }
+    achievements { achievement { id name category iconUrl } }
   }
+  myFollowersCount
+  myFollowingCount
 }
 ''';
 

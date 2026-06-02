@@ -2,7 +2,6 @@ import 'package:go_router/go_router.dart';
 import '../../features/circles/presentation/screens/community_screen.dart';
 import '../../features/circles/presentation/screens/post_detail_screen.dart';
 import '../../features/circles/presentation/screens/create_post_screen.dart';
-import '../../features/circles/presentation/screens/discover_screen.dart';
 import '../../features/circles/presentation/screens/create_community_screen.dart';
 import '../../features/circles/presentation/screens/search_screen.dart';
 import '../../features/circles/presentation/screens/mod_panel_screen.dart';
@@ -46,7 +45,6 @@ List<GoRoute> get communityRoutes => [
         builder: (_, state) =>
             UserProfileScreen(username: state.pathParameters['username']!),
       ),
-      GoRoute(path: '/discover', builder: (_, __) => const DiscoverScreen()),
       GoRoute(
         path: '/search',
         builder: (_, state) => SearchScreen(

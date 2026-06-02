@@ -12,6 +12,7 @@ import '../features/circles/presentation/screens/home_screen.dart';
 import '../features/circles/presentation/screens/discover_screen.dart';
 import '../features/circles/presentation/screens/inbox_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
+import '../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../features/notifications/presentation/screens/notifications_screen.dart';
 import '../features/notifications/presentation/screens/modmail_thread_list.dart';
 import '../features/notifications/presentation/screens/modmail_thread_detail.dart';
@@ -21,8 +22,8 @@ import '../core/services/analytics_service.dart';
 import 'shell.dart';
 import 'routes/community_routes.dart';
 import 'routes/app_routes.dart';
+import 'study_hub_screen.dart';
 
-/// Logs screen views to analytics on every navigation.
 class _AnalyticsObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
@@ -35,8 +36,8 @@ class _AnalyticsObserver extends NavigatorObserver {
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
     if (newRoute != null) {
-      final name = newRoute.settings.name ?? newRoute.settings.toString();
-      AnalyticsService.logScreenView(name);
+      AnalyticsService.logScreenView(
+          newRoute.settings.name ?? newRoute.settings.toString());
     }
   }
 
@@ -44,9 +45,8 @@ class _AnalyticsObserver extends NavigatorObserver {
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
     if (previousRoute != null) {
-      final name =
-          previousRoute.settings.name ?? previousRoute.settings.toString();
-      AnalyticsService.logScreenView(name);
+      AnalyticsService.logScreenView(
+          previousRoute.settings.name ?? previousRoute.settings.toString());
     }
   }
 }
@@ -69,9 +69,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (!auth.isAuthenticated) {
         if (['/login', '/register', '/onboarding'].contains(location) ||
-            isKidsRoute) {
-          return null;
-        }
+            isKidsRoute) return null;
         if (location == '/splash') return '/onboarding';
         return '/onboarding';
       }
@@ -82,12 +80,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         return profileComplete ? '/home' : '/setup';
       }
       if (!profileComplete && location != '/setup') return '/setup';
-
       if (profileComplete &&
           ['/login', '/register', '/onboarding'].contains(location)) {
         return '/home';
       }
-
       return null;
     },
     routes: [
@@ -99,21 +95,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(path: '/setup', builder: (_, __) => const ProfileSetupScreen()),
 
-      // Standalone AI Tutor route (keep accessible from quick actions)
+      // AI Tutor — full screen, no shell (pushed from anywhere)
       GoRoute(path: '/ai-tutor', builder: (_, __) => const AiTutorScreen()),
 
       ...appRoutes,
 
-      // Main shell with bottom nav: Home | Discover | Inbox | Profile
+      // ── Shell: 4 tabs ──────────────────────────────────────────
+      // Tab 0: Home (Dashboard)
+      // Tab 1: Study hub (Materials + Quizzes + Scanner)
+      // Tab 2: Circles (community feed + discover + inbox)
+      // Tab 3: Profile
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             MainShell(navigationShell: navigationShell),
         branches: [
+          // ── Tab 0: Dashboard ──────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (_, __) => const HomeScreen(),
+                builder: (_, __) => const DashboardScreen(),
                 routes: [
                   GoRoute(
                     path: 'notifications',
@@ -123,18 +124,35 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          // ── Tab 1: Study hub ──────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
-                  path: '/discover',
-                  builder: (_, __) => const DiscoverScreen()),
+                path: '/study',
+                builder: (_, __) => const StudyHubScreen(),
+              ),
             ],
           ),
+          // ── Tab 2: Circles ───────────────────────────────────
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/inbox', builder: (_, __) => const InboxScreen()),
+              GoRoute(
+                path: '/circles',
+                builder: (_, __) => const HomeScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'discover',
+                    builder: (_, __) => const DiscoverScreen(),
+                  ),
+                  GoRoute(
+                    path: 'inbox',
+                    builder: (_, __) => const InboxScreen(),
+                  ),
+                ],
+              ),
             ],
           ),
+          // ── Tab 3: Profile ───────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(

@@ -176,36 +176,65 @@ class _LeaderboardTab extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Icons.check_circle_rounded,
-                                size: 12, color: DesignTokens.success),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${e['questionsCorrect'] ?? 0} correct',
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: DesignTokens.textSecondary),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('•',
-                                style: TextStyle(
-                                    color: DesignTokens.textTertiary,
-                                    fontSize: 12)),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.analytics_rounded,
-                                size: 12, color: DesignTokens.primary),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${e['score']?.toStringAsFixed(0) ?? '0'} avg',
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: DesignTokens.textSecondary),
-                            ),
-                          ],
-                        ),
+                        if (category == 'learners')
+                          Row(
+                            children: [
+                              const Icon(Icons.check_circle_rounded,
+                                  size: 12, color: DesignTokens.success),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${e['questionsCorrect'] ?? 0} correct',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: DesignTokens.textSecondary),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('•',
+                                  style: TextStyle(
+                                      color: DesignTokens.textTertiary,
+                                      fontSize: 12)),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.analytics_rounded,
+                                  size: 12, color: DesignTokens.primary),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${(e['score'] as num?)?.toStringAsFixed(0) ?? '0'} avg',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: DesignTokens.textSecondary),
+                              ),
+                            ],
+                          )
+                        else
+                          Row(
+                            children: [
+                              const Icon(Icons.arrow_upward_rounded,
+                                  size: 12, color: DesignTokens.secondary),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${e['postKarma'] ?? 0} post karma',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: DesignTokens.textSecondary),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('•',
+                                  style: TextStyle(
+                                      color: DesignTokens.textTertiary,
+                                      fontSize: 12)),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${e['helpfulAnswers'] ?? 0} answers',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: DesignTokens.textSecondary),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
@@ -219,11 +248,18 @@ class _LeaderboardTab extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.quiz_rounded,
-                            size: 14, color: DesignTokens.primary),
+                        Icon(
+                          category == 'learners'
+                              ? Icons.quiz_rounded
+                              : Icons.star_rounded,
+                          size: 14,
+                          color: DesignTokens.primary,
+                        ),
                         const SizedBox(width: 6),
                         Text(
-                          '${e['quizCount'] ?? 0}',
+                          category == 'learners'
+                              ? '${e['quizCount'] ?? 0}'
+                              : '${e['totalKarma'] ?? 0}',
                           style: const TextStyle(
                               fontSize: 13,
                               color: DesignTokens.primary,

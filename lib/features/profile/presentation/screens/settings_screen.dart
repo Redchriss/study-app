@@ -54,7 +54,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Icons.folder_special_outlined, 'My Uploads', '/my-uploads'),
       ]),
       _SettingsItem('Community', Icons.groups_outlined, [
-        _SettingsSub(Icons.notifications_outlined, 'Notifications', '/inbox'),
+        _SettingsSub(Icons.notifications_outlined, 'Notifications', '/circles/inbox'),
       ]),
       _SettingsItem('Appearance', Icons.palette_outlined, [
         _SettingsSub(Icons.brightness_auto_outlined, 'Theme', null,
