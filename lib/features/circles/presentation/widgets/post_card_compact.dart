@@ -93,10 +93,16 @@ class CompactPostCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 2),
-                  Text(
-                    'y/${community?['name'] ?? '?'} • u/${author?['username'] ?? '?'}',
-                    style: const TextStyle(
-                        fontSize: 11, color: DesignTokens.textTertiary),
+                  Row(
+                    children: [
+                      _CompactCommunityAvatar(community: community),
+                      const SizedBox(width: 4),
+                      Text(
+                        'y/${community?['name'] ?? '?'} • u/${author?['username'] ?? '?'}',
+                        style: const TextStyle(
+                            fontSize: 11, color: DesignTokens.textTertiary),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -133,5 +139,30 @@ class CompactPostCard extends StatelessWidget {
     final n = (val as num?)?.toInt() ?? 0;
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
     return n.toString();
+  }
+}
+
+class _CompactCommunityAvatar extends StatelessWidget {
+  final Map<String, dynamic>? community;
+  const _CompactCommunityAvatar({this.community});
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = community?['icon']?.toString() ?? '';
+    final name = community?['name']?.toString() ?? '?';
+    final letter = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return CircleAvatar(
+      radius: 8,
+      backgroundColor: DesignTokens.primary.withValues(alpha: 0.15),
+      backgroundImage: icon.isNotEmpty ? NetworkImage(icon) : null,
+      onBackgroundImageError: icon.isNotEmpty ? (_, __) {} : null,
+      child: icon.isEmpty
+          ? Text(letter,
+              style: const TextStyle(
+                  fontSize: 7,
+                  fontWeight: FontWeight.w800,
+                  color: DesignTokens.primary))
+          : null,
+    );
   }
 }

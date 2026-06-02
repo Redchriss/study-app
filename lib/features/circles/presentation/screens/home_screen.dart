@@ -9,8 +9,8 @@ import '../../../../core/errors/app_exception.dart';
 import '../widgets/post_card.dart';
 import 'home_drawer.dart';
 
-final _tabs = ['Best', 'Hot', 'New', 'Rising'];
-final _tabSorts = ['best', 'hot', 'new', 'rising'];
+final _tabs = ['Best', 'Hot', 'New', 'Rising', 'Popular'];
+final _tabSorts = ['best', 'hot', 'new', 'rising', 'popular'];
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home',
+        title: Text('Circles',
             style: theme.textTheme.titleLarge
                 ?.copyWith(fontWeight: FontWeight.w800)),
         centerTitle: false,
@@ -152,8 +152,10 @@ class _HomeScreenState extends State<HomeScreen>
                   child: Query(
                     key: ValueKey('home_$_tab'),
                     options: QueryOptions(
-                      document: gql(kHomeFeed),
-                      variables: {'sort': _tabSorts[_tab], 'limit': 25},
+                      document: gql(_tab == 4 ? kPopularPosts : kHomeFeed),
+                      variables: _tab == 4
+                          ? {'limit': 25}
+                          : {'sort': _tabSorts[_tab], 'limit': 25},
                       fetchPolicy: FetchPolicy.networkOnly,
                     ),
                     builder: (result, {fetchMore, refetch}) {
@@ -166,7 +168,8 @@ class _HomeScreenState extends State<HomeScreen>
                         );
                       }
 
-                      final feed = result.data?['homeFeed'];
+                      final feedKey = _tab == 4 ? 'popularPosts' : 'homeFeed';
+                      final feed = result.data?[feedKey];
                       final edges = (feed?['edges'] as List?) ?? [];
                       final posts = edges
                           .map((e) => e['node'] as Map<String, dynamic>)
@@ -175,9 +178,12 @@ class _HomeScreenState extends State<HomeScreen>
                       if (posts.isEmpty) {
                         return EmptyState(
                           icon: Icons.group_outlined,
-                          title: 'Join some communities',
-                          subtitle:
-                              'Your feed is empty. Discover communities to follow.',
+                          title: _tab == 4
+                              ? 'Nothing trending yet'
+                              : 'Join some communities',
+                          subtitle: _tab == 4
+                              ? 'Check back soon for popular posts.'
+                              : 'Your feed is empty. Discover communities to follow.',
                           actionLabel: 'Discover',
                           onAction: () => context.push('/circles/discover'),
                         );
@@ -195,18 +201,18 @@ class _HomeScreenState extends State<HomeScreen>
                                 fetchMore?.call(FetchMoreOptions(
                                   variables: {'after': pageInfo['endCursor']},
                                   updateQuery: (prev, next) {
-                                    if (next?['homeFeed'] == null) return prev;
+                                    if (next?[feedKey] == null) return prev;
                                     final merged =
                                         Map<String, dynamic>.from(prev ?? {});
                                     final prevFeed = Map<String, dynamic>.from(
-                                        prev?['homeFeed'] ?? {});
+                                        prev?[feedKey] ?? {});
                                     final nextFeed = Map<String, dynamic>.from(
-                                        next!['homeFeed']);
+                                        next![feedKey]);
                                     final prevEdges =
                                         (prevFeed['edges'] as List?) ?? [];
                                     final nextEdges =
                                         (nextFeed['edges'] as List?) ?? [];
-                                    merged['homeFeed'] = {
+                                    merged[feedKey] = {
                                       ...nextFeed,
                                       'edges': [
                                         ...prevEdges,
