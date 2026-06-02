@@ -27,7 +27,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
 
-  bool _loading = false;
+  bool _loading = false; // kept for local UI only (page transitions)
 
   @override
   void dispose() {
@@ -87,16 +87,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
       return;
     }
-    setState(() => _loading = true);
     final ok = await ref.read(authProvider.notifier).register(
           _usernameCtrl.text.trim(),
           _emailCtrl.text.trim(),
           _passwordCtrl.text,
           phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
         );
-    if (mounted) setState(() => _loading = false);
     if (!mounted) return;
-
     if (ok) {
       return;
     } else {
@@ -189,39 +186,43 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   height: 56,
-                  child: FilledButton(
-                    onPressed: _loading ? null : _nextPage,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: DesignTokens.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                  child: Builder(builder: (context) {
+                    final isSubmitting = ref.watch(authProvider).isSubmitting;
+                    return FilledButton(
+                      onPressed: isSubmitting ? null : _nextPage,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: DesignTokens.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
                       ),
-                      elevation: 0,
-                    ),
-                    child: _loading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2))
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _currentPage == 2
-                                    ? 'Create Account'
-                                    : 'Continue',
-                                style: const TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w800),
-                              ),
-                              if (_currentPage < 2) ...[
-                                const SizedBox(width: 8),
-                                const Icon(Icons.arrow_forward_rounded,
-                                    size: 20),
+                      child: isSubmitting
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2))
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _currentPage == 2
+                                      ? 'Create Account'
+                                      : 'Continue',
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800),
+                                ),
+                                if (_currentPage < 2) ...[
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.arrow_forward_rounded,
+                                      size: 20),
+                                ],
                               ],
-                            ],
-                          ),
-                  ),
+                            ),
+                    );
+                  }),
                 ),
               ),
             ],

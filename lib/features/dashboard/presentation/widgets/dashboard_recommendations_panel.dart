@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import '../../../../core/graphql/client.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../providers/dashboard_data.dart';
 
-class DashboardRecommendationsPanel extends StatefulWidget {
+class DashboardRecommendationsPanel extends ConsumerStatefulWidget {
   final DashboardData data;
   const DashboardRecommendationsPanel({super.key, required this.data});
 
   @override
-  State<DashboardRecommendationsPanel> createState() =>
+  ConsumerState<DashboardRecommendationsPanel> createState() =>
       _DashboardRecommendationsPanelState();
 }
 
 class _DashboardRecommendationsPanelState
-    extends State<DashboardRecommendationsPanel> {
+    extends ConsumerState<DashboardRecommendationsPanel> {
   late Future<QueryResult?> _planFuture;
 
   @override
@@ -29,7 +30,7 @@ class _DashboardRecommendationsPanelState
 
   Future<QueryResult?> _loadAdaptivePlan() async {
     try {
-      final client = buildGraphQLClient();
+      final client = ref.read(graphqlClientProvider);
       return client.query(
         QueryOptions(
           document: gql(kAdaptiveStudyPlan),
@@ -209,7 +210,7 @@ class _DashboardRecommendationsPanelState
                     onPressed: () => context.push('/ai-tutor'),
                     icon: const Icon(Icons.play_arrow_rounded, size: 18),
                     label: Text(d.focusTopic.isNotEmpty
-                        ? 'Study $d.focusTopic'
+                        ? 'Study ${d.focusTopic}'
                         : 'Start Study Session'),
                   ),
                 ),

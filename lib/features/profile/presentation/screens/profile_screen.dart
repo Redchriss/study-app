@@ -94,8 +94,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             (me?['achievements'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
         return Scaffold(
-          body: CustomScrollView(
-            slivers: [
+          body: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
               ProfileHeader(
                 avatarUrl: avatarUrl,
                 bannerUrl: bannerUrl,
@@ -117,30 +117,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               SliverToBoxAdapter(
                 child: _ProfileActions(isOwnProfile: true, username: username),
               ),
-              SliverToBoxAdapter(
-                child: TabBar(
-                  controller: _tabCtrl,
-                  tabs: const [
-                    Tab(text: 'Posts'),
-                    Tab(text: 'Comments'),
-                    Tab(text: 'Saved'),
-                  ],
-                  labelColor: DesignTokens.primary,
-                  unselectedLabelColor: DesignTokens.textSecondary,
-                  indicatorSize: TabBarIndicatorSize.label,
-                ),
-              ),
-              SliverFillRemaining(
-                child: TabBarView(
-                  controller: _tabCtrl,
-                  children: [
-                    ProfilePostsTab(username: username),
-                    ProfileCommentsTab(username: username),
-                    const ProfileSavedTab(),
-                  ],
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _TabBarDelegate(
+                  TabBar(
+                    controller: _tabCtrl,
+                    tabs: const [
+                      Tab(text: 'Posts'),
+                      Tab(text: 'Comments'),
+                      Tab(text: 'Saved'),
+                    ],
+                    labelColor: DesignTokens.primary,
+                    unselectedLabelColor: DesignTokens.textSecondary,
+                    indicatorSize: TabBarIndicatorSize.label,
+                  ),
                 ),
               ),
             ],
+            body: TabBarView(
+              controller: _tabCtrl,
+              children: [
+                ProfilePostsTab(username: username),
+                ProfileCommentsTab(username: username),
+                const ProfileSavedTab(),
+              ],
+            ),
           ),
         );
       },
@@ -255,4 +256,27 @@ class _ProfileActions extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _TabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar tabBar;
+  const _TabBarDelegate(this.tabBar);
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      color: dark ? DesignTokens.darkBackground : DesignTokens.background,
+      child: tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_TabBarDelegate old) => false;
 }

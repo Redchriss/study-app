@@ -78,3 +78,5 @@ query NotificationPreferences {
   }
 }
 ''';
+
+// kUpdateProfile is defined in auth_queries.dart — do not duplicate here.
