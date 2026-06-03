@@ -2,19 +2,11 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 
 class OnboardingLastPageActions extends StatelessWidget {
-  final String? preferredLevel;
-  final String preferredGoal;
-  final ValueChanged<String> onLevelSelected;
-  final ValueChanged<String> onGoalSelected;
   final VoidCallback onGetStarted;
   final VoidCallback onLogin;
 
   const OnboardingLastPageActions({
     super.key,
-    required this.preferredLevel,
-    required this.preferredGoal,
-    required this.onLevelSelected,
-    required this.onGoalSelected,
     required this.onGetStarted,
     required this.onLogin,
   });
@@ -38,9 +30,9 @@ class OnboardingLastPageActions extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: const Text("Get Started — Free",
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                  child: const Text('Get Started — Free',
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w800)),
                 ),
               ),
             ),
@@ -52,14 +44,14 @@ class OnboardingLastPageActions extends StatelessWidget {
                   onPressed: onLogin,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side:
-                        BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+                    side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.5)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),
                   child: const Text('Log In',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w700)),
                 ),
               ),
             ),

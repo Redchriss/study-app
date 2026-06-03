@@ -1,8 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/services/app_preferences_service.dart';
-
 import 'onboarding_data.dart';
 import 'onboarding_last_page_actions.dart';
 import 'onboarding_next_button.dart';
@@ -64,8 +62,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               duration: const Duration(milliseconds: 500),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment(math.cos(_bgAnim.value * math.pi) * 0.3, -1),
-                  end: Alignment(math.sin(_bgAnim.value * math.pi) * 0.3, 1),
+                  begin: Alignment(
+                      math.cos(_bgAnim.value * math.pi) * 0.3, -1),
+                  end: Alignment(
+                      math.sin(_bgAnim.value * math.pi) * 0.3, 1),
                   colors: data.gradient,
                 ),
               ),
@@ -103,8 +103,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             child: Column(
               children: [
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -159,10 +159,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                   child: isLast
                       ? OnboardingLastPageActions(
-                          preferredLevel: null,
-                          preferredGoal: 'read',
-                          onLevelSelected: (_) {},
-                          onGoalSelected: (_) {},
                           onGetStarted: () => context.go('/register'),
                           onLogin: () => context.go('/login'),
                         )

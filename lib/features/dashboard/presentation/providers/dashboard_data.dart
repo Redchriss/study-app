@@ -106,7 +106,9 @@ class DashboardData {
         .toList();
 
     return DashboardData(
-      name: me?['username']?.toString() ?? 'Student',
+      name: (me?['firstName']?.toString().isNotEmpty == true)
+          ? me!['firstName'].toString()
+          : me?['username']?.toString() ?? 'Student',
       educationLevel:
           profile?['educationLevel']?.toString() ?? 'secondary',
       streak: (profile?['studyStreak'] as num?)?.toInt() ?? 0,

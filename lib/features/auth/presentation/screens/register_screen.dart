@@ -22,6 +22,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey2 = GlobalKey<FormState>();
 
   final _usernameCtrl = TextEditingController();
+  final _fullNameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -33,6 +34,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   void dispose() {
     _pageController.dispose();
     _usernameCtrl.dispose();
+    _fullNameCtrl.dispose();
     _emailCtrl.dispose();
     _phoneCtrl.dispose();
     _passwordCtrl.dispose();
@@ -92,6 +94,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           _emailCtrl.text.trim(),
           _passwordCtrl.text,
           phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
+          fullName: _fullNameCtrl.text.trim().isEmpty ? null : _fullNameCtrl.text.trim(),
         );
     if (!mounted) return;
     if (ok) {
@@ -161,6 +164,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     RegisterStepUsername(
                       formKey: _formKey0,
                       controller: _usernameCtrl,
+                      fullNameCtrl: _fullNameCtrl,
                       dark: dark,
                       onContinue: _nextPage,
                     ),

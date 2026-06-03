@@ -256,18 +256,24 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> register(String username, String email, String password,
-      {String? phone}) async {
+      {String? phone, String? fullName}) async {
     try {
       state = const AuthState(isAuthenticated: false, isLoading: true);
       final client = ref.read(graphqlClientProvider);
+      final variables = {
+        'username': username,
+        'email': email,
+        'password': password,
+        'phone': phone,
+      };
+      if (fullName != null && fullName.isNotEmpty) {
+        final parts = fullName.trim().split(' ');
+        variables['firstName'] = parts.first;
+        if (parts.length > 1) variables['lastName'] = parts.skip(1).join(' ');
+      }
       final result = await client.mutate(MutationOptions(
         document: gql(kRegister),
-        variables: {
-          'username': username,
-          'email': email,
-          'password': password,
-          'phone': phone
-        },
+        variables: variables,
       ));
 
       if (result.hasException) {

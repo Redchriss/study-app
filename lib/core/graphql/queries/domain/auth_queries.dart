@@ -8,8 +8,8 @@ mutation Login($username: String!, $password: String!) {
 ''';
 
 const String kRegister = r'''
-mutation Register($username: String!, $email: String!, $password: String!, $phone: String) {
-  register(username: $username, email: $email, password: $password, phone: $phone) {
+mutation Register($username: String!, $email: String!, $password: String!, $phone: String, $firstName: String, $lastName: String) {
+  register(username: $username, email: $email, password: $password, phone: $phone, firstName: $firstName, lastName: $lastName) {
     success
     errors
     token

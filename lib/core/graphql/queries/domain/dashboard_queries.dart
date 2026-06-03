@@ -3,6 +3,8 @@ query Dashboard {
   me {
     id
     username
+    firstName
+    lastName
     email
     profile {
       educationLevel

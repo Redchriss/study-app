@@ -63,18 +63,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
       final isKidsRoute = location == '/kids' || location.startsWith('/kids/');
 
-      // Never redirect while auth is in progress
       if (auth.isLoading || auth.isSubmitting || auth.biometricRequired) {
         return location == '/splash' || isKidsRoute ? null : '/splash';
       }
 
       if (!auth.isAuthenticated) {
-        const authRoutes = ['/login', '/register', '/onboarding', '/splash'];
+        const authRoutes = ['/login', '/register', '/splash'];
         if (authRoutes.contains(location) || isKidsRoute) return null;
-        return '/onboarding';
+        return '/login';
       }
 
-      // Authenticated below this line
       final profileComplete =
           auth.user?['profile']?['onboardingComplete'] == true;
 
@@ -83,16 +81,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (!profileComplete && location != '/setup') {
-        // Don't redirect away from auth screens — prevents post-login loop
-        const authRoutes = ['/login', '/register', '/onboarding'];
+        const authRoutes = ['/login', '/register'];
         if (authRoutes.contains(location)) return null;
         return '/setup';
       }
 
       if (profileComplete &&
-          ['/login', '/register', '/onboarding'].contains(location)) {
+          ['/login', '/register'].contains(location)) {
         return '/home';
       }
+
       return null;
     },
     routes: [
