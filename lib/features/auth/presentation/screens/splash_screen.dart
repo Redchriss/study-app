@@ -19,23 +19,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final Animation<double> _scaleAnim;
   late final Animation<double> _fadeAnim;
   Timer? _timeoutTimer;
+  bool _showSlowHint = false;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: const Duration(milliseconds: 1200),
     );
     _scaleAnim = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(
           parent: _controller,
-          curve: const Interval(0.0, 0.5, curve: Curves.elasticOut)),
+          curve: const Interval(0.0, 0.6, curve: Curves.elasticOut)),
     );
     _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
           parent: _controller,
-          curve: const Interval(0.4, 0.7, curve: Curves.easeOut)),
+          curve: const Interval(0.3, 0.7, curve: Curves.easeOut)),
     );
     _controller.forward();
     WidgetsBinding.instance.addPostFrameCallback((_) => _listen());
@@ -43,6 +44,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _timeoutTimer = Timer(const Duration(seconds: 20), () {
       if (!mounted) return;
       context.go('/onboarding');
+    });
+    // Show slow connection hint after 5s
+    Timer(const Duration(seconds: 5), () {
+      if (mounted && ref.read(authProvider).isLoading) {
+        setState(() => _showSlowHint = true);
+      }
     });
   }
 
@@ -162,20 +169,34 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               bottom: MediaQuery.of(context).size.height * 0.12,
               left: 0,
               right: 0,
-              child: Opacity(
-                opacity: _controller.value > 0.8
-                    ? (_controller.value - 0.8) / 0.2
-                    : 0.0,
-                child: const Center(
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white54,
-                      strokeWidth: 2.5,
+              child: Column(
+                children: [
+                  Opacity(
+                    opacity: _controller.value > 0.6
+                        ? ((_controller.value - 0.6) / 0.4).clamp(0.0, 1.0)
+                        : 0.0,
+                    child: const Center(
+                      child: SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(
+                          color: Colors.white54,
+                          strokeWidth: 2.5,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (_showSlowHint) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Connecting to server...',
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
