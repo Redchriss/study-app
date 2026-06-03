@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import '../../../../core/theme/design_tokens.dart';
 import '../providers/ai_tutor_provider.dart';
 import '../widgets/ai_tutor_app_bar.dart';
 import '../widgets/ai_tutor_header.dart';
@@ -9,6 +8,7 @@ import '../widgets/ai_tutor_input_bar.dart';
 import '../widgets/ai_tutor_preferences_sheet.dart';
 import '../widgets/ai_tutor_typing_indicator.dart';
 import 'ai_tutor_chat_widgets.dart';
+import 'ai_tutor_error_bottom_sheet.dart';
 import 'ai_tutor_mode_helpers.dart';
 
 class AiTutorScreen extends ConsumerStatefulWidget {
@@ -124,66 +124,13 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 32,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: DesignTokens.textTertiary.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Icon(Icons.wifi_off_rounded, color: DesignTokens.error),
-                  const SizedBox(width: 8),
-                  Text('Connection lost',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(error,
-                  style: const TextStyle(
-                      color: DesignTokens.textSecondary, fontSize: 13)),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    ref.read(aiTutorProvider.notifier).clearError();
-                    ref.read(aiTutorProvider.notifier).retry();
-                  },
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Retry'),
-                ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    ref.read(aiTutorProvider.notifier).clearError();
-                  },
-                  child: const Text('Dismiss'),
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (_) => AiTutorErrorBottomSheet(
+        error: error,
+        onRetry: () {
+          ref.read(aiTutorProvider.notifier).clearError();
+          ref.read(aiTutorProvider.notifier).retry();
+        },
+        onDismiss: () => ref.read(aiTutorProvider.notifier).clearError(),
       ),
     );
   }

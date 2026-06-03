@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
+import 'community_divider.dart';
+import 'community_rules_section.dart';
+import 'community_moderators_section.dart';
 
 class CommunityInfoSection extends StatelessWidget {
   final Map<String, dynamic> community;
@@ -48,7 +51,7 @@ class CommunityInfoSection extends StatelessWidget {
               ),
             ),
           ),
-          _Divider(dark: dark),
+          CommunityDivider(dark: dark),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
@@ -61,7 +64,7 @@ class CommunityInfoSection extends StatelessWidget {
               ],
             ),
           ),
-          _Divider(dark: dark),
+          CommunityDivider(dark: dark),
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -82,7 +85,7 @@ class CommunityInfoSection extends StatelessWidget {
             ),
           ),
           if (community['communityType'] != null) ...[
-            _Divider(dark: dark),
+            CommunityDivider(dark: dark),
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -106,94 +109,9 @@ class CommunityInfoSection extends StatelessWidget {
               ),
             ),
           ],
-          if (rules.isNotEmpty) ...[
-            _Divider(dark: dark),
-            _sectionHeader('Rules'),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: Column(
-                children: rules.asMap().entries.map((e) {
-                  final r = e.value;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${e.key + 1}.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: dark
-                                ? DesignTokens.darkTextPrimary
-                                : DesignTokens.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                r['title']?.toString() ?? '',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: dark
-                                      ? DesignTokens.darkTextPrimary
-                                      : DesignTokens.textPrimary,
-                                ),
-                              ),
-                              if (r['description'] != null &&
-                                  r['description'].toString().isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 2),
-                                  child: Text(
-                                    r['description'].toString(),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: dark
-                                          ? DesignTokens.darkTextSecondary
-                                          : DesignTokens.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-          if (moderators.isNotEmpty) ...[
-            _Divider(dark: dark),
-            _sectionHeader('Moderators'),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: Column(
-                children: moderators.map((m) {
-                  final user = m['user'] as Map<String, dynamic>?;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.shield_rounded,
-                            size: 14, color: DesignTokens.primary),
-                        const SizedBox(width: 6),
-                        Text(
-                          'u/${user?['username'] ?? 'unknown'}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
+          if (rules.isNotEmpty) CommunityRulesSection(rules: rules, dark: dark),
+          if (moderators.isNotEmpty)
+            CommunityModeratorsSection(moderators: moderators, dark: dark),
         ],
       ),
     );
@@ -256,18 +174,5 @@ class CommunityInfoSection extends StatelessWidget {
       default:
         return type;
     }
-  }
-}
-
-class _Divider extends StatelessWidget {
-  final bool dark;
-  const _Divider({required this.dark});
-
-  @override
-  Widget build(BuildContext context) {
-    return Divider(
-      height: 1,
-      color: dark ? DesignTokens.darkBorder : DesignTokens.border,
-    );
   }
 }

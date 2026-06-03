@@ -8,6 +8,8 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../widgets/post_card.dart';
 import 'home_drawer.dart';
+import 'feed_loading.dart';
+import 'home_search_bar.dart';
 
 final _tabs = ['Best', 'Hot', 'New', 'Rising', 'Popular'];
 final _tabSorts = ['best', 'hot', 'new', 'rising', 'popular'];
@@ -77,8 +79,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       drawer: const CommunityDrawer(),
       body: !_layoutLoaded
@@ -98,39 +98,7 @@ class _HomeScreenState extends State<HomeScreen>
                             onPressed: () => Scaffold.of(ctx).openDrawer(),
                           ),
                         ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => context.push('/search'),
-                            child: Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: dark
-                                    ? DesignTokens.darkSurfaceVariant
-                                    : DesignTokens.surfaceVariant,
-                                borderRadius: BorderRadius.circular(
-                                    DesignTokens.radiusMd),
-                              ),
-                              child: Row(
-                                children: [
-                                  const SizedBox(width: 10),
-                                  const Icon(Icons.search_rounded,
-                                      size: 18,
-                                      color: DesignTokens.textTertiary),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Search posts, communities...',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: dark
-                                          ? DesignTokens.darkTextTertiary
-                                          : DesignTokens.textTertiary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        const HomeSearchBar(),
                         IconButton(
                           icon: Icon(
                             _layout == PostCardLayout.compact
@@ -174,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen>
                         fetchPolicy: FetchPolicy.networkOnly,
                       ),
                       builder: (result, {fetchMore, refetch}) {
-                        if (result.isLoading) return const _FeedLoading();
+                        if (result.isLoading) return const FeedLoading();
                         if (result.hasException) {
                           return ErrorState(
                             message: graphQLErrorMessage(
@@ -265,22 +233,6 @@ class _HomeScreenState extends State<HomeScreen>
                 ],
               ),
             ),
-    );
-  }
-}
-
-class _FeedLoading extends StatelessWidget {
-  const _FeedLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: 6,
-      itemBuilder: (_, __) => const Padding(
-        padding: EdgeInsets.only(bottom: 8),
-        child: ShimmerBox(height: 140, radius: DesignTokens.radiusMd),
-      ),
     );
   }
 }

@@ -9,6 +9,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import 'user_profile_posts_tab.dart';
 import 'user_profile_comments_tab.dart';
 import 'user_profile_header.dart';
+import 'saved_tab.dart';
+import 'ach_icon.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   final String username;

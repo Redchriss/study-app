@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:genui/genui.dart';
 import 'kids_companion_character.dart';
-import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../ai_tutor/presentation/providers/ai_tutor_state.dart';
 import '../../kids_visual_theme.dart';
@@ -13,6 +12,8 @@ import 'kids_home_sections.dart';
 import 'kids_lesson_sidebar_cards.dart';
 import 'kids_lesson_step_bar.dart';
 import 'kids_topic_chip.dart';
+import 'kids_lesson_empty_state.dart';
+import 'kids_session_warning_banner.dart';
 
 class KidsLessonViewSection extends StatelessWidget {
   const KidsLessonViewSection({
@@ -65,42 +66,7 @@ class KidsLessonViewSection extends StatelessWidget {
       return const LoadingWidget();
     }
     if (state.currentLesson == null && state.lessonItems.isEmpty) {
-      return Semantics(
-        label: 'No lesson available',
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    'No lesson available for this topic yet.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Semantics(
-                  button: true,
-                  label: 'Ask AI to generate a lesson',
-                  child: FilledButton.icon(
-                    onPressed: onRetryFetchLesson,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Ask AI to generate'),
-                    style: FilledButton.styleFrom(
-                        backgroundColor: KidsVisualTheme.pathBlue),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+      return KidsLessonEmptyState(onRetryFetchLesson: onRetryFetchLesson);
     }
     final subjectId = state.selectedSubject?['id']?.toString() ?? '';
     return LayoutBuilder(
@@ -113,39 +79,8 @@ class KidsLessonViewSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (state.sessionActive && state.sessionWarningShown)
-                  Semantics(
-                    liveRegion: true,
-                    label: 'Session ending soon warning',
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: DesignTokens.error.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                            color: DesignTokens.error.withValues(alpha: 0.4)),
-                      ),
-                      child: Row(
-                        children: [
-                          Semantics(
-                            excludeSemantics: true,
-                            child: const Icon(Icons.timer_off_rounded,
-                                color: DesignTokens.error, size: 20),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Session ending soon! ${state.sessionRemaining ~/ 60}:${(state.sessionRemaining % 60).toString().padLeft(2, '0')} left',
-                            style: const TextStyle(
-                              color: DesignTokens.error,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  KidsSessionWarningBanner(
+                      remainingSeconds: state.sessionRemaining),
                 Row(
                   children: [
                     Semantics(

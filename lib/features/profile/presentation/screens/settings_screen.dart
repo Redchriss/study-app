@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/design_tokens.dart';
-
-import '../../../../main.dart';
 import 'settings_widgets.dart';
+import 'settings_dialogs.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -199,81 +197,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (label == 'Log Out') {
       showDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusXl)),
-          title: const Row(
-            children: [
-              Icon(Icons.logout, size: 20, color: DesignTokens.error),
-              SizedBox(width: 8),
-              Text('Log out?', style: TextStyle(fontWeight: FontWeight.w800)),
-            ],
-          ),
-          content: const Text(
-              'You will need to log in again to access your study data.'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel')),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                ref.read(authProvider.notifier).logout();
-              },
-              child: const Text('Log out',
-                  style: TextStyle(color: DesignTokens.error)),
-            ),
-          ],
+        builder: (ctx) => LogoutDialog(
+          onLogout: () => ref.read(authProvider.notifier).logout(),
         ),
       );
     } else if (label == 'Delete Account') {
-      final pwdCtrl = TextEditingController();
       showDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusXl)),
-          title: const Row(
-            children: [
-              Icon(Icons.warning_rounded, size: 20, color: DesignTokens.error),
-              SizedBox(width: 8),
-              Text('Delete Account',
-                  style: TextStyle(fontWeight: FontWeight.w800)),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('This will permanently delete your account, '
-                  'study history, progress, and all associated data. '
-                  'This action cannot be undone.'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: pwdCtrl,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Enter your password to confirm',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel')),
-            TextButton(
-              onPressed: () {
-                final password = pwdCtrl.text.trim();
-                if (password.isEmpty) return;
-                Navigator.pop(ctx);
-                _performDeleteAccount(password);
-              },
-              child: const Text('Delete Account',
-                  style: TextStyle(color: DesignTokens.error)),
-            ),
-          ],
+        builder: (ctx) => DeleteAccountDialog(
+          onDelete: (password) {
+            Navigator.pop(ctx);
+            _performDeleteAccount(password);
+          },
         ),
       );
     }
@@ -291,17 +226,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (error != null) {
       showDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusXl)),
-          title:
-              const Text('Error', style: TextStyle(color: DesignTokens.error)),
-          content: Text(error),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
-          ],
-        ),
+        builder: (ctx) => DeleteAccountErrorDialog(error: error),
       );
     }
   }

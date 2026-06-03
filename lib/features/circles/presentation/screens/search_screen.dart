@@ -5,6 +5,7 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../widgets/post_card.dart';
+import 'search_filter_bar.dart';
 
 class SearchScreen extends StatefulWidget {
   final String? initialQuery;
@@ -24,24 +25,6 @@ class _SearchScreenState extends State<SearchScreen> {
   String _query = '';
   String _sort = 'relevance';
   String _timeFilter = 'all';
-
-  static const _sorts = ['relevance', 'hot', 'new', 'top', 'comments'];
-  static const _sortLabels = {
-    'relevance': 'Relevance',
-    'hot': 'Hot',
-    'new': 'New',
-    'top': 'Top',
-    'comments': 'Comments',
-  };
-  static const _timeFilters = ['all', 'hour', 'day', 'week', 'month', 'year'];
-  static const _timeLabels = {
-    'all': 'All time',
-    'hour': 'Past hour',
-    'day': 'Today',
-    'week': 'This week',
-    'month': 'This month',
-    'year': 'This year',
-  };
 
   @override
   void initState() {
@@ -111,73 +94,12 @@ class _SearchScreenState extends State<SearchScreen> {
             )
           : Column(
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: dark
-                            ? DesignTokens.darkBorder
-                            : DesignTokens.border,
-                      ),
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Row(
-                      children: [
-                        ..._sorts.map((s) {
-                          final sel = _sort == s;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: ChoiceChip(
-                              label: Text(
-                                _sortLabels[s]!,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight:
-                                      sel ? FontWeight.w700 : FontWeight.w500,
-                                ),
-                              ),
-                              selected: sel,
-                              onSelected: (_) => setState(() => _sort = s),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          );
-                        }),
-                        Container(
-                          width: 1,
-                          height: 20,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                          color: dark
-                              ? DesignTokens.darkBorder
-                              : DesignTokens.border,
-                        ),
-                        ..._timeFilters.map((t) {
-                          final sel = _timeFilter == t;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: FilterChip(
-                              label: Text(
-                                _timeLabels[t]!,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight:
-                                      sel ? FontWeight.w600 : FontWeight.w400,
-                                ),
-                              ),
-                              selected: sel,
-                              onSelected: (_) =>
-                                  setState(() => _timeFilter = t),
-                              visualDensity: VisualDensity.compact,
-                              showCheckmark: false,
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
+                SearchFilterBar(
+                  sort: _sort,
+                  timeFilter: _timeFilter,
+                  dark: dark,
+                  onSortChanged: (s) => setState(() => _sort = s),
+                  onTimeFilterChanged: (t) => setState(() => _timeFilter = t),
                 ),
                 Expanded(
                   child: Query(

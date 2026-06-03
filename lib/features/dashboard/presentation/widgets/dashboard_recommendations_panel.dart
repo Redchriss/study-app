@@ -8,6 +8,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../providers/dashboard_data.dart';
+import 'mini_stat_widget.dart';
 
 class DashboardRecommendationsPanel extends ConsumerStatefulWidget {
   final DashboardData data;
@@ -149,11 +150,11 @@ class _DashboardRecommendationsPanelState
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _MiniStat(value: '${d.masteryPercent}%', label: 'Mastery'),
-                  _MiniStat(value: '${d.avgQuizScore}%', label: 'Avg Score'),
-                  _MiniStat(
+                  MiniStat(value: '${d.masteryPercent}%', label: 'Mastery'),
+                  MiniStat(value: '${d.avgQuizScore}%', label: 'Avg Score'),
+                  MiniStat(
                       value: '${d.questionsPracticed}', label: 'Questions'),
-                  _MiniStat(value: '${d.attemptCount}', label: 'Attempts'),
+                  MiniStat(value: '${d.attemptCount}', label: 'Attempts'),
                 ],
               ),
             ],
@@ -235,27 +236,5 @@ class _DashboardRecommendationsPanelState
         .whereType<Map>()
         .map((e) => Map<String, dynamic>.from(e))
         .toList();
-  }
-}
-
-class _MiniStat extends StatelessWidget {
-  final String value;
-  final String label;
-  const _MiniStat({required this.value, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(value,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w900, color: DesignTokens.primary)),
-        Text(label,
-            style: const TextStyle(
-                fontSize: 10,
-                color: DesignTokens.textTertiary,
-                fontWeight: FontWeight.w600)),
-      ],
-    );
   }
 }

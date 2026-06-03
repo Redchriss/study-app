@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:genui/genui.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../providers/ai_tutor_provider.dart';
+import '../widgets/ai_tutor_assistant_bubble.dart';
 import '../widgets/ai_tutor_bubbles.dart';
 import '../widgets/ai_tutor_empty_state.dart';
+import 'ai_tutor_streaming_message.dart';
+import 'ai_tutor_surface_placeholder.dart';
 
 class AiTutorMessageList extends StatelessWidget {
   final List<ConversationItem> conversationItems;
@@ -52,7 +54,7 @@ class AiTutorMessageList extends StatelessWidget {
       itemCount: conversationItems.length + (streaming ? 1 : 0),
       itemBuilder: (_, i) {
         if (i >= conversationItems.length && streaming) {
-          return _StreamingMessage(
+          return AiTutorStreamingMessage(
             text: streamingText,
             cursorAnim: cursorAnim,
             breathAnim: breathAnim,
@@ -65,7 +67,7 @@ class AiTutorMessageList extends StatelessWidget {
         if (item is SurfaceItem) {
           if (!item.mounted) {
             onMountSurface?.call(item.surfaceId);
-            return _SurfacePlaceholder();
+            return AiTutorSurfacePlaceholder();
           }
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -98,168 +100,6 @@ class AiTutorMessageList extends StatelessWidget {
 
         return const SizedBox.shrink();
       },
-    );
-  }
-}
-
-class _StreamingMessage extends StatelessWidget {
-  final String text;
-  final Animation<double> cursorAnim;
-  final Animation<double> breathAnim;
-  final bool dark;
-
-  const _StreamingMessage({
-    required this.text,
-    required this.cursorAnim,
-    required this.breathAnim,
-    required this.dark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            margin: const EdgeInsets.only(right: 8, top: 2),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                  colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: ScaleTransition(
-              scale: breathAnim,
-              child: const Icon(Icons.auto_awesome_rounded,
-                  color: Colors.white, size: 14),
-            ),
-          ),
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.78),
-              margin: const EdgeInsets.only(bottom: 10, right: 48),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: dark
-                    ? DesignTokens.darkSurfaceVariant
-                    : DesignTokens.surfaceVariant,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(18),
-                  bottomLeft: Radius.circular(18),
-                  bottomRight: Radius.circular(18),
-                ),
-              ),
-              child: Stack(
-                children: [
-                  MarkdownBody(
-                    data: sanitizeStreamingMarkdown(text),
-                    styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(fontSize: 14, height: 1.55),
-                      code: TextStyle(
-                          fontSize: 13,
-                          fontFamily: 'monospace',
-                          backgroundColor:
-                              dark ? Colors.black26 : const Color(0xFFEEF0F2)),
-                      codeblockDecoration: BoxDecoration(
-                          color: dark
-                              ? const Color(0xFF161B22)
-                              : const Color(0xFFEEF0F2),
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: ScaleTransition(
-                      scale: breathAnim,
-                      child: FadeTransition(
-                        opacity: cursorAnim,
-                        child: Container(
-                          width: 8,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF7C4DFF),
-                                Color(0xFF1B6CA8),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SurfacePlaceholder extends StatefulWidget {
-  @override
-  State<_SurfacePlaceholder> createState() => _SurfacePlaceholderState();
-}
-
-class _SurfacePlaceholderState extends State<_SurfacePlaceholder>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _pulseCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return FadeTransition(
-      opacity: Tween<double>(begin: 0.3, end: 0.7).animate(_pulseCtrl),
-      child: Container(
-        height: 120,
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: isDark
-              ? DesignTokens.darkSurfaceVariant
-              : DesignTokens.surfaceVariant,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              SizedBox(width: 10),
-              Text('Building interactive widget...',
-                  style: TextStyle(
-                      fontSize: 12, color: DesignTokens.textSecondary)),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

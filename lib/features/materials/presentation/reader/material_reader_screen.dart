@@ -16,6 +16,7 @@ import 'reader_flashcards_sheet.dart';
 import 'reader_loading.dart';
 import 'reader_not_found.dart';
 import 'reader_quiz_sheet.dart';
+import 'reader_screen_snackbar.dart';
 
 class MaterialReaderScreen extends StatefulWidget {
   const MaterialReaderScreen({super.key, required this.slug});
@@ -28,25 +29,6 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
   final _service = MaterialReaderService();
   final _cache = MaterialCacheService();
   var _aiActionBusy = false;
-  void _showResultSnackBar(
-      ReaderServiceResult result, String onSuccess, String onFail) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(result.success ? onSuccess : (result.message ?? onFail)),
-        backgroundColor:
-            result.success ? DesignTokens.success : DesignTokens.error,
-      ),
-    );
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: DesignTokens.error,
-      ),
-    );
-  }
 
   Future<void> _saveAnnotation(
       ReaderStudySelection selection, VoidCallback? refetch) async {
@@ -61,8 +43,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       color: draft.color,
     );
     if (!mounted) return;
-    _showResultSnackBar(
-        result, 'Annotation saved', 'Could not save annotation.');
+    showReaderResultSnackBar(
+        context, result, 'Annotation saved', 'Could not save annotation.');
     if (result.success) refetch?.call();
   }
 
@@ -77,8 +59,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
           annotationId: annotation.id,
         );
         if (!mounted) return;
-        _showResultSnackBar(
-            result, 'Annotation removed', 'Could not delete annotation.');
+        showReaderResultSnackBar(context, result, 'Annotation removed',
+            'Could not delete annotation.');
         if (result.success) {
           Navigator.of(context).pop();
           refetch?.call();
@@ -110,7 +92,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
         );
         if (!mounted) return;
         setState(() => _aiActionBusy = false);
-        _showResultSnackBar(
+        showReaderResultSnackBar(
+            context,
             result,
             'Flashcards requested',
             result.message ??
@@ -166,7 +149,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
       onSuccess: (reply) async {
         final quiz = parseQuickQuizPayload(reply);
         if (quiz == null || !mounted) {
-          _showErrorSnackBar(
+          showReaderErrorSnackBar(context,
               'AI could not shape a mini quiz from this section right now.');
           return;
         }
@@ -194,9 +177,11 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     if (!mounted) return;
     Navigator.of(context).pop();
     if (!result.success || result.data == null) {
-      _showErrorSnackBar(result.message ??
-          result.errors.firstOrNull ??
-          'AI could not help right now.');
+      showReaderErrorSnackBar(
+          context,
+          result.message ??
+              result.errors.firstOrNull ??
+              'AI could not help right now.');
       return;
     }
     await onSuccess(result.data as T);

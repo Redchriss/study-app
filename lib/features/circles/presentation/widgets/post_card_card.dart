@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'post_card_states.dart';
+import 'post_card_card_vote_column.dart';
+import 'post_card_card_community_avatar.dart';
 
 class CardPostCard extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -53,7 +52,7 @@ class _CardPostCardState extends State<CardPostCard> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // ── Left: Reddit-style vote column ─────────────────────
-                  _VoteColumn(
+                  CardVoteColumn(
                     postId: post['id'].toString(),
                     score: (post['fuzzedScore'] as num?)?.toInt() ?? 0,
                     userVote: (post['voteDirection'] as num?)?.toInt(),
@@ -69,7 +68,7 @@ class _CardPostCardState extends State<CardPostCard> {
                           // Community avatar + name + author
                           Row(
                             children: [
-                              _CommunityAvatar(community: community),
+                              CardCommunityAvatar(community: community),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text.rich(
@@ -208,118 +207,6 @@ class _CardPostCardState extends State<CardPostCard> {
                 ],
               ),
       ),
-    );
-  }
-}
-
-// ── Reddit-style vertical vote column on left edge ───────────────────────────
-class _VoteColumn extends ConsumerWidget {
-  final String postId;
-  final int score;
-  final int? userVote;
-  final bool dark;
-
-  const _VoteColumn({
-    required this.postId,
-    required this.score,
-    required this.dark,
-    this.userVote,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Mutation(
-      options: MutationOptions(document: gql(kVotePost)),
-      builder: (runMutation, result) {
-        void vote(int dir) {
-          if (result?.isLoading ?? false) return;
-          runMutation({'postId': postId, 'direction': dir});
-        }
-
-        final upColor =
-            userVote == 1 ? DesignTokens.secondary : DesignTokens.textTertiary;
-        final downColor =
-            userVote == -1 ? DesignTokens.error : DesignTokens.textTertiary;
-        final scoreColor = userVote == 1
-            ? DesignTokens.secondary
-            : userVote == -1
-                ? DesignTokens.error
-                : DesignTokens.textSecondary;
-
-        return Container(
-          width: 40,
-          decoration: BoxDecoration(
-            color: dark
-                ? Colors.white.withValues(alpha: 0.03)
-                : Colors.black.withValues(alpha: 0.02),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(DesignTokens.radiusMd),
-              bottomLeft: Radius.circular(DesignTokens.radiusMd),
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: () => vote(1),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Icon(Icons.arrow_upward_rounded,
-                      size: 20, color: upColor),
-                ),
-              ),
-              Text(
-                _fmt(score),
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: scoreColor),
-              ),
-              GestureDetector(
-                onTap: () => vote(-1),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Icon(Icons.arrow_downward_rounded,
-                      size: 20, color: downColor),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  String _fmt(int n) {
-    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
-    return n.toString();
-  }
-}
-
-// ── Community circle avatar — always shown, letter fallback ─────────────────
-class _CommunityAvatar extends StatelessWidget {
-  final Map<String, dynamic>? community;
-  const _CommunityAvatar({this.community});
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = community?['icon']?.toString() ?? '';
-    final name = community?['name']?.toString() ?? '?';
-    final letter = name.isNotEmpty ? name[0].toUpperCase() : '?';
-
-    return CircleAvatar(
-      radius: 10,
-      backgroundColor: DesignTokens.primary.withValues(alpha: 0.15),
-      backgroundImage: icon.isNotEmpty ? NetworkImage(icon) : null,
-      onBackgroundImageError: icon.isNotEmpty ? (_, __) {} : null,
-      child: icon.isEmpty
-          ? Text(letter,
-              style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  color: DesignTokens.primary))
-          : null,
     );
   }
 }
