@@ -76,32 +76,15 @@ class MainShell extends ConsumerWidget {
               height: 68,
               child: Row(
                 children: [
-                  NavItem(
-                    icon: Icons.dashboard_outlined,
-                    activeIcon: Icons.dashboard_rounded,
-                    label: 'Home',
-                    isSelected: currentIndex == 0,
-                    onTap: () => _onDestinationSelected(context, 0),
-                  ),
-                  NavItem(
-                    icon: Icons.menu_book_outlined,
-                    activeIcon: Icons.menu_book_rounded,
-                    label: 'Study',
-                    isSelected: currentIndex == 1,
-                    onTap: () => _onDestinationSelected(context, 1),
-                  ),
-                  CentreAiButton(
-                    isSelected: false,
-                    onTap: () => context.push('/ai-tutor'),
-                  ),
+                  // Tab 0: Feed (social — first screen)
                   Stack(
                     children: [
                       NavItem(
-                        icon: Icons.groups_outlined,
-                        activeIcon: Icons.groups_rounded,
-                        label: 'Circles',
-                        isSelected: currentIndex == 2,
-                        onTap: () => _onDestinationSelected(context, 2),
+                        icon: Icons.home_outlined,
+                        activeIcon: Icons.home_rounded,
+                        label: 'Feed',
+                        isSelected: currentIndex == 0,
+                        onTap: () => _onDestinationSelected(context, 0),
                       ),
                       if (unreadCount > 0)
                         Positioned(
@@ -127,6 +110,28 @@ class MainShell extends ConsumerWidget {
                         ),
                     ],
                   ),
+                  // Tab 1: Study
+                  NavItem(
+                    icon: Icons.menu_book_outlined,
+                    activeIcon: Icons.menu_book_rounded,
+                    label: 'Study',
+                    isSelected: currentIndex == 1,
+                    onTap: () => _onDestinationSelected(context, 1),
+                  ),
+                  // Centre: AI Tutor
+                  CentreAiButton(
+                    isSelected: false,
+                    onTap: () => context.push('/ai-tutor'),
+                  ),
+                  // Tab 2: Dashboard
+                  NavItem(
+                    icon: Icons.dashboard_outlined,
+                    activeIcon: Icons.dashboard_rounded,
+                    label: 'Dashboard',
+                    isSelected: currentIndex == 2,
+                    onTap: () => _onDestinationSelected(context, 2),
+                  ),
+                  // Tab 3: Profile
                   NavItem(
                     icon: Icons.person_outline_rounded,
                     activeIcon: Icons.person_rounded,

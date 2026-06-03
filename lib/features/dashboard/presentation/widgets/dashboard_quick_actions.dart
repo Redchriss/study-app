@@ -54,7 +54,7 @@ class DashboardQuickActions extends StatelessWidget {
             icon: Icons.groups_rounded,
             label: 'Circles',
             color: DesignTokens.info,
-            onTap: () => context.go('/circles')),
+            onTap: () => context.go('/home')),
       ],
     );
   }

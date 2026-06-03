@@ -86,8 +86,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/setup';
       }
 
-      if (profileComplete &&
-          ['/login', '/register'].contains(location)) {
+      if (profileComplete && ['/login', '/register'].contains(location)) {
         return '/home';
       }
 
@@ -108,43 +107,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       ...appRoutes,
 
       // ── Shell: 4 tabs ──────────────────────────────────────────
-      // Tab 0: Home (Dashboard)
+      // Tab 0: Feed (social — first thing you see)
       // Tab 1: Study hub (Materials + Quizzes + Scanner)
-      // Tab 2: Circles (community feed + discover + inbox)
+      // Tab 2: Dashboard (stats + AI tutor)
       // Tab 3: Profile
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             MainShell(navigationShell: navigationShell),
         branches: [
-          // ── Tab 0: Dashboard ──────────────────────────────────
+          // ── Tab 0: Feed ───────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (_, __) => const DashboardScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'notifications',
-                    builder: (_, __) => const NotificationsScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // ── Tab 1: Study hub ──────────────────────────────────
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/study',
-                builder: (_, __) => const StudyHubScreen(),
-              ),
-            ],
-          ),
-          // ── Tab 2: Circles ───────────────────────────────────
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/circles',
                 builder: (_, __) => const HomeScreen(),
                 routes: [
                   GoRoute(
@@ -159,7 +134,31 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // ── Tab 3: Profile ───────────────────────────────────
+          // ── Tab 1: Study hub ──────────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/study',
+                builder: (_, __) => const StudyHubScreen(),
+              ),
+            ],
+          ),
+          // ── Tab 2: Dashboard ─────────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/dashboard',
+                builder: (_, __) => const DashboardScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'notifications',
+                    builder: (_, __) => const NotificationsScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // ── Tab 3: Profile ────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(

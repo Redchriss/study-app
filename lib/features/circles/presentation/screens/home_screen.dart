@@ -148,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen>
                         IconButton(
                           icon: const Icon(Icons.explore_outlined),
                           tooltip: 'Discover',
-                          onPressed: () => context.push('/circles/discover'),
+                          onPressed: () => context.push('/home/discover'),
                         ),
                       ],
                     ),
@@ -200,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 ? 'Check back soon for popular posts.'
                                 : 'Your feed is empty. Discover communities to follow.',
                             actionLabel: 'Discover',
-                            onAction: () => context.push('/circles/discover'),
+                            onAction: () => context.push('/home/discover'),
                           );
                         }
 

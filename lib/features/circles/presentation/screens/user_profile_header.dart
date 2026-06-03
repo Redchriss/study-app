@@ -128,7 +128,7 @@ class ProfileHeader extends StatelessWidget {
                       ),
                     const SizedBox(width: 8),
                     TextButton.icon(
-                      onPressed: () => context.push('/circles/inbox'),
+                      onPressed: () => context.push('/home/inbox'),
                       icon: const Icon(Icons.message_outlined, size: 14),
                       label: const Text('Message', style: TextStyle(fontSize: 12)),
                       style: TextButton.styleFrom(

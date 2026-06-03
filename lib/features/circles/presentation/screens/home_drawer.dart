@@ -79,7 +79,7 @@ class CommunityDrawer extends StatelessWidget {
                           title: const Text('Discover'),
                           onTap: () {
                             Navigator.pop(context);
-                            context.push('/circles/discover');
+                            context.push('/home/discover');
                           },
                         );
                       }
