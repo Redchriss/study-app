@@ -112,7 +112,13 @@ class AuthNotifier extends Notifier<AuthState> {
           .timeout(const Duration(seconds: 25));
 
       if (result.hasException || result.data?['me'] == null) {
-        await SecureStorage.clearTokens();
+        // Only clear tokens on explicit auth error, not network failures
+        final isAuthError = result.exception?.graphqlErrors.any((e) =>
+                e.message.toLowerCase().contains('not authenticated') ||
+                e.message.toLowerCase().contains('permission') ||
+                e.message.toLowerCase().contains('unauthorized')) ==
+            true;
+        if (isAuthError) await SecureStorage.clearTokens();
         state = const AuthState(isAuthenticated: false, isLoading: false);
         return;
       }
@@ -211,7 +217,12 @@ class AuthNotifier extends Notifier<AuthState> {
               document: gql(kMe), fetchPolicy: FetchPolicy.networkOnly))
           .timeout(const Duration(seconds: 25));
       if (result.hasException || result.data?['me'] == null) {
-        await SecureStorage.clearTokens();
+        final isAuthError = result.exception?.graphqlErrors.any((e) =>
+                e.message.toLowerCase().contains('not authenticated') ||
+                e.message.toLowerCase().contains('permission') ||
+                e.message.toLowerCase().contains('unauthorized')) ==
+            true;
+        if (isAuthError) await SecureStorage.clearTokens();
         state = const AuthState(isAuthenticated: false, isLoading: false);
         return;
       }
