@@ -153,7 +153,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             ],
           );
         }
-        final communities = (result.data?['communities'] as List?) ?? [];
+        final rawEdges = (result.data?['communities']?['edges'] as List?) ?? [];
+        final communities = rawEdges
+            .map((e) => e['node'] as Map<String, dynamic>?)
+            .whereType<Map<String, dynamic>>()
+            .toList();
         if (communities.isEmpty) return const SizedBox.shrink();
         return SizedBox(
           height: 140,

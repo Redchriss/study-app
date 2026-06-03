@@ -19,7 +19,10 @@ query Community($slug: String!) {
 const String kCommunities = r'''
 query Communities($search: String, $sort: CommunitySortEnum, $limit: Int, $after: String) {
   communities(search: $search, sort: $sort, limit: $limit, after: $after) {
-    id name slug displayName description icon memberCount postCount communityType
+    edges {
+      node { id name slug displayName description icon memberCount postCount communityType }
+    }
+    pageInfo { hasNextPage endCursor }
   }
 }
 ''';
