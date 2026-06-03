@@ -110,14 +110,17 @@ class _AuthErrorLink extends Link {
       );
       if (request.statusCode == 200) {
         final data = jsonDecode(request.body)['data']?['refreshToken'];
-        if (data != null) {
+        if (data != null && data['token'] != null) {
           await SecureStorage.saveTokens(data['token'], data['refreshToken']);
           return;
         }
+        // Server rejected the refresh token — now it's safe to clear
+        await SecureStorage.clearTokens();
       }
-      await SecureStorage.clearTokens();
+      // Non-200 = network/server error, don't clear tokens
     } catch (_) {
-      await SecureStorage.clearTokens();
+      // Don't clear tokens on refresh network failure — just let the next request retry
+      return;
     } finally {
       client.close();
     }

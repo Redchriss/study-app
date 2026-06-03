@@ -54,12 +54,12 @@ class _AnalyticsObserver extends NavigatorObserver {
 final _analyticsObserver = _AnalyticsObserver();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final auth = ref.watch(authProvider);
-
-  return GoRouter(
+  final router = GoRouter(
     observers: [_analyticsObserver],
     initialLocation: '/splash',
+    refreshListenable: _AuthStateNotifier(ref),
     redirect: (context, state) {
+      final auth = ref.read(authProvider);
       final location = state.matchedLocation;
       final isKidsRoute = location == '/kids' || location.startsWith('/kids/');
 
@@ -203,4 +203,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ...communityRoutes,
     ],
   );
+  ref.onDispose(router.dispose);
+  return router;
 });
+
+/// Notifies GoRouter to re-evaluate redirect when auth state changes.
+/// Using refreshListenable instead of ref.watch(authProvider) prevents
+/// the entire GoRouter from being recreated on every auth change.
+class _AuthStateNotifier extends ChangeNotifier {
+  _AuthStateNotifier(Ref ref) {
+    ref.listen(authProvider, (_, __) => notifyListeners());
+  }
+}
