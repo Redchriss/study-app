@@ -77,42 +77,13 @@ class MainShell extends ConsumerWidget {
               child: Row(
                 children: [
                   // Tab 0: Feed (with unread badge)
-                  Expanded(
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.center,
-                      children: [
-                        NavItem(
-                          icon: Icons.home_outlined,
-                          activeIcon: Icons.home_rounded,
-                          label: 'Feed',
-                          isSelected: currentIndex == 0,
-                          onTap: () => _onDestinationSelected(context, 0),
-                        ),
-                        if (unreadCount > 0)
-                          Positioned(
-                            right: 4,
-                            top: 2,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: DesignTokens.error,
-                                shape: BoxShape.circle,
-                              ),
-                              constraints: const BoxConstraints(
-                                  minWidth: 18, minHeight: 18),
-                              child: Text(
-                                unreadCount > 99 ? '99+' : '$unreadCount',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                  NavItem(
+                    icon: Icons.home_outlined,
+                    activeIcon: Icons.home_rounded,
+                    label: 'Feed',
+                    isSelected: currentIndex == 0,
+                    badgeCount: unreadCount,
+                    onTap: () => _onDestinationSelected(context, 0),
                   ),
                   // Tab 1: Study
                   NavItem(
