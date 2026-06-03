@@ -8,13 +8,16 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/errors/app_exception.dart';
 import 'contact_card.dart';
+
 /// Generic screen that fetches and renders any [SitePage] by slug.
 /// Used for: terms, privacy, faq, support, community-guidelines, cookies.
 class SitePageScreen extends StatelessWidget {
   /// The slug that matches [SitePage.slug] on the backend.
   final String slug;
+
   /// Shown in the AppBar while loading or if backend has no content yet.
   final String fallbackTitle;
+
   /// Shown as markdown content if the backend returns nothing.
   final String fallbackContent;
   const SitePageScreen({
@@ -189,4 +192,3 @@ class SitePageScreen extends StatelessWidget {
     );
   }
 }
-

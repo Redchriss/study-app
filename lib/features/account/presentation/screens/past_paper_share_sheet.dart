@@ -9,9 +9,11 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 class PastPaperShareSheet extends ConsumerStatefulWidget {
   final String title;
   final String url;
-  const PastPaperShareSheet({super.key, required this.title, required this.url});
+  const PastPaperShareSheet(
+      {super.key, required this.title, required this.url});
   @override
-  ConsumerState<PastPaperShareSheet> createState() => _PastPaperShareSheetState();
+  ConsumerState<PastPaperShareSheet> createState() =>
+      _PastPaperShareSheetState();
 }
 
 class _PastPaperShareSheetState extends ConsumerState<PastPaperShareSheet> {
@@ -37,19 +39,23 @@ class _PastPaperShareSheetState extends ConsumerState<PastPaperShareSheet> {
       if (!mounted) return;
       if (result.hasException) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(graphQLErrorMessage(result.exception, 'Could not share')),
+          content:
+              Text(graphQLErrorMessage(result.exception, 'Could not share')),
           backgroundColor: DesignTokens.error,
         ));
         return;
       }
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Shared to community!'), backgroundColor: DesignTokens.success),
+        const SnackBar(
+            content: Text('Shared to community!'),
+            backgroundColor: DesignTokens.success),
       );
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -59,7 +65,8 @@ class _PastPaperShareSheetState extends ConsumerState<PastPaperShareSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Share to Community', style: Theme.of(context).textTheme.titleLarge),
+            Text('Share to Community',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             Query(
               options: QueryOptions(document: gql(kMyCommunities)),
@@ -67,8 +74,14 @@ class _PastPaperShareSheetState extends ConsumerState<PastPaperShareSheet> {
                 final communities = (qr.data?['myCommunities'] as List?) ?? [];
                 return DropdownButtonFormField<String>(
                   value: _selectedCommunity,
-                  decoration: const InputDecoration(labelText: 'Select community', border: OutlineInputBorder()),
-                  items: communities.map((c) => DropdownMenuItem(value: c['slug']?.toString(), child: Text('y/${c['name'] ?? c['slug']}'))).toList(),
+                  decoration: const InputDecoration(
+                      labelText: 'Select community',
+                      border: OutlineInputBorder()),
+                  items: communities
+                      .map((c) => DropdownMenuItem(
+                          value: c['slug']?.toString(),
+                          child: Text('y/${c['name'] ?? c['slug']}')))
+                      .toList(),
                   onChanged: (v) => setState(() => _selectedCommunity = v),
                 );
               },
@@ -77,9 +90,14 @@ class _PastPaperShareSheetState extends ConsumerState<PastPaperShareSheet> {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: (_selectedCommunity != null && !_sharing) ? _share : null,
+                onPressed:
+                    (_selectedCommunity != null && !_sharing) ? _share : null,
                 icon: _sharing
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.share),
                 label: Text(_sharing ? 'Sharing...' : 'Share'),
               ),

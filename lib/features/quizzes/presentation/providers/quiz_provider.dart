@@ -32,7 +32,8 @@ class QuizSessionState {
       );
 }
 
-final quizSessionProvider = StateNotifierProvider.family<QuizSessionNotifier, QuizSessionState, String>(
+final quizSessionProvider =
+    StateNotifierProvider.family<QuizSessionNotifier, QuizSessionState, String>(
   (ref, slug) => QuizSessionNotifier(slug),
 );
 

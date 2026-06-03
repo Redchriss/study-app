@@ -219,9 +219,8 @@ class _CommunityPostListState extends State<CommunityPostList> {
               },
               child: ListView.builder(
                 padding: EdgeInsets.zero,
-                itemCount: pendings.length +
-                    posts.length +
-                    (_loadingMore ? 1 : 0),
+                itemCount:
+                    pendings.length + posts.length + (_loadingMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index < pendings.length) {
                     return _pendingPostCard(pendings[index], context);

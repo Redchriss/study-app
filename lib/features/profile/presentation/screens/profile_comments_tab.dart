@@ -40,10 +40,12 @@ class ProfileCommentsTab extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.chat_outlined, size: 48, color: DesignTokens.textTertiary),
+                  Icon(Icons.chat_outlined,
+                      size: 48, color: DesignTokens.textTertiary),
                   SizedBox(height: 12),
                   Text('No comments yet',
-                      style: TextStyle(color: DesignTokens.textSecondary, fontSize: 15)),
+                      style: TextStyle(
+                          color: DesignTokens.textSecondary, fontSize: 15)),
                 ],
               ),
             ),
@@ -80,24 +82,28 @@ class ProfileCommentsTab extends StatelessWidget {
                         const SizedBox(width: 2),
                         Text('$score',
                             style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
                                 color: DesignTokens.textSecondary)),
                         const SizedBox(width: 8),
                         if (postTitle.isNotEmpty)
                           Expanded(
                             child: Text(postTitle,
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                     fontSize: 11, color: DesignTokens.primary)),
                           ),
                         Text(_timeAgo(createdAt),
                             style: const TextStyle(
-                                fontSize: 11, color: DesignTokens.textTertiary)),
+                                fontSize: 11,
+                                color: DesignTokens.textTertiary)),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text(body,
-                        maxLines: 3, overflow: TextOverflow.ellipsis,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 13, height: 1.4)),
                   ],
                 ),

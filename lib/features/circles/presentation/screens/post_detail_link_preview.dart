@@ -28,7 +28,8 @@ class PostLinkPreview extends StatelessWidget {
       return _buildYazaCard(context, yazaMatch, post, url);
     }
 
-    final displayTitle = urlTitle.isNotEmpty ? urlTitle : post['title']?.toString() ?? '';
+    final displayTitle =
+        urlTitle.isNotEmpty ? urlTitle : post['title']?.toString() ?? '';
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -16,12 +16,13 @@ class ProfileSavedTab extends StatelessWidget {
         variables: const {'limit': 25},
         fetchPolicy: FetchPolicy.networkOnly,
       ),
-      builder: (QueryResult result, {VoidCallback? refetch, FetchMore? fetchMore}) {
+      builder: (QueryResult result,
+          {VoidCallback? refetch, FetchMore? fetchMore}) {
         if (result.isLoading) return const Center(child: LoadingWidget());
         if (result.hasException) {
           return ErrorState(
-            message: graphQLErrorMessage(
-                result.exception, 'Could not load saved'),
+            message:
+                graphQLErrorMessage(result.exception, 'Could not load saved'),
             onRetry: () => refetch?.call(),
           );
         }
@@ -68,10 +69,10 @@ class ProfileSavedTab extends StatelessWidget {
                 ),
               ),
               title: Text(p['title']?.toString() ?? '',
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 13)),
-              subtitle: Text(
-                  'y/${community?['name'] ?? ''}',
+              subtitle: Text('y/${community?['name'] ?? ''}',
                   style: const TextStyle(fontSize: 11)),
               trailing: const Icon(Icons.bookmark,
                   size: 18, color: DesignTokens.primary),

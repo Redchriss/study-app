@@ -144,8 +144,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
               const SizedBox(height: 16),
               Row(
                 children: [
-                  const Icon(Icons.wifi_off_rounded,
-                      color: DesignTokens.error),
+                  const Icon(Icons.wifi_off_rounded, color: DesignTokens.error),
                   const SizedBox(width: 8),
                   Text('Connection lost',
                       style: Theme.of(context)
@@ -194,19 +193,14 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     final studyMode = ref.watch(aiTutorProvider.select((s) => s.studyMode));
     final snapshotLoading =
         ref.watch(aiTutorProvider.select((s) => s.snapshotLoading));
-    final topicStates =
-        ref.watch(aiTutorProvider.select((s) => s.topicStates));
+    final topicStates = ref.watch(aiTutorProvider.select((s) => s.topicStates));
     final memories = ref.watch(aiTutorProvider.select((s) => s.memories));
-    final activePlan =
-        ref.watch(aiTutorProvider.select((s) => s.activePlan));
-    final reviewCount =
-        ref.watch(aiTutorProvider.select((s) => s.reviewCount));
+    final activePlan = ref.watch(aiTutorProvider.select((s) => s.activePlan));
+    final reviewCount = ref.watch(aiTutorProvider.select((s) => s.reviewCount));
     final showInsights =
         ref.watch(aiTutorProvider.select((s) => s.showInsights));
-    final items =
-        ref.watch(aiTutorProvider.select((s) => s.conversationItems));
-    final streaming =
-        ref.watch(aiTutorProvider.select((s) => s.streaming));
+    final items = ref.watch(aiTutorProvider.select((s) => s.conversationItems));
+    final streaming = ref.watch(aiTutorProvider.select((s) => s.streaming));
     final streamingText =
         ref.watch(aiTutorProvider.select((s) => s.streamingText));
     final sending = ref.watch(aiTutorProvider.select((s) => s.sending));
@@ -245,8 +239,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
             onSuggestion: _send,
             onFeedback: ref.read(aiTutorProvider.notifier).setMessageFeedback,
             onRetry: ref.read(aiTutorProvider.notifier).retry,
-            onMountSurface:
-                ref.read(aiTutorProvider.notifier).mountSurface,
+            onMountSurface: ref.read(aiTutorProvider.notifier).mountSurface,
           ),
         ),
         if (sending) const AiTypingIndicator(),

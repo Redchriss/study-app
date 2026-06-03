@@ -94,7 +94,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           _emailCtrl.text.trim(),
           _passwordCtrl.text,
           phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
-          fullName: _fullNameCtrl.text.trim().isEmpty ? null : _fullNameCtrl.text.trim(),
+          fullName: _fullNameCtrl.text.trim().isEmpty
+              ? null
+              : _fullNameCtrl.text.trim(),
         );
     if (!mounted) return;
     if (ok) {

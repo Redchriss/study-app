@@ -84,7 +84,8 @@ class _ModPanelModLogTabState extends ConsumerState<ModPanelModLogTab> {
                   ? entries
                   : entries.where((e) {
                       final action =
-                          (e as Map<String, dynamic>)['action'] as String? ?? '';
+                          (e as Map<String, dynamic>)['action'] as String? ??
+                              '';
                       final filterKey =
                           _filter.toLowerCase().replaceAll(' ', '_');
                       return action == filterKey;
@@ -204,7 +205,8 @@ class _ModLogTile extends StatelessWidget {
           color: _colorForAction(action).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(_iconForAction(action), size: 18, color: _colorForAction(action)),
+        child: Icon(_iconForAction(action),
+            size: 18, color: _colorForAction(action)),
       ),
       title: Text(
         action.replaceAll('_', ' '),

@@ -119,7 +119,8 @@ class KidLoginDashboard extends StatelessWidget {
                                   onLoginKid(kid);
                                 },
                                 child: Container(
-                                  constraints: const BoxConstraints(minHeight: 72),
+                                  constraints:
+                                      const BoxConstraints(minHeight: 72),
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16, vertical: 14),
                                   child: Row(
@@ -129,17 +130,22 @@ class KidLoginDashboard extends StatelessWidget {
                                         height: 60,
                                         decoration: BoxDecoration(
                                           gradient: KidsVisualTheme.ctaGradient,
-                                          borderRadius: BorderRadius.circular(18),
-                                          boxShadow: KidsVisualTheme.chunkyShadow(
-                                              const Color(0xFF2A8F4A),
-                                              dy: 3),
+                                          borderRadius:
+                                              BorderRadius.circular(18),
+                                          boxShadow:
+                                              KidsVisualTheme.chunkyShadow(
+                                                  const Color(0xFF2A8F4A),
+                                                  dy: 3),
                                         ),
                                         child: Center(
                                           child: Text(
-                                            avatar.isNotEmpty ? avatar : name[0].toUpperCase(),
+                                            avatar.isNotEmpty
+                                                ? avatar
+                                                : name[0].toUpperCase(),
                                             style: TextStyle(
                                                 color: Colors.white,
-                                                fontSize: avatar.isNotEmpty ? 32 : 24,
+                                                fontSize:
+                                                    avatar.isNotEmpty ? 32 : 24,
                                                 fontWeight: FontWeight.w900),
                                           ),
                                         ),
@@ -147,13 +153,15 @@ class KidLoginDashboard extends StatelessWidget {
                                       const SizedBox(width: 16),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(name,
                                                 style: const TextStyle(
                                                     fontSize: 18,
                                                     fontWeight: FontWeight.w800,
-                                                    color: KidsVisualTheme.ink)),
+                                                    color:
+                                                        KidsVisualTheme.ink)),
                                             const SizedBox(height: 4),
                                             Text(
                                               isEcd
@@ -162,7 +170,8 @@ class KidLoginDashboard extends StatelessWidget {
                                               style: const TextStyle(
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.w600,
-                                                  color: KidsVisualTheme.inkMuted),
+                                                  color:
+                                                      KidsVisualTheme.inkMuted),
                                             ),
                                           ],
                                         ),
@@ -171,10 +180,12 @@ class KidLoginDashboard extends StatelessWidget {
                                         width: 48,
                                         height: 48,
                                         decoration: BoxDecoration(
-                                          color: KidsVisualTheme.pathBlue.withValues(alpha: 0.1),
+                                          color: KidsVisualTheme.pathBlue
+                                              .withValues(alpha: 0.1),
                                           shape: BoxShape.circle,
                                         ),
-                                        child: const Icon(Icons.play_circle_fill_rounded,
+                                        child: const Icon(
+                                            Icons.play_circle_fill_rounded,
                                             color: KidsVisualTheme.pathBlue,
                                             size: 32),
                                       ),
@@ -201,8 +212,7 @@ class KidLoginDashboard extends StatelessWidget {
                                   boxShadow: DesignTokens.shadowSm(
                                       theme.brightness == Brightness.dark)),
                               child: const Icon(Icons.child_friendly_rounded,
-                                  size: 64,
-                                  color: KidsVisualTheme.pathBlue),
+                                  size: 64, color: KidsVisualTheme.pathBlue),
                             ),
                             const SizedBox(height: 24),
                             Text(

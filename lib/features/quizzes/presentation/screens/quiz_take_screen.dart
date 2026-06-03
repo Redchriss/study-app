@@ -7,11 +7,8 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/hive_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/errors/app_exception.dart';
-import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import 'quiz_question_card.dart';
-import 'quiz_timer_widget.dart';
-import 'quiz_progress_bar.dart';
+import 'quiz_answer_widgets.dart';
 
 class QuizTakeScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -228,194 +225,29 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dark = theme.brightness == Brightness.dark;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Query(
       options:
           QueryOptions(document: gql(kQuiz), variables: {'slug': widget.slug}),
-      builder: (result, {fetchMore, refetch}) {
-        if (result.isLoading) return const Scaffold(body: LoadingWidget());
-        if (result.hasException) {
-          return Scaffold(
-              body: ErrorState(
-                  message: graphQLErrorMessage(
-                      result.exception, 'Failed to load quiz'),
-                  onRetry: () => refetch?.call()));
-        }
-        final quiz = result.data?['quiz'];
-        if (quiz == null)
-          return const Scaffold(body: Center(child: Text('Quiz not found')));
-        final questions = (quiz['questions'] as List?) ?? [];
-        final quizId = quiz['id'] as String?;
-        if (quizId != null &&
-            quizId.isNotEmpty &&
-            _attemptId == null &&
-            !_startingAttempt) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) _startAttempt(quizId, ref.read(graphqlClientProvider));
-          });
-        }
-        final answered = _answeredCount;
-
-        return Scaffold(
-          backgroundColor:
-              dark ? DesignTokens.darkBackground : DesignTokens.background,
-          appBar: AppBar(
-            backgroundColor:
-                dark ? DesignTokens.darkSurface : DesignTokens.surface,
-            title: Text(quiz['title'] ?? '',
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 15)),
-            centerTitle: true,
-            actions: [QuizTimerWidget(seconds: _time)],
-          ),
-          body: Column(
-            children: [
-              AchievementProgressBar(
-                answered: answered,
-                total: questions.length,
-                score: _results.values.where((v) => v).length,
-              ),
-              if (HiveService.hasPendingQuizSubmissions()) _OfflineBanner(),
-              Expanded(
-                child: questions.isEmpty
-                    ? const Center(child: Text('No questions'))
-                    : PageView.builder(
-                        controller: _pageCtrl,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: questions.length,
-                        onPageChanged: (i) => setState(() => _currentIndex = i),
-                        itemBuilder: (_, i) {
-                          final q = questions[i] as Map<String, dynamic>;
-                          final qId = q['id'] as String? ?? '$i';
-                          final answeredId = _answers[qId];
-                          final isCorrect = _results[qId];
-                          return QuizQuestionCard(
-                            index: i,
-                            questionId: qId,
-                            questionText: q['questionText'] ?? '',
-                            questionType: q['questionType']?.toString(),
-                            options: (q['answers'] as List?) ?? [],
-                            selectedAnswerId: answeredId,
-                            showFeedback: answeredId != null,
-                            isCorrect: isCorrect,
-                            onSelect: (optId) {
-                              _onAnswer(qId, optId);
-                              setState(() {});
-                            },
-                          );
-                        },
-                      ),
-              ),
-              _BottomBar(
-                currentIndex: _currentIndex,
-                total: questions.length,
-                answered: answered,
-                attemptId: _attemptId,
-                submitting: _submitting,
-                hasAnswers: _answers.isNotEmpty,
-                onSubmit: () => _submit(ref.read(graphqlClientProvider)),
-                onNext: _onNext,
-                dark: dark,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _OfflineBanner extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: DesignTokens.warning.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(children: [
-        const Icon(Icons.cloud_upload_outlined,
-            size: 16, color: DesignTokens.warning),
-        const SizedBox(width: 8),
-        Expanded(
-            child: Text(
-          '${HiveService.pendingQuizCount()} pending — will retry',
-          style: const TextStyle(fontSize: 12, color: DesignTokens.warning),
-        )),
-      ]),
-    );
-  }
-}
-
-class _BottomBar extends StatelessWidget {
-  final int currentIndex;
-  final int total;
-  final int answered;
-  final String? attemptId;
-  final bool submitting;
-  final bool hasAnswers;
-  final VoidCallback onSubmit;
-  final VoidCallback onNext;
-  final bool dark;
-
-  const _BottomBar({
-    required this.currentIndex,
-    required this.total,
-    required this.answered,
-    this.attemptId,
-    required this.submitting,
-    required this.hasAnswers,
-    required this.onSubmit,
-    required this.onNext,
-    required this.dark,
-  });
-
-  bool get _isLast => currentIndex >= total - 1;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-      decoration: BoxDecoration(
-        color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
-        border: Border(
-            top: BorderSide(
-                color: (dark ? DesignTokens.darkBorder : DesignTokens.border)
-                    .withValues(alpha: 0.5))),
-      ),
-      child: Row(
-        children: [
-          if (!_isLast)
-            Text('${currentIndex + 1}/$total',
-                style:
-                    TextStyle(color: DesignTokens.textTertiary, fontSize: 13))
-          else
-            Text('Review',
-                style:
-                    TextStyle(color: DesignTokens.textSecondary, fontSize: 13)),
-          const Spacer(),
-          SizedBox(
-            width: _isLast ? double.infinity : null,
-            child: FilledButton(
-              onPressed: _isLast
-                  ? (attemptId == null || submitting || !hasAnswers
-                      ? null
-                      : onSubmit)
-                  : onNext,
-              child: _isLast
-                  ? (submitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : Text('Submit ($answered/$total)'))
-                  : const Text('Next'),
-            ),
-          ),
-        ],
+      builder: (result, {fetchMore, refetch}) => QuizBody(
+        result: result,
+        refetch: refetch,
+        answers: _answers,
+        results: _results,
+        time: _time,
+        attemptId: _attemptId,
+        submitting: _submitting,
+        startingAttempt: _startingAttempt,
+        currentIndex: _currentIndex,
+        answeredCount: _answeredCount,
+        pageCtrl: _pageCtrl,
+        dark: dark,
+        onAnswer: _onAnswer,
+        onNext: _onNext,
+        onSubmit: () => _submit(ref.read(graphqlClientProvider)),
+        onStartAttempt: (quizId) =>
+            _startAttempt(quizId, ref.read(graphqlClientProvider)),
+        onPageChanged: (i) => setState(() => _currentIndex = i),
       ),
     );
   }

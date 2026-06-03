@@ -42,10 +42,12 @@ class ProfilePostsTab extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.article_outlined, size: 48, color: DesignTokens.textTertiary),
+                  Icon(Icons.article_outlined,
+                      size: 48, color: DesignTokens.textTertiary),
                   SizedBox(height: 12),
                   Text('No posts yet',
-                      style: TextStyle(color: DesignTokens.textSecondary, fontSize: 15)),
+                      style: TextStyle(
+                          color: DesignTokens.textSecondary, fontSize: 15)),
                 ],
               ),
             ),
@@ -133,7 +135,8 @@ class _PostListItem extends StatelessWidget {
                       size: 14, color: DesignTokens.textTertiary),
                   Text('$score',
                       style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                           color: DesignTokens.textSecondary)),
                   const Icon(Icons.arrow_downward,
                       size: 14, color: DesignTokens.textTertiary),
@@ -146,7 +149,8 @@ class _PostListItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      maxLines: 2, overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),

@@ -151,8 +151,8 @@ class VideoPlayerPlaceholder extends StatelessWidget {
                   child: Text(videoUrl,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          color: Colors.white54, fontSize: 10)),
+                      style:
+                          const TextStyle(color: Colors.white54, fontSize: 10)),
                 ),
                 Positioned(
                   top: 8,
@@ -283,7 +283,9 @@ class _PostTypeBadge extends StatelessWidget {
       ),
       child: Text(typeLabel,
           style: const TextStyle(
-              fontSize: 9, color: DesignTokens.primary, fontWeight: FontWeight.w600)),
+              fontSize: 9,
+              color: DesignTokens.primary,
+              fontWeight: FontWeight.w600)),
     );
   }
 }

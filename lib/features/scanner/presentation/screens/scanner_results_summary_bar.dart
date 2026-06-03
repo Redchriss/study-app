@@ -6,7 +6,8 @@ class ScannerResultsSummaryBar extends StatelessWidget {
   final List solutions;
   final bool dark;
 
-  const ScannerResultsSummaryBar({super.key, required this.solutions, required this.dark});
+  const ScannerResultsSummaryBar(
+      {super.key, required this.solutions, required this.dark});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +23,12 @@ class ScannerResultsSummaryBar extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [DesignTokens.primary.withValues(alpha: 0.12), DesignTokens.accent.withValues(alpha: 0.08)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: [
+            DesignTokens.primary.withValues(alpha: 0.12),
+            DesignTokens.accent.withValues(alpha: 0.08)
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
         border: Border.all(color: DesignTokens.primary.withValues(alpha: 0.2)),
@@ -32,8 +37,11 @@ class ScannerResultsSummaryBar extends StatelessWidget {
         Row(children: [
           const Icon(Icons.auto_awesome, color: DesignTokens.primary, size: 20),
           const SizedBox(width: 12),
-          Expanded(child: Text('AI solved $withAnswer of $total',
-              style: const TextStyle(fontWeight: FontWeight.w700, color: DesignTokens.primary))),
+          Expanded(
+              child: Text('AI solved $withAnswer of $total',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: DesignTokens.primary))),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
@@ -41,7 +49,10 @@ class ScannerResultsSummaryBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
             ),
             child: Text('${(pct * 100).round()}%',
-                style: const TextStyle(color: DesignTokens.success, fontWeight: FontWeight.w800, fontSize: 13)),
+                style: const TextStyle(
+                    color: DesignTokens.success,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13)),
           ),
         ]),
         const SizedBox(height: 10),

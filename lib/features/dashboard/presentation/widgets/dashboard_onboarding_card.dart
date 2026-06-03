@@ -7,14 +7,12 @@ class DashboardOnboardingCard extends StatelessWidget {
   const DashboardOnboardingCard({super.key});
 
   static const _subjects = [
-    _SubjectSuggestion('Mathematics', Icons.calculate_rounded,
-        DesignTokens.warning),
-    _SubjectSuggestion('English', Icons.menu_book_rounded,
-        DesignTokens.primary),
-    _SubjectSuggestion('Science', Icons.biotech_rounded,
-        DesignTokens.success),
-    _SubjectSuggestion('History', Icons.history_rounded,
-        DesignTokens.accent),
+    _SubjectSuggestion(
+        'Mathematics', Icons.calculate_rounded, DesignTokens.warning),
+    _SubjectSuggestion(
+        'English', Icons.menu_book_rounded, DesignTokens.primary),
+    _SubjectSuggestion('Science', Icons.biotech_rounded, DesignTokens.success),
+    _SubjectSuggestion('History', Icons.history_rounded, DesignTokens.accent),
   ];
 
   @override
@@ -34,10 +32,7 @@ class DashboardOnboardingCard extends StatelessWidget {
                   height: 48,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF1B6CA8),
-                          Color(0xFF7C4DFF)
-                        ]),
+                        colors: [Color(0xFF1B6CA8), Color(0xFF7C4DFF)]),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.auto_stories_rounded,
@@ -53,8 +48,7 @@ class DashboardOnboardingCard extends StatelessWidget {
                               ?.copyWith(fontWeight: FontWeight.w800)),
                       Text('Pick a subject to start learning',
                           style: theme.textTheme.bodySmall
-                              ?.copyWith(
-                                  color: DesignTokens.textSecondary)),
+                              ?.copyWith(color: DesignTokens.textSecondary)),
                     ],
                   ),
                 ),
@@ -62,23 +56,20 @@ class DashboardOnboardingCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text('Recommended for you',
-                style: TextStyle(
-                    fontWeight: FontWeight.w700, fontSize: 13)),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
             const SizedBox(height: 10),
             ..._subjects.map(
               (s) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: AnimatedPress(
-                  onTap: () =>
-                      context.push('/materials'),
+                  onTap: () => context.push('/materials'),
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: s.color.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color:
-                              s.color.withValues(alpha: 0.15)),
+                      border:
+                          Border.all(color: s.color.withValues(alpha: 0.15)),
                     ),
                     child: Row(
                       children: [
@@ -89,18 +80,15 @@ class DashboardOnboardingCard extends StatelessWidget {
                             color: s.color.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Icon(s.icon,
-                              color: s.color, size: 18),
+                          child: Icon(s.icon, color: s.color, size: 18),
                         ),
                         const SizedBox(width: 12),
                         Text(s.name,
                             style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14)),
+                                fontWeight: FontWeight.w700, fontSize: 14)),
                         const Spacer(),
                         Icon(Icons.chevron_right_rounded,
-                            color: DesignTokens.textTertiary,
-                            size: 20),
+                            color: DesignTokens.textTertiary, size: 20),
                       ],
                     ),
                   ),

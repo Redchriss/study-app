@@ -31,53 +31,79 @@ class ReportCard extends ConsumerWidget {
             Row(children: [
               const Icon(Icons.flag, size: 16, color: Colors.red),
               const SizedBox(width: 6),
-              Expanded(child: Text('Reported by u/${reporter?['username'] ?? 'unknown'}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey))),
+              Expanded(
+                  child: Text(
+                      'Reported by u/${reporter?['username'] ?? 'unknown'}',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: Colors.grey))),
             ]),
             const SizedBox(height: 8),
-            Text(report['reason'] as String? ?? '', style: Theme.of(context).textTheme.bodyMedium),
+            Text(report['reason'] as String? ?? '',
+                style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 4),
             if (post != null)
               InkWell(
-                onTap: () => context.push('/y/$communitySlug/post/${post['slug']}'),
+                onTap: () =>
+                    context.push('/y/$communitySlug/post/${post['slug']}'),
                 child: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8)),
                   child: Row(children: [
                     const Icon(Icons.article_outlined, size: 16),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(post['title'] as String? ?? '',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-                        maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    Expanded(
+                        child: Text(post['title'] as String? ?? '',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis)),
                   ]),
                 ),
               ),
             if (comment != null)
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8)),
                 child: Row(children: [
                   const Icon(Icons.comment_outlined, size: 16),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(comment['body'] as String? ?? '', maxLines: 2, overflow: TextOverflow.ellipsis)),
+                  Expanded(
+                      child: Text(comment['body'] as String? ?? '',
+                          maxLines: 2, overflow: TextOverflow.ellipsis)),
                 ]),
               ),
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-              TextButton.icon(onPressed: () => _resolve(context, ref, 'IGNORE'),
-                  icon: const Icon(Icons.clear, size: 18), label: const Text('Ignore')),
+              TextButton.icon(
+                  onPressed: () => _resolve(context, ref, 'IGNORE'),
+                  icon: const Icon(Icons.clear, size: 18),
+                  label: const Text('Ignore')),
               const SizedBox(width: 4),
-              FilledButton.tonalIcon(onPressed: () => _approve(context, ref, post),
-                  icon: const Icon(Icons.check_circle_outline, size: 18), label: const Text('Approve'),
+              FilledButton.tonalIcon(
+                  onPressed: () => _approve(context, ref, post),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: const Text('Approve'),
                   style: FilledButton.styleFrom(foregroundColor: Colors.green)),
               const SizedBox(width: 4),
-              FilledButton.tonalIcon(onPressed: () => _resolve(context, ref, 'REMOVE_CONTENT'),
-                  icon: const Icon(Icons.delete_outline, size: 18), label: const Text('Remove'),
+              FilledButton.tonalIcon(
+                  onPressed: () => _resolve(context, ref, 'REMOVE_CONTENT'),
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: const Text('Remove'),
                   style: FilledButton.styleFrom(foregroundColor: Colors.red)),
               if (post != null) ...[
                 const SizedBox(width: 4),
-                TextButton.icon(onPressed: () => _banUser(context, ref, post),
-                    icon: const Icon(Icons.block, size: 18), label: const Text('Ban'),
+                TextButton.icon(
+                    onPressed: () => _banUser(context, ref, post),
+                    icon: const Icon(Icons.block, size: 18),
+                    label: const Text('Ban'),
                     style: TextButton.styleFrom(foregroundColor: Colors.red)),
               ],
             ]),
@@ -87,38 +113,53 @@ class ReportCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _resolve(BuildContext context, WidgetRef ref, String action) async {
+  Future<void> _resolve(
+      BuildContext context, WidgetRef ref, String action) async {
     final client = ref.read(graphqlClientProvider);
     final result = await client.mutate(MutationOptions(
       document: gql(kResolveReport),
       variables: {'reportId': report['id'], 'action': action},
     ));
     if (result.hasException) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.exception?.graphqlErrors.first.message ?? 'Failed')));
+      if (context.mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                result.exception?.graphqlErrors.first.message ?? 'Failed')));
       return;
     }
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(action == 'IGNORE' ? 'Report ignored' : action == 'REMOVE_CONTENT' ? 'Content removed' : 'Content approved')));
+    if (context.mounted)
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(action == 'IGNORE'
+              ? 'Report ignored'
+              : action == 'REMOVE_CONTENT'
+                  ? 'Content removed'
+                  : 'Content approved')));
     onResolved();
   }
 
-  Future<void> _approve(BuildContext context, WidgetRef ref, Map<String, dynamic>? post) async {
+  Future<void> _approve(
+      BuildContext context, WidgetRef ref, Map<String, dynamic>? post) async {
     if (post == null) return;
     final client = ref.read(graphqlClientProvider);
     final result = await client.mutate(MutationOptions(
-      document: gql(kApprovePost), variables: {'postId': post['id']},
+      document: gql(kApprovePost),
+      variables: {'postId': post['id']},
     ));
     if (result.hasException) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.exception?.graphqlErrors.first.message ?? 'Failed')));
+      if (context.mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                result.exception?.graphqlErrors.first.message ?? 'Failed')));
       return;
     }
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Post approved')));
+    if (context.mounted)
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Post approved')));
     onResolved();
   }
 
-  Future<void> _banUser(BuildContext context, WidgetRef ref, Map<String, dynamic>? post) async {
+  Future<void> _banUser(
+      BuildContext context, WidgetRef ref, Map<String, dynamic>? post) async {
     if (post == null) return;
     final author = post['author'] as Map<String, dynamic>?;
     final username = author?['username']?.toString();
@@ -128,14 +169,22 @@ class ReportCard extends ConsumerWidget {
     final client = ref.read(graphqlClientProvider);
     final result = await client.mutate(MutationOptions(
       document: gql(kBanUser),
-      variables: {'communitySlug': communitySlug, 'username': username, 'reason': reason},
+      variables: {
+        'communitySlug': communitySlug,
+        'username': username,
+        'reason': reason
+      },
     ));
     if (result.hasException) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.exception?.graphqlErrors.first.message ?? 'Failed')));
+      if (context.mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                result.exception?.graphqlErrors.first.message ?? 'Failed')));
       return;
     }
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('u/$username has been banned')));
+    if (context.mounted)
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('u/$username has been banned')));
     onResolved();
   }
 
@@ -145,11 +194,17 @@ class ReportCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Ban user'),
-        content: TextField(controller: ctrl, autofocus: true,
-            decoration: const InputDecoration(hintText: 'Reason for ban', labelText: 'Ban reason')),
+        content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            decoration: const InputDecoration(
+                hintText: 'Reason for ban', labelText: 'Ban reason')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text), child: const Text('Confirm Ban')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text),
+              child: const Text('Confirm Ban')),
         ],
       ),
     );

@@ -4,17 +4,6 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/graphql/queries/queries.dart';
 
-class GalleryItem {
-  final String imageBase64;
-  final String imagePath;
-  final TextEditingController captionCtrl;
-  GalleryItem({
-    required this.imageBase64,
-    required this.imagePath,
-    required this.captionCtrl,
-  });
-}
-
 class CommunityPicker extends StatelessWidget {
   final String? selected;
   final ValueChanged<String?> onChanged;

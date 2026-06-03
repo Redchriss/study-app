@@ -76,8 +76,7 @@ class ProfilePreferencesSection extends ConsumerWidget {
                 ),
               ),
               Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: SizedBox(
                   width: double.infinity,
                   child: SegmentedButton<ThemeMode>(

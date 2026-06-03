@@ -17,8 +17,8 @@ String sanitizeStreamingMarkdown(String text) {
 }
 
 String _extractConfidenceLabel(String text) {
-  final match = RegExp(r'\[confidence:\s*(\d+(?:\.\d+)?)\s*\]')
-      .firstMatch(text);
+  final match =
+      RegExp(r'\[confidence:\s*(\d+(?:\.\d+)?)\s*\]').firstMatch(text);
   if (match == null) return '';
   final score = double.tryParse(match.group(1) ?? '') ?? 1.0;
   return score >= 0.9
@@ -44,8 +44,8 @@ class AiUserBubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10, left: 48),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-              colors: [Color(0xFF1B6CA8), Color(0xFF7C4DFF)]),
+          gradient:
+              LinearGradient(colors: [Color(0xFF1B6CA8), Color(0xFF7C4DFF)]),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(18),
             topRight: Radius.circular(18),
@@ -173,8 +173,7 @@ class AiAssistantBubble extends StatelessWidget {
                                       height: 16,
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF7C4DFF),
-                                        borderRadius:
-                                            BorderRadius.circular(2),
+                                        borderRadius: BorderRadius.circular(2),
                                       ),
                                     ),
                                   ),
@@ -191,12 +190,13 @@ class AiAssistantBubble extends StatelessWidget {
                       children: [
                         if (confidenceLabel.isNotEmpty)
                           _ConfidenceBadge(label: confidenceLabel),
-                        if (confidenceLabel.isNotEmpty) const SizedBox(width: 6),
+                        if (confidenceLabel.isNotEmpty)
+                          const SizedBox(width: 6),
                         _FeedbackButton(
                           icon: Icons.thumb_up_alt_rounded,
                           isActive: feedback == 'like',
-                          onTap: () =>
-                              onFeedback?.call(feedback == 'like' ? null : 'like'),
+                          onTap: () => onFeedback
+                              ?.call(feedback == 'like' ? null : 'like'),
                         ),
                         const SizedBox(width: 2),
                         _FeedbackButton(
@@ -221,7 +221,8 @@ class AiAssistantBubble extends StatelessWidget {
                             color: DesignTokens.textTertiary,
                             padding: EdgeInsets.zero,
                             onPressed: () {
-                              Clipboard.setData(ClipboardData(text: displayText));
+                              Clipboard.setData(
+                                  ClipboardData(text: displayText));
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                     content: const Text('Copied to clipboard'),
@@ -270,8 +271,7 @@ class AiAssistantBubble extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               const Text('Report this response',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w700)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
               const SizedBox(height: 4),
               Text('What\'s wrong?',
                   style: TextStyle(

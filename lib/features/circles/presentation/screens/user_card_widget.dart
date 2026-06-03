@@ -45,9 +45,7 @@ class UserCardWidget extends StatelessWidget {
               backgroundImage:
                   avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
               child: avatarUrl.isEmpty
-                  ? Text(username.isNotEmpty
-                      ? username[0].toUpperCase()
-                      : '?',
+                  ? Text(username.isNotEmpty ? username[0].toUpperCase() : '?',
                       style: const TextStyle(
                           color: DesignTokens.primary,
                           fontWeight: FontWeight.w700))
@@ -70,8 +68,7 @@ class UserCardWidget extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            fontSize: 12,
-                            color: DesignTokens.textSecondary)),
+                            fontSize: 12, color: DesignTokens.textSecondary)),
                 ],
               ),
             ),

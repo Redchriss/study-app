@@ -213,9 +213,7 @@ class _TimeFilterBar extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected
-                      ? Colors.white
-                      : DesignTokens.textSecondary,
+                  color: selected ? Colors.white : DesignTokens.textSecondary,
                 ),
               ),
               selected: selected,
@@ -270,8 +268,7 @@ class _PostTypeBar extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color:
-                      selected ? Colors.white : DesignTokens.textSecondary,
+                  color: selected ? Colors.white : DesignTokens.textSecondary,
                 ),
               ),
               selected: selected,
@@ -279,8 +276,7 @@ class _PostTypeBar extends StatelessWidget {
               checkmarkColor: Colors.white,
               showCheckmark: false,
               visualDensity: VisualDensity.compact,
-              onSelected: (_) =>
-                  onPostTypeChanged(t == postType ? null : t),
+              onSelected: (_) => onPostTypeChanged(t == postType ? null : t),
             ),
           );
         },
@@ -312,11 +308,14 @@ class _FlairBar extends StatelessWidget {
         itemCount: flairs.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 4),
         itemBuilder: (_, i) {
-          final selected = i == 0 ? flairId == null : flairId == flairs[i - 1]['id'];
-          final label = i == 0 ? 'All' : flairs[i - 1]['text']?.toString() ?? '';
+          final selected =
+              i == 0 ? flairId == null : flairId == flairs[i - 1]['id'];
+          final label =
+              i == 0 ? 'All' : flairs[i - 1]['text']?.toString() ?? '';
           final color = i == 0
               ? null
-              : _parseColor(flairs[i - 1]['backgroundColor']?.toString() ?? '#0079D3');
+              : _parseColor(
+                  flairs[i - 1]['backgroundColor']?.toString() ?? '#0079D3');
           return Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: FilterChip(
@@ -335,8 +334,8 @@ class _FlairBar extends StatelessWidget {
               checkmarkColor: Colors.white,
               showCheckmark: false,
               visualDensity: VisualDensity.compact,
-              onSelected: (_) =>
-                  onFlairChanged(i == 0 ? null : flairs[i - 1]['id']?.toString()),
+              onSelected: (_) => onFlairChanged(
+                  i == 0 ? null : flairs[i - 1]['id']?.toString()),
             ),
           );
         },

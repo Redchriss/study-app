@@ -62,10 +62,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               duration: const Duration(milliseconds: 500),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment(
-                      math.cos(_bgAnim.value * math.pi) * 0.3, -1),
-                  end: Alignment(
-                      math.sin(_bgAnim.value * math.pi) * 0.3, 1),
+                  begin: Alignment(math.cos(_bgAnim.value * math.pi) * 0.3, -1),
+                  end: Alignment(math.sin(_bgAnim.value * math.pi) * 0.3, 1),
                   colors: data.gradient,
                 ),
               ),
@@ -103,8 +101,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 24, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

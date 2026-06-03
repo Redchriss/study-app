@@ -14,7 +14,8 @@ class DashboardLoading extends StatelessWidget {
           const SliverToBoxAdapter(child: _HeaderSkeleton()),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spMd),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: DesignTokens.spMd),
               child: Column(
                 children: [
                   const SizedBox(height: DesignTokens.spMd),
@@ -84,15 +85,13 @@ class _HeaderSkeleton extends StatelessWidget {
                             width: 100,
                             height: 14,
                             radius: 4,
-                            baseColor:
-                                Colors.white.withValues(alpha: 0.15)),
+                            baseColor: Colors.white.withValues(alpha: 0.15)),
                         const SizedBox(height: 6),
                         ShimmerBox(
                             width: 160,
                             height: 26,
                             radius: 4,
-                            baseColor:
-                                Colors.white.withValues(alpha: 0.2)),
+                            baseColor: Colors.white.withValues(alpha: 0.2)),
                       ],
                     ),
                   ),
@@ -105,24 +104,21 @@ class _HeaderSkeleton extends StatelessWidget {
                     child: ShimmerBox(
                         height: 50,
                         radius: 14,
-                        baseColor:
-                            Colors.white.withValues(alpha: 0.1)),
+                        baseColor: Colors.white.withValues(alpha: 0.1)),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: ShimmerBox(
                         height: 50,
                         radius: 14,
-                        baseColor:
-                            Colors.white.withValues(alpha: 0.1)),
+                        baseColor: Colors.white.withValues(alpha: 0.1)),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: ShimmerBox(
                         height: 50,
                         radius: 14,
-                        baseColor:
-                            Colors.white.withValues(alpha: 0.1)),
+                        baseColor: Colors.white.withValues(alpha: 0.1)),
                   ),
                 ],
               ),

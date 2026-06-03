@@ -64,9 +64,7 @@ class InboxNotificationCard extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 6),
           padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
           decoration: BoxDecoration(
-            color: isRead
-                ? null
-                : colors.primary.withValues(alpha: 0.03),
+            color: isRead ? null : colors.primary.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isRead
@@ -98,8 +96,7 @@ class InboxNotificationCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight:
-                            isRead ? FontWeight.w500 : FontWeight.w700,
+                        fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
                         color: isRead
                             ? DesignTokens.textSecondary
                             : DesignTokens.textPrimary,
@@ -227,20 +224,41 @@ class InboxNotificationCard extends StatelessWidget {
     switch (type) {
       case 'post_reply':
       case 'comment_reply':
-        return (primary: const Color(0xFF389E75), light: const Color(0xFFE8F5E9));
+        return (
+          primary: const Color(0xFF389E75),
+          light: const Color(0xFFE8F5E9)
+        );
       case 'post_mention':
       case 'comment_mention':
-        return (primary: const Color(0xFF5A6BB2), light: const Color(0xFFEDE7F6));
+        return (
+          primary: const Color(0xFF5A6BB2),
+          light: const Color(0xFFEDE7F6)
+        );
       case 'upvote_milestone':
-        return (primary: const Color(0xFFE87E5E), light: const Color(0xFFFFF3E0));
+        return (
+          primary: const Color(0xFFE87E5E),
+          light: const Color(0xFFFFF3E0)
+        );
       case 'award':
-        return (primary: const Color(0xFFE5B300), light: const Color(0xFFFFF8E1));
+        return (
+          primary: const Color(0xFFE5B300),
+          light: const Color(0xFFFFF8E1)
+        );
       case 'mod_action':
-        return (primary: const Color(0xFFE53E3E), light: const Color(0xFFFFEBEE));
+        return (
+          primary: const Color(0xFFE53E3E),
+          light: const Color(0xFFFFEBEE)
+        );
       case 'modmail':
-        return (primary: const Color(0xFF6B48FF), light: const Color(0xFFF3E5F5));
+        return (
+          primary: const Color(0xFF6B48FF),
+          light: const Color(0xFFF3E5F5)
+        );
       case 'community_invite':
-        return (primary: const Color(0xFF389E75), light: const Color(0xFFE8F5E9));
+        return (
+          primary: const Color(0xFF389E75),
+          light: const Color(0xFFE8F5E9)
+        );
       default:
         return (primary: DesignTokens.primary, light: const Color(0xFFE3F2FD));
     }

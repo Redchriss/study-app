@@ -31,7 +31,9 @@ final pastPaperQuestionSchema = S.object(
     'submitAction',
   ],
 );
+
 enum _GradingState { unanswered, submitting, graded }
+
 class _PastPaperQuestionData {
   final String subject;
   final int year;
@@ -67,6 +69,7 @@ class _PastPaperQuestionData {
     );
   }
 }
+
 class _PastPaperQuestionWidget extends StatefulWidget {
   final _PastPaperQuestionData data;
   final Future<void> Function(String answer) onSubmit;
@@ -78,6 +81,7 @@ class _PastPaperQuestionWidget extends StatefulWidget {
   State<_PastPaperQuestionWidget> createState() =>
       _PastPaperQuestionWidgetState();
 }
+
 class _PastPaperQuestionWidgetState extends State<_PastPaperQuestionWidget>
     with SingleTickerProviderStateMixin {
   final _controller = TextEditingController();
@@ -98,17 +102,20 @@ class _PastPaperQuestionWidgetState extends State<_PastPaperQuestionWidget>
       setState(() => _charCount = _controller.text.length);
     });
   }
+
   @override
   void dispose() {
     _controller.dispose();
     _ctrl.dispose();
     super.dispose();
   }
+
   Future<void> _submit() async {
     if (_controller.text.trim().isEmpty) return;
     setState(() => _state = _GradingState.submitting);
     await widget.onSubmit(_controller.text.trim());
   }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -176,6 +183,7 @@ class _PastPaperQuestionWidgetState extends State<_PastPaperQuestionWidget>
       ),
     );
   }
+
   Widget _buildHeader(ThemeData theme, ColorScheme cs) {
     return Row(
       children: [

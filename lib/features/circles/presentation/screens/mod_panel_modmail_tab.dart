@@ -27,8 +27,8 @@ class ModPanelModmailTab extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, size: 48,
-                    color: DesignTokens.error),
+                const Icon(Icons.error_outline,
+                    size: 48, color: DesignTokens.error),
                 const SizedBox(height: 12),
                 Text(graphQLErrorMessage(result.exception),
                     style: const TextStyle(color: DesignTokens.textSecondary)),
@@ -50,8 +50,7 @@ class ModPanelModmailTab extends ConsumerWidget {
                     size: 48, color: DesignTokens.textTertiary),
                 SizedBox(height: 12),
                 Text('No modmail threads',
-                    style:
-                        TextStyle(color: DesignTokens.textSecondary)),
+                    style: TextStyle(color: DesignTokens.textSecondary)),
               ],
             ),
           );
@@ -167,8 +166,8 @@ class _ModmailThreadCard extends ConsumerWidget {
             style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(
           _timeAgo(thread['lastUpdated']?.toString() ?? ''),
-          style: const TextStyle(
-              color: DesignTokens.textSecondary, fontSize: 12),
+          style:
+              const TextStyle(color: DesignTokens.textSecondary, fontSize: 12),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -299,15 +298,13 @@ class _ModmailThreadDetailState extends State<_ModmailThreadDetail> {
                         itemCount: messages.length,
                         itemBuilder: (_, i) {
                           final m = messages[i] as Map<String, dynamic>;
-                          final author =
-                              m['author'] as Map<String, dynamic>?;
+                          final author = m['author'] as Map<String, dynamic>?;
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: m['isInternal'] == true
-                                  ? DesignTokens.warning
-                                      .withValues(alpha: 0.08)
+                                  ? DesignTokens.warning.withValues(alpha: 0.08)
                                   : DesignTokens.surfaceVariant,
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -340,8 +337,9 @@ class _ModmailThreadDetailState extends State<_ModmailThreadDetail> {
                                       ),
                                     ],
                                     const Spacer(),
-                                    Text(_timeAgo(
-                                        m['createdAt']?.toString() ?? ''),
+                                    Text(
+                                        _timeAgo(
+                                            m['createdAt']?.toString() ?? ''),
                                         style: const TextStyle(
                                             fontSize: 11,
                                             color: DesignTokens.textTertiary)),

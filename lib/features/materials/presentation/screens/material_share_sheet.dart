@@ -18,8 +18,7 @@ class MaterialShareSheet extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<MaterialShareSheet> createState() =>
-      _MaterialShareSheetState();
+  ConsumerState<MaterialShareSheet> createState() => _MaterialShareSheetState();
 }
 
 class _MaterialShareSheetState extends ConsumerState<MaterialShareSheet> {

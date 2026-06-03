@@ -79,9 +79,8 @@ class NotificationItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: dark ? DesignTokens.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: isRead
-              ? null
-              : Border.all(color: color.withValues(alpha: 0.3)),
+          border:
+              isRead ? null : Border.all(color: color.withValues(alpha: 0.3)),
           boxShadow: isRead
               ? null
               : [
@@ -121,9 +120,7 @@ class NotificationItem extends StatelessWidget {
                     notification['message'] ?? '',
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight: isRead
-                          ? FontWeight.w500
-                          : FontWeight.w700,
+                      fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
                       color: isRead
                           ? DesignTokens.textSecondary
                           : DesignTokens.textPrimary,

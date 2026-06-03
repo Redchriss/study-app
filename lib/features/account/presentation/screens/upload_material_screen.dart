@@ -126,7 +126,8 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
             ],
             if (_m.requiresFile || _m.supportsOptionalFile) ...[
               FilePickerCard(
-                fileButtonLabel: UploadMaterialLabels.fileButtonLabel(_m.contentType),
+                fileButtonLabel:
+                    UploadMaterialLabels.fileButtonLabel(_m.contentType),
                 requiresFile: _m.requiresFile,
                 selectedFile: _m.selectedFile,
                 onPick: _m.pickFile,
@@ -187,7 +188,8 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
               const SizedBox(width: DesignTokens.spSm),
               const UploadPill(label: 'Mobile-friendly'),
               const SizedBox(width: DesignTokens.spSm),
-              UploadPill(label: UploadMaterialLabels.levelLabel(_m.educationLevel)),
+              UploadPill(
+                  label: UploadMaterialLabels.levelLabel(_m.educationLevel)),
             ],
           ),
         ],
@@ -205,7 +207,7 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: DesignTokens.spXs),
-            Text(UploadMaterialLabels.primaryHint(_m.contentType),
+          Text(UploadMaterialLabels.primaryHint(_m.contentType),
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: DesignTokens.textSecondary)),
         ],

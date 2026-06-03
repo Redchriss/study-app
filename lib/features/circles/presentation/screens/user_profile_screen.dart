@@ -48,15 +48,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         document: gql(kUserProfile),
         variables: {'username': widget.username},
       ),
-      builder: (QueryResult result, {VoidCallback? refetch, FetchMore? fetchMore}) {
+      builder: (QueryResult result,
+          {VoidCallback? refetch, FetchMore? fetchMore}) {
         if (result.isLoading) {
-          return Scaffold(appBar: AppBar(), body: const Center(child: LoadingWidget()));
+          return Scaffold(
+              appBar: AppBar(), body: const Center(child: LoadingWidget()));
         }
         if (result.hasException) {
           return Scaffold(
             appBar: AppBar(),
             body: ErrorState(
-              message: graphQLErrorMessage(result.exception, 'Could not load profile'),
+              message: graphQLErrorMessage(
+                  result.exception, 'Could not load profile'),
               onRetry: () => refetch?.call(),
             ),
           );
@@ -64,7 +67,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
 
         final profile = result.data?['userProfile'] as Map<String, dynamic>?;
         if (profile == null) {
-          return Scaffold(appBar: AppBar(), body: const Center(child: Text('User not found')));
+          return Scaffold(
+              appBar: AppBar(),
+              body: const Center(child: Text('User not found')));
         }
 
         _isFollowing = profile['isFollowing'] == true;
@@ -72,8 +77,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
 
         final user = profile['user'] as Map<String, dynamic>?;
         final username = user?['username']?.toString() ?? widget.username;
-        final achievements = (profile['achievements'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-        final activeCommunities = (profile['activeCommunities'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        final achievements =
+            (profile['achievements'] as List?)?.cast<Map<String, dynamic>>() ??
+                [];
+        final activeCommunities = (profile['activeCommunities'] as List?)
+                ?.cast<Map<String, dynamic>>() ??
+            [];
 
         return Scaffold(
           body: CustomScrollView(
@@ -101,9 +110,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                           child: Column(
                             children: [
                               Container(
-                                width: 44, height: 44,
+                                width: 44,
+                                height: 44,
                                 decoration: BoxDecoration(
-                                  color: DesignTokens.primary.withValues(alpha: 0.1),
+                                  color: DesignTokens.primary
+                                      .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(achIcon(ach?['icon']?.toString()),
@@ -112,7 +123,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                               const SizedBox(height: 4),
                               Text(ach?['name']?.toString() ?? '',
                                   style: const TextStyle(fontSize: 10),
-                                  maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
                             ],
                           ),
                         );
@@ -127,7 +139,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Active in', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: DesignTokens.textSecondary)),
+                        const Text('Active in',
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: DesignTokens.textSecondary)),
                         const SizedBox(height: 8),
                         SizedBox(
                           height: 32,
@@ -137,10 +153,20 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                               return Padding(
                                 padding: const EdgeInsets.only(right: 6),
                                 child: ActionChip(
-                                  avatar: c['icon'] != null && c['icon'].toString().isNotEmpty
-                                      ? CircleAvatar(radius: 10, backgroundImage: NetworkImage(c['icon'].toString()))
-                                      : const CircleAvatar(radius: 10, child: Text('y', style: TextStyle(fontSize: 10, color: Colors.white))),
-                                  label: Text('y/${c['name']}', style: const TextStyle(fontSize: 11)),
+                                  avatar: c['icon'] != null &&
+                                          c['icon'].toString().isNotEmpty
+                                      ? CircleAvatar(
+                                          radius: 10,
+                                          backgroundImage: NetworkImage(
+                                              c['icon'].toString()))
+                                      : const CircleAvatar(
+                                          radius: 10,
+                                          child: Text('y',
+                                              style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.white))),
+                                  label: Text('y/${c['name']}',
+                                      style: const TextStyle(fontSize: 11)),
                                   onPressed: () {},
                                 ),
                               );
@@ -170,7 +196,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   children: [
                     UserProfilePostsTab(username: widget.username),
                     UserProfileCommentsTab(username: widget.username),
-                    if (_isOwnProfile) const SavedTab() else const SizedBox.shrink(),
+                    if (_isOwnProfile)
+                      const SavedTab()
+                    else
+                      const SizedBox.shrink(),
                   ],
                 ),
               ),

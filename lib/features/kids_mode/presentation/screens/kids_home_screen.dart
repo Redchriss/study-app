@@ -114,8 +114,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
     final notifier = ref.read(kidsHomeStateProvider.notifier);
     notifier.apply((s) => s.copyWith(
           sessionWarningShown: false,
-          sessionRemaining: (s.sessionRemaining + 300)
-              .clamp(0, s.sessionDuration + 300),
+          sessionRemaining:
+              (s.sessionRemaining + 300).clamp(0, s.sessionDuration + 300),
           sessionDuration: s.sessionDuration + 300,
         ));
     HapticFeedback.lightImpact();
@@ -137,8 +137,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
             .apply((s) => s.copyWith(isSpeaking: false));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content:
-                  Text('Reading aloud is not available on this device'),
+              content: Text('Reading aloud is not available on this device'),
               backgroundColor: DesignTokens.error),
         );
       }
@@ -299,8 +298,7 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
           appBar: KidsHomeAppBar(
             remainingSeconds:
                 state.sessionActive ? state.sessionRemaining : null,
-            durationSeconds:
-                state.sessionActive ? state.sessionDuration : null,
+            durationSeconds: state.sessionActive ? state.sessionDuration : null,
           ),
           body: Stack(
             children: [
@@ -308,7 +306,9 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
                 child: Column(
                   children: [
                     KidsOfflineBanner(isOffline: _isOffline),
-                    if (state.sessionActive && state.sessionRemaining <= 300 && !_showWarningOverlay)
+                    if (state.sessionActive &&
+                        state.sessionRemaining <= 300 &&
+                        !_showWarningOverlay)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                         child: KidsSoftStopBanner(
@@ -353,14 +353,14 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
                                           topics: []));
                                 },
                                 onTopicTap: _onTopicTap,
-                                onReviewTap: () =>
-                                    _mgr.actions.openRoadmapTopicById(
-                                        state.roadmapSummary?['reviewTopicId']
-                                            ?.toString()),
-                                onNextTap: () =>
-                                    _mgr.actions.openRoadmapTopicById(
-                                        state.roadmapSummary?['nextTopicId']
-                                            ?.toString()),
+                                onReviewTap: () => _mgr.actions
+                                    .openRoadmapTopicById(state
+                                        .roadmapSummary?['reviewTopicId']
+                                        ?.toString()),
+                                onNextTap: () => _mgr.actions
+                                    .openRoadmapTopicById(state
+                                        .roadmapSummary?['nextTopicId']
+                                        ?.toString()),
                                 onJourneyTap: () =>
                                     _mgr.actions.openJourney(auth),
                                 onTapTopic: (tid) =>
@@ -386,12 +386,9 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen>
                   onStop: () {
                     setState(() => _showWarningOverlay = false);
                     _stopSessionTimer();
-                    ref
-                        .read(kidsHomeStateProvider.notifier)
-                        .clearSavedState();
-                    ref
-                        .read(kidsHomeStateProvider.notifier)
-                        .apply((s) => s.copyWith(
+                    ref.read(kidsHomeStateProvider.notifier).clearSavedState();
+                    ref.read(kidsHomeStateProvider.notifier).apply((s) => s
+                        .copyWith(
                             selectedSubject: null,
                             selectedTopic: null,
                             currentLesson: null,

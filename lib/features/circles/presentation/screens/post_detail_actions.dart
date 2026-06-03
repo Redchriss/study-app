@@ -4,7 +4,8 @@ import '../../../../core/theme/design_tokens.dart';
 class CommentSortBar extends StatelessWidget {
   final String sort;
   final ValueChanged<String> onChanged;
-  const CommentSortBar({super.key, required this.sort, required this.onChanged});
+  const CommentSortBar(
+      {super.key, required this.sort, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +49,7 @@ class CommentInput extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        border:
-            Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: SafeArea(
         top: false,
@@ -78,8 +78,7 @@ class CommentInput extends StatelessWidget {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.send_rounded,
-                      color: DesignTokens.primary),
+                  : const Icon(Icons.send_rounded, color: DesignTokens.primary),
               onPressed: sending ? null : onSubmit,
             ),
           ],

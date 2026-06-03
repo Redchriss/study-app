@@ -72,11 +72,11 @@ class ProfileHeader extends StatelessWidget {
                       ? NetworkImage(avatarUrl!)
                       : null,
                   child: avatarUrl == null || avatarUrl!.isEmpty
-                      ? Text(username.isNotEmpty
-                            ? username[0].toUpperCase()
-                            : 'U',
+                      ? Text(
+                          username.isNotEmpty ? username[0].toUpperCase() : 'U',
                           style: const TextStyle(
-                              fontSize: 32, fontWeight: FontWeight.w800,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
                               color: DesignTokens.primary))
                       : null,
                 ),
@@ -111,7 +111,8 @@ class ProfileHeader extends StatelessWidget {
                   const Spacer(),
                   Text('$totalKarma karma',
                       style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                           color: DesignTokens.primary)),
                 ],
               ),
@@ -159,8 +160,18 @@ class ProfileHeader extends StatelessWidget {
     try {
       final dt = DateTime.parse(iso);
       final months = [
-        'Jan','Feb','Mar','Apr','May','Jun',
-        'Jul','Aug','Sep','Oct','Nov','Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
       ];
       return '${months[dt.month - 1]} ${dt.year}';
     } catch (_) {
@@ -184,7 +195,8 @@ class _KarmaChip extends StatelessWidget {
       ),
       child: Text('$label: $value',
           style: const TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w600,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
               color: DesignTokens.primary)),
     );
   }

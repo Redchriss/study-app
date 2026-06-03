@@ -136,5 +136,4 @@ class NotificationsScreen extends ConsumerWidget {
       },
     );
   }
-
 }

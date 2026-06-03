@@ -22,7 +22,8 @@ class OnboardingData {
   static const pages = [
     OnboardingData(
       title: 'Your AI Study\nPartner',
-      subtitle: 'Get instant help with any subject.\nPersonal tutor. Available 24/7.',
+      subtitle:
+          'Get instant help with any subject.\nPersonal tutor. Available 24/7.',
       gradient: [Color(0xFF1B6CA8), Color(0xFF0E3D6E)],
       accentColor: Color(0xFF4FC3F7),
       icon: Icons.auto_awesome_rounded,
@@ -31,7 +32,8 @@ class OnboardingData {
     ),
     OnboardingData(
       title: 'Built for\nMalawi',
-      subtitle: 'From PSLCE to MSCE, plus public & private\nuniversities and all TTCs.',
+      subtitle:
+          'From PSLCE to MSCE, plus public & private\nuniversities and all TTCs.',
       gradient: [Color(0xFF1F6A52), Color(0xFF0D3B2E)],
       accentColor: Color(0xFF69F0AE),
       icon: Icons.flag_rounded,
@@ -40,7 +42,8 @@ class OnboardingData {
     ),
     OnboardingData(
       title: 'Scan. Solve.\nLearn.',
-      subtitle: 'Point your camera at any past paper.\nGet step-by-step AI solutions instantly.',
+      subtitle:
+          'Point your camera at any past paper.\nGet step-by-step AI solutions instantly.',
       gradient: [Color(0xFF6A1B9A), Color(0xFF380B5A)],
       accentColor: Color(0xFFCE93D8),
       icon: Icons.document_scanner_rounded,

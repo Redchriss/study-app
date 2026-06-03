@@ -63,11 +63,16 @@ class ProfileHeader extends StatelessWidget {
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(36),
                         child: Image.network(avatarUrl,
-                            width: 72, height: 72, fit: BoxFit.cover,
+                            width: 72,
+                            height: 72,
+                            fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => const Icon(
-                                Icons.person, size: 36, color: DesignTokens.primary)),
+                                Icons.person,
+                                size: 36,
+                                color: DesignTokens.primary)),
                       )
-                    : const Icon(Icons.person, size: 36, color: DesignTokens.primary),
+                    : const Icon(Icons.person,
+                        size: 36, color: DesignTokens.primary),
               ),
             ),
           ],
@@ -86,7 +91,8 @@ class ProfileHeader extends StatelessWidget {
             children: [
               const SizedBox(height: 8),
               Text('u/$username',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),
               Row(
                 children: [
@@ -97,7 +103,10 @@ class ProfileHeader extends StatelessWidget {
                   KarmaChip(label: 'Award', value: awardKarma),
                   const Spacer(),
                   Text('$totalKarma karma',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: DesignTokens.primary)),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: DesignTokens.primary)),
                 ],
               ),
               if (!isOwnProfile) ...[
@@ -112,7 +121,8 @@ class ProfileHeader extends StatelessWidget {
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: Text(isFollowing ? 'Following' : 'Follow', style: const TextStyle(fontSize: 12)),
+                        child: Text(isFollowing ? 'Following' : 'Follow',
+                            style: const TextStyle(fontSize: 12)),
                       ),
                     const SizedBox(width: 8),
                     if (onBlock != null)
@@ -124,13 +134,16 @@ class ProfileHeader extends StatelessWidget {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: Text(isBlocked ? 'Unblock' : 'Block',
-                            style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: DesignTokens.textSecondary)),
                       ),
                     const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: () => context.push('/home/inbox'),
                       icon: const Icon(Icons.message_outlined, size: 14),
-                      label: const Text('Message', style: TextStyle(fontSize: 12)),
+                      label:
+                          const Text('Message', style: TextStyle(fontSize: 12)),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         minimumSize: Size.zero,
@@ -143,16 +156,20 @@ class ProfileHeader extends StatelessWidget {
               ],
               if (bio != null && bio.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text(bio, style: const TextStyle(fontSize: 13, color: DesignTokens.textSecondary)),
+                Text(bio,
+                    style: const TextStyle(
+                        fontSize: 13, color: DesignTokens.textSecondary)),
               ],
               if (createdAt != null) ...[
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 12, color: DesignTokens.textTertiary),
+                    const Icon(Icons.calendar_today,
+                        size: 12, color: DesignTokens.textTertiary),
                     const SizedBox(width: 4),
                     Text('Joined ${_formatDate(createdAt)}',
-                        style: const TextStyle(fontSize: 11, color: DesignTokens.textTertiary)),
+                        style: const TextStyle(
+                            fontSize: 11, color: DesignTokens.textTertiary)),
                   ],
                 ),
               ],
@@ -167,7 +184,9 @@ class ProfileHeader extends StatelessWidget {
     try {
       final dt = DateTime.parse(iso);
       return '${dt.month}/${dt.year}';
-    } catch (_) { return ''; }
+    } catch (_) {
+      return '';
+    }
   }
 }
 
@@ -185,7 +204,10 @@ class KarmaChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text('$label: $value',
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: DesignTokens.primary)),
+          style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: DesignTokens.primary)),
     );
   }
 }
@@ -201,22 +223,26 @@ class SavedTab extends StatelessWidget {
         variables: const {'limit': 25},
         fetchPolicy: FetchPolicy.networkOnly,
       ),
-      builder: (QueryResult result, {VoidCallback? refetch, FetchMore? fetchMore}) {
+      builder: (QueryResult result,
+          {VoidCallback? refetch, FetchMore? fetchMore}) {
         if (result.isLoading) return const Center(child: LoadingWidget());
         if (result.hasException) {
           return ErrorState(
-            message: graphQLErrorMessage(result.exception, 'Could not load saved'),
+            message:
+                graphQLErrorMessage(result.exception, 'Could not load saved'),
             onRetry: () => refetch?.call(),
           );
         }
         final data = result.data?['savedPosts'];
         final edges = (data?['edges'] as List?) ?? [];
-        final posts = edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+        final posts =
+            edges.map((e) => e['node'] as Map<String, dynamic>).toList();
         if (posts.isEmpty) {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(32),
-              child: Text('No saved posts', style: TextStyle(color: DesignTokens.textSecondary)),
+              child: Text('No saved posts',
+                  style: TextStyle(color: DesignTokens.textSecondary)),
             ),
           );
         }
@@ -227,7 +253,8 @@ class SavedTab extends StatelessWidget {
             leading: const Icon(Icons.bookmark, size: 20),
             title: Text(posts[i]['title']?.toString() ?? '',
                 maxLines: 1, overflow: TextOverflow.ellipsis),
-            subtitle: Text('y/${(posts[i]['community'] as Map?)?['name'] ?? ''}',
+            subtitle: Text(
+                'y/${(posts[i]['community'] as Map?)?['name'] ?? ''}',
                 style: const TextStyle(fontSize: 12)),
           ),
         );
@@ -238,12 +265,19 @@ class SavedTab extends StatelessWidget {
 
 IconData achIcon(String? icon) {
   switch (icon) {
-    case 'streak': return Icons.local_fire_department_rounded;
-    case 'posts': return Icons.article_rounded;
-    case 'comments': return Icons.chat_rounded;
-    case 'karma': return Icons.trending_up_rounded;
-    case 'votes': return Icons.arrow_upward_rounded;
-    case 'awards': return Icons.auto_awesome_rounded;
-    default: return Icons.emoji_events_rounded;
+    case 'streak':
+      return Icons.local_fire_department_rounded;
+    case 'posts':
+      return Icons.article_rounded;
+    case 'comments':
+      return Icons.chat_rounded;
+    case 'karma':
+      return Icons.trending_up_rounded;
+    case 'votes':
+      return Icons.arrow_upward_rounded;
+    case 'awards':
+      return Icons.auto_awesome_rounded;
+    default:
+      return Icons.emoji_events_rounded;
   }
 }

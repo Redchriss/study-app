@@ -222,5 +222,3 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
     );
   }
 }
-
-

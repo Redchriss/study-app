@@ -47,16 +47,14 @@ void _confirmLogout(BuildContext context, WidgetRef ref) {
         children: [
           Icon(Icons.logout, size: 20, color: DesignTokens.error),
           SizedBox(width: 8),
-          Text('Log out?',
-              style: TextStyle(fontWeight: FontWeight.w800)),
+          Text('Log out?', style: TextStyle(fontWeight: FontWeight.w800)),
         ],
       ),
       content: const Text(
           'You will need to log in again to access your study data.'),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
         TextButton(
           onPressed: () {
             Navigator.pop(ctx);
@@ -79,11 +77,9 @@ void _confirmDeleteAccount(BuildContext context, WidgetRef ref) {
           borderRadius: BorderRadius.circular(DesignTokens.radiusXl)),
       title: const Row(
         children: [
-          Icon(Icons.warning_rounded,
-              size: 20, color: DesignTokens.error),
+          Icon(Icons.warning_rounded, size: 20, color: DesignTokens.error),
           SizedBox(width: 8),
-          Text('Delete Account',
-              style: TextStyle(fontWeight: FontWeight.w800)),
+          Text('Delete Account', style: TextStyle(fontWeight: FontWeight.w800)),
         ],
       ),
       content: Column(
@@ -107,8 +103,7 @@ void _confirmDeleteAccount(BuildContext context, WidgetRef ref) {
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
         TextButton(
           onPressed: () {
             final password = pwdCtrl.text.trim();
@@ -142,13 +137,11 @@ Future<void> _performDelete(
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DesignTokens.radiusXl)),
-        title: const Text('Error',
-            style: TextStyle(color: DesignTokens.error)),
+        title: const Text('Error', style: TextStyle(color: DesignTokens.error)),
         content: Text(error),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('OK')),
+              onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
         ],
       ),
     );

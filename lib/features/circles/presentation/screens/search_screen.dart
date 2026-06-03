@@ -33,14 +33,7 @@ class _SearchScreenState extends State<SearchScreen> {
     'top': 'Top',
     'comments': 'Comments',
   };
-  static const _timeFilters = [
-    'all',
-    'hour',
-    'day',
-    'week',
-    'month',
-    'year'
-  ];
+  static const _timeFilters = ['all', 'hour', 'day', 'week', 'month', 'year'];
   static const _timeLabels = {
     'all': 'All time',
     'hour': 'Past hour',
@@ -67,8 +60,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dark =
-        Theme.of(context).brightness == Brightness.dark;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         title: TextField(
@@ -85,14 +77,12 @@ class _SearchScreenState extends State<SearchScreen> {
                   : DesignTokens.textTertiary,
             ),
           ),
-          onSubmitted: (q) =>
-              setState(() => _query = q.trim()),
+          onSubmitted: (q) => setState(() => _query = q.trim()),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.search_rounded),
-            onPressed: () =>
-                setState(() => _query = _ctrl.text.trim()),
+            onPressed: () => setState(() => _query = _ctrl.text.trim()),
           ),
         ],
       ),
@@ -113,8 +103,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       widget.communitySlug != null
                           ? 'Search in y/${widget.communitySlug}'
                           : 'Type a query to search',
-                      style: const TextStyle(
-                          color: DesignTokens.textSecondary),
+                      style: const TextStyle(color: DesignTokens.textSecondary),
                     ),
                   ],
                 ),
@@ -134,38 +123,33 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     child: Row(
                       children: [
                         ..._sorts.map((s) {
                           final sel = _sort == s;
                           return Padding(
-                            padding:
-                                const EdgeInsets.only(right: 4),
+                            padding: const EdgeInsets.only(right: 4),
                             child: ChoiceChip(
                               label: Text(
                                 _sortLabels[s]!,
                                 style: TextStyle(
                                   fontSize: 11,
-                                  fontWeight: sel
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
+                                  fontWeight:
+                                      sel ? FontWeight.w700 : FontWeight.w500,
                                 ),
                               ),
                               selected: sel,
-                              onSelected: (_) =>
-                                  setState(() => _sort = s),
-                              visualDensity:
-                                  VisualDensity.compact,
+                              onSelected: (_) => setState(() => _sort = s),
+                              visualDensity: VisualDensity.compact,
                             ),
                           );
                         }),
                         Container(
                           width: 1,
                           height: 20,
-                          margin:
-                              const EdgeInsets.symmetric(horizontal: 8),
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
                           color: dark
                               ? DesignTokens.darkBorder
                               : DesignTokens.border,
@@ -173,23 +157,20 @@ class _SearchScreenState extends State<SearchScreen> {
                         ..._timeFilters.map((t) {
                           final sel = _timeFilter == t;
                           return Padding(
-                            padding:
-                                const EdgeInsets.only(right: 4),
+                            padding: const EdgeInsets.only(right: 4),
                             child: FilterChip(
                               label: Text(
                                 _timeLabels[t]!,
                                 style: TextStyle(
                                   fontSize: 10,
-                                  fontWeight: sel
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
+                                  fontWeight:
+                                      sel ? FontWeight.w600 : FontWeight.w400,
                                 ),
                               ),
                               selected: sel,
-                              onSelected: (_) => setState(
-                                  () => _timeFilter = t),
-                              visualDensity:
-                                  VisualDensity.compact,
+                              onSelected: (_) =>
+                                  setState(() => _timeFilter = t),
+                              visualDensity: VisualDensity.compact,
                               showCheckmark: false,
                             ),
                           );
@@ -200,8 +181,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 Expanded(
                   child: Query(
-                    key: ValueKey(
-                        'search_$_query$_sort$_timeFilter'),
+                    key: ValueKey('search_$_query$_sort$_timeFilter'),
                     options: QueryOptions(
                       document: gql(kSearchPosts),
                       variables: {
@@ -210,8 +190,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         if (widget.communitySlug != null)
                           'communitySlug': widget.communitySlug,
                         if (_timeFilter != 'all')
-                          'timeFilter':
-                              _timeFilter.toUpperCase(),
+                          'timeFilter': _timeFilter.toUpperCase(),
                         'limit': 25,
                       },
                       fetchPolicy: FetchPolicy.networkOnly,
@@ -221,11 +200,9 @@ class _SearchScreenState extends State<SearchScreen> {
                         return const Padding(
                           padding: EdgeInsets.all(12),
                           child: Column(children: [
-                            ShimmerBox(
-                                height: 100, radius: 12),
+                            ShimmerBox(height: 100, radius: 12),
                             SizedBox(height: 8),
-                            ShimmerBox(
-                                height: 100, radius: 12),
+                            ShimmerBox(height: 100, radius: 12),
                           ]),
                         );
                       }
@@ -235,25 +212,20 @@ class _SearchScreenState extends State<SearchScreen> {
                           onRetry: () => refetch?.call(),
                         );
                       }
-                      final data =
-                          result.data?['searchPosts'];
-                      final edges =
-                          (data?['edges'] as List?) ?? [];
+                      final data = result.data?['searchPosts'];
+                      final edges = (data?['edges'] as List?) ?? [];
                       final posts = edges
-                          .map((e) =>
-                              e['node'] as Map<String, dynamic>)
+                          .map((e) => e['node'] as Map<String, dynamic>)
                           .toList();
 
                       if (posts.isEmpty) {
                         return Center(
                           child: Padding(
-                            padding:
-                                const EdgeInsets.all(32),
+                            padding: const EdgeInsets.all(32),
                             child: Text(
                               'No results for "$_query"',
                               style: const TextStyle(
-                                  color: DesignTokens
-                                      .textSecondary),
+                                  color: DesignTokens.textSecondary),
                             ),
                           ),
                         );
@@ -265,8 +237,8 @@ class _SearchScreenState extends State<SearchScreen> {
                           post: posts[i],
                           layout: PostCardLayout.compact,
                           onTap: () {
-                            final c = posts[i]['community']
-                                as Map<String, dynamic>?;
+                            final c =
+                                posts[i]['community'] as Map<String, dynamic>?;
                             if (c != null) {
                               context.push(
                                 '/y/${c['slug']}/post/${posts[i]['slug']}',

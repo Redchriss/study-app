@@ -23,7 +23,9 @@ class CommunityInfoSection extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: dark ? DesignTokens.darkSurfaceVariant : DesignTokens.surfaceVariant,
+        color: dark
+            ? DesignTokens.darkSurfaceVariant
+            : DesignTokens.surfaceVariant,
         borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
         border: Border.all(
           color: dark ? DesignTokens.darkBorder : DesignTokens.border,
@@ -39,7 +41,9 @@ class CommunityInfoSection extends StatelessWidget {
               community['description']?.toString() ?? 'No description',
               style: TextStyle(
                 fontSize: 13,
-                color: dark ? DesignTokens.darkTextSecondary : DesignTokens.textSecondary,
+                color: dark
+                    ? DesignTokens.darkTextSecondary
+                    : DesignTokens.textSecondary,
                 height: 1.4,
               ),
             ),
@@ -49,9 +53,11 @@ class CommunityInfoSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
-                _stat(Icons.people_outline, '${formatCount((community['memberCount'] as num?)?.toInt() ?? 0)} members'),
+                _stat(Icons.people_outline,
+                    '${formatCount((community['memberCount'] as num?)?.toInt() ?? 0)} members'),
                 const SizedBox(width: 24),
-                _stat(Icons.article_outlined, '${formatCount((community['postCount'] as num?)?.toInt() ?? 0)} posts'),
+                _stat(Icons.article_outlined,
+                    '${formatCount((community['postCount'] as num?)?.toInt() ?? 0)} posts'),
               ],
             ),
           ),
@@ -67,7 +73,9 @@ class CommunityInfoSection extends StatelessWidget {
                   _formatDate(community['createdAt']?.toString()),
                   style: TextStyle(
                     fontSize: 12,
-                    color: dark ? DesignTokens.darkTextSecondary : DesignTokens.textSecondary,
+                    color: dark
+                        ? DesignTokens.darkTextSecondary
+                        : DesignTokens.textSecondary,
                   ),
                 ),
               ],
@@ -91,7 +99,8 @@ class CommunityInfoSection extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     _typeLabel(community['communityType'].toString()),
-                    style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary),
+                    style: const TextStyle(
+                        fontSize: 12, color: DesignTokens.textSecondary),
                   ),
                 ],
               ),
@@ -115,7 +124,9 @@ class CommunityInfoSection extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: dark ? DesignTokens.darkTextPrimary : DesignTokens.textPrimary,
+                            color: dark
+                                ? DesignTokens.darkTextPrimary
+                                : DesignTokens.textPrimary,
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -128,17 +139,22 @@ class CommunityInfoSection extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: dark ? DesignTokens.darkTextPrimary : DesignTokens.textPrimary,
+                                  color: dark
+                                      ? DesignTokens.darkTextPrimary
+                                      : DesignTokens.textPrimary,
                                 ),
                               ),
-                              if (r['description'] != null && r['description'].toString().isNotEmpty)
+                              if (r['description'] != null &&
+                                  r['description'].toString().isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 2),
                                   child: Text(
                                     r['description'].toString(),
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: dark ? DesignTokens.darkTextSecondary : DesignTokens.textSecondary,
+                                      color: dark
+                                          ? DesignTokens.darkTextSecondary
+                                          : DesignTokens.textSecondary,
                                     ),
                                   ),
                                 ),
@@ -164,7 +180,8 @@ class CommunityInfoSection extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Row(
                       children: [
-                        const Icon(Icons.shield_rounded, size: 14, color: DesignTokens.primary),
+                        const Icon(Icons.shield_rounded,
+                            size: 14, color: DesignTokens.primary),
                         const SizedBox(width: 6),
                         Text(
                           'u/${user?['username'] ?? 'unknown'}',
@@ -211,7 +228,9 @@ class CommunityInfoSection extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: DesignTokens.textSecondary),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12, color: DesignTokens.textSecondary)),
       ],
     );
   }

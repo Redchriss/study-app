@@ -72,7 +72,8 @@ class _ContinueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ratio = progress.completionRatio <= 0 ? 0.05 : progress.completionRatio;
+    final ratio =
+        progress.completionRatio <= 0 ? 0.05 : progress.completionRatio;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
           DesignTokens.spMd, 0, DesignTokens.spMd, DesignTokens.spMd),
@@ -136,8 +137,8 @@ class _ContinueCard extends StatelessWidget {
                       progress.subjectName.isEmpty
                           ? progress.progressLabel
                           : '${progress.subjectName} \u00b7 ${progress.progressLabel}',
-                      style: const TextStyle(
-                          color: Colors.white70, fontSize: 12),
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     const SizedBox(height: 10),
                     Row(
@@ -149,15 +150,13 @@ class _ContinueCard extends StatelessWidget {
                               tween: Tween(begin: 0, end: ratio),
                               duration: DesignTokens.durSlow,
                               curve: Curves.easeOutCubic,
-                              builder: (_, v, __) =>
-                                  LinearProgressIndicator(
+                              builder: (_, v, __) => LinearProgressIndicator(
                                 minHeight: 5,
                                 value: v,
                                 backgroundColor:
                                     Colors.white.withValues(alpha: 0.15),
-                                valueColor:
-                                    const AlwaysStoppedAnimation<Color>(
-                                        Color(0xFFFFD700)),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFFFD700)),
                               ),
                             ),
                           ),

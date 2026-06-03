@@ -43,7 +43,8 @@ class DashboardScreen extends ConsumerWidget {
                       points: 0,
                       credits: 0,
                       dark: dark,
-                      onNotification: () => context.push('/dashboard/notifications'),
+                      onNotification: () =>
+                          context.push('/dashboard/notifications'),
                       onAiTutor: () => context.push('/ai-tutor'),
                     ),
                   ),
@@ -61,9 +62,8 @@ class DashboardScreen extends ConsumerWidget {
         }
 
         final data = DashboardData.fromGraphQL(result.data);
-        unawaited(
-            RetentionService()
-                .refreshStudyReminder(weakTopic: data.focusTopic));
+        unawaited(RetentionService()
+            .refreshStudyReminder(weakTopic: data.focusTopic));
 
         return Scaffold(
           body: RefreshIndicator(
@@ -78,7 +78,8 @@ class DashboardScreen extends ConsumerWidget {
                     points: data.points,
                     credits: data.credits,
                     dark: dark,
-                    onNotification: () => context.push('/dashboard/notifications'),
+                    onNotification: () =>
+                        context.push('/dashboard/notifications'),
                     onAiTutor: () => context.push('/ai-tutor'),
                     dailyProgress: data.dailyProgress,
                     dailyGoal: DashboardData.dailyQuestionGoal,
@@ -107,14 +108,14 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 if (!data.isFirstTime &&
-                    (data.focusTopic.isNotEmpty ||
-                        data.hasProgressData))
+                    (data.focusTopic.isNotEmpty || data.hasProgressData))
                   SliverToBoxAdapter(
                     child: DashboardRecommendationsPanel(data: data),
                   ),
                 if (data.recentMaterials.isNotEmpty)
                   SliverToBoxAdapter(
-                    child: DashboardRecentPanel(materials: data.recentMaterials),
+                    child:
+                        DashboardRecentPanel(materials: data.recentMaterials),
                   ),
                 const SliverToBoxAdapter(
                     child: SizedBox(height: DesignTokens.spXxl * 2)),

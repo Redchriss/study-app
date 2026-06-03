@@ -6,7 +6,8 @@ class FlashCardWidget extends StatefulWidget {
   final FlashCardData data;
   final void Function(String rating) onRecall;
 
-  const FlashCardWidget({super.key, required this.data, required this.onRecall});
+  const FlashCardWidget(
+      {super.key, required this.data, required this.onRecall});
 
   @override
   State<FlashCardWidget> createState() => _FlashCardWidgetState();
@@ -209,5 +210,3 @@ class _FlashCardWidgetState extends State<FlashCardWidget>
     );
   }
 }
-
-

@@ -52,8 +52,7 @@ class DashboardRecentPanel extends StatelessWidget {
               final m = materials[i];
               final color = _colorFor(m);
               return AnimatedPress(
-                onTap: () =>
-                    context.push('/materials/${m['slug']}'),
+                onTap: () => context.push('/materials/${m['slug']}'),
                 child: Container(
                   width: 160,
                   padding: const EdgeInsets.all(14),
@@ -88,8 +87,7 @@ class DashboardRecentPanel extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(m['subject']?['name']?.toString() ?? '',
                           style: theme.textTheme.labelSmall
-                              ?.copyWith(
-                                  color: DesignTokens.textTertiary),
+                              ?.copyWith(color: DesignTokens.textTertiary),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                     ],

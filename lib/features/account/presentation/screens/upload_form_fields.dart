@@ -24,7 +24,8 @@ class UploadFormFields extends StatelessWidget {
             controller: manager.titleCtrl,
             decoration: InputDecoration(
               labelText: 'Title',
-              hintText: UploadMaterialLabels.titlePlaceholder(manager.contentType, manager.educationLevel),
+              hintText: UploadMaterialLabels.titlePlaceholder(
+                  manager.contentType, manager.educationLevel),
             ),
             textInputAction: TextInputAction.next,
           ),
@@ -57,7 +58,8 @@ class UploadFormFields extends StatelessWidget {
             controller: manager.descCtrl,
             decoration: InputDecoration(
               labelText: 'Description',
-              hintText: UploadMaterialLabels.descPlaceholder(manager.educationLevel),
+              hintText:
+                  UploadMaterialLabels.descPlaceholder(manager.educationLevel),
             ),
             maxLines: 3,
             textInputAction: TextInputAction.next,

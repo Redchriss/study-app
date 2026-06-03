@@ -36,8 +36,7 @@ class SimpleQuizData {
     return SimpleQuizData(
       question: (json['question'] as String?) ?? '',
       options: optionsRaw
-              ?.map(
-                  (e) => SimpleQuizOption.fromJson(e as Map<String, Object?>))
+              ?.map((e) => SimpleQuizOption.fromJson(e as Map<String, Object?>))
               .toList() ??
           [],
       correctIndex: (json['correct_index'] as num?)?.toInt() ?? 0,

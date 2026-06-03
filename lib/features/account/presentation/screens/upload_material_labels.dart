@@ -37,8 +37,10 @@ class UploadMaterialLabels {
         }
         return 'e.g. MSCE Mathematics – Differentiation';
       case 'text':
-        if (educationLevel == 'primary') return 'e.g. Science Summary – Living Things';
-        if (educationLevel == 'tertiary') return 'e.g. Law Notes – Constitutional Law';
+        if (educationLevel == 'primary')
+          return 'e.g. Science Summary – Living Things';
+        if (educationLevel == 'tertiary')
+          return 'e.g. Law Notes – Constitutional Law';
         return 'e.g. History Notes – Colonial Malawi';
       default:
         return 'e.g. Form 3 Biology Notes – Respiration';

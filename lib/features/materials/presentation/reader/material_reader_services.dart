@@ -8,6 +8,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/study_progress_store.dart';
 import 'material_reader_models.dart';
+
 class ReaderServiceResult<T> {
   const ReaderServiceResult({
     required this.success,
@@ -20,6 +21,7 @@ class ReaderServiceResult<T> {
   final String? message;
   final List<String> errors;
 }
+
 class MaterialReaderService {
   static const _pageProgressPrefix = 'reader_page_';
   static const _textProgressPrefix = 'reader_text_page_';
@@ -28,6 +30,7 @@ class MaterialReaderService {
       [String fallback = 'Something went wrong.']) {
     return graphQLErrorMessage(result.exception, fallback);
   }
+
   Future<String?> cachePdf(String url, String slug) async {
     final uri = Uri.tryParse(url);
     if (uri == null) return null;
@@ -41,18 +44,21 @@ class MaterialReaderService {
     await file.writeAsBytes(response.bodyBytes, flush: true);
     return file.path;
   }
+
   Future<int> loadSavedPage(String slug, {bool textMode = false}) async {
     final prefs = await SharedPreferences.getInstance();
     final key =
         textMode ? '$_textProgressPrefix$slug' : '$_pageProgressPrefix$slug';
     return prefs.getInt(key) ?? 0;
   }
+
   Future<void> savePage(String slug, int page, {bool textMode = false}) async {
     final prefs = await SharedPreferences.getInstance();
     final key =
         textMode ? '$_textProgressPrefix$slug' : '$_pageProgressPrefix$slug';
     await prefs.setInt(key, page);
   }
+
   Future<void> trackProgress({
     required BuildContext context,
     required String slug,
@@ -86,6 +92,7 @@ class MaterialReaderService {
       );
     } catch (_) {}
   }
+
   Future<ReaderServiceResult<void>> saveAnnotation({
     required BuildContext context,
     required String materialSlug,
@@ -124,6 +131,7 @@ class MaterialReaderService {
       );
     }
   }
+
   Future<ReaderServiceResult<void>> deleteAnnotation({
     required BuildContext context,
     required String annotationId,
@@ -152,6 +160,7 @@ class MaterialReaderService {
       );
     }
   }
+
   Future<ReaderServiceResult<void>> requestAiTask({
     required BuildContext context,
     required String materialId,
@@ -185,6 +194,7 @@ class MaterialReaderService {
       );
     }
   }
+
   Future<ReaderServiceResult<String>> askAi({
     required BuildContext context,
     required String materialId,

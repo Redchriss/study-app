@@ -13,16 +13,22 @@ class ContactCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF1B6CA8), Color(0xFF2EC4B6)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Get in Touch', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
+          const Text('Get in Touch',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white)),
           const SizedBox(height: 6),
-          const Text('We respond to every message within 24 hours.', style: TextStyle(fontSize: 13, color: Colors.white70)),
+          const Text('We respond to every message within 24 hours.',
+              style: TextStyle(fontSize: 13, color: Colors.white70)),
           const SizedBox(height: 16),
           GestureDetector(
             onTap: () async {
@@ -38,9 +44,14 @@ class ContactCard extends StatelessWidget {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.mail_rounded, color: DesignTokens.primary, size: 18),
+                  Icon(Icons.mail_rounded,
+                      color: DesignTokens.primary, size: 18),
                   SizedBox(width: 8),
-                  Text('support@yaza.app', style: TextStyle(fontWeight: FontWeight.w800, color: DesignTokens.primary, fontSize: 14)),
+                  Text('support@yaza.app',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: DesignTokens.primary,
+                          fontSize: 14)),
                 ],
               ),
             ),

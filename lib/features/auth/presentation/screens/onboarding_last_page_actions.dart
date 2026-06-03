@@ -31,8 +31,8 @@ class OnboardingLastPageActions extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16)),
                   ),
                   child: const Text('Get Started — Free',
-                      style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w800)),
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                 ),
               ),
             ),
@@ -44,14 +44,14 @@ class OnboardingLastPageActions extends StatelessWidget {
                   onPressed: onLogin,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.5)),
+                    side:
+                        BorderSide(color: Colors.white.withValues(alpha: 0.5)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),
                   child: const Text('Log In',
-                      style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w700)),
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                 ),
               ),
             ),

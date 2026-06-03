@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import 'past_paper_share_sheet.dart';
+
 /// Detail for a curated past paper from [kPastPapers] (matches web paper list / detail intent).
 class PastPaperDetailScreen extends ConsumerWidget {
   const PastPaperDetailScreen({super.key, required this.paper});
@@ -39,6 +40,7 @@ class PastPaperDetailScreen extends ConsumerWidget {
     }
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -108,6 +110,7 @@ class PastPaperDetailScreen extends ConsumerWidget {
       ),
     );
   }
+
   void _showShareSheet(
       BuildContext context, WidgetRef ref, String title, String fileUrl) {
     showModalBottomSheet(
@@ -118,6 +121,7 @@ class PastPaperDetailScreen extends ConsumerWidget {
       ),
     );
   }
+
   Widget _kv(BuildContext context, String k, String v) {
     return Padding(
       padding: const EdgeInsets.only(bottom: DesignTokens.spXs),
