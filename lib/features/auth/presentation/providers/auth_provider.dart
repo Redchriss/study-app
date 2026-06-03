@@ -7,43 +7,8 @@ import '../../../../core/graphql/client.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/biometric_service.dart';
 import '../../../../core/storage/secure_storage.dart';
-
-class AuthState {
-  final bool isAuthenticated;
-  final bool isLoading;
-  final bool isSubmitting;
-  final bool biometricRequired;
-  final Map<String, dynamic>? user;
-  final String? error;
-
-  const AuthState({
-    required this.isAuthenticated,
-    required this.isLoading,
-    this.isSubmitting = false,
-    this.biometricRequired = false,
-    this.user,
-    this.error,
-  });
-
-  AuthState copyWith({
-    bool? isAuthenticated,
-    bool? isLoading,
-    bool? isSubmitting,
-    bool? biometricRequired,
-    Map<String, dynamic>? user,
-    String? error,
-    bool clearError = false,
-  }) {
-    return AuthState(
-      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      isLoading: isLoading ?? this.isLoading,
-      isSubmitting: isSubmitting ?? this.isSubmitting,
-      biometricRequired: biometricRequired ?? this.biometricRequired,
-      user: user ?? this.user,
-      error: clearError ? null : error ?? this.error,
-    );
-  }
-}
+import 'auth_state.dart';
+export 'auth_state.dart';
 
 final graphqlClientProvider = Provider<GraphQLClient>((ref) {
   return buildGraphQLClient();

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/design_tokens.dart';
 
 import '../../../../main.dart';
+import 'settings_widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -16,8 +17,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _searchCtrl = TextEditingController();
-  List<_SettingsItem> _allItems = [];
-  List<_SettingsItem> _filteredItems = [];
+  List<SettingsItem> _allItems = [];
+  List<SettingsItem> _filteredItems = [];
   bool _showSearch = false;
 
   @override
@@ -33,45 +34,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
-  List<_SettingsItem> _buildItems() {
+  List<SettingsItem> _buildItems() {
     return [
-      _SettingsItem('Account', Icons.person_outline, [
-        _SettingsSub(Icons.edit_outlined, 'Edit Profile', '/edit-profile'),
-        _SettingsSub(
-            Icons.auto_awesome_outlined, 'Plans & Credits', '/upgrade'),
-        _SettingsSub(
-            Icons.emoji_events_outlined, 'Leaderboard', '/leaderboard'),
+      SettingsItem('Account', Icons.person_outline, [
+        SettingsSub(Icons.edit_outlined, 'Edit Profile', '/edit-profile'),
+        SettingsSub(Icons.auto_awesome_outlined, 'Plans & Credits', '/upgrade'),
+        SettingsSub(Icons.emoji_events_outlined, 'Leaderboard', '/leaderboard'),
       ]),
-      _SettingsItem('Preferences', Icons.tune_outlined, [
-        _SettingsSub(Icons.history_outlined, 'Study History', '/history'),
-        _SettingsSub(Icons.bookmark_outline, 'Bookmarks', '/bookmarks'),
-        _SettingsSub(Icons.article_outlined, 'Past Papers', '/past-papers'),
-        _SettingsSub(
+      SettingsItem('Preferences', Icons.tune_outlined, [
+        SettingsSub(Icons.history_outlined, 'Study History', '/history'),
+        SettingsSub(Icons.bookmark_outline, 'Bookmarks', '/bookmarks'),
+        SettingsSub(Icons.article_outlined, 'Past Papers', '/past-papers'),
+        SettingsSub(
             Icons.library_books_outlined, 'Paper Library', '/paper-library'),
-        _SettingsSub(
+        SettingsSub(
             Icons.upload_file_outlined, 'Upload Material', '/upload-material'),
-        _SettingsSub(
-            Icons.folder_special_outlined, 'My Uploads', '/my-uploads'),
+        SettingsSub(Icons.folder_special_outlined, 'My Uploads', '/my-uploads'),
       ]),
-      _SettingsItem('Community', Icons.groups_outlined, [
-        _SettingsSub(Icons.notifications_outlined, 'Notifications', '/home/inbox'),
+      SettingsItem('Community', Icons.groups_outlined, [
+        SettingsSub(
+            Icons.notifications_outlined, 'Notifications', '/home/inbox'),
       ]),
-      _SettingsItem('Appearance', Icons.palette_outlined, [
-        _SettingsSub(Icons.brightness_auto_outlined, 'Theme', null,
+      SettingsItem('Appearance', Icons.palette_outlined, [
+        SettingsSub(Icons.brightness_auto_outlined, 'Theme', null,
             isTheme: true),
       ]),
-      _SettingsItem('Support', Icons.help_outline, [
-        _SettingsSub(Icons.info_outline, 'About', '/about'),
-        _SettingsSub(
+      SettingsItem('Support', Icons.help_outline, [
+        SettingsSub(Icons.info_outline, 'About', '/about'),
+        SettingsSub(
             Icons.description_outlined, 'Terms of Service', '/legal/terms'),
-        _SettingsSub(
+        SettingsSub(
             Icons.privacy_tip_outlined, 'Privacy Policy', '/legal/privacy'),
-        _SettingsSub(Icons.help_outline, 'FAQ', '/legal/faq'),
-        _SettingsSub(Icons.support_agent_outlined, 'Support', '/legal/support'),
+        SettingsSub(Icons.help_outline, 'FAQ', '/legal/faq'),
+        SettingsSub(Icons.support_agent_outlined, 'Support', '/legal/support'),
       ]),
-      _SettingsItem('Danger Zone', Icons.warning_amber_outlined, [
-        _SettingsSub(Icons.logout, 'Log Out', null, isDanger: true),
-        _SettingsSub(Icons.delete_forever_outlined, 'Delete Account', null,
+      SettingsItem('Danger Zone', Icons.warning_amber_outlined, [
+        SettingsSub(Icons.logout, 'Log Out', null, isDanger: true),
+        SettingsSub(Icons.delete_forever_outlined, 'Delete Account', null,
             isDanger: true),
       ]),
     ];
@@ -87,7 +86,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               final subs = section.items
                   .where((s) => s.label.toLowerCase().contains(q.toLowerCase()))
                   .toList();
-              return _SettingsItem(section.title, section.icon, subs);
+              return SettingsItem(section.title, section.icon, subs);
             })
             .where((s) => s.items.isNotEmpty)
             .toList();
@@ -134,7 +133,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           for (final section in _filteredItems) ...[
-            _SectionHeader(title: section.title),
+            SettingsSectionHeader(title: section.title),
             const SizedBox(height: 8),
             Card(
               margin: const EdgeInsets.only(bottom: 16),
@@ -155,12 +154,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildItem(BuildContext context, _SettingsSub item, bool dark) {
+  Widget _buildItem(BuildContext context, SettingsSub item, bool dark) {
     if (item.isTheme) {
-      return _ThemeSelector(dark: dark);
+      return SettingsThemeSelector(dark: dark);
     }
     if (item.isDanger) {
-      return _DangerRow(
+      return SettingsDangerRow(
         icon: item.icon,
         label: item.label,
         onTap: () => _handleDangerAction(item.label),
@@ -305,167 +304,5 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       );
     }
-  }
-}
-
-class _SettingsItem {
-  final String title;
-  final IconData icon;
-  final List<_SettingsSub> items;
-  _SettingsItem(this.title, this.icon, this.items);
-}
-
-class _SettingsSub {
-  final IconData icon;
-  final String label;
-  final String? route;
-  final bool isTheme;
-  final bool isDanger;
-  _SettingsSub(this.icon, this.label, this.route,
-      {this.isTheme = false, this.isDanger = false});
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: title == 'DANGER ZONE'
-                  ? DesignTokens.error
-                  : DesignTokens.textTertiary,
-              letterSpacing: 1.0,
-              fontWeight: FontWeight.w700,
-            ),
-      ),
-    );
-  }
-}
-
-class _ThemeSelector extends ConsumerWidget {
-  final bool dark;
-  const _ThemeSelector({required this.dark});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeModeProvider);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: DesignTokens.info.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
-                ),
-                child: const Icon(Icons.palette_outlined,
-                    size: 16, color: DesignTokens.info),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text('Theme',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          SegmentedButton<ThemeMode>(
-            segments: const [
-              ButtonSegment(
-                  value: ThemeMode.system,
-                  label: Text('System'),
-                  icon: Icon(Icons.brightness_auto_outlined, size: 16)),
-              ButtonSegment(
-                  value: ThemeMode.light,
-                  label: Text('Light'),
-                  icon: Icon(Icons.light_mode_outlined, size: 16)),
-              ButtonSegment(
-                  value: ThemeMode.dark,
-                  label: Text('Dark'),
-                  icon: Icon(Icons.dark_mode_outlined, size: 16)),
-            ],
-            selected: {themeMode},
-            onSelectionChanged: (v) => _setTheme(ref, v.first),
-            style: const ButtonStyle(
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _setTheme(WidgetRef ref, ThemeMode mode) {
-    ref.read(themeModeProvider.notifier).state = mode;
-    SharedPreferences.getInstance().then((p) {
-      final value = switch (mode) {
-        ThemeMode.dark => 'dark',
-        ThemeMode.light => 'light',
-        ThemeMode.system => 'system',
-      };
-      p.setString('theme_mode', value);
-    });
-  }
-}
-
-class _DangerRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _DangerRow({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: DesignTokens.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
-                ),
-                child: Icon(icon, size: 16, color: DesignTokens.error),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(label,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: DesignTokens.error,
-                    )),
-              ),
-              const Icon(Icons.chevron_right,
-                  size: 16, color: DesignTokens.error),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
