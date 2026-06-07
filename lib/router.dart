@@ -63,7 +63,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
       final isKidsRoute = location == '/kids' || location.startsWith('/kids/');
 
-      if (auth.isLoading || auth.isSubmitting || auth.biometricRequired) {
+      if (auth.isSubmitting) return null; // stay on current screen during login/register
+
+      if (auth.isLoading || auth.biometricRequired) {
         return location == '/splash' || isKidsRoute ? null : '/splash';
       }
 
