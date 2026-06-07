@@ -28,6 +28,14 @@ mutation ClaimDailyCredits {
 }
 ''';
 
+const String kRegisterFcmToken = r'''
+mutation RegisterFcmToken($token: String!) {
+  registerFcmToken(token: $token) {
+    success
+  }
+}
+''';
+
 const String kInitializePayment = r'''
 mutation InitializePayment($packageCode: String!, $purchaseType: String!) {
   initializePayment(packageCode: $packageCode, purchaseType: $purchaseType) {

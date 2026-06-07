@@ -76,4 +76,9 @@ class PushNotificationService {
 
   static String? get token => _fcmToken;
   static bool get isInitialized => _initialized;
+
+  static Future<String?> getToken() async {
+    if (!_initialized) await initialize();
+    return _fcmToken ?? await _fcm.getToken();
+  }
 }

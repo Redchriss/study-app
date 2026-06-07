@@ -6,6 +6,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/graphql/client.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/biometric_service.dart';
+import '../../../../core/services/push_notification_service.dart';
 import '../../../../core/storage/secure_storage.dart';
 import 'auth_state.dart';
 export 'auth_state.dart';
@@ -148,8 +149,9 @@ class AuthNotifier extends Notifier<AuthState>
           isLoading: false,
           isSubmitting: false,
           user: result.data!['me']);
-      // Claim daily credits silently — fire and forget
+      // Fire and forget — non-critical background tasks
       unawaited(_claimDailyCredits());
+      unawaited(_registerFcmToken());
     } catch (e) {
       debugPrint('Silent bootstrap failed: $e');
       state = const AuthState(
@@ -181,11 +183,23 @@ class AuthNotifier extends Notifier<AuthState>
   Future<void> _claimDailyCredits() async {
     try {
       final client = ref.read(graphqlClientProvider);
-      await client.mutate(MutationOptions(
-        document: gql(kClaimDailyCredits),
-      ));
+      await client.mutate(MutationOptions(document: gql(kClaimDailyCredits)));
     } catch (e) {
       debugPrint('Daily credits claim failed (non-critical): $e');
+    }
+  }
+
+  Future<void> _registerFcmToken() async {
+    try {
+      final token = await PushNotificationService.getToken();
+      if (token == null) return;
+      final client = ref.read(graphqlClientProvider);
+      await client.mutate(MutationOptions(
+        document: gql(kRegisterFcmToken),
+        variables: {'token': token},
+      ));
+    } catch (e) {
+      debugPrint('FCM token registration failed (non-critical): $e');
     }
   }
 
