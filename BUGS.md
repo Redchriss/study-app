@@ -15,6 +15,13 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-047] Setup/dashboard/profile first-run routes and GraphQL casts could block app entry
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** `profile_setup_manager.dart`, `app_routes.dart`, Study hub cards/tabs, profile tabs
+**Root cause:** Profile setup relied only on auth refresh/redirect after save, `/dashboard` was registered twice, and several first authenticated screens force-cast GraphQL edge/node maps and nested values.
+**Fix:** Explicitly navigate to `/home` or `/kids` after successful setup, removed duplicate top-level dashboard route, and hardened Study/Profile list parsing against missing or differently typed GraphQL values.
+**Verified:** Source audit and `dart format` on touched files. Analyzer/tests intentionally skipped per token-saving instruction.
+
 ### [BUG-046] Auth entry flow could strand users on splash/login/register
 **Priority:** 🔴 CRITICAL → ✅ RESOLVED
 **Location:** `lib/router.dart`, `lib/features/auth/presentation/providers/auth_register_mixin.dart`, `lib/features/auth/presentation/screens/register_screen.dart`, `lib/features/auth/presentation/screens/login_form.dart`

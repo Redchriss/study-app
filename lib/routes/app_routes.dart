@@ -27,12 +27,8 @@ import '../../features/materials/presentation/screens/materials_screen.dart';
 import '../../features/materials/presentation/screens/material_detail_screen.dart';
 import '../../features/materials/presentation/reader/material_reader_screen.dart';
 import '../../features/profile/presentation/screens/settings_screen.dart';
-import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 
 List<GoRoute> get appRoutes => [
-      // Study Dashboard (accessible from Home screen app bar or Profile)
-      GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
-
       // Kids Mode
       GoRoute(path: '/kids', builder: (_, __) => const KidLoginScreen()),
       GoRoute(path: '/kids/learn', builder: (_, __) => const KidsHomeScreen()),

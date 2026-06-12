@@ -32,8 +32,12 @@ class ProfilePostsTab extends StatelessWidget {
 
         final data = result.data?['userPosts'];
         final edges = (data?['edges'] as List?) ?? [];
-        final posts =
-            edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+        final posts = edges
+            .whereType<Map>()
+            .map((edge) => edge['node'])
+            .whereType<Map>()
+            .map((node) => Map<String, dynamic>.from(node))
+            .toList();
 
         if (posts.isEmpty) {
           return const Center(
@@ -91,9 +95,13 @@ class ProfilePostsTab extends StatelessWidget {
               itemBuilder: (_, i) => _PostListItem(
                 post: posts[i],
                 onTap: () {
-                  final c = posts[i]['community'];
-                  if (c != null) {
-                    context.push('/y/${c['slug']}/post/${posts[i]['slug']}');
+                  final community = posts[i]['community'];
+                  final communitySlug = community is Map
+                      ? community['slug']?.toString() ?? ''
+                      : '';
+                  final postSlug = posts[i]['slug']?.toString() ?? '';
+                  if (communitySlug.isNotEmpty && postSlug.isNotEmpty) {
+                    context.push('/y/$communitySlug/post/$postSlug');
                   }
                 },
               ),
@@ -113,7 +121,9 @@ class _PostListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final community = post['community'] as Map<String, dynamic>?;
+    final rawCommunity = post['community'];
+    final community =
+        rawCommunity is Map ? Map<String, dynamic>.from(rawCommunity) : null;
     final title = post['title']?.toString() ?? '';
     final score = (post['fuzzedScore'] as num?)?.toInt() ?? 0;
     final commentCount = (post['commentCount'] as num?)?.toInt() ?? 0;

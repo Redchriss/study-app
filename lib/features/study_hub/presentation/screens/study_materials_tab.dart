@@ -120,13 +120,20 @@ class _StudyMaterialsTabState extends State<StudyMaterialsTab>
                                 padding:
                                     const EdgeInsets.fromLTRB(12, 4, 12, 100),
                                 itemCount: materials.length,
-                                itemBuilder: (_, i) => MaterialCard(
-                                  material: materials[i],
-                                  dark: widget.dark,
-                                  index: i,
-                                  onTap: () => context.push(
-                                      '/materials/${materials[i]['slug']}'),
-                                ),
+                                itemBuilder: (_, i) {
+                                  final slug =
+                                      materials[i]['slug']?.toString() ?? '';
+                                  return MaterialCard(
+                                    material: materials[i],
+                                    dark: widget.dark,
+                                    index: i,
+                                    onTap: slug.isEmpty
+                                        ? () {}
+                                        : () => context.push(
+                                              '/materials/$slug',
+                                            ),
+                                  );
+                                },
                               ),
                             ),
             ),

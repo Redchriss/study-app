@@ -30,8 +30,12 @@ class ProfileCommentsTab extends StatelessWidget {
 
         final data = result.data?['userComments'];
         final edges = (data?['edges'] as List?) ?? [];
-        final comments =
-            edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+        final comments = edges
+            .whereType<Map>()
+            .map((edge) => edge['node'])
+            .whereType<Map>()
+            .map((node) => Map<String, dynamic>.from(node))
+            .toList();
 
         if (comments.isEmpty) {
           return const Center(
@@ -62,7 +66,9 @@ class ProfileCommentsTab extends StatelessWidget {
               final score = (c['fuzzedScore'] as num?)?.toInt() ?? 0;
               final body = c['body']?.toString() ?? '';
               final createdAt = c['createdAt']?.toString() ?? '';
-              final post = c['post'] as Map<String, dynamic>?;
+              final rawPost = c['post'];
+              final post =
+                  rawPost is Map ? Map<String, dynamic>.from(rawPost) : null;
               final postTitle = post?['title']?.toString() ?? '';
 
               return Container(

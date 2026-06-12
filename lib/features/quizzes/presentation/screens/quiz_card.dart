@@ -39,11 +39,16 @@ class QuizCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final subjectName = quiz['subject']?['name'] as String? ?? '';
+    final subject = quiz['subject'];
+    final subjectName = subject is Map ? subject['name']?.toString() ?? '' : '';
     final color = _colorFor(subjectName);
-    final difficulty = quiz['difficulty'] as String? ?? 'medium';
+    final difficulty =
+        (quiz['difficulty']?.toString().trim().isNotEmpty == true)
+            ? quiz['difficulty'].toString()
+            : 'medium';
     final questionCount = quiz['questionCount'] ?? 0;
     final durationMin = quiz['durationMinutes'];
+    final slug = quiz['slug']?.toString() ?? '';
 
     final diffColor = difficulty == 'easy'
         ? DesignTokens.success
@@ -54,7 +59,7 @@ class QuizCard extends StatelessWidget {
     final diffLabel = difficulty[0].toUpperCase() + difficulty.substring(1);
 
     return AnimatedPress(
-      onTap: () => context.push('/quiz/${quiz['slug']}'),
+      onTap: slug.isEmpty ? null : () => context.push('/quiz/$slug'),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -100,7 +105,7 @@ class QuizCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        quiz['title'] as String? ?? '',
+                        quiz['title']?.toString() ?? 'Untitled quiz',
                         style: theme.textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.w700),
                         maxLines: 2,

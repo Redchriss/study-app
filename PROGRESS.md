@@ -6,6 +6,10 @@
 - Changed registration to use submit loading instead of global auth bootstrap loading.
 - Added persistent inline register errors and clearer timeout/network/server messages.
 - Corrected login field copy from "Username or Email" to "Username" to match the current `tokenAuth` mutation.
+- Continued source audit of first authenticated screens.
+- Made profile setup explicitly route to `/home` or `/kids` after successful save.
+- Removed duplicate `/dashboard` route outside the shell.
+- Hardened Study/Profile list cards and tabs against malformed GraphQL maps, empty difficulty, missing slugs, and string view counts.
 
 ## 2026-06-02 (Full Audit Refactor)
 

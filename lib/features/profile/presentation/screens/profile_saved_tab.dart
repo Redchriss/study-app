@@ -28,8 +28,12 @@ class ProfileSavedTab extends StatelessWidget {
         }
         final data = result.data?['savedPosts'];
         final edges = (data?['edges'] as List?) ?? [];
-        final posts =
-            edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+        final posts = edges
+            .whereType<Map>()
+            .map((edge) => edge['node'])
+            .whereType<Map>()
+            .map((node) => Map<String, dynamic>.from(node))
+            .toList();
         if (posts.isEmpty) {
           return const Center(
             child: Padding(
@@ -53,7 +57,10 @@ class ProfileSavedTab extends StatelessWidget {
           itemCount: posts.length,
           itemBuilder: (_, i) {
             final p = posts[i];
-            final community = p['community'] as Map<String, dynamic>?;
+            final rawCommunity = p['community'];
+            final community = rawCommunity is Map
+                ? Map<String, dynamic>.from(rawCommunity)
+                : null;
             return ListTile(
               leading: Container(
                 width: 36,

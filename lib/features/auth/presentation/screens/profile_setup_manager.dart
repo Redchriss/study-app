@@ -156,24 +156,28 @@ class ProfileSetupManager {
         return;
       }
       await _ref.read(authProvider.notifier).refreshUser();
-      // Suggest Kids Mode for primary students
+      if (!_context.mounted) return;
       if (level == 'primary' && _context.mounted) {
-        await _suggestKidsMode();
+        final goKids = await _suggestKidsMode();
+        if (!_context.mounted) return;
+        if (goKids) {
+          GoRouter.of(_context).go('/kids');
+          return;
+        }
       }
+      GoRouter.of(_context).go('/home');
     } finally {
       if (_isMounted()) _setState(() => saving = false);
     }
   }
 
-  Future<void> _suggestKidsMode() async {
+  Future<bool> _suggestKidsMode() async {
     final goKids = await showDialog<bool>(
       context: _context,
       barrierDismissible: false,
       builder: (_) => const KidsModeSuggestionDialog(),
     );
-    if (goKids == true && _context.mounted) {
-      GoRouter.of(_context).push('/kids');
-    }
+    return goKids == true;
   }
 
   Future<void> openUniversitySheet() async {

@@ -17,7 +17,11 @@ class StudyQuizzesTab extends StatelessWidget {
       options:
           QueryOptions(document: gql(kQuizzes), variables: const {'limit': 50}),
       builder: (result, {fetchMore, refetch}) {
-        final quizzes = (result.data?['quizzes'] as List?) ?? [];
+        final rawQuizzes = (result.data?['quizzes'] as List?) ?? [];
+        final quizzes = rawQuizzes
+            .whereType<Map>()
+            .map((quiz) => Map<String, dynamic>.from(quiz))
+            .toList();
         if (result.isLoading && quizzes.isEmpty) {
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -47,7 +51,7 @@ class StudyQuizzesTab extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
             itemCount: quizzes.length,
             itemBuilder: (_, i) => QuizCard(
-              quiz: quizzes[i] as Map<String, dynamic>,
+              quiz: quizzes[i],
               dark: dark,
               index: i,
             ),

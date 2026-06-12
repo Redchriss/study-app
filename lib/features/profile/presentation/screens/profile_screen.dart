@@ -77,9 +77,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           );
         }
 
-        final me = result.data?['me'] as Map<String, dynamic>?;
-        final profile = me?['profile'] as Map<String, dynamic>?;
-        final username = me?['username'] as String? ?? 'User';
+        final rawMe = result.data?['me'];
+        final me = rawMe is Map ? Map<String, dynamic>.from(rawMe) : null;
+        final rawProfile = me?['profile'];
+        final profile =
+            rawProfile is Map ? Map<String, dynamic>.from(rawProfile) : null;
+        final username = me?['username']?.toString() ?? 'User';
         final avatarUrl = profile?['avatarUrl']?.toString();
         final bannerUrl = profile?['bannerUrl']?.toString();
         final bio = profile?['bio']?.toString();
@@ -92,8 +95,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             (result.data?['myFollowersCount'] as num?)?.toInt() ?? 0;
         final following =
             (result.data?['myFollowingCount'] as num?)?.toInt() ?? 0;
-        final achievements =
-            (me?['achievements'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        final achievements = ((me?['achievements'] as List?) ?? const [])
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
 
         return Scaffold(
           body: NestedScrollView(

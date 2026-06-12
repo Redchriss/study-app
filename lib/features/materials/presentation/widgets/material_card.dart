@@ -19,14 +19,18 @@ class MaterialCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final subjectName = (material['subject']?['name'] ?? '') as String;
+    final subject = material['subject'];
+    final subjectName = subject is Map ? subject['name']?.toString() ?? '' : '';
     final type = (material['contentType'] ?? '').toString();
     final typeColor = materialTypeColor(type);
     final accentColor = materialSubjectColor(subjectName);
     final description = (material['description'] ?? '').toString().trim();
     final aiSummary = (material['aiSummary'] ?? '').toString().trim();
     final snippet = description.isNotEmpty ? description : aiSummary;
-    final views = (material['viewsCount'] ?? 0) as int;
+    final rawViews = material['viewsCount'];
+    final views = rawViews is num
+        ? rawViews.toInt()
+        : int.tryParse(rawViews?.toString() ?? '') ?? 0;
     final isPremium = material['isPremium'] == true;
     final isBookmarked = material['isBookmarked'] == true;
     final level =
@@ -83,7 +87,9 @@ class MaterialCard extends StatelessWidget {
                           Row(
                             children: [
                               Expanded(
-                                  child: Text(material['title'] ?? '',
+                                  child: Text(
+                                      material['title']?.toString() ??
+                                          'Untitled material',
                                       style: theme.textTheme.titleSmall
                                           ?.copyWith(
                                               fontWeight: FontWeight.w700),
