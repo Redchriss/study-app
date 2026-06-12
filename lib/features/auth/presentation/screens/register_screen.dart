@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/theme/design_tokens.dart';
+import 'register_error_banner.dart';
 import 'register_step_username.dart';
 import 'register_step_contact.dart';
 import 'register_step_password.dart';
@@ -28,7 +29,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
 
-  bool _loading = false; // kept for local UI only (page transitions)
+  String? _submitError;
 
   @override
   void dispose() {
@@ -44,6 +45,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _nextPage() {
     FocusScope.of(context).unfocus();
+    _clearSubmitError();
     if (_currentPage == 0 && !_formKey0.currentState!.validate()) return;
     if (_currentPage == 1 && !_formKey1.currentState!.validate()) return;
 
@@ -60,6 +62,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _prevPage() {
     FocusScope.of(context).unfocus();
+    _clearSubmitError();
     if (_currentPage > 0) {
       _pageController.previousPage(
         duration: const Duration(milliseconds: 400),
@@ -77,16 +80,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _submit() async {
     if (!_formKey2.currentState!.validate()) return;
+    _clearSubmitError();
     if (_passwordCtrl.text != _confirmCtrl.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Passwords do not match'),
-          backgroundColor: DesignTokens.error,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      setState(() => _submitError = 'Passwords do not match.');
       return;
     }
     final ok = await ref.read(authProvider.notifier).register(
@@ -103,16 +99,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     } else {
       final error = ref.read(authProvider).error ?? 'Registration failed.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: DesignTokens.error,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      setState(() => _submitError = error);
     }
+  }
+
+  void _clearSubmitError() {
+    if (_submitError == null) return;
+    setState(() => _submitError = null);
   }
 
   @override
@@ -187,6 +180,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ],
                 ),
               ),
+              if (_submitError != null)
+                RegisterErrorBanner(message: _submitError!),
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: SizedBox(

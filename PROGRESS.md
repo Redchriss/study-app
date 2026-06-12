@@ -1,5 +1,12 @@
 # PROGRESS.md — Yaza Flutter App
 
+## 2026-06-12
+- Fixed auth routing so unauthenticated startup leaves `/splash` for onboarding.
+- Fixed successful login/register with incomplete profile to continue to `/setup`.
+- Changed registration to use submit loading instead of global auth bootstrap loading.
+- Added persistent inline register errors and clearer timeout/network/server messages.
+- Corrected login field copy from "Username or Email" to "Username" to match the current `tokenAuth` mutation.
+
 ## 2026-06-02 (Full Audit Refactor)
 
 ### Navigation & Architecture

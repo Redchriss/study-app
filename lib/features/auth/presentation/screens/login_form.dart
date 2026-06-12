@@ -139,9 +139,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             TextFormField(
               controller: _usernameCtrl,
               decoration: const InputDecoration(
-                labelText: 'Username or Email',
+                labelText: 'Username',
                 prefixIcon: Icon(Icons.person_outline_rounded),
-                hintText: 'Enter your username or email',
+                hintText: 'Enter your username',
               ),
               textInputAction: TextInputAction.next,
               autocorrect: false,

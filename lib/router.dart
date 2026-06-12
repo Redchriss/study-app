@@ -63,14 +63,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
       final isKidsRoute = location == '/kids' || location.startsWith('/kids/');
 
-      if (auth.isSubmitting) return null; // stay on current screen during login/register
+      if (auth.isSubmitting)
+        return null; // stay on current screen during login/register
 
       if (auth.isLoading || auth.biometricRequired) {
         return location == '/splash' || isKidsRoute ? null : '/splash';
       }
 
       if (!auth.isAuthenticated) {
-        const authRoutes = ['/login', '/register', '/splash'];
+        const authRoutes = ['/login', '/register', '/onboarding'];
+        if (location == '/splash') return '/onboarding';
         if (authRoutes.contains(location) || isKidsRoute) return null;
         return '/login';
       }
@@ -83,8 +85,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (!profileComplete && location != '/setup') {
-        const authRoutes = ['/login', '/register'];
-        if (authRoutes.contains(location)) return null;
         return '/setup';
       }
 

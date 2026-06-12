@@ -15,6 +15,13 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-046] Auth entry flow could strand users on splash/login/register
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** `lib/router.dart`, `lib/features/auth/presentation/providers/auth_register_mixin.dart`, `lib/features/auth/presentation/screens/register_screen.dart`, `lib/features/auth/presentation/screens/login_form.dart`
+**Root cause:** Unauthenticated `/splash` did not enter onboarding, authenticated users with incomplete profiles were allowed to remain on login/register, registration used global auth loading instead of submit loading, and register failures were only transient snackbars.
+**Fix:** Route unauthenticated splash to onboarding, route successful auth with incomplete profiles to setup, switched registration to `isSubmitting`, added timeout/user-friendly register errors, and made register submit errors persistent inline.
+**Verified:** Targeted `flutter analyze` and login widget test were started before commit; user requested immediate commit/push before waiting for full output.
+
 ### [BUG-036] Bottom nav architecture — Dashboard buried, AI Tutor inaccessible from shell
 **Priority:** 🔴 CRITICAL → ✅ RESOLVED
 **Fix:** Restructured shell to 4 study-first tabs (Dashboard, Study hub, Circles, Profile) with AI Tutor centre button.
