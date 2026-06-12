@@ -23,8 +23,12 @@ class _ClassicPostCardState extends State<ClassicPostCard> {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final community = post['community'] as Map<String, dynamic>?;
-    final author = post['author'] as Map<String, dynamic>?;
+    final rawCommunity = post['community'];
+    final community =
+        rawCommunity is Map ? Map<String, dynamic>.from(rawCommunity) : null;
+    final rawAuthor = post['author'];
+    final author =
+        rawAuthor is Map ? Map<String, dynamic>.from(rawAuthor) : null;
     final isRemoved = post['isRemoved'] == true;
     final isDeleted = post['isDeleted'] == true;
     final isLocked = post['isLocked'] == true;
@@ -51,8 +55,8 @@ class _ClassicPostCardState extends State<ClassicPostCard> {
             // Left vote column
             ClassicVoteColumn(
               postId: post['id'].toString(),
-              score: (post['fuzzedScore'] as num?)?.toInt() ?? 0,
-              userVote: (post['voteDirection'] as num?)?.toInt(),
+              score: _toInt(post['fuzzedScore']),
+              userVote: _toNullableInt(post['voteDirection']),
               dark: dark,
             ),
             // Thumbnail
@@ -202,8 +206,14 @@ class _ClassicPostCardState extends State<ClassicPostCard> {
   }
 
   String _count(dynamic val) {
-    final n = (val as num?)?.toInt() ?? 0;
+    final n = _toInt(val);
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
     return n.toString();
   }
+
+  int _toInt(dynamic value) =>
+      value is num ? value.toInt() : int.tryParse(value?.toString() ?? '') ?? 0;
+
+  int? _toNullableInt(dynamic value) =>
+      value is num ? value.toInt() : int.tryParse(value?.toString() ?? '');
 }

@@ -26,8 +26,12 @@ class _CardPostCardState extends State<CardPostCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-    final community = post['community'] as Map<String, dynamic>?;
-    final author = post['author'] as Map<String, dynamic>?;
+    final rawCommunity = post['community'];
+    final community =
+        rawCommunity is Map ? Map<String, dynamic>.from(rawCommunity) : null;
+    final rawAuthor = post['author'];
+    final author =
+        rawAuthor is Map ? Map<String, dynamic>.from(rawAuthor) : null;
     final isPinned = post['isPinned'] == true;
     final isRemoved = post['isRemoved'] == true;
     final isDeleted = post['isDeleted'] == true;
@@ -54,8 +58,8 @@ class _CardPostCardState extends State<CardPostCard> {
                   // ── Left: Reddit-style vote column ─────────────────────
                   CardVoteColumn(
                     postId: post['id'].toString(),
-                    score: (post['fuzzedScore'] as num?)?.toInt() ?? 0,
-                    userVote: (post['voteDirection'] as num?)?.toInt(),
+                    score: _toInt(post['fuzzedScore']),
+                    userVote: _toNullableInt(post['voteDirection']),
                     dark: dark,
                   ),
                   // ── Right: content ────────────────────────────────────
@@ -209,4 +213,10 @@ class _CardPostCardState extends State<CardPostCard> {
       ),
     );
   }
+
+  int _toInt(dynamic value) =>
+      value is num ? value.toInt() : int.tryParse(value?.toString() ?? '') ?? 0;
+
+  int? _toNullableInt(dynamic value) =>
+      value is num ? value.toInt() : int.tryParse(value?.toString() ?? '');
 }

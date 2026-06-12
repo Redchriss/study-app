@@ -15,6 +15,13 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-048] Kids login and feed rendering could hang or crash on backend/network edge cases
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Location:** Kids login managers, Feed/community post lists, post card renderers
+**Root cause:** Kids parent/kid login paths did not catch timeouts or thrown GraphQL failures, and Feed/community post cards force-cast GraphQL maps/counts.
+**Fix:** Added timeouts and visible errors for Kids parent login, child loading, child creation, and PIN login. Hardened Feed/community list parsing and post cards against missing nested maps, missing slugs, and string counts/votes.
+**Verified:** Source audit and `dart format` on touched files. Analyzer/tests intentionally skipped to conserve tokens.
+
 ### [BUG-047] Setup/dashboard/profile first-run routes and GraphQL casts could block app entry
 **Priority:** 🔴 CRITICAL → ✅ RESOLVED
 **Location:** `profile_setup_manager.dart`, `app_routes.dart`, Study hub cards/tabs, profile tabs

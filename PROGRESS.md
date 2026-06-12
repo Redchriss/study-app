@@ -10,6 +10,8 @@
 - Made profile setup explicitly route to `/home` or `/kids` after successful save.
 - Removed duplicate `/dashboard` route outside the shell.
 - Hardened Study/Profile list cards and tabs against malformed GraphQL maps, empty difficulty, missing slugs, and string view counts.
+- Hardened Kids Mode login/create-learner flows so backend/network failures reset loading and show messages.
+- Hardened Feed/community post lists and post card renderers against malformed GraphQL edge/node data and string count/vote values.
 
 ## 2026-06-02 (Full Audit Refactor)
 

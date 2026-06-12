@@ -155,7 +155,10 @@ class _HomeScreenState extends State<HomeScreen>
                         final feed = result.data?[feedKey];
                         final edges = (feed?['edges'] as List?) ?? [];
                         final posts = edges
-                            .map((e) => e['node'] as Map<String, dynamic>)
+                            .whereType<Map>()
+                            .map((edge) => edge['node'])
+                            .whereType<Map>()
+                            .map((node) => Map<String, dynamic>.from(node))
                             .toList();
 
                         if (posts.isEmpty) {
@@ -217,10 +220,16 @@ class _HomeScreenState extends State<HomeScreen>
                                 post: posts[i],
                                 layout: _layout,
                                 onTap: () {
-                                  final c = posts[i]['community'];
-                                  if (c != null) {
+                                  final community = posts[i]['community'];
+                                  final communitySlug = community is Map
+                                      ? community['slug']?.toString() ?? ''
+                                      : '';
+                                  final postSlug =
+                                      posts[i]['slug']?.toString() ?? '';
+                                  if (communitySlug.isNotEmpty &&
+                                      postSlug.isNotEmpty) {
                                     context.push(
-                                        '/y/${c['slug']}/post/${posts[i]['slug']}');
+                                        '/y/$communitySlug/post/$postSlug');
                                   }
                                 },
                               ),

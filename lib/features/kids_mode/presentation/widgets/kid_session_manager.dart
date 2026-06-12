@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -24,55 +26,83 @@ class KidSessionManager {
   }
 
   Future<void> loginAsKid(Map<String, dynamic> kid) async {
+    final standard = (kid['standard'] as num?)?.toInt() ?? 1;
     showDialog(
       context: mgr.context,
       barrierDismissible: false,
       builder: (_) => KidPinDialog(
         kidName: kid['childName'] as String? ?? 'Kid',
-        graphical:
-            (kid['standard'] as int?) != null && (kid['standard'] as int) <= 2,
+        graphical: standard <= 2,
         onSubmit: (pin) async {
           Navigator.pop(mgr.context);
-          final result = await _buildClient().mutate(MutationOptions(
-            document: gql(kKidLogin),
-            variables: {'username': kid['username'], 'pinCode': pin},
-          ));
-          final data = result.data?['kidLogin'];
-          if (data?['success'] == true) {
-            final child = data['child'] as Map<String, dynamic>?;
+          try {
+            final result = await _buildClient()
+                .mutate(MutationOptions(
+                  document: gql(kKidLogin),
+                  variables: {'username': kid['username'], 'pinCode': pin},
+                ))
+                .timeout(const Duration(seconds: 25));
+            final data = result.data?['kidLogin'];
+            if (data?['success'] != true) {
+              if (!mgr.mounted) return;
+              // ignore: use_build_context_synchronously
+              ScaffoldMessenger.of(mgr.context).showSnackBar(SnackBar(
+                content: Text(data?['errors']?.first?.toString() ??
+                    'Wrong PIN. Try again.'),
+                backgroundColor: DesignTokens.error,
+              ));
+              return;
+            }
+            final rawChild = data['child'];
+            final child = rawChild is Map
+                ? Map<String, dynamic>.from(rawChild)
+                : <String, dynamic>{};
+            final token = data['token']?.toString() ?? '';
+            if (token.isEmpty) {
+              throw StateError('Missing kid token');
+            }
             final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('kid_token', data['token'] as String);
-            final rt = data['refreshToken'] as String?;
+            await prefs.setString('kid_token', token);
+            final rt = data['refreshToken']?.toString();
             if (rt != null && rt.isNotEmpty) {
               await prefs.setString('kid_refresh_token', rt);
             }
             await prefs.setString(
               'kid_child_name',
-              child?['childName'] as String? ??
-                  kid['childName'] as String? ??
+              child['childName']?.toString() ??
+                  kid['childName']?.toString() ??
                   '',
             );
             await prefs.setInt(
               'kid_standard',
-              (child?['standard'] as num?)?.toInt() ??
-                  kid['standard'] as int? ??
-                  1,
+              (child['standard'] as num?)?.toInt() ?? standard,
             );
             await prefs.setString(
               'kid_education_track',
-              child?['childEducationTrack'] as String? ?? 'primary',
+              child['childEducationTrack']?.toString() ?? 'primary',
             );
-            mgr.refreshToken(data['token'], Map<String, dynamic>.from(kid));
+            mgr.refreshToken(token, Map<String, dynamic>.from(kid));
             if (!mgr.mounted) return;
             // ignore: use_build_context_synchronously
             mgr.context.go('/kids/learn');
-          } else {
+          } on TimeoutException {
             if (!mgr.mounted) return;
             // ignore: use_build_context_synchronously
-            ScaffoldMessenger.of(mgr.context).showSnackBar(SnackBar(
-              content: Text(data?['errors']?.first ?? 'Wrong PIN'),
-              backgroundColor: DesignTokens.error,
-            ));
+            ScaffoldMessenger.of(mgr.context).showSnackBar(
+              const SnackBar(
+                content: Text('Kids login is taking too long. Try again.'),
+                backgroundColor: DesignTokens.error,
+              ),
+            );
+          } catch (_) {
+            if (!mgr.mounted) return;
+            // ignore: use_build_context_synchronously
+            ScaffoldMessenger.of(mgr.context).showSnackBar(
+              const SnackBar(
+                content: Text('Could not log in. Check your connection.'),
+                backgroundColor: DesignTokens.error,
+              ),
+            );
           }
         },
       ),

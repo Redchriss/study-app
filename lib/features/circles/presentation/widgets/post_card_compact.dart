@@ -10,8 +10,12 @@ class CompactPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final community = post['community'] as Map<String, dynamic>?;
-    final author = post['author'] as Map<String, dynamic>?;
+    final rawCommunity = post['community'];
+    final community =
+        rawCommunity is Map ? Map<String, dynamic>.from(rawCommunity) : null;
+    final rawAuthor = post['author'];
+    final author =
+        rawAuthor is Map ? Map<String, dynamic>.from(rawAuthor) : null;
     final isRemoved = post['isRemoved'] == true;
     final isDeleted = post['isDeleted'] == true;
     final isLocked = post['isLocked'] == true;
@@ -136,7 +140,8 @@ class CompactPostCard extends StatelessWidget {
   }
 
   String _count(dynamic val) {
-    final n = (val as num?)?.toInt() ?? 0;
+    final n =
+        val is num ? val.toInt() : int.tryParse(val?.toString() ?? '') ?? 0;
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
     return n.toString();
   }

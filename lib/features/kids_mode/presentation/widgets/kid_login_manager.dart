@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -90,46 +92,86 @@ class KidLoginManager {
       parentLoading = true;
       error = null;
     });
-    final result = await _buildClient().mutate(MutationOptions(
-      document: gql(kTokenAuth),
-      variables: {
-        'username': parentUserCtrl.text.trim(),
-        'password': parentPassCtrl.text
-      },
-    ));
-    if (result.data != null && result.data!['tokenAuth'] != null) {
-      final t = result.data!['tokenAuth']['token'] as String?;
-      if (t != null) {
+    try {
+      final result = await _buildClient()
+          .mutate(MutationOptions(
+            document: gql(kTokenAuth),
+            variables: {
+              'username': parentUserCtrl.text.trim(),
+              'password': parentPassCtrl.text
+            },
+          ))
+          .timeout(const Duration(seconds: 25));
+      final auth = result.data?['tokenAuth'];
+      if (auth != null) {
+        final t = auth['token'] as String?;
+        if (t == null || t.isEmpty) {
+          throw StateError('Missing parent token');
+        }
         parentToken = t;
         _client = null;
         await SecureStorage.saveTokens(
-            t, result.data!['tokenAuth']['refreshToken'] as String? ?? '');
+            t, auth['refreshToken'] as String? ?? '');
+        await fetchChildren();
+        return;
       }
-      await fetchChildren();
-    } else {
       final msg = graphQLErrorMessage(result.exception, 'Invalid credentials');
+      if (!mounted) return;
       setState(() {
         error = msg;
+        parentLoading = false;
+      });
+    } on TimeoutException {
+      if (!mounted) return;
+      setState(() {
+        error = 'Kids sign-in is taking too long. Check your connection.';
+        parentLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        error = 'Could not sign in right now. Please try again.';
         parentLoading = false;
       });
     }
   }
 
   Future<void> fetchChildren() async {
-    final result =
-        await _buildClient().query(QueryOptions(document: gql(kMyChildren)));
-    if (!mounted) return;
-    final prefs = await SharedPreferences.getInstance();
-    final Map<String, String> avs = {};
-    for (final kid in (result.data?['myChildren'] as List? ?? [])) {
-      avs[kid['id'].toString()] =
-          prefs.getString('kid_avatar_${kid['id']}') ?? '';
+    try {
+      final result = await _buildClient()
+          .query(QueryOptions(document: gql(kMyChildren)))
+          .timeout(const Duration(seconds: 25));
+      if (!mounted) return;
+      if (result.hasException) {
+        setState(() {
+          error = graphQLErrorMessage(
+              result.exception, 'Could not load learners. Try again.');
+          parentLoading = false;
+        });
+        return;
+      }
+      final prefs = await SharedPreferences.getInstance();
+      final Map<String, String> avs = {};
+      final loadedChildren = (result.data?['myChildren'] as List? ?? [])
+          .whereType<Map>()
+          .map((kid) => Map<String, dynamic>.from(kid))
+          .toList();
+      for (final kid in loadedChildren) {
+        avs[kid['id'].toString()] =
+            prefs.getString('kid_avatar_${kid['id']}') ?? '';
+      }
+      setState(() {
+        children = loadedChildren;
+        avatars = avs;
+        parentLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        error = 'Could not load learners. Check your connection.';
+        parentLoading = false;
+      });
     }
-    setState(() {
-      children = result.data?['myChildren'] as List? ?? [];
-      avatars = avs;
-      parentLoading = false;
-    });
   }
 
   Future<void> createKid() async {
@@ -139,35 +181,51 @@ class KidLoginManager {
       return;
     }
     setState(() => creatingKid = true);
-    final result = await _buildClient().mutate(MutationOptions(
-      document: gql(kCreateChildProfile),
-      variables: {
-        'childName': nameCtrl.text.trim(),
-        'standard': newKidStandard!,
-        'pinCode': kidPinCtrl.text,
-        'educationTrack': newKidEducationTrack
-      },
-    ));
-    if (!mounted) return;
-    setState(() => creatingKid = false);
-    if (result.data?['createChildProfile']?['success'] == true) {
-      final childId =
-          result.data?['createChildProfile']?['child']?['id']?.toString();
-      if (childId != null) {
-        (await SharedPreferences.getInstance())
-            .setString('kid_avatar_$childId', newKidAvatar);
+    try {
+      final result = await _buildClient()
+          .mutate(MutationOptions(
+            document: gql(kCreateChildProfile),
+            variables: {
+              'childName': nameCtrl.text.trim(),
+              'standard': newKidStandard!,
+              'pinCode': kidPinCtrl.text,
+              'educationTrack': newKidEducationTrack
+            },
+          ))
+          .timeout(const Duration(seconds: 25));
+      if (!mounted) return;
+      setState(() => creatingKid = false);
+      if (result.data?['createChildProfile']?['success'] == true) {
+        final childId =
+            result.data?['createChildProfile']?['child']?['id']?.toString();
+        if (childId != null) {
+          (await SharedPreferences.getInstance())
+              .setString('kid_avatar_$childId', newKidAvatar);
+        }
+        nameCtrl.clear();
+        kidPinCtrl.clear();
+        newKidAvatar = '🦊';
+        await fetchChildren();
+        return;
       }
-      nameCtrl.clear();
-      kidPinCtrl.clear();
-      newKidAvatar = '🦊';
-      await fetchChildren();
-    } else {
       final msg = graphQLErrorMessage(
-          result.exception, 'Could not add learner. Try again.');
+          result.exception,
+          result.data?['createChildProfile']?['errors']?.first?.toString() ??
+              'Could not add learner. Try again.');
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msg),
+          backgroundColor: DesignTokens.error,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => creatingKid = false);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not add learner. Check your connection.'),
           backgroundColor: DesignTokens.error,
         ),
       );

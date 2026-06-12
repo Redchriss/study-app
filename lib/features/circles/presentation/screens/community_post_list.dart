@@ -111,8 +111,12 @@ class _CommunityPostListState extends State<CommunityPostList> {
 
         final data = result.data?['communityPosts'];
         final edges = (data?['edges'] as List?) ?? [];
-        final posts =
-            edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+        final posts = edges
+            .whereType<Map>()
+            .map((edge) => edge['node'])
+            .whereType<Map>()
+            .map((node) => Map<String, dynamic>.from(node))
+            .toList();
 
         if (posts.isEmpty) {
           return EmptyState(
@@ -149,10 +153,14 @@ class _CommunityPostListState extends State<CommunityPostList> {
                   }
                   final postIndex = index - pendings.length;
                   if (postIndex < posts.length) {
+                    final postSlug = posts[postIndex]['slug']?.toString() ?? '';
                     return PostCard(
                       post: posts[postIndex],
-                      onTap: () => context.push(
-                          '/y/${widget.slug}/post/${posts[postIndex]['slug']}'),
+                      onTap: postSlug.isEmpty
+                          ? () {}
+                          : () => context.push(
+                                '/y/${widget.slug}/post/$postSlug',
+                              ),
                     );
                   }
                   return const Padding(
