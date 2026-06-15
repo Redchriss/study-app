@@ -68,10 +68,10 @@ void main() {
       await tester.pumpWidget(createApp());
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      await tester.scrollUntilVisible(find.text('Log In'), 100);
-      await tester.pump();
+      // Scroll down to find the button
       final loginButton = find.text('Log In');
       await tester.ensureVisible(loginButton);
+      await tester.pump();
       await tester.tap(loginButton);
       await tester.pumpAndSettle();
 
@@ -87,10 +87,9 @@ void main() {
       await tester.enterText(find.byType(TextFormField).first, 'wrong-user');
       await tester.enterText(find.byType(TextFormField).last, 'wrong-pass');
 
-      await tester.scrollUntilVisible(find.text('Log In'), 100);
-      await tester.pump();
       final loginButton = find.text('Log In');
       await tester.ensureVisible(loginButton);
+      await tester.pump();
       await tester.tap(loginButton);
       await tester.pumpAndSettle();
 
