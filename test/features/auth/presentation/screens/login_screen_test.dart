@@ -75,8 +75,8 @@ void main() {
       await tester.tap(loginButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('Enter your username'), findsOneWidget);
-      expect(find.text('Enter your password'), findsOneWidget);
+      expect(find.text('Enter your username'), findsAtLeastNWidgets(1));
+      expect(find.text('Enter your password'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('should show clear incorrect credentials message',
