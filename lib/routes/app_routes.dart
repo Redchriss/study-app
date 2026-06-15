@@ -5,6 +5,7 @@ import '../../features/kids_mode/presentation/screens/kids_journey_screen.dart';
 import '../../features/kids_mode/presentation/screens/kid_login_screen.dart';
 import '../../features/kids_mode/presentation/screens/parent_kids_progress_screen.dart';
 import '../../features/leaderboard/presentation/screens/leaderboard_screen.dart';
+import '../../features/materials/presentation/screens/review_queue_screen.dart';
 import '../../features/profile/presentation/screens/about_screen.dart';
 import '../../features/profile/presentation/screens/legal_content.dart';
 import '../../features/profile/presentation/screens/site_page_screen.dart';
@@ -116,6 +117,9 @@ List<GoRoute> get appRoutes => [
           path: '/upload-material',
           builder: (_, __) => const UploadMaterialScreen()),
       GoRoute(path: '/my-uploads', builder: (_, __) => const MyUploadsScreen()),
+      GoRoute(
+          path: '/review-queue',
+          builder: (_, __) => const ReviewQueueScreen()),
 
       // Materials
       GoRoute(

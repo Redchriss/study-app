@@ -218,3 +218,42 @@ mutation SendReaderAiMessage($sessionId: ID!, $content: String!, $materialId: ID
   }
 }
 ''';
+
+const String kDueFlashcardReviews = r'''
+query DueFlashcardReviews($limit: Int) {
+  dueFlashcardReviews(limit: $limit) {
+    id
+    frontText
+    backText
+    easeFactor
+    interval
+    repetitions
+    nextReviewOn
+    materialId
+    materialTitle
+    materialSlug
+  }
+  dueReviewCount
+}
+''';
+
+const String kSubmitFlashcardReview = r'''
+mutation SubmitFlashcardReview($reviewId: ID!, $quality: Int!) {
+  submitFlashcardReview(reviewId: $reviewId, quality: $quality) {
+    success
+    nextReviewOn
+    interval
+    repetitions
+  }
+}
+''';
+
+const String kGenerateFlashcardReviews = r'''
+mutation GenerateFlashcardReviews($materialSlug: String!) {
+  generateFlashcardReviews(materialSlug: $materialSlug) {
+    success
+    count
+    errors
+  }
+}
+''';

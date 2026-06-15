@@ -43,12 +43,22 @@ class StudyToolsTab extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _ToolCard(
+          icon: Icons.history_rounded,
+          color: const Color(0xFFFF6B00),
+          title: 'Review Queue',
+          subtitle: 'Flashcards due for spaced repetition review',
+          badge: 'SM-2',
+          onTap: () => context.push('/review-queue'),
+          index: 3,
+        ),
+        const SizedBox(height: 12),
+        _ToolCard(
           icon: Icons.bookmark_rounded,
           color: DesignTokens.secondary,
           title: 'Bookmarks',
           subtitle: 'Materials you saved for later',
           onTap: () => context.push('/bookmarks'),
-          index: 3,
+          index: 4,
         ),
         const SizedBox(height: 12),
         _ToolCard(
