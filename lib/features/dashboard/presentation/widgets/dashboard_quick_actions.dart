@@ -21,6 +21,11 @@ class DashboardQuickActions extends StatelessWidget {
             color: DesignTokens.primary,
             onTap: () => context.push('/materials')),
         _ActionTile(
+            icon: Icons.document_scanner_rounded,
+            label: 'Diagnose',
+            color: const Color(0xFF7C4DFF),
+            onTap: () => context.push('/diagnostic/MATH-S')),
+        _ActionTile(
             icon: Icons.quiz_rounded,
             label: 'Quiz',
             color: DesignTokens.secondary,
