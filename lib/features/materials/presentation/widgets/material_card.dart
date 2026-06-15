@@ -163,6 +163,16 @@ class MaterialCard extends StatelessWidget {
                                             ? DesignTokens.darkTextTertiary
                                             : DesignTokens.textTertiary)),
                               ],
+                              if (snippet.isNotEmpty) ...[
+                                const SizedBox(width: 6),
+                                Text(estimateReadingTime(snippet),
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: dark
+                                            ? DesignTokens.darkTextTertiary
+                                            : DesignTokens.textTertiary)),
+                              ],
                               if (isBookmarked) ...[
                                 const SizedBox(width: 6),
                                 Icon(Icons.bookmark_rounded,

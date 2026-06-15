@@ -133,12 +133,14 @@ class ReaderActionBar extends StatelessWidget {
     required this.onQuickQuiz,
     required this.onFlashcards,
     this.onAskAi,
+    this.onListen,
   });
 
   final VoidCallback onNote;
   final VoidCallback onQuickQuiz;
   final VoidCallback onFlashcards;
   final VoidCallback? onAskAi;
+  final VoidCallback? onListen;
 
   @override
   Widget build(BuildContext context) {
@@ -174,6 +176,12 @@ class ReaderActionBar extends StatelessWidget {
               icon: Icons.psychology_rounded,
               emphasized: true,
               onPressed: onAskAi!,
+            ),
+          if (onListen != null)
+            _ReaderActionChip(
+              label: 'Listen',
+              icon: Icons.headphones_rounded,
+              onPressed: onListen!,
             ),
         ],
       ),

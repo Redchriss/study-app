@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'material_reader_helpers.dart';
 import 'material_reader_models.dart';
 import 'material_reader_services.dart';
 import 'reader_chrome.dart';
+import 'reader_tts.dart';
 import 'text_reader_page_widget.dart';
 
 class TextMaterialReader extends StatefulWidget {
@@ -99,6 +101,7 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
             onAskAi: widget.onAskAi == null
                 ? null
                 : () => widget.onAskAi!(_currentSelection()),
+            onListen: () => _readCurrentPageAloud(),
           ),
           child: Container(
             decoration: BoxDecoration(
@@ -157,6 +160,21 @@ class _TextMaterialReaderState extends State<TextMaterialReader> {
         );
       },
     );
+  }
+
+  String _currentPageText() {
+    if (_currentPage < widget.material.textPages.length) {
+      return widget.material.textPages[_currentPage]
+          .replaceAll(RegExp(r'<[^>]*>'), '')
+          .trim();
+    }
+    return '';
+  }
+
+  Future<void> _readCurrentPageAloud() async {
+    final text = _currentPageText();
+    if (text.isEmpty) return;
+    await ReaderTts.toggle(text);
   }
 
   ReaderStudySelection _currentSelection() {

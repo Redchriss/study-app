@@ -67,3 +67,12 @@ String materialFormatViews(int views) {
   if (views >= 1000) return '${(views / 1000).toStringAsFixed(1)}k';
   return '$views';
 }
+
+String estimateReadingTime(String? text) {
+  if (text == null || text.isEmpty) return '';
+  final wordCount = text.split(RegExp(r'\s+')).length;
+  final minutes = (wordCount / 200).ceil();
+  if (minutes < 1) return '<1 min';
+  if (minutes == 1) return '1 min';
+  return '$minutes min';
+}

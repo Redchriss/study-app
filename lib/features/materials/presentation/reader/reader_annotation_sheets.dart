@@ -14,6 +14,16 @@ Color annotationColor(String? color) {
       return const Color(0xFF62C7A5);
     case 'sky':
       return const Color(0xFF6FA8FF);
+    case 'rose':
+      return const Color(0xFFE87E8E);
+    case 'lavender':
+      return const Color(0xFFB39DDB);
+    case 'peach':
+      return const Color(0xFFFFCC80);
+    case 'lime':
+      return const Color(0xFFAED581);
+    case 'coral':
+      return const Color(0xFFFF8A65);
     default:
       return const Color(0xFFEEC66D);
   }
@@ -63,6 +73,11 @@ Future<ReaderAnnotationDraft?> showReaderAnnotationComposer(
                       ('amber', Color(0xFFEEC66D)),
                       ('mint', Color(0xFF62C7A5)),
                       ('sky', Color(0xFF6FA8FF)),
+                      ('rose', Color(0xFFE87E8E)),
+                      ('lavender', Color(0xFFB39DDB)),
+                      ('peach', Color(0xFFFFCC80)),
+                      ('lime', Color(0xFFAED581)),
+                      ('coral', Color(0xFFFF8A65)),
                     ])
                       ChoiceChip(
                         label: Text(entry.$1),
