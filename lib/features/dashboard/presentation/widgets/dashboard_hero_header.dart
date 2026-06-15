@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 import 'dashboard_hero_tiles.dart';
 
-class DashboardHeroHeader extends StatelessWidget {
+class DashboardHeroHeader extends StatefulWidget {
   final String name;
   final String educationLevel;
   final int streak;
@@ -30,6 +30,29 @@ class DashboardHeroHeader extends StatelessWidget {
     this.showDailyGoal = false,
   });
 
+  @override
+  State<DashboardHeroHeader> createState() => _DashboardHeroHeaderState();
+}
+
+class _DashboardHeroHeaderState extends State<DashboardHeroHeader>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _gradientCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _gradientCtrl = AnimationController(
+      vsync: this,
+      duration: 6.seconds,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _gradientCtrl.dispose();
+    super.dispose();
+  }
+
   String get _greeting {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good morning';
@@ -38,7 +61,7 @@ class DashboardHeroHeader extends StatelessWidget {
   }
 
   String get _levelLabel {
-    switch (educationLevel.toLowerCase()) {
+    switch (widget.educationLevel.toLowerCase()) {
       case 'primary':
         return 'Primary student';
       case 'tertiary':
@@ -50,52 +73,74 @@ class DashboardHeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dailyPct =
-        dailyGoal > 0 ? (dailyProgress / dailyGoal).clamp(0.0, 1.0) : 0.0;
+    final dailyPct = widget.dailyGoal > 0
+        ? (widget.dailyProgress / widget.dailyGoal).clamp(0.0, 1.0)
+        : 0.0;
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1B6CA8), Color(0xFF0D2E4A)],
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _buildTopRow(),
-            const SizedBox(height: 16),
-            _buildStatsRow(dailyPct),
-            if (showDailyGoal && streak > 0) ...[
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                child: StreakDotsRow(
-                  streak: streak,
-                  dailyProgress: dailyProgress,
-                  dailyGoal: dailyGoal,
-                ),
-              ),
-            ],
-            const SizedBox(height: 14),
-            _buildAiTutorButton(),
-            const SizedBox(height: 16),
-            Container(
-              height: 24,
-              decoration: BoxDecoration(
-                color: dark
-                    ? DesignTokens.darkBackground
-                    : DesignTokens.background,
-                borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24)),
-              ),
+    return AnimatedBuilder(
+      animation: _gradientCtrl,
+      builder: (context, _) {
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(
+                  const Color(0xFF1B6CA8),
+                  const Color(0xFF155885),
+                  _gradientCtrl.value,
+                )!,
+                Color.lerp(
+                  const Color(0xFF155885),
+                  const Color(0xFF0D2E4A),
+                  _gradientCtrl.value,
+                )!,
+                Color.lerp(
+                  const Color(0xFF0D2E4A),
+                  const Color(0xFF0A1E33),
+                  _gradientCtrl.value,
+                )!,
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                _buildTopRow(),
+                const SizedBox(height: 16),
+                _buildStatsRow(dailyPct),
+                if (widget.showDailyGoal && widget.streak > 0) ...[
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    child: StreakDotsRow(
+                      streak: widget.streak,
+                      dailyProgress: widget.dailyProgress,
+                      dailyGoal: widget.dailyGoal,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                _buildAiTutorButton(),
+                const SizedBox(height: 16),
+                Container(
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: widget.dark
+                        ? DesignTokens.darkBackground
+                        : DesignTokens.background,
+                    borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -113,7 +158,7 @@ class DashboardHeroHeader extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 14,
                         fontWeight: FontWeight.w500)),
-                Text(name,
+                Text(widget.name,
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 26,
@@ -136,10 +181,13 @@ class DashboardHeroHeader extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-              icon: const Icon(Icons.notifications_outlined,
-                  color: Colors.white, size: 24),
-              onPressed: onNotification),
+          Transform.scale(
+            scale: 1.1,
+            child: IconButton(
+                icon: const Icon(Icons.notifications_outlined,
+                    color: Colors.white, size: 24),
+                onPressed: widget.onNotification),
+          ),
         ],
       ),
     );
@@ -152,28 +200,29 @@ class DashboardHeroHeader extends StatelessWidget {
         children: [
           Expanded(
             child: HeroStatTile(
-              value: streak.toString(),
+              value: widget.streak.toString(),
               label: 'Day Streak',
               icon: Icons.local_fire_department_rounded,
               color: const Color(0xFFFF9800),
               iconBg: const Color(0x33FF9800),
-              subtitle:
-                  streak > 0 ? '$streak day${streak == 1 ? '' : 's'}' : null,
+              subtitle: widget.streak > 0
+                  ? '${widget.streak} day${widget.streak == 1 ? '' : 's'}'
+                  : null,
             ),
           ),
           const SizedBox(width: 10),
-          if (showDailyGoal)
+          if (widget.showDailyGoal)
             Expanded(
               child: DailyGoalRingTile(
                 progress: dailyPct,
-                value: '$dailyProgress',
+                value: '${widget.dailyProgress}',
                 label: 'Daily Goal',
               ),
             )
           else
             Expanded(
               child: HeroStatTile(
-                value: points.toString(),
+                value: widget.points.toString(),
                 label: 'Points',
                 icon: Icons.star_rounded,
                 color: const Color(0xFFFFD700),
@@ -183,7 +232,7 @@ class DashboardHeroHeader extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: HeroStatTile(
-              value: credits.toString(),
+              value: widget.credits.toString(),
               label: 'Credits',
               icon: Icons.bolt_rounded,
               color: const Color(0xFF69F0AE),
@@ -197,36 +246,46 @@ class DashboardHeroHeader extends StatelessWidget {
 
   Widget _buildAiTutorButton() {
     return GestureDetector(
-      onTap: onAiTutor,
+      onTap: widget.onAiTutor,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF7C4DFF).withValues(alpha: 0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 36,
-              height: 36,
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                  color: const Color(0xFF69F0AE).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10)),
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: const Icon(Icons.auto_awesome_rounded,
-                  color: Color(0xFF69F0AE), size: 18),
+                  color: Colors.white, size: 18),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text('Ask AI Tutor anything...',
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.75),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500)),
-            ),
-            Icon(Icons.arrow_forward_ios_rounded,
-                color: Colors.white.withValues(alpha: 0.5), size: 14),
+            const SizedBox(width: 10),
+            const Text('Study with AI Tutor',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800)),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right_rounded,
+                color: Colors.white70, size: 20),
           ],
         ),
       ),

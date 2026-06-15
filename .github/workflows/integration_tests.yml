@@ -44,6 +44,8 @@ jobs:
           arch: x86_64
           profile: Nexus 6
           script: >
-            flutter test integration_test/flows/auth_flow_test.dart
+            flutter test
+            integration_test/flows/auth_flow_test.dart
+            integration_test/flows/core_flow_test.dart
             --dart-define=YAZA_API_URL=https://yaza-ai-tutor.onrender.com
             -v

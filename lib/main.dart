@@ -171,40 +171,5 @@ Future<void> _initializePostLaunchServices() async {
   });
 }
 
-class StudyApp extends ConsumerWidget {
-  const StudyApp({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(routerProvider);
-    final client = ref.watch(graphqlClientProvider);
-    final themeMode = ref.watch(themeModeProvider);
-
-    // Track screen views on route changes
-    ref.listen(routerProvider, (_, GoRouter next) {
-      final uri = next.routeInformationProvider.value.uri.toString();
-      AnalyticsService.logScreenView(uri);
-    });
-
-    return GraphQLProvider(
-      client: ValueNotifier(client),
-      child: MaterialApp.router(
-        title: 'Yaza',
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        themeMode: themeMode,
-        routerConfig: router,
-        debugShowCheckedModeBanner: false,
-        builder: (context, child) {
-          // Router can pass null child briefly; SizedBox.shrink() looks like a "frozen" blank screen.
-          final routed = child ??
-              const Scaffold(
-                backgroundColor: DesignTokens.primary,
-                body: LoadingWidget(),
-              );
-          return OfflineBanner(child: routed);
-        },
-      ),
-    );
-  }
-}
+// StudyApp has been moved to lib/app.dart for modularity.
+import 'app.dart';

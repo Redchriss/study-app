@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../core/theme/design_tokens.dart';
 import 'login_form.dart';
 
 class LoginScreen extends ConsumerWidget {
@@ -14,7 +16,11 @@ class LoginScreen extends ConsumerWidget {
           child: Column(
             children: [
               _buildHeader(size),
-              const LoginForm(),
+              const LoginForm().animate().fadeIn(
+                    delay: 400.ms,
+                    duration: 600.ms,
+                    curve: Curves.easeOut,
+                  ).slideY(begin: 0.05),
             ],
           ),
         ),
@@ -30,26 +36,54 @@ class LoginScreen extends ConsumerWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1B6CA8), Color(0xFF0E3D6E)],
+          stops: [0.0, 0.6, 1.0],
+          colors: [
+            Color(0xFF1B6CA8),
+            Color(0xFF155885),
+            Color(0xFF0E3D6E),
+          ],
         ),
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(40),
-          bottomRight: Radius.circular(40),
+          bottomLeft: Radius.circular(48),
+          bottomRight: Radius.circular(48),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x331B6CA8),
+            blurRadius: 30,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Animated icon
           Container(
-            width: 72,
-            height: 72,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.15),
+              gradient: RadialGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0.2),
+                  Colors.white.withValues(alpha: 0.05),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
             ),
-            child: const Icon(Icons.auto_stories_rounded,
-                size: 40, color: Colors.white),
-          ),
+            child: const Icon(
+              Icons.auto_stories_rounded,
+              size: 44,
+              color: Colors.white,
+            ),
+          ).animate().scale(
+                duration: 600.ms,
+                curve: Curves.elasticOut,
+              ),
           const SizedBox(height: 20),
           const Text(
             'Welcome back',
@@ -60,7 +94,10 @@ class LoginScreen extends ConsumerWidget {
               height: 1.1,
               letterSpacing: -1.2,
             ),
-          ),
+          ).animate().fadeIn(
+                duration: 500.ms,
+                curve: Curves.easeOut,
+              ).slideY(begin: 0.1),
           const SizedBox(height: 8),
           Text(
             'Log in to continue studying',
@@ -69,7 +106,7 @@ class LoginScreen extends ConsumerWidget {
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
-          ),
+          ).animate(delay: 200.ms).fadeIn(),
         ],
       ),
     );

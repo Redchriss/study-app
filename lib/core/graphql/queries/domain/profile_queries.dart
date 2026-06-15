@@ -14,7 +14,7 @@ query Profile {
       onboardingComplete
       postKarma commentKarma awardKarma
     }
-    achievements { achievement { id name category iconUrl } }
+    achievements { achievement { id name category icon } }
   }
   myFollowersCount
   myFollowingCount
