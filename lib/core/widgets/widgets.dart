@@ -1,11 +1,15 @@
+export 'achievement_badge.dart';
 export 'animated_press.dart';
+export 'animated_streak_flame.dart';
 export 'bento_card.dart';
 export 'centre_ai_button.dart';
 export 'empty_state.dart';
+export 'error_state.dart';
 export 'glass_card.dart';
 export 'loading_overlay.dart';
-export 'error_state.dart';
 export 'nav_item.dart';
 export 'offline_banner.dart';
 export 'section_header.dart';
 export 'shimmer_box.dart';
+export 'study_meter_gauge.dart';
+export 'subject_color_chip.dart';
