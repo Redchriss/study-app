@@ -8,16 +8,16 @@ class DesignTokens {
   DesignTokens._();
 
   // ── Brand ────────────────────────────────────────────────────────────
-  static const Color primary = Color(0xFF1B6CA8);
-  static const Color primaryLight = Color(0xFF4A90D9);
-  static const Color secondary = Color(0xFFF4A261);
-  static const Color accent = Color(0xFF2EC4B6);
+  static const Color primary = Color(0xFF1A1A6B);      // Deep navy — premium, trustworthy
+  static const Color primaryLight = Color(0xFF3D5AFE); // Vibrant indigo — for gradients
+  static const Color secondary = Color(0xFFF5A623);    // Warm gold — African sun, aspirational
+  static const Color accent = Color(0xFF00C9A7);       // Emerald teal — fresh, energetic CTA
 
   // ── Semantic ─────────────────────────────────────────────────────────
-  static const Color success = Color(0xFF27AE60);
-  static const Color warning = Color(0xFFF39C12);
-  static const Color error = Color(0xFFE74C3C);
-  static const Color info = Color(0xFF3498DB);
+  static const Color success = Color(0xFF00C853);
+  static const Color warning = Color(0xFFFFB300);
+  static const Color error = Color(0xFFFF1744);
+  static const Color info = Color(0xFF448AFF);
 
   // ── Surfaces (light) ─────────────────────────────────────────────────
   static const Color background = Color(0xFFF8F9FA);
@@ -27,20 +27,20 @@ class DesignTokens {
   static const Color borderLight = Color(0xFFDEE2E6);
 
   // ── Surfaces (dark) ──────────────────────────────────────────────────
-  static const Color darkBackground = Color(0xFF0D1117);
-  static const Color darkSurface = Color(0xFF161B22);
-  static const Color darkSurfaceVariant = Color(0xFF21262D);
-  static const Color darkBorder = Color(0xFF30363D);
+  static const Color darkBackground = Color(0xFF0A0E17);     // Richer midnight
+  static const Color darkSurface = Color(0xFF121926);        // Slightly lighter card surface
+  static const Color darkSurfaceVariant = Color(0xFF1C2333); // Input fills
+  static const Color darkBorder = Color(0xFF2D3548);         // Subtle blue-tinted border
 
   // ── Text ─────────────────────────────────────────────────────────────
-  static const Color textPrimary = Color(0xFF1A1A2E);
-  static const Color textSecondary = Color(0xFF6C757D);
-  static const Color textTertiary = Color(0xFFADB5BD);
+  static const Color textPrimary = Color(0xFF17172B);
+  static const Color textSecondary = Color(0xFF5A6476);
+  static const Color textTertiary = Color(0xFF9CA3AF);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 
-  static const Color darkTextPrimary = Color(0xFFF0F6FC);
-  static const Color darkTextSecondary = Color(0xFF8B949E);
-  static const Color darkTextTertiary = Color(0xFF6E7681);
+  static const Color darkTextPrimary = Color(0xFFEDF2F7);
+  static const Color darkTextSecondary = Color(0xFF7F8EA3);
+  static const Color darkTextTertiary = Color(0xFF596580);
 
   // ── Corner Radii ─────────────────────────────────────────────────────
   static const double radiusXs = 4;
