@@ -219,6 +219,19 @@ mutation SendReaderAiMessage($sessionId: ID!, $content: String!, $materialId: ID
 }
 ''';
 
+const String kYouTubeSearch = r'''
+query YouTubeSearch($query: String!, $maxResults: Int) {
+  youtubeSearch(query: $query, maxResults: $maxResults) {
+    videoId
+    title
+    description
+    channelTitle
+    thumbnailUrl
+    url
+  }
+}
+''';
+
 const String kDueFlashcardReviews = r'''
 query DueFlashcardReviews($limit: Int) {
   dueFlashcardReviews(limit: $limit) {

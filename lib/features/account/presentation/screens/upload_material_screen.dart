@@ -7,6 +7,7 @@ import 'upload_form_fields.dart';
 import 'upload_material_labels.dart';
 import 'upload_material_manager.dart';
 import 'upload_material_widgets.dart';
+import '../../../materials/presentation/widgets/youtube_search_picker.dart';
 
 class UploadMaterialScreen extends ConsumerStatefulWidget {
   const UploadMaterialScreen({super.key});
@@ -83,11 +84,21 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
             ),
             const SizedBox(height: DesignTokens.spLg),
             if (_m.contentType == 'video') ...[
+              const Text('Search YouTube',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              const SizedBox(height: DesignTokens.spSm),
+              YouTubeSearchPicker(
+                onSelected: (url) {
+                  _m.youtubeCtrl.text = url;
+                  setState(() {});
+                },
+              ),
+              const SizedBox(height: DesignTokens.spLg),
               GlassCard(
                 child: TextField(
                   controller: _m.youtubeCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'YouTube URL',
+                    labelText: 'Or paste YouTube URL',
                     hintText: 'https://www.youtube.com/watch?v=...',
                   ),
                 ),
