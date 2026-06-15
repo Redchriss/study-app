@@ -68,7 +68,7 @@ class _DashboardRecommendationsPanelState
                     color: const Color(0xFF7C4DFF).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.auto_awesome_rounded,
+                  child: const Icon(Icons.rocket_launch_rounded,
                       color: Color(0xFF7C4DFF), size: 22),
                 ),
                 const SizedBox(width: 12),

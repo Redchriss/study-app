@@ -48,7 +48,7 @@ class _AiTypingIndicatorState extends State<AiTypingIndicator> {
                   colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.auto_awesome_rounded,
+            child: const Icon(Icons.psychology_rounded,
                 color: Colors.white, size: 14),
           ),
           const SizedBox(width: 8),

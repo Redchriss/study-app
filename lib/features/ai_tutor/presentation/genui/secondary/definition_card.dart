@@ -179,7 +179,7 @@ class _DefinitionCardWidgetState extends State<_DefinitionCardWidget>
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.auto_awesome, size: 16, color: cs.tertiary),
+                      Icon(Icons.psychology_rounded, size: 16, color: cs.tertiary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(

@@ -144,7 +144,7 @@ class _NotificationPreferencesScreenState
               ),
               PreferenceSwitchTile(
                 dark: dark,
-                icon: Icons.auto_awesome_rounded,
+                icon: Icons.campaign_rounded,
                 title: 'Awards',
                 subtitle: 'Someone gives you an award',
                 value: _award,

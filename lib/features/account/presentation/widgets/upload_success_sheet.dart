@@ -100,7 +100,7 @@ class UploadSuccessSheet extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.auto_awesome, color: DesignTokens.primary),
+                  const Icon(Icons.workspace_premium, color: DesignTokens.primary),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(

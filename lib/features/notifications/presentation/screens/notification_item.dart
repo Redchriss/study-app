@@ -31,7 +31,7 @@ class NotificationItem extends StatelessWidget {
       case 'quiz_result':
         return Icons.quiz_rounded;
       case 'ai_credits':
-        return Icons.auto_awesome_rounded;
+        return Icons.campaign_rounded;
       default:
         return Icons.notifications_rounded;
     }

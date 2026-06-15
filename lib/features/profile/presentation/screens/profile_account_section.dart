@@ -22,7 +22,7 @@ class ProfileAccountSection extends ConsumerWidget {
                   onTap: () => context.push('/edit-profile')),
               const SectionDivider(),
               NavRow(
-                  icon: Icons.auto_awesome_outlined,
+                  icon: Icons.workspace_premium_outlined,
                   label: 'Plans & Credits',
                   onTap: () => context.push('/upgrade')),
               const SectionDivider(),

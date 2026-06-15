@@ -229,7 +229,7 @@ class MaterialDetailBody extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                 Row(children: [
-                  const Icon(Icons.auto_awesome,
+                  const Icon(Icons.psychology_rounded,
                       size: 16, color: DesignTokens.warning),
                   const SizedBox(width: 6),
                   Text('AI Summary',

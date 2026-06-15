@@ -35,7 +35,7 @@ class ScannerResultsSummaryBar extends StatelessWidget {
       ),
       child: Column(children: [
         Row(children: [
-          const Icon(Icons.auto_awesome, color: DesignTokens.primary, size: 20),
+          const Icon(Icons.auto_stories_rounded, color: DesignTokens.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
               child: Text('AI solved $withAnswer of $total',

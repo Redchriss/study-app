@@ -26,7 +26,7 @@ class OnboardingData {
           'Get instant help with any subject.\nPersonal tutor. Available 24/7.',
       gradient: [Color(0xFF1B6CA8), Color(0xFF0E3D6E)],
       accentColor: Color(0xFF4FC3F7),
-      icon: Icons.auto_awesome_rounded,
+      icon: Icons.auto_stories_rounded,
       stat: '24/7',
       statLabel: 'instant AI tutoring',
     ),

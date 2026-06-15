@@ -37,7 +37,7 @@ class CentreAiButton extends StatelessWidget {
                     : null,
               ),
               child: Icon(
-                Icons.auto_awesome_rounded,
+                Icons.auto_stories_rounded,
                 color: Colors.white.withValues(alpha: isSelected ? 1.0 : 0.9),
                 size: 22,
               ),

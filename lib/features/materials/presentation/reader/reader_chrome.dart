@@ -171,7 +171,7 @@ class ReaderActionBar extends StatelessWidget {
           if (onAskAi != null)
             _ReaderActionChip(
               label: 'Ask AI',
-              icon: Icons.auto_awesome,
+              icon: Icons.psychology_rounded,
               emphasized: true,
               onPressed: onAskAi!,
             ),

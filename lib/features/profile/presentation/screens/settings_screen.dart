@@ -36,7 +36,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return [
       SettingsItem('Account', Icons.person_outline, [
         SettingsSub(Icons.edit_outlined, 'Edit Profile', '/edit-profile'),
-        SettingsSub(Icons.auto_awesome_outlined, 'Plans & Credits', '/upgrade'),
+        SettingsSub(Icons.workspace_premium_outlined, 'Plans & Credits', '/upgrade'),
         SettingsSub(Icons.emoji_events_outlined, 'Leaderboard', '/leaderboard'),
       ]),
       SettingsItem('Preferences', Icons.tune_outlined, [

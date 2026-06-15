@@ -31,7 +31,7 @@ class DashboardQuickActions extends StatelessWidget {
             color: const Color(0xFF2EC4B6),
             onTap: () => context.push('/scanner')),
         _ActionTile(
-            icon: Icons.auto_awesome_rounded,
+            icon: Icons.rocket_launch_rounded,
             label: 'AI Tutor',
             color: const Color(0xFF7C4DFF),
             onTap: () => context.push('/ai-tutor')),

@@ -195,7 +195,7 @@ class HistoryScreen extends ConsumerWidget {
                             child: Icon(
                               isPositive
                                   ? Icons.add_rounded
-                                  : Icons.auto_awesome_rounded,
+                                  : Icons.workspace_premium_rounded,
                               color: isPositive
                                   ? DesignTokens.success
                                   : const Color(0xFFE87E5E),

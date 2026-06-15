@@ -139,7 +139,7 @@ class InboxNotificationCard extends StatelessWidget {
       case 'upvote_milestone':
         return Icons.arrow_upward_rounded;
       case 'award':
-        return Icons.auto_awesome_rounded;
+        return Icons.notifications_active_rounded;
       case 'mod_action':
         return Icons.shield_rounded;
       case 'modmail':

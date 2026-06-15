@@ -35,7 +35,7 @@ class AiTutorStreamingMessage extends StatelessWidget {
             ),
             child: ScaleTransition(
               scale: breathAnim,
-              child: const Icon(Icons.auto_awesome_rounded,
+              child: const Icon(Icons.psychology_rounded,
                   color: Colors.white, size: 14),
             ),
           ),

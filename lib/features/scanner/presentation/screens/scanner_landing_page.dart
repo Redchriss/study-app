@@ -147,7 +147,7 @@ class ScannerLandingPage extends StatelessWidget {
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.auto_awesome,
+                              Icon(Icons.auto_stories_rounded,
                                   color: Color(0xFFFFD54F), size: 12),
                               SizedBox(width: 4),
                               Text('AI POWERED',

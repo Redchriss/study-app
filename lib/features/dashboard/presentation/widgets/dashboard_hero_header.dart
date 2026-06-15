@@ -274,7 +274,7 @@ class _DashboardHeroHeaderState extends State<DashboardHeroHeader>
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.auto_awesome_rounded,
+              child: const Icon(Icons.rocket_launch_rounded,
                   color: Colors.white, size: 18),
             ),
             const SizedBox(width: 10),

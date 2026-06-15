@@ -71,7 +71,7 @@ class AiAssistantBubble extends StatelessWidget {
                           strokeWidth: 1.5, color: Colors.white),
                     ),
                   )
-                : const Icon(Icons.auto_awesome_rounded,
+                : const Icon(Icons.psychology_rounded,
                     color: Colors.white, size: 14),
           ),
           Flexible(

@@ -68,7 +68,7 @@ class ProfileAchievementsRow extends StatelessWidget {
       case 'milestone':
         return Icons.emoji_events_rounded;
       default:
-        return Icons.auto_awesome_rounded;
+        return Icons.workspace_premium_rounded;
     }
   }
 }

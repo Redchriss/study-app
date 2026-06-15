@@ -36,7 +36,7 @@ class UpgradeScreen extends ConsumerWidget {
             children: [
               GlassCard(
                   child: Column(children: [
-                const Icon(Icons.auto_awesome,
+                const Icon(Icons.workspace_premium,
                     size: 40, color: DesignTokens.warning),
                 const SizedBox(height: 8),
                 Text('$credits',
@@ -169,7 +169,7 @@ class _PackageTile extends StatelessWidget {
               ),
               child: Icon(
                 isSub
-                    ? Icons.auto_awesome_rounded
+                    ? Icons.workspace_premium_rounded
                     : Icons.add_circle_outline_rounded,
                 color: isSub ? Colors.white : DesignTokens.primary,
                 size: 28,

@@ -101,7 +101,7 @@ class _MotivationCardWidgetState extends State<_MotivationCardWidget>
               children: [
                 Row(
                   children: [
-                    Icon(Icons.auto_awesome, color: cs.tertiary, size: 22),
+                    Icon(Icons.psychology_rounded, color: cs.tertiary, size: 22),
                     const SizedBox(width: 8),
                     Text(
                       'Keep going',

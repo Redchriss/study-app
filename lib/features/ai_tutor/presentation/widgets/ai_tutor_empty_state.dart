@@ -36,7 +36,7 @@ class AiTutorEmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.auto_awesome_rounded,
+                Icons.psychology_rounded,
                 size: 42,
                 color: Color(0xFF7C4DFF),
               ),

@@ -213,7 +213,7 @@ class _ScannerDetailsFormState extends ConsumerState<ScannerDetailsForm> {
                     height: 20,
                     child: CircularProgressIndicator(
                         color: Colors.white, strokeWidth: 2))
-                : const Icon(Icons.auto_awesome_rounded),
+                : const Icon(Icons.auto_stories_rounded),
             label: Text(
               _solving
                   ? (_progressText.isNotEmpty ? _progressText : 'Solving...')

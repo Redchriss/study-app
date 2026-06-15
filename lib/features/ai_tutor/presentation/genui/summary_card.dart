@@ -79,7 +79,7 @@ class _SummaryCardWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.auto_awesome, color: colorScheme.secondary),
+                Icon(Icons.psychology_rounded, color: colorScheme.secondary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

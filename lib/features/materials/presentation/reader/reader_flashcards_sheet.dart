@@ -72,7 +72,7 @@ class _ReaderFlashcardsSheetState extends State<_ReaderFlashcardsSheet> {
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.auto_awesome),
+                      : const Icon(Icons.psychology_rounded),
                   label: Text(widget.isGenerating
                       ? 'Generating...'
                       : 'Generate Flashcards'),

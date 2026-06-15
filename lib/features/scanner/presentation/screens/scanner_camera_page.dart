@@ -53,7 +53,7 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
                     ),
                     child: const Row(
                       children: [
-                        Icon(Icons.auto_awesome_rounded,
+                        Icon(Icons.auto_stories_rounded,
                             color: Color(0xFFFFC107), size: 16),
                         SizedBox(width: 8),
                         Text('AI Paper Solver',

@@ -39,7 +39,7 @@ IconData notificationIconForType(String type) {
     case 'upvote_milestone':
       return Icons.trending_up_rounded;
     case 'award':
-      return Icons.auto_awesome_rounded;
+      return Icons.campaign_rounded;
     case 'mod_action':
       return Icons.shield_rounded;
     case 'modmail':

@@ -145,7 +145,7 @@ class _KidsVisualLessonPanelState extends State<KidsVisualLessonPanel> {
         SizedBox(
             width: double.infinity,
             child: KidsActionButton(
-              icon: Icons.auto_awesome,
+              icon: Icons.auto_stories_rounded,
               label: 'Next lesson',
               color: KidsVisualTheme.trailGreen,
               onTap: widget.onNextLesson,

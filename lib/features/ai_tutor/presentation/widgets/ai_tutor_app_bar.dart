@@ -32,7 +32,7 @@ class AiTutorAppBar extends ConsumerWidget implements PreferredSizeWidget {
               ),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.auto_awesome_rounded,
+            child: const Icon(Icons.psychology_rounded,
                 color: Colors.white, size: 16),
           ),
           const SizedBox(width: 8),

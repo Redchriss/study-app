@@ -13,7 +13,7 @@ IconData achIcon(String? icon) {
     case 'votes':
       return Icons.arrow_upward_rounded;
     case 'awards':
-      return Icons.auto_awesome_rounded;
+      return Icons.workspace_premium_rounded;
     default:
       return Icons.emoji_events_rounded;
   }

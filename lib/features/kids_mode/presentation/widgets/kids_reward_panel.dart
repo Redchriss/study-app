@@ -49,7 +49,7 @@ class KidsRewardPanel extends StatelessWidget {
                   color: KidsVisualTheme.sunGold.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: const Icon(Icons.auto_awesome_rounded,
+                child: const Icon(Icons.auto_stories_rounded,
                     color: KidsVisualTheme.sunGold, size: 30),
               ),
               const SizedBox(width: 12),
