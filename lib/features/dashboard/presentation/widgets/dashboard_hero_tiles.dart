@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/widgets.dart';
 
 /// Reusable stat tile for the dashboard hero.
 class HeroStatTile extends StatelessWidget {
@@ -152,44 +153,50 @@ class StreakDotsRow extends StatelessWidget {
     required this.dailyGoal,
   });
 
-  static const int _dotCount = 7;
-
-  int get _filledDots =>
-      streak > _dotCount ? _dotCount : streak.clamp(0, _dotCount);
-
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        ...List.generate(
-          _dotCount,
-          (i) => Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: i < _filledDots
-                    ? const Color(0xFFFF9800)
-                    : Colors.white.withValues(alpha: 0.2),
+        AnimatedStreakFlame(streak: streak, size: 28),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              streak > 0 ? '$streak day streak!' : 'Start your streak',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
               ),
             ),
-          ),
+            Text(
+              streak > 0
+                  ? '${(dailyGoal - dailyProgress).clamp(0, dailyGoal)} questions remaining today'
+                  : 'Complete ${dailyGoal} questions daily',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
         const Spacer(),
-        Text(
-          '+${(dailyGoal - dailyProgress).clamp(0, dailyGoal)} Q left',
-          style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '$dailyProgress/$dailyGoal',
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 11,
-              fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '$dailyProgress/$dailyGoal',
-          style: const TextStyle(
-              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
+              fontWeight: FontWeight.w800,
+            ),
+          ),
         ),
       ],
     );

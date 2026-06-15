@@ -150,41 +150,29 @@ class _TypeFilterBar extends StatelessWidget {
   const _TypeFilterBar({required this.selected, required this.onSelect});
 
   static const _filters = [
-    ('all', 'All'),
-    ('pdf', 'PDF'),
-    ('text', 'Text'),
-    ('video', 'Video'),
-    ('youtube', 'YouTube'),
+    ('all', 'All', SubjectColors.defaultColor),
+    ('pdf', 'PDF', SubjectColors.english),
+    ('text', 'Text', SubjectColors.science),
+    ('video', 'Video', SubjectColors.physics),
+    ('youtube', 'YouTube', SubjectColors.history),
   ];
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 40,
+      height: 44,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         children: _filters.map((f) {
-          final (val, label) = f;
-          final sel = selected == val;
+          final (val, label, color) = f;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(label,
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: sel ? Colors.white : DesignTokens.textSecondary)),
-              selected: sel,
-              onSelected: (_) => onSelect(val),
-              selectedColor: DesignTokens.primary,
-              backgroundColor: Colors.transparent,
-              side: BorderSide(
-                  color: sel
-                      ? DesignTokens.primary
-                      : DesignTokens.border.withValues(alpha: 0.6)),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              visualDensity: VisualDensity.compact,
+            child: SubjectColorChip(
+              label: label,
+              isSelected: selected == val,
+              color: color,
+              onTap: () => onSelect(val),
             ),
           );
         }).toList(),
