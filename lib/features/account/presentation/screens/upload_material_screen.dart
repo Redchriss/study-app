@@ -97,10 +97,22 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
               GlassCard(
                 child: TextField(
                   controller: _m.youtubeCtrl,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Or paste YouTube URL',
                     hintText: 'https://www.youtube.com/watch?v=...',
+                    suffixIcon: _m.youtubeCtrl.text.isNotEmpty
+                        ? Icon(
+                            _isValidYoutubeUrl(_m.youtubeCtrl.text)
+                                ? Icons.check_circle_rounded
+                                : Icons.error_outline_rounded,
+                            color: _isValidYoutubeUrl(_m.youtubeCtrl.text)
+                                ? DesignTokens.success
+                                : DesignTokens.error,
+                            size: 20,
+                          )
+                        : null,
                   ),
+                  onChanged: (_) => setState(() {}),
                 ),
               ),
               const SizedBox(height: DesignTokens.spLg),
@@ -206,6 +218,13 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
         ],
       ),
     );
+  }
+
+  bool _isValidYoutubeUrl(String url) {
+    final regex = RegExp(
+      r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/',
+    );
+    return regex.hasMatch(url.trim());
   }
 
   Widget _buildHintCard() {

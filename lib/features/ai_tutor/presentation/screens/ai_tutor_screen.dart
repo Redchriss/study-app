@@ -12,7 +12,9 @@ import 'ai_tutor_error_bottom_sheet.dart';
 import 'ai_tutor_mode_helpers.dart';
 
 class AiTutorScreen extends ConsumerStatefulWidget {
-  const AiTutorScreen({super.key});
+  final String? initialPrompt;
+
+  const AiTutorScreen({super.key, this.initialPrompt});
   @override
   ConsumerState<AiTutorScreen> createState() => _AiTutorScreenState();
 }
@@ -38,6 +40,12 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   void initState() {
     super.initState();
     _httpClient = http.Client();
+    // Auto-send initial prompt if provided from dashboard suggestion
+    if (widget.initialPrompt != null && widget.initialPrompt!.isNotEmpty) {
+      Future.microtask(() {
+        ref.read(aiTutorProvider.notifier).send(widget.initialPrompt!, _httpClient);
+      });
+    }
     _cursorCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),

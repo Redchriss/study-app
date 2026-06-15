@@ -104,7 +104,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/setup', builder: (_, __) => const ProfileSetupScreen()),
 
       // AI Tutor — full screen, no shell (pushed from anywhere)
-      GoRoute(path: '/ai-tutor', builder: (_, __) => const AiTutorScreen()),
+      GoRoute(
+        path: '/ai-tutor',
+        builder: (_, state) => AiTutorScreen(
+          initialPrompt: state.extra is Map
+              ? (state.extra as Map)['prompt'] as String?
+              : null,
+        ),
+      ),
 
       ...appRoutes,
 

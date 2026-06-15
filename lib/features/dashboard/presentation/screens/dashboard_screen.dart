@@ -16,6 +16,7 @@ import '../widgets/dashboard_recommendations_panel.dart';
 import '../widgets/dashboard_recent_panel.dart';
 import '../widgets/dashboard_onboarding_card.dart';
 import '../widgets/dashboard_loading.dart';
+import '../widgets/dashboard_suggestions_panel.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -107,6 +108,7 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SliverToBoxAdapter(child: DashboardSuggestionsPanel()),
                 if (!data.isFirstTime &&
                     (data.focusTopic.isNotEmpty || data.hasProgressData))
                   SliverToBoxAdapter(

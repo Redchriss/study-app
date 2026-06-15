@@ -143,3 +143,38 @@ mutation UpdateChatSessionTitle($sessionId: ID!, $title: String!) {
   }
 }
 ''';
+
+const String kSuggestedReviews = r'''
+query SuggestedReviews {
+  suggestedReviews {
+    topicName
+    topicSlug
+    subjectName
+    masteryScore
+    confidenceScore
+    daysSinceStudied
+    reason
+    reasonLabel
+    statusLabel
+  }
+}
+''';
+
+const String kWeeklyInsights = r'''
+query WeeklyInsights {
+  weeklyInsights {
+    totalQuizzesTaken
+    questionsAnswered
+    averageScore
+    totalTimeSpentMinutes
+    scoreTrend
+    recentTopics {
+      quizTitle
+      subjectName
+      score
+      timeTakenSeconds
+      completedAt
+    }
+  }
+}
+''';
