@@ -22,7 +22,7 @@ import '../core/services/analytics_service.dart';
 import 'shell.dart';
 import 'routes/community_routes.dart';
 import 'routes/app_routes.dart';
-import 'study_hub_screen.dart';
+import 'features/study_hub/presentation/screens/study_hub_screen.dart';
 
 class _AnalyticsObserver extends NavigatorObserver {
   @override

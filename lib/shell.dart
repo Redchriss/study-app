@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/design_tokens.dart';
-import 'widgets/nav_item.dart';
-import 'widgets/centre_ai_button.dart';
+import 'core/widgets/nav_item.dart';
+import 'core/widgets/centre_ai_button.dart';
 import 'features/notifications/presentation/providers/unread_count_provider.dart';
 
 class MainShell extends ConsumerWidget {
