@@ -26,6 +26,7 @@ class MaterialCard extends StatelessWidget {
     final accentColor = materialSubjectColor(subjectName);
     final description = (material['description'] ?? '').toString().trim();
     final aiSummary = (material['aiSummary'] ?? '').toString().trim();
+    final thumbnailUrl = material['thumbnailUrl']?.toString() ?? '';
     final snippet = description.isNotEmpty ? description : aiSummary;
     final rawViews = material['viewsCount'];
     final views = rawViews is num
@@ -64,18 +65,40 @@ class MaterialCard extends StatelessWidget {
                           bottomLeft: Radius.circular(DesignTokens.radiusLg)),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 14, 0, 14),
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                          color: typeColor.withValues(alpha: 0.1),
-                          borderRadius:
-                              BorderRadius.circular(DesignTokens.radiusMd)),
-                      child: Icon(materialTypeIcon(type),
-                          color: typeColor, size: 22),
-                    ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                    child: thumbnailUrl.isNotEmpty
+                        ? Container(
+                            width: 64,
+                            height: 64,
+                            margin: const EdgeInsets.fromLTRB(12, 14, 0, 14),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(
+                                  DesignTokens.radiusMd),
+                            ),
+                            child: Image.network(
+                              thumbnailUrl,
+                              width: 64,
+                              height: 64,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _fallbackIcon(
+                                  type, typeColor),
+                            ),
+                          )
+                        : Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(12, 14, 0, 14),
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                  color: typeColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(
+                                      DesignTokens.radiusMd)),
+                              child: Icon(materialTypeIcon(type),
+                                  color: typeColor, size: 22),
+                            ),
+                          ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -197,6 +220,17 @@ class MaterialCard extends StatelessWidget {
           .slideY(begin: 0.04),
     );
   }
+}
+
+Widget _fallbackIcon(String type, Color typeColor) {
+  return Container(
+    width: 48,
+    height: 48,
+    decoration: BoxDecoration(
+        color: typeColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMd)),
+    child: Icon(materialTypeIcon(type), color: typeColor, size: 22),
+  );
 }
 
 class _TypeBadge extends StatelessWidget {
