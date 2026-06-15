@@ -8,6 +8,8 @@ import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/onboarding_screen.dart';
 import '../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../features/ai_tutor/presentation/screens/ai_tutor_screen.dart';
+import '../features/diagnostics/presentation/screens/diagnostic_screen.dart';
+import '../features/diagnostics/presentation/screens/knowledge_map_screen.dart';
 import '../features/circles/presentation/screens/home_screen.dart';
 import '../features/circles/presentation/screens/discover_screen.dart';
 import '../features/circles/presentation/screens/inbox_screen.dart';
@@ -111,6 +113,23 @@ final routerProvider = Provider<GoRouter>((ref) {
               ? (state.extra as Map)['prompt'] as String?
               : null,
         ),
+      ),
+
+      // Diagnostic & Knowledge Map (AI 2.0)
+      GoRoute(
+        path: '/diagnostic/:subjectCode',
+        builder: (_, state) => DiagnosticScreen(
+          subjectCode: state.pathParameters['subjectCode'] ?? 'MATH-S',
+        ),
+      ),
+      GoRoute(
+        path: '/knowledge-map',
+        builder: (_, state) {
+          final extra = state.extra as Map? ?? {};
+          return KnowledgeMapScreen(
+            subjectCode: (extra['subjectCode'] as String?) ?? 'MATH-S',
+          );
+        },
       ),
 
       ...appRoutes,
