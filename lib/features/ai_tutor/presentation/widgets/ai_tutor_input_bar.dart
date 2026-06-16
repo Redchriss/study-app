@@ -126,28 +126,28 @@ class _AiTutorInputBarState extends State<AiTutorInputBar> {
                         isDense: true,
                       ),
                       textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => sending ? null : onSend(),
+                      onSubmitted: (_) => widget.sending ? null : widget.onSend(),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 AnimatedPress(
-                  onTap: sending ? null : () => onSend(),
+                  onTap: widget.sending ? null : () => widget.onSend(),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      gradient: sending
+                      gradient: widget.sending
                           ? null
                           : const LinearGradient(
                               colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]),
-                      color: sending
+                      color: widget.sending
                           ? DesignTokens.textTertiary.withValues(alpha: 0.3)
                           : null,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: sending
+                    child: widget.sending
                         ? const Center(
                             child: SizedBox(
                                 width: 18,
