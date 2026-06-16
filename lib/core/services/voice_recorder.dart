@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 /// Voice recorder for AI Tutor voice input.
@@ -10,11 +11,10 @@ class VoiceRecorder {
   final AudioRecorder _recorder = AudioRecorder();
   bool _isRecording = false;
   String? _recordedPath;
-  Uint8List? _recordedBytes;
 
   bool get isRecording => _isRecording;
 
-  /// Start recording audio.
+  /// Start recording audio to a temp file.
   Future<bool> start() async {
     try {
       final hasPermission = await _recorder.hasPermission();
@@ -23,30 +23,14 @@ class VoiceRecorder {
         return false;
       }
 
-      _recordedBytes = null;
+      final dir = await getTemporaryDirectory();
+      _recordedPath = '${dir.path}/yaza_voice_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-      // Record directly to bytes
-      final stream = await _recorder.startStream(const RecordConfig(
+      await _recorder.start(const RecordConfig(
         encoder: AudioEncoder.wav,
-        sampleRate: 16000, // NIM prefers 16kHz
+        sampleRate: 16000,
         numChannels: 1,
-      ));
-
-      // Collect all chunks
-      final chunks = <Uint8List>[];
-      stream.listen(
-        (data) => chunks.add(data),
-        onDone: () {
-          _recordedBytes = Uint8List(chunks.fold<int>(0, (sum, e) => sum + e.length));
-          final full = Uint8List(_recordedBytes!.length);
-          int offset = 0;
-          for (final chunk in chunks) {
-            full.setRange(offset, offset + chunk.length, chunk);
-            offset += chunk.length;
-          }
-          _recordedBytes = full;
-        },
-      );
+      ), path: _recordedPath!);
 
       _isRecording = true;
       return true;
@@ -65,12 +49,21 @@ class VoiceRecorder {
       await _recorder.stop();
       _isRecording = false;
 
-      if (_recordedBytes == null || _recordedBytes!.length < 100) {
-        debugPrint('❌ Recording too short');
+      if (_recordedPath == null || !File(_recordedPath!).existsSync()) {
+        debugPrint('❌ No recording file found');
         return null;
       }
 
-      return base64Encode(_recordedBytes!);
+      final file = File(_recordedPath!);
+      final bytes = await file.readAsBytes();
+      await file.delete(); // clean up
+
+      if (bytes.length < 100) {
+        debugPrint('❌ Recording too short: ${bytes.length} bytes');
+        return null;
+      }
+
+      return base64Encode(bytes);
     } catch (e) {
       debugPrint('❌ Recording stop failed: $e');
       return null;
