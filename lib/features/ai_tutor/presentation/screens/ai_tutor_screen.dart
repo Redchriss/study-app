@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import '../../../core/services/voice_recorder.dart';
-import '../../../core/config/app_config.dart';
+import '../../../../core/services/voice_recorder.dart';
+import '../../../../core/config/app_config.dart';
 import '../providers/ai_tutor_provider.dart';
 import '../widgets/ai_tutor_app_bar.dart';
 import '../widgets/ai_tutor_header.dart';

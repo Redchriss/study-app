@@ -36,7 +36,7 @@ class _AiTutorInputBarState extends State<AiTutorInputBar> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (suggestions.isNotEmpty)
+          if (widget.suggestions.isNotEmpty)
             SizedBox(
               height: 36,
               child: ListView.separated(
