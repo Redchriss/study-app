@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../../core/theme/design_tokens.dart';
 import '../../../../../core/widgets/elite/soft_mesh_background.dart';
 import '../onboarding_data.dart';
 

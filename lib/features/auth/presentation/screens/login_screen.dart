@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../../core/theme/design_tokens.dart';
 import 'login_form.dart';
 
 class LoginScreen extends ConsumerWidget {

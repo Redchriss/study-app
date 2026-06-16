@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../theme/design_tokens.dart';
 
 /// A custom-painted achievement badge with ribbon and star emblem.
 /// Distinctive from stock Material icons — gives Yaza its own visual language.

@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../theme/design_tokens.dart';
 
 /// An animated flame streak indicator with organic fire-like animation.
 /// Replaces the static orange dots in the dashboard hero header.

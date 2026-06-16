@@ -12,8 +12,6 @@ class DashboardNextAction extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-
     return Query(
       options: QueryOptions(
         document: gql(kNextAction),
