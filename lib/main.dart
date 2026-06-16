@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'app.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -171,5 +172,4 @@ Future<void> _initializePostLaunchServices() async {
   });
 }
 
-// StudyApp has been moved to lib/app.dart for modularity.
-import 'app.dart';
+// StudyApp is imported at the top of this file.

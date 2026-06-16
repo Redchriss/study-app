@@ -43,7 +43,7 @@ class _DashboardHeroHeaderState extends State<DashboardHeroHeader>
     super.initState();
     _gradientCtrl = AnimationController(
       vsync: this,
-      duration: 6.seconds,
+      duration: const Duration(seconds: 6),
     )..repeat();
   }
 
