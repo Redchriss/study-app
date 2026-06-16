@@ -8,6 +8,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class DiagnosticScreen extends ConsumerStatefulWidget {
   final String subjectCode;
