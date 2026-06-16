@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
-class AiTutorInputBar extends StatelessWidget {
+class AiTutorInputBar extends StatefulWidget {
   final TextEditingController ctrl;
   final bool sending;
   final String placeholder;
   final List<String> suggestions;
   final void Function([String?]) onSend;
+  final Future<String?> Function()? onVoiceInput;
 
   const AiTutorInputBar({
     super.key,
@@ -16,7 +17,15 @@ class AiTutorInputBar extends StatelessWidget {
     required this.placeholder,
     required this.suggestions,
     required this.onSend,
+    this.onVoiceInput,
   });
+
+  @override
+  State<AiTutorInputBar> createState() => _AiTutorInputBarState();
+}
+
+class _AiTutorInputBarState extends State<AiTutorInputBar> {
+  bool _isRecording = false;
 
   @override
   Widget build(BuildContext context) {
@@ -59,32 +68,40 @@ class AiTutorInputBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 AnimatedPress(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Voice input coming soon'),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  },
+                  onTap: widget.onVoiceInput != null
+                      ? () async {
+                          if (!_isRecording) {
+                            setState(() => _isRecording = true);
+                            final text = await widget.onVoiceInput!();
+                            setState(() => _isRecording = false);
+                            if (text != null && text.isNotEmpty && mounted) {
+                              widget.ctrl.text = text;
+                              widget.ctrl.selection = TextSelection.fromPosition(
+                                TextPosition(offset: text.length),
+                              );
+                            }
+                          }
+                        }
+                      : null,
                   child: Container(
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: dark
-                          ? DesignTokens.darkSurfaceVariant
-                          : DesignTokens.surfaceVariant,
+                      color: _isRecording
+                          ? DesignTokens.error.withValues(alpha: 0.15)
+                          : dark
+                              ? DesignTokens.darkSurfaceVariant
+                              : DesignTokens.surfaceVariant,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
-                      Icons.mic_rounded,
+                      _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
                       size: 20,
-                      color: dark
-                          ? DesignTokens.darkTextSecondary
-                          : DesignTokens.textSecondary,
+                      color: _isRecording
+                          ? DesignTokens.error
+                          : dark
+                              ? DesignTokens.darkTextSecondary
+                              : DesignTokens.textSecondary,
                     ),
                   ),
                 ),

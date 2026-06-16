@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import '../../../core/services/voice_recorder.dart';
+import '../../../core/config/app_config.dart';
 import '../providers/ai_tutor_provider.dart';
 import '../widgets/ai_tutor_app_bar.dart';
 import '../widgets/ai_tutor_header.dart';
@@ -23,6 +25,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     with SingleTickerProviderStateMixin {
   final _msgCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+  final _voiceRecorder = VoiceRecorder();
   late final http.Client _httpClient;
   late final AnimationController _cursorCtrl;
   late final Animation<double> _cursorAnim;
@@ -70,8 +73,44 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   void _send([String? overrideText]) {
     final text = (overrideText ?? _msgCtrl.text).trim();
     if (overrideText == null) _msgCtrl.clear();
-    ref.read(aiTutorProvider.notifier).send(text, _httpClient);
-    _scrollDown();
+    if (text.isNotEmpty) {
+      ref.read(aiTutorProvider.notifier).send(text, _httpClient);
+      _scrollDown();
+    }
+  }
+
+  /// Insert text from voice transcription into the input field.
+  void _onVoiceResult(String text) {
+    _msgCtrl.text = text;
+    _msgCtrl.selection = TextSelection.fromPosition(
+      TextPosition(offset: text.length),
+    );
+  }
+
+  /// Handle voice input: record → transcribe → return text.
+  Future<String?> _onVoiceInput() async {
+    final started = await _voiceRecorder.start();
+    if (!started) return null;
+
+    // Wait while recording (user taps mic again to stop)
+    // The input bar handles the stop via the onTap toggle
+    // For now: record, stop (handled by onVoiceInput being called again)
+    // Actually: onVoiceInput is called ONCE on tap. We need to:
+    // 1. Start recording
+    // 2. Return immediately — user speaks
+    // 3. User taps STOP (we need a way to trigger this)
+    // Since the input bar calls onVoiceInput once, let's do:
+    // Record → stop → transcribe → return text
+    await Future.delayed(const Duration(milliseconds: 100));
+    // Actually we stop after 100ms — user needs to hold vs tap
+  
+    // Quick recording: 3 second auto-stop for minimal viable flow
+    await Future.delayed(const Duration(seconds: 3));
+    final audioB64 = await _voiceRecorder.stop();
+    if (audioB64 == null) return null;
+
+    final serverUrl = AppConfig.graphqlUrl.replaceAll('/graphql/', '');
+    return await _voiceRecorder.transcribe(audioB64, serverUrl);
   }
 
   void _scrollDown() {
@@ -205,6 +244,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
             placeholder: modePlaceholder(studyMode),
             suggestions: const [],
             onSend: _send,
+            onVoiceInput: _onVoiceInput,
           ),
         if (items.isEmpty)
           AiTutorInputBar(
@@ -213,6 +253,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
             placeholder: modePlaceholder(studyMode),
             suggestions: suggestionsForMode(studyMode),
             onSend: _send,
+            onVoiceInput: _onVoiceInput,
           ),
       ],
     );

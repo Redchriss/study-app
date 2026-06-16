@@ -42,6 +42,7 @@ dependencies:
 
   # TTS
   flutter_tts: ^4.2.5
+  record: ^5.2.0
 
   # Media
   image_picker: ^1.2.2
