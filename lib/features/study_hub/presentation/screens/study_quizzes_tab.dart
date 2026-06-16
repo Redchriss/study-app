@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../../core/graphql/queries/queries.dart';
 import '../../../../../core/theme/design_tokens.dart';
