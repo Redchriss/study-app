@@ -42,18 +42,18 @@ class _AiTutorInputBarState extends State<AiTutorInputBar> {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: suggestions.length,
+                itemCount: widget.suggestions.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 6),
                 itemBuilder: (_, i) => ActionChip(
-                  label: Text(suggestions[i],
+                  label: Text(widget.suggestions[i],
                       style: const TextStyle(fontSize: 11)),
-                  onPressed: sending ? null : () => onSend(suggestions[i]),
+                  onPressed: widget.sending ? null : () => widget.onSend(widget.suggestions[i]),
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
             ),
-          if (suggestions.isNotEmpty) const SizedBox(height: 6),
+          if (widget.suggestions.isNotEmpty) const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -110,10 +110,10 @@ class _AiTutorInputBarState extends State<AiTutorInputBar> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 120),
                     child: TextField(
-                      controller: ctrl,
+                      controller: widget.ctrl,
                       maxLines: null,
                       decoration: InputDecoration(
-                        hintText: placeholder,
+                        hintText: widget.placeholder,
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
                             borderSide: BorderSide.none),
