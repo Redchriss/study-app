@@ -6,6 +6,8 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/design_tokens.dart';
 import 'core/services/analytics_service.dart';
 import 'core/widgets/offline_banner.dart';
+import 'features/auth/presentation/providers/auth_provider.dart';
+import 'main.dart' show themeModeProvider;
 import 'router.dart';
 
 /// The root of the Yaza application.
