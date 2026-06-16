@@ -80,13 +80,6 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   }
 
   /// Insert text from voice transcription into the input field.
-  void _onVoiceResult(String text) {
-    _msgCtrl.text = text;
-    _msgCtrl.selection = TextSelection.fromPosition(
-      TextPosition(offset: text.length),
-    );
-  }
-
   /// Handle voice input: record → transcribe → return text.
   Future<String?> _onVoiceInput() async {
     final started = await _voiceRecorder.start();
