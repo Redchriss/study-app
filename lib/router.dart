@@ -5,7 +5,7 @@ import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
-import '../features/auth/presentation/screens/onboarding_screen.dart';
+import '../features/auth/presentation/screens/onboarding_v2/onboarding_screen_v2.dart';
 import '../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../features/ai_tutor/presentation/screens/ai_tutor_screen.dart';
 import '../features/diagnostics/presentation/screens/diagnostic_screen.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../core/theme/design_tokens.dart';
+import '../../core/theme/design_tokens.dart';
 
 class CentreAiButton extends StatelessWidget {
   final bool isSelected;

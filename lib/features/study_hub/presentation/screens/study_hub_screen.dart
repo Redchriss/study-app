@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'features/study_hub/presentation/screens/study_materials_tab.dart';
-import 'features/study_hub/presentation/screens/study_quizzes_tab.dart';
-import 'features/study_hub/presentation/screens/study_tools_tab.dart';
+import 'package:studyapp/features/study_hub/presentation/screens/study_materials_tab.dart';
+import 'package:studyapp/features/study_hub/presentation/screens/study_quizzes_tab.dart';
+import 'package:studyapp/features/study_hub/presentation/screens/study_tools_tab.dart';
 
 class StudyHubScreen extends StatefulWidget {
   const StudyHubScreen({super.key});
