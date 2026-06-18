@@ -4,7 +4,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
 
 class AiTutorDataService {
-  final WidgetRef _ref;
+  final Ref _ref;
   AiTutorDataService(this._ref);
 
   Future<Map<String, dynamic>?> loadLearningProfile() async {
