@@ -45,11 +45,14 @@ class ProfileHeader extends StatelessWidget {
               Positioned.fill(
                 child: Image.network(bannerUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                        color: DesignTokens.primary.withValues(alpha: 0.2))),
+                    errorBuilder: (_, __, ___) => const DecoratedBox(
+                        decoration: BoxDecoration(
+                            gradient: DesignTokens.brandGradient))),
               )
             else
-              Container(color: DesignTokens.primary.withValues(alpha: 0.2)),
+              const DecoratedBox(
+                  decoration:
+                      BoxDecoration(gradient: DesignTokens.brandGradient)),
             Positioned(
               left: 16,
               bottom: 60,
