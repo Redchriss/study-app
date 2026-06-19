@@ -151,11 +151,36 @@ class ApprovedList extends StatelessWidget {
                 ),
                 title: Text('u/${user?['username'] ?? 'unknown'}',
                     style: const TextStyle(fontWeight: FontWeight.w600)),
+                trailing: TextButton(
+                  onPressed: () => _removeApproved(
+                      context, user?['username']?.toString(), refetch),
+                  child: const Text('Remove',
+                      style: TextStyle(color: DesignTokens.error)),
+                ),
               );
             }),
           ],
         );
       },
     );
+  }
+
+  Future<void> _removeApproved(
+      BuildContext context, String? username, dynamic refetch) async {
+    if (username == null) return;
+    final client = GraphQLProvider.of(context).value;
+    final result = await client.mutate(MutationOptions(
+      document: gql(kRemoveApprovedUser),
+      variables: {'communitySlug': communitySlug, 'username': username},
+    ));
+    if (result.hasException) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Failed to remove approval'),
+            backgroundColor: DesignTokens.error));
+      }
+      return;
+    }
+    refetch?.call();
   }
 }

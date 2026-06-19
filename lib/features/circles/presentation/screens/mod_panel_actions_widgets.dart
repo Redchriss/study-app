@@ -37,7 +37,8 @@ class SearchedUserActions extends StatelessWidget {
             icon: Icons.check_circle_outline_rounded,
             label: 'Unban user',
             color: DesignTokens.success,
-            onTap: () => _unbanUser(context)),
+            onTap: () => _run(context, kUnbanUser,
+                {'communitySlug': communitySlug, 'username': username})),
         ActionButton(
             icon: Icons.volume_off_rounded,
             label: 'Mute user',
@@ -47,17 +48,32 @@ class SearchedUserActions extends StatelessWidget {
             icon: Icons.volume_up_rounded,
             label: 'Unmute user',
             color: DesignTokens.success,
-            onTap: () => _unmuteUser(context)),
+            onTap: () => _run(context, kUnmuteUser,
+                {'communitySlug': communitySlug, 'username': username})),
+        ActionButton(
+            icon: Icons.verified_user_outlined,
+            label: 'Approve user',
+            color: DesignTokens.success,
+            onTap: () => _run(context, kAddApprovedUser,
+                {'communitySlug': communitySlug, 'username': username})),
+        ActionButton(
+            icon: Icons.person_remove_outlined,
+            label: 'Remove approval',
+            color: DesignTokens.warning,
+            onTap: () => _run(context, kRemoveApprovedUser,
+                {'communitySlug': communitySlug, 'username': username})),
         ActionButton(
             icon: Icons.admin_panel_settings_outlined,
             label: 'Add as moderator',
             color: DesignTokens.primary,
-            onTap: () => _addModerator(context)),
+            onTap: () => _run(context, kAddModerator,
+                {'slug': communitySlug, 'username': username})),
         ActionButton(
             icon: Icons.remove_moderator_outlined,
             label: 'Remove moderator',
             color: DesignTokens.error,
-            onTap: () => _removeModerator(context)),
+            onTap: () => _run(context, kRemoveModerator,
+                {'slug': communitySlug, 'username': username})),
       ],
     );
   }
@@ -136,14 +152,6 @@ class SearchedUserActions extends StatelessWidget {
     if (context.mounted) _showResult(context, result);
   }
 
-  Future<void> _unbanUser(BuildContext context) async {
-    final result = await client.mutate(MutationOptions(
-      document: gql(kUnbanUser),
-      variables: {'communitySlug': communitySlug, 'username': username},
-    ));
-    if (context.mounted) _showResult(context, result);
-  }
-
   Future<void> _muteUser(BuildContext context) async {
     final durationDays = ValueNotifier<int>(7);
     final proceed = await showDialog<bool>(
@@ -187,27 +195,10 @@ class SearchedUserActions extends StatelessWidget {
     if (context.mounted) _showResult(context, result);
   }
 
-  Future<void> _unmuteUser(BuildContext context) async {
-    final result = await client.mutate(MutationOptions(
-      document: gql(kUnmuteUser),
-      variables: {'communitySlug': communitySlug, 'username': username},
-    ));
-    if (context.mounted) _showResult(context, result);
-  }
-
-  Future<void> _addModerator(BuildContext context) async {
-    final result = await client.mutate(MutationOptions(
-      document: gql(kAddModerator),
-      variables: {'slug': communitySlug, 'username': username},
-    ));
-    if (context.mounted) _showResult(context, result);
-  }
-
-  Future<void> _removeModerator(BuildContext context) async {
-    final result = await client.mutate(MutationOptions(
-      document: gql(kRemoveModerator),
-      variables: {'slug': communitySlug, 'username': username},
-    ));
+  Future<void> _run(BuildContext context, String document,
+      Map<String, dynamic> variables) async {
+    final result = await client.mutate(
+        MutationOptions(document: gql(document), variables: variables));
     if (context.mounted) _showResult(context, result);
   }
 
