@@ -76,13 +76,24 @@ the constants + repository methods + wires the UI:
 - `mark_answer`, `collapse_comment` — comment actions (Q&A / threading).
 - `add_approved_user`, `remove_approved_user` — approved-users management.
 
-**Step 2 wiring status:** all of the above now have GraphQL constants + typed
-repository methods (reachable via `CirclesRepository`). Comment moderation
-(`approve`/`pin`/`distinguish`) and **mark-as-answer** are additionally surfaced
-in the UI via `comment_mod_menu.dart` (shown to moderators / the post author in
-`CommentItem`). The remaining UI entry points (flair pickers, approved-users
-management, icon/banner upload) are wired into their screens during the Step 3
-redesign, when those screens migrate onto the repository.
+**Step 2 wiring status (complete):** every backend-only capability above now has
+a GraphQL constant + typed `CirclesRepository` method **and** a reachable UI
+entry point:
+
+- Comment moderation (`approve`/`pin`/`distinguish`) + **mark-as-answer** —
+  `comment_mod_menu.dart`, shown to moderators / the post author in `CommentItem`.
+- **Mark OC / spoiler** and a **post flair picker** (`post_flair_picker.dart`,
+  loads `communityFlairs` + applies `setPostFlair`) — surfaced in the post
+  overflow menu (`post_actions_menu.dart`, popup entries extracted to
+  `post_actions_menu_items.dart`) for the author/mods.
+- **Approved-users management** — `Approve user` / `Remove approval` actions in
+  the searched-user mod panel (`mod_panel_actions_widgets.dart`) and a per-row
+  Remove on the Approved members list (`mod_panel_approve_widgets.dart`).
+- **Community icon/banner upload** — `community_image_section.dart`, embedded in
+  the mod settings tab (`mod_panel_settings_tab.dart`).
+- **Modmail** (`apps/notifications`) verified end-to-end: list/detail/send/reply/
+  archive ops all match the backend resolvers/mutations (no drift).
+- `AskAiOnPost`, poll voting (`kVotePoll`), and crosspost confirmed already wired.
 
 ## 3. Gaps — app UI with thin/scattered state (to harden in Steps 2–3)
 
