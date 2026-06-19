@@ -6,8 +6,8 @@ import '../../../../core/graphql/queries/domain/community_queries_community.dart
 import '../../../../core/graphql/queries/domain/community_queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
-
 import '../../../auth/presentation/providers/auth_provider.dart';
+import 'community_image_section.dart';
 import 'rules_section.dart';
 
 class ModPanelSettingsTab extends ConsumerStatefulWidget {
@@ -70,6 +70,13 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            _section('Appearance'),
+            CommunityImageSection(
+              communitySlug: widget.communitySlug,
+              icon: c['icon']?.toString(),
+              banner: c['banner']?.toString(),
+            ),
+            const SizedBox(height: 16),
             _section('Community Type'),
             DropdownButtonFormField<String>(
               value: _communityType,
@@ -167,6 +174,7 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
     query CommunityForSettings($slug: String!) {
       community(slug: $slug) {
         id slug name displayName description sidebarMarkdown
+        icon banner
         communityType allowImages allowVideos allowPolls
         allowLinks allowGalleries allowCrossposts
         minAccountAgeDays minKarmaToPost spoilersEnabled over18
@@ -191,26 +199,23 @@ class _ModPanelSettingsTabState extends ConsumerState<ModPanelSettingsTab> {
     _initialized = true;
   }
 
-  Widget _section(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(title,
-          style: Theme.of(context)
-              .textTheme
-              .titleSmall
-              ?.copyWith(fontWeight: FontWeight.w800)),
-    );
-  }
+  Widget _section(String title) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text(title,
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall
+                ?.copyWith(fontWeight: FontWeight.w800)),
+      );
 
-  Widget _switch(String label, bool value, ValueChanged<bool> onChanged) {
-    return SwitchListTile(
-      title: Text(label, style: const TextStyle(fontSize: 14)),
-      value: value,
-      onChanged: onChanged,
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-    );
-  }
+  Widget _switch(String label, bool value, ValueChanged<bool> onChanged) =>
+      SwitchListTile(
+        title: Text(label, style: const TextStyle(fontSize: 14)),
+        value: value,
+        onChanged: onChanged,
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+      );
 
   Future<void> _save() async {
     final messenger = ScaffoldMessenger.of(context);
