@@ -5,6 +5,7 @@ library;
 export 'circle_author.dart';
 export 'circle_comment.dart';
 export 'circle_community.dart';
+export 'circle_flair.dart';
 export 'circle_page.dart';
 export 'circle_parse.dart';
 export 'circle_poll.dart';

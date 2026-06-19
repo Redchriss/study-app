@@ -175,3 +175,61 @@ mutation DeleteRule($ruleId: ID!) {
   deleteRule(ruleId: $ruleId) { success }
 }
 ''';
+
+// ---- Comment moderation (previously unreachable from the app) ----
+
+const String kApproveComment = r'''
+mutation ApproveComment($commentId: ID!) {
+  approveComment(commentId: $commentId) {
+    comment { id isRemoved }
+    errors
+  }
+}
+''';
+
+const String kPinComment = r'''
+mutation PinComment($commentId: ID!) {
+  pinComment(commentId: $commentId) {
+    comment { id isPinned }
+    errors
+  }
+}
+''';
+
+const String kDistinguishComment = r'''
+mutation DistinguishComment($commentId: ID!) {
+  distinguishComment(commentId: $commentId) {
+    comment { id }
+    errors
+  }
+}
+''';
+
+const String kMarkAnswer = r'''
+mutation MarkAnswer($commentId: ID!, $postId: ID!) {
+  markAnswer(commentId: $commentId, postId: $postId) {
+    comment { id isAnswer }
+    errors
+  }
+}
+''';
+
+const String kCollapseComment = r'''
+mutation CollapseComment($commentId: ID!) {
+  collapseComment(commentId: $commentId) { success }
+}
+''';
+
+// ---- Approved users (previously unreachable from the app) ----
+
+const String kAddApprovedUser = r'''
+mutation AddApprovedUser($communitySlug: String!, $username: String!) {
+  addApprovedUser(communitySlug: $communitySlug, username: $username) { success }
+}
+''';
+
+const String kRemoveApprovedUser = r'''
+mutation RemoveApprovedUser($communitySlug: String!, $username: String!) {
+  removeApprovedUser(communitySlug: $communitySlug, username: $username) { success }
+}
+''';

@@ -149,3 +149,21 @@ mutation ToggleFavourite($slug: String!) {
   }
 }
 ''';
+
+const String kUploadCommunityIcon = r'''
+mutation UploadCommunityIcon($slug: String!, $imageBase64: String!) {
+  uploadCommunityIcon(slug: $slug, imageBase64: $imageBase64) {
+    community { id icon }
+    errors
+  }
+}
+''';
+
+const String kUploadCommunityBanner = r'''
+mutation UploadCommunityBanner($slug: String!, $imageBase64: String!) {
+  uploadCommunityBanner(slug: $slug, imageBase64: $imageBase64) {
+    community { id banner }
+    errors
+  }
+}
+''';

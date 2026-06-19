@@ -9,6 +9,7 @@ import '../domain/circles_domain.dart';
 part 'circles_repository_reads.dart';
 part 'circles_repository_actions_content.dart';
 part 'circles_repository_actions_mod.dart';
+part 'circles_repository_actions_flair.dart';
 
 /// Raised when a community GraphQL call fails or returns server-side errors.
 class CirclesException implements Exception {
