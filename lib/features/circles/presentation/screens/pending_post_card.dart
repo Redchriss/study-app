@@ -10,23 +10,19 @@ class PendingPostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSubmitting = entry.status == PendingStatus.submitting;
     final hasFailed = entry.status == PendingStatus.failed;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final post = entry.data;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: (Theme.of(context).brightness == Brightness.dark
-                ? DesignTokens.darkSurface
-                : DesignTokens.surface)
-            .withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-        border: Border.all(
-          color: hasFailed
-              ? DesignTokens.error.withValues(alpha: 0.5)
-              : (Theme.of(context).brightness == Brightness.dark
-                  ? DesignTokens.darkBorder
-                  : DesignTokens.border),
-        ),
-      ),
+    return Opacity(
+      // Pending posts read as slightly faded until they're confirmed.
+      opacity: hasFailed ? 1 : 0.75,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: hasFailed
+            ? DesignTokens.signatureSurface(dark).copyWith(
+                border: Border.all(
+                    color: DesignTokens.error.withValues(alpha: 0.5)),
+              )
+            : DesignTokens.signatureSurface(dark),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -79,7 +75,8 @@ class PendingPostCard extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 12, color: DesignTokens.textSecondary)),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );

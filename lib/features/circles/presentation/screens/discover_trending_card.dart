@@ -22,11 +22,7 @@ class DiscoverTrendingCard extends StatelessWidget {
       child: Container(
         width: 150,
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: DesignTokens.border.withValues(alpha: 0.3)),
-        ),
+        decoration: DesignTokens.signatureSurface(dark),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
