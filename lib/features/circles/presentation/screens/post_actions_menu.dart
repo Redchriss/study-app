@@ -4,13 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
-import '../../../../core/theme/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import 'post_actions_menu_items.dart';
+import 'post_flair_picker.dart';
 
 class PostActions extends ConsumerWidget {
   final String postId;
   final String communitySlug;
   final bool isMod;
+  final bool isPostAuthor;
   final bool isPinned, isLocked, isRemoved;
   final Map<String, dynamic>? post;
   final VoidCallback onRefetch;
@@ -20,6 +22,7 @@ class PostActions extends ConsumerWidget {
     required this.postId,
     required this.communitySlug,
     required this.isMod,
+    this.isPostAuthor = false,
     this.isPinned = false,
     this.isLocked = false,
     this.isRemoved = false,
@@ -31,6 +34,9 @@ class PostActions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final author = post?['author'] as Map<String, dynamic>?;
     final authorUsername = author?['username']?.toString() ?? '';
+    final isOc = post?['isOc'] == true;
+    final isSpoiler = post?['isSpoiler'] == true;
+    final canTagPost = isPostAuthor || isMod;
 
     return PopupMenuButton<String>(
       onSelected: (v) async {
@@ -73,6 +79,20 @@ class PostActions extends ConsumerWidget {
             }
           case 'report':
             await _reportPost(context, ref, postId);
+          case 'mark_oc':
+            await client.mutate(MutationOptions(
+              document: gql(kMarkOc),
+              variables: {'postId': postId},
+            ));
+            onRefetch();
+          case 'mark_spoiler':
+            await client.mutate(MutationOptions(
+              document: gql(kMarkSpoiler),
+              variables: {'postId': postId, 'isSpoiler': !isSpoiler},
+            ));
+            onRefetch();
+          case 'set_flair':
+            await _setFlair(context);
           case 'pin':
             await client.mutate(MutationOptions(
               document: gql(kPinPost),
@@ -105,95 +125,26 @@ class PostActions extends ConsumerWidget {
             onRefetch();
         }
       },
-      itemBuilder: (_) => [
-        const PopupMenuItem(
-            value: 'save',
-            child: Row(children: [
-              Icon(Icons.bookmark_outline, size: 18),
-              SizedBox(width: 8),
-              Text('Save')
-            ])),
-        const PopupMenuItem(
-            value: 'copy_link',
-            child: Row(children: [
-              Icon(Icons.link, size: 18),
-              SizedBox(width: 8),
-              Text('Copy link')
-            ])),
-        const PopupMenuItem(
-            value: 'hide',
-            child: Row(children: [
-              Icon(Icons.visibility_off_outlined, size: 18),
-              SizedBox(width: 8),
-              Text('Hide')
-            ])),
-        const PopupMenuItem(
-            value: 'crosspost',
-            child: Row(children: [
-              Icon(Icons.repeat_rounded, size: 18),
-              SizedBox(width: 8),
-              Text('Crosspost')
-            ])),
-        if (authorUsername.isNotEmpty)
-          const PopupMenuItem(
-              value: 'block_author',
-              child: Row(children: [
-                Icon(Icons.block, size: 18, color: DesignTokens.error),
-                SizedBox(width: 8),
-                Text('Block author',
-                    style: TextStyle(color: DesignTokens.error))
-              ])),
-        const PopupMenuDivider(),
-        const PopupMenuItem(
-            value: 'report',
-            child: Row(children: [
-              Icon(Icons.flag_outlined, size: 18),
-              SizedBox(width: 8),
-              Text('Report')
-            ])),
-        if (isMod) ...[
-          const PopupMenuDivider(),
-          PopupMenuItem(
-              value: 'pin',
-              child: Row(children: [
-                Icon(isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                    size: 18),
-                const SizedBox(width: 8),
-                Text(isPinned ? 'Unpin' : 'Pin')
-              ])),
-          PopupMenuItem(
-              value: 'lock',
-              child: Row(children: [
-                Icon(isLocked ? Icons.lock : Icons.lock_outline, size: 18),
-                const SizedBox(width: 8),
-                Text(isLocked ? 'Unlock' : 'Lock')
-              ])),
-          const PopupMenuItem(
-              value: 'distinguish',
-              child: Row(children: [
-                Icon(Icons.shield_outlined, size: 18),
-                SizedBox(width: 8),
-                Text('Distinguish [MOD]')
-              ])),
-          const PopupMenuItem(
-              value: 'remove',
-              child: Row(children: [
-                Icon(Icons.delete_outline, size: 18, color: DesignTokens.error),
-                SizedBox(width: 8),
-                Text('Remove', style: TextStyle(color: DesignTokens.error))
-              ])),
-          if (isRemoved)
-            const PopupMenuItem(
-                value: 'approve',
-                child: Row(children: [
-                  Icon(Icons.check_circle_outline,
-                      size: 18, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text('Approve', style: TextStyle(color: Colors.green))
-                ])),
-        ],
-      ],
+      itemBuilder: (_) => buildPostActionItems(
+        isMod: isMod,
+        canTagPost: canTagPost,
+        isOc: isOc,
+        isSpoiler: isSpoiler,
+        isPinned: isPinned,
+        isLocked: isLocked,
+        isRemoved: isRemoved,
+        authorUsername: authorUsername,
+      ),
     );
+  }
+
+  Future<void> _setFlair(BuildContext context) async {
+    final changed = await showPostFlairPicker(
+      context,
+      communitySlug: communitySlug,
+      postId: postId,
+    );
+    if (changed) onRefetch();
   }
 
   Future<void> _reportPost(

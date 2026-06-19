@@ -153,6 +153,7 @@ class PostDetailBody extends StatelessWidget {
             postId: postId,
             communitySlug: community?['slug']?.toString() ?? '',
             isMod: isMod,
+            isPostAuthor: isPostAuthor,
             isPinned: isPinned,
             isLocked: isLocked,
             isRemoved: isRemoved,

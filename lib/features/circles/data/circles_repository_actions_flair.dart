@@ -4,6 +4,16 @@ part of 'circles_repository.dart';
 /// mark-answer / collapse, approved-users, flair management, and community
 /// icon/banner uploads. Backed by ops that previously had no app constant.
 extension CirclesRepositoryFlairActions on CirclesRepository {
+  // ---- Flair reads -------------------------------------------------------
+
+  /// Returns the post-flair templates configured for [slug].
+  Future<List<CirclePostFlair>> communityFlairs(String slug) async {
+    final data = await _query(kCommunityFlairs, variables: {'slug': slug});
+    return asMapList(data['communityFlair'])
+        .map(CirclePostFlair.fromJson)
+        .toList();
+  }
+
   // ---- Comment moderation ------------------------------------------------
 
   Future<void> approveComment(String commentId) async {
