@@ -37,6 +37,7 @@ class InboxNotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isRead = notification['isRead'] == true;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final notifType = notification['notifType']?.toString() ?? '';
     final body = notification['bodyPreview']?.toString() ?? '';
     final community = notification['community'] as Map<String, dynamic>?;
@@ -57,11 +58,14 @@ class InboxNotificationCard extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: isRead ? null : DesignTokens.primary.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(14),
-            border: isRead ? Border.all(color: DesignTokens.border) : null,
-          ),
+          decoration: isRead
+              ? DesignTokens.signatureSurface(dark, radius: 14)
+              : BoxDecoration(
+                  gradient: DesignTokens.brandGradientSubtle(dark),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                      color: DesignTokens.primary.withValues(alpha: 0.25)),
+                ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

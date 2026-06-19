@@ -8,6 +8,7 @@ class CrosspostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final title = crosspost['title']?.toString() ?? '';
     final author = crosspost['author'] as Map<String, dynamic>?;
     final community = crosspost['community'] as Map<String, dynamic>?;
@@ -19,20 +20,18 @@ class CrosspostCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: DesignTokens.border),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            if (communitySlug.isNotEmpty && slug.isNotEmpty) {
-              context.push('/y/$communitySlug/post/$slug');
-            }
-          },
-          child: Padding(
+      child: Material(
+        color: Colors.transparent,
+        child: Ink(
+          decoration: DesignTokens.signatureSurface(dark),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+            onTap: () {
+              if (communitySlug.isNotEmpty && slug.isNotEmpty) {
+                context.push('/y/$communitySlug/post/$slug');
+              }
+            },
+            child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,6 +85,7 @@ class CrosspostCard extends StatelessWidget {
                     size: 18, color: DesignTokens.textTertiary),
               ],
             ),
+          ),
           ),
         ),
       ),
