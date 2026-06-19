@@ -39,15 +39,9 @@ class ClassicVoteColumn extends ConsumerWidget {
                 : DesignTokens.textSecondary;
 
         return Container(
-          width: 36,
+          width: 38,
           decoration: BoxDecoration(
-            color: dark
-                ? Colors.white.withValues(alpha: 0.03)
-                : Colors.black.withValues(alpha: 0.02),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(DesignTokens.radiusMd),
-              bottomLeft: Radius.circular(DesignTokens.radiusMd),
-            ),
+            gradient: DesignTokens.brandGradientSubtle(dark),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

@@ -42,13 +42,9 @@ class _ClassicPostCardState extends State<ClassicPostCard> {
     return AnimatedPress(
       onTap: widget.onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-          color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
-          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-          border: Border.all(
-              color: dark ? DesignTokens.darkBorder : DesignTokens.border),
-        ),
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        clipBehavior: Clip.antiAlias,
+        decoration: DesignTokens.signatureSurface(dark),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

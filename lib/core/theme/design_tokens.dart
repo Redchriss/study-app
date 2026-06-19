@@ -111,6 +111,41 @@ class DesignTokens {
     );
   }
 
+  // ── Signature brand gradients ────────────────────────────────────────
+  /// The primary Yaza gradient (deep navy → vibrant indigo). Use sparingly
+  /// for hero surfaces, accents, and the AI presence so the brand reads as
+  /// unmistakably Yaza rather than a generic flat theme.
+  static const LinearGradient brandGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [primary, primaryLight],
+  );
+
+  /// A low-emphasis tint of the brand gradient for card washes / chips.
+  static LinearGradient brandGradientSubtle(bool dark) => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          primary.withValues(alpha: dark ? 0.18 : 0.06),
+          primaryLight.withValues(alpha: dark ? 0.10 : 0.03),
+        ],
+      );
+
+  // ── Signature card surface ───────────────────────────────────────────
+  /// The signature Yaza card: rounded, hairline-bordered, softly elevated.
+  /// Shared seam for the redesign so every feature card reads consistently.
+  static BoxDecoration signatureSurface(bool dark,
+      {double radius = radiusLg, bool elevated = true}) {
+    return BoxDecoration(
+      color: dark ? darkSurface : surface,
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: (dark ? darkBorder : border).withValues(alpha: dark ? 0.7 : 1),
+      ),
+      boxShadow: elevated ? shadowSm(dark) : null,
+    );
+  }
+
   // ── Breakpoints ──────────────────────────────────────────────────────
   static const double mobileMax = 600;
   static const double tabletMax = 1024;
