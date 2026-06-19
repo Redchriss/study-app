@@ -40,10 +40,9 @@ class PostLinkPreview extends StatelessWidget {
           onTap: () => _openUrl(url),
           child: Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: DesignTokens.border),
-            ),
+            decoration: DesignTokens.signatureSurface(
+                Theme.of(context).brightness == Brightness.dark,
+                radius: 12),
             child: Row(
               children: [
                 if (thumbnail.isNotEmpty)
