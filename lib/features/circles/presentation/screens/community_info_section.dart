@@ -25,15 +25,7 @@ class CommunityInfoSection extends StatelessWidget {
     final dark = theme.brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: dark
-            ? DesignTokens.darkSurfaceVariant
-            : DesignTokens.surfaceVariant,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-        border: Border.all(
-          color: dark ? DesignTokens.darkBorder : DesignTokens.border,
-        ),
-      ),
+      decoration: DesignTokens.signatureSurface(dark),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

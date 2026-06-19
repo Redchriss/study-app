@@ -108,6 +108,7 @@ class LinkPreviewFetcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         TextField(
@@ -124,11 +125,7 @@ class LinkPreviewFetcher extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(top: 8),
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: DesignTokens.border),
-              color: DesignTokens.surfaceVariant,
-            ),
+            decoration: DesignTokens.signatureSurface(dark, radius: 12),
             child: Row(
               children: [
                 if (previewThumbnail != null) ...[
