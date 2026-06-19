@@ -14,6 +14,7 @@ class PostDetailBody extends StatelessWidget {
   final Map<String, dynamic> post;
   final String postId;
   final bool isLocked, isPinned, isRemoved, isDeleted, isSpoiler, isNsfw, isMod;
+  final bool isPostAuthor;
   final bool isBookmarked, awarding;
   final int? userVote;
   final String commentSort;
@@ -38,6 +39,7 @@ class PostDetailBody extends StatelessWidget {
     required this.isSpoiler,
     required this.isNsfw,
     required this.isMod,
+    this.isPostAuthor = false,
     required this.isBookmarked,
     required this.awarding,
     required this.userVote,
@@ -172,6 +174,8 @@ class PostDetailBody extends StatelessWidget {
                   postId: postId,
                   sort: commentSort,
                   scrollToCommentId: commentId,
+                  canModerate: isMod,
+                  canMarkAnswer: isPostAuthor,
                 );
               },
             ),

@@ -48,7 +48,7 @@ Step 2 (add the missing pieces) and Step 3 (redesign).
 | `kVotePost` / `kVoteComment` | `vote_post` / `vote_comment` | `post_card_*`, `comment_actions` |
 | `kSavePost` / `kUnsavePost` / `kSaveComment` / `kUnsaveComment` | `save_*` / `unsave_*` | `post_actions_menu`, `comment_actions` |
 | `kVotePoll` | `vote_poll` | `post_detail_poll` |
-| `kAskAiOnPost` | `ask_ai_on_post` | post detail (AI action) |
+| `kAskAiOnPost` | `ask_ai_on_post` | post detail app-bar "Ask AI Tutor" (already wired) |
 | `kGiveAward` | `give_award` | `post_detail_action_bar` |
 | `kAddComment` / `kEditComment` / `kDeleteComment` | `add_comment` / `edit_comment` / `delete_comment` | `post_detail_comments`, `comment_item` |
 | `kCreateCommunity` / `kUpdateCommunity` | `create_community` / `update_community` | `create_community_screen`, `mod_panel_settings_tab` |
@@ -75,6 +75,14 @@ the constants + repository methods + wires the UI:
 - `approve_comment`, `pin_comment`, `distinguish_comment` — comment moderation.
 - `mark_answer`, `collapse_comment` — comment actions (Q&A / threading).
 - `add_approved_user`, `remove_approved_user` — approved-users management.
+
+**Step 2 wiring status:** all of the above now have GraphQL constants + typed
+repository methods (reachable via `CirclesRepository`). Comment moderation
+(`approve`/`pin`/`distinguish`) and **mark-as-answer** are additionally surfaced
+in the UI via `comment_mod_menu.dart` (shown to moderators / the post author in
+`CommentItem`). The remaining UI entry points (flair pickers, approved-users
+management, icon/banner upload) are wired into their screens during the Step 3
+redesign, when those screens migrate onto the repository.
 
 ## 3. Gaps — app UI with thin/scattered state (to harden in Steps 2–3)
 

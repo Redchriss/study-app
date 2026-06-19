@@ -8,6 +8,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import 'comment_actions.dart';
 import 'comment_content.dart';
+import 'comment_mod_menu.dart';
 
 class CommentItem extends ConsumerStatefulWidget {
   final Map<String, dynamic> comment;
@@ -15,6 +16,8 @@ class CommentItem extends ConsumerStatefulWidget {
   final VoidCallback? onRefetch;
   final bool isPending;
   final VoidCallback? onRetry;
+  final bool canModerate;
+  final bool canMarkAnswer;
   const CommentItem({
     super.key,
     required this.comment,
@@ -22,6 +25,8 @@ class CommentItem extends ConsumerStatefulWidget {
     this.onRefetch,
     this.isPending = false,
     this.onRetry,
+    this.canModerate = false,
+    this.canMarkAnswer = false,
   });
 
   @override
@@ -149,6 +154,17 @@ class _CommentItemState extends ConsumerState<CommentItem> {
                 onCollapse: () => setState(() => _collapsed = !_collapsed),
                 onReport: () => reportComment(
                     ref, widget.comment['id'].toString(), context),
+                trailing: (widget.canModerate || widget.canMarkAnswer)
+                    ? CommentModMenu(
+                        commentId: widget.comment['id'].toString(),
+                        postId: widget.postId,
+                        isPinned: isPinned,
+                        isAnswer: isAnswer,
+                        canModerate: widget.canModerate,
+                        canMarkAnswer: widget.canMarkAnswer,
+                        onChanged: widget.onRefetch,
+                      )
+                    : null,
               ),
             if (_showReply)
               CommentReplyInput(

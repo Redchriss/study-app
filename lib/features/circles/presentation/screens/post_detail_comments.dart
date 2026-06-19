@@ -11,11 +11,15 @@ class PostCommentsList extends StatefulWidget {
   final String postId;
   final String sort;
   final String? scrollToCommentId;
+  final bool canModerate;
+  final bool canMarkAnswer;
   const PostCommentsList({
     super.key,
     required this.postId,
     required this.sort,
     this.scrollToCommentId,
+    this.canModerate = false,
+    this.canMarkAnswer = false,
   });
 
   @override
@@ -116,6 +120,8 @@ class _PostCommentsListState extends State<PostCommentsList> {
                     comment: c,
                     postId: widget.postId,
                     onRefetch: refetch,
+                    canModerate: widget.canModerate,
+                    canMarkAnswer: widget.canMarkAnswer,
                   )),
               if (hasNextPage)
                 Padding(

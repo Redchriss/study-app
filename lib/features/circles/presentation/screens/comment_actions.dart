@@ -12,6 +12,7 @@ class CommentActionRow extends StatelessWidget {
   final VoidCallback onSave;
   final VoidCallback onCollapse;
   final VoidCallback onReport;
+  final Widget? trailing;
 
   const CommentActionRow({
     super.key,
@@ -21,6 +22,7 @@ class CommentActionRow extends StatelessWidget {
     required this.onSave,
     required this.onCollapse,
     required this.onReport,
+    this.trailing,
   });
 
   @override
@@ -84,6 +86,10 @@ class CommentActionRow extends StatelessWidget {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
+          if (trailing != null) ...[
+            const Spacer(),
+            trailing!,
+          ],
         ],
       ),
     );

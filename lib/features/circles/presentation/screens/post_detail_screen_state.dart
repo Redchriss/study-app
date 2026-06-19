@@ -206,6 +206,12 @@ class PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         final isMod = community?['isModerator'] == true;
         final postId = post['id'].toString();
         final isBookmarked = post['isBookmarked'] == true || _saved;
+        final currentUserId = ref.read(authProvider).user?['id']?.toString();
+        final postAuthorId =
+            (post['author'] as Map<String, dynamic>?)?['id']?.toString();
+        final isPostAuthor = currentUserId != null &&
+            postAuthorId != null &&
+            currentUserId == postAuthorId;
 
         return PostDetailBody(
           dark: dark,
@@ -219,6 +225,7 @@ class PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           isSpoiler: isSpoiler,
           isNsfw: isNsfw,
           isMod: isMod,
+          isPostAuthor: isPostAuthor,
           isBookmarked: isBookmarked,
           awarding: _awarding,
           userVote: _userVote,
