@@ -5,6 +5,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/domain/community_queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import 'report_action_chip.dart';
 import 'report_ban_dialog.dart';
 import 'report_content_preview.dart';
 
@@ -93,25 +94,25 @@ class ReportQueueItem extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
             child: Row(
               children: [
-                ActionChip(
+                ReportActionChip(
                   icon: Icons.check_circle_outline,
                   label: 'Approve',
                   color: DesignTokens.success,
                   onTap: () => _approve(context, ref),
                 ),
-                ActionChip(
+                ReportActionChip(
                   icon: Icons.delete_outline,
                   label: 'Remove',
                   color: DesignTokens.error,
                   onTap: () => _resolve(context, ref, 'REMOVE_CONTENT'),
                 ),
-                ActionChip(
+                ReportActionChip(
                   icon: Icons.block,
                   label: 'Ban',
                   color: DesignTokens.error,
                   onTap: () => _banUser(context, ref, post),
                 ),
-                ActionChip(
+                ReportActionChip(
                   icon: Icons.clear,
                   label: 'Ignore',
                   color: DesignTokens.textTertiary,
@@ -220,34 +221,5 @@ class ReportQueueItem extends ConsumerWidget {
     } catch (_) {
       return '';
     }
-  }
-}
-
-class ActionChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const ActionChip({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      style: TextButton.styleFrom(
-        foregroundColor: color,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        visualDensity: VisualDensity.compact,
-      ),
-    );
   }
 }
