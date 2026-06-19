@@ -57,12 +57,15 @@ class ModmailThreadDetail extends StatelessWidget {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: m['isInternal'] == true
-                            ? DesignTokens.warning.withValues(alpha: 0.08)
-                            : DesignTokens.surfaceVariant,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      decoration: m['isInternal'] == true
+                          ? BoxDecoration(
+                              color: DesignTokens.warning
+                                  .withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                            )
+                          : DesignTokens.signatureSurface(
+                              Theme.of(context).brightness == Brightness.dark,
+                              radius: 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
