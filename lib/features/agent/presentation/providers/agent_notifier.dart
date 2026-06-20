@@ -6,14 +6,14 @@ import 'package:genui/genui.dart' hide TextPart;
 import 'package:genui/genui.dart' as genui;
 
 import '../../../../core/storage/secure_storage.dart';
-import '../screens/ai_tutor_data_service.dart';
-import '../screens/ai_tutor_stream_service.dart';
+import '../screens/agent_data_service.dart';
+import '../screens/agent_stream_service.dart';
 import '../genui/tutor_catalog.dart' as tutor_catalog;
-import 'ai_tutor_data_mixin.dart';
-import 'ai_tutor_state.dart';
+import 'agent_data_mixin.dart';
+import 'agent_state.dart';
 
-class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
-  late AiTutorStreamService _streamService;
+class AgentNotifier extends Notifier<AgentState> with AgentDataMixin {
+  late AgentStreamService _streamService;
   late SurfaceController surfaceController;
   bool _disposed = false;
   late final A2uiTransportAdapter _transport;
@@ -25,9 +25,9 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
   int? _lastJobId;
 
   @override
-  AiTutorState build() {
-    dataService = AiTutorDataService(ref);
-    _streamService = AiTutorStreamService();
+  AgentState build() {
+    dataService = AgentDataService(ref);
+    _streamService = AgentStreamService();
     ref.onDispose(() => _disposed = true);
     catalog = tutor_catalog.catalogForStudyMode(state.studyMode);
     surfaceController = SurfaceController(catalogs: [catalog]);
@@ -37,7 +37,7 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
     _listenConversation();
     loadLearningProfile();
     loadTutorSnapshot();
-    return const AiTutorState();
+    return const AgentState();
   }
 
   void _listenConversation() {
@@ -259,7 +259,7 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
         .where((t) => t.isUser)
         .map((t) => t.text)
         .firstOrNull;
-    final title = AiTutorState.generateTitle(userText ?? firstMessage);
+    final title = AgentState.generateTitle(userText ?? firstMessage);
     dataService.updateLastChatTitle(state.sessionId, title);
   }
 

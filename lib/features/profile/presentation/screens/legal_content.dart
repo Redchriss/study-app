@@ -61,7 +61,7 @@ const String kFaqFallback = '''
 # Frequently Asked Questions
 
 ## Is Yaza free?
-Yaza has a free tier with generous limits. Premium plans unlock unlimited AI tutor sessions and advanced features.
+Yaza has a free tier with generous limits. Premium plans unlock unlimited AI-powered study sessions and advanced features.
 
 ## What subjects does Yaza cover?
 All MSCE subjects including English, Chichewa, Mathematics, Biology, Physics, Chemistry, History, Geography, and more.
@@ -72,7 +72,7 @@ Some features require internet. Cached lessons can be read offline.
 ## Is Kids Mode safe?
 Yes. Kids Mode uses a separate PIN-protected login and collects no email or sensitive data.
 
-## How accurate is the AI tutor?
+## How accurate is the AI study assistant?
 Our AI is trained on the Malawian curriculum. Always double-check critical answers with your textbook or teacher.
 
 ## How do I upload my own materials?

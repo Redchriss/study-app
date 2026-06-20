@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../widgets/ai_tutor_mode_bar.dart';
-import '../widgets/ai_tutor_snapshot_cards.dart';
+import '../widgets/agent_mode_bar.dart';
+import '../widgets/agent_snapshot_cards.dart';
 
-class AiTutorHeader extends StatelessWidget {
+class AgentHeader extends StatelessWidget {
   final String studyMode;
   final List<(String, String, IconData)> modes;
   final String modeHint;
@@ -17,7 +17,7 @@ class AiTutorHeader extends StatelessWidget {
   final VoidCallback onGeneratePlan;
   final VoidCallback onToggleInsights;
 
-  const AiTutorHeader({
+  const AgentHeader({
     super.key,
     required this.studyMode,
     required this.modes,
@@ -49,7 +49,7 @@ class AiTutorHeader extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                    child: AiTutorModeBar(
+                    child: AgentModeBar(
                         selectedMode: studyMode,
                         modes: modes,
                         onSelect: onModeSelect)),
@@ -124,7 +124,7 @@ class AiTutorHeader extends StatelessWidget {
             child: showInsights && !snapshotLoading
                 ? Padding(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-                    child: AiTutorSnapshotCards(
+                    child: AgentSnapshotCards(
                       reviewCount: reviewCount,
                       topicStates: topicStates,
                       memories: memories,

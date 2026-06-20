@@ -8,11 +8,11 @@ import '../../../../core/graphql/queries/queries.dart';
 import '../../data/kid_graphql_client.dart';
 import 'kid_auth_widgets.dart';
 import 'kids_home_state_provider.dart';
-import '../../../ai_tutor/presentation/screens/ai_tutor_stream_service.dart';
+import '../../../agent/presentation/screens/agent_stream_service.dart';
 
 class KidsHomeScreenFetcher {
   final WidgetRef ref;
-  late final AiTutorStreamService streamService;
+  late final AgentStreamService streamService;
   late final A2uiTransportAdapter transport;
   final Catalog catalog;
   final bool Function() mountedFn;
@@ -27,7 +27,7 @@ class KidsHomeScreenFetcher {
 
   void attachServices({
     required A2uiTransportAdapter transport,
-    required AiTutorStreamService streamService,
+    required AgentStreamService streamService,
   }) {
     this.transport = transport;
     this.streamService = streamService;

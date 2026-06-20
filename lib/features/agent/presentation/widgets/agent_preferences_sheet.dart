@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/design_tokens.dart';
 
-class AiTutorPreferencesSheet extends StatefulWidget {
-  const AiTutorPreferencesSheet({
+class AgentPreferencesSheet extends StatefulWidget {
+  const AgentPreferencesSheet({
     super.key,
     required this.initialLearningStyle,
     required this.initialPrefersExamples,
@@ -26,11 +26,11 @@ class AiTutorPreferencesSheet extends StatefulWidget {
   }) onSave;
 
   @override
-  State<AiTutorPreferencesSheet> createState() =>
-      _AiTutorPreferencesSheetState();
+  State<AgentPreferencesSheet> createState() =>
+      _AgentPreferencesSheetState();
 }
 
-class _AiTutorPreferencesSheetState extends State<AiTutorPreferencesSheet> {
+class _AgentPreferencesSheetState extends State<AgentPreferencesSheet> {
   late String _learningStyle;
   late bool _prefersExamples;
   late bool _prefersStepByStep;

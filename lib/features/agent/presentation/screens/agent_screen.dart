@@ -3,25 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/services/voice_recorder.dart';
 import '../../../../core/config/app_config.dart';
-import '../providers/ai_tutor_provider.dart';
-import '../widgets/ai_tutor_app_bar.dart';
-import '../widgets/ai_tutor_header.dart';
-import '../widgets/ai_tutor_input_bar.dart';
-import '../widgets/ai_tutor_preferences_sheet.dart';
-import '../widgets/ai_tutor_typing_indicator.dart';
-import 'ai_tutor_chat_widgets.dart';
-import 'ai_tutor_error_bottom_sheet.dart';
-import 'ai_tutor_mode_helpers.dart';
+import '../providers/agent_provider.dart';
+import '../widgets/agent_app_bar.dart';
+import '../widgets/agent_header.dart';
+import '../widgets/agent_input_bar.dart';
+import '../widgets/agent_preferences_sheet.dart';
+import '../widgets/agent_typing_indicator.dart';
+import 'agent_chat_widgets.dart';
+import 'agent_error_bottom_sheet.dart';
+import 'agent_mode_helpers.dart';
 
-class AiTutorScreen extends ConsumerStatefulWidget {
+class AgentScreen extends ConsumerStatefulWidget {
   final String? initialPrompt;
 
-  const AiTutorScreen({super.key, this.initialPrompt});
+  const AgentScreen({super.key, this.initialPrompt});
   @override
-  ConsumerState<AiTutorScreen> createState() => _AiTutorScreenState();
+  ConsumerState<AgentScreen> createState() => _AgentScreenState();
 }
 
-class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
+class _AgentScreenState extends ConsumerState<AgentScreen>
     with SingleTickerProviderStateMixin {
   final _msgCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
@@ -46,7 +46,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     // Auto-send initial prompt if provided from dashboard suggestion
     if (widget.initialPrompt != null && widget.initialPrompt!.isNotEmpty) {
       Future.microtask(() {
-        ref.read(aiTutorProvider.notifier).send(widget.initialPrompt!, _httpClient);
+        ref.read(agentProvider.notifier).send(widget.initialPrompt!, _httpClient);
       });
     }
     _cursorCtrl = AnimationController(
@@ -74,7 +74,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
     final text = (overrideText ?? _msgCtrl.text).trim();
     if (overrideText == null) _msgCtrl.clear();
     if (text.isNotEmpty) {
-      ref.read(aiTutorProvider.notifier).send(text, _httpClient);
+      ref.read(agentProvider.notifier).send(text, _httpClient);
       _scrollDown();
     }
   }
@@ -119,25 +119,25 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
   }
 
   void _openHistory() async {
-    await ref.read(aiTutorProvider.notifier).loadChatHistory();
+    await ref.read(agentProvider.notifier).loadChatHistory();
     if (!mounted) return;
-    final state = ref.read(aiTutorProvider);
+    final state = ref.read(agentProvider);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (ctx) => AiTutorChatHistoryContent(
+      builder: (ctx) => AgentChatHistoryContent(
         chatHistory: state.chatHistory,
         onRestoreSession: (id) {
           Navigator.pop(ctx);
-          ref.read(aiTutorProvider.notifier).restoreSession(id);
+          ref.read(agentProvider.notifier).restoreSession(id);
         },
       ),
     );
   }
 
   void _openPreferences() async {
-    final st = ref.read(aiTutorProvider);
+    final st = ref.read(agentProvider);
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -146,13 +146,13 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: AiTutorPreferencesSheet(
+        child: AgentPreferencesSheet(
           initialLearningStyle: st.learningStyle,
           initialPrefersExamples: st.prefersExamples,
           initialPrefersStepByStep: st.prefersStepByStep,
           initialDetailLevel: st.detailLevel,
           saving: st.profileSaving,
-          onSave: ref.read(aiTutorProvider.notifier).saveLearningProfile,
+          onSave: ref.read(agentProvider.notifier).saveLearningProfile,
         ),
       ),
     );
@@ -164,37 +164,37 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => AiTutorErrorBottomSheet(
+      builder: (_) => AgentErrorBottomSheet(
         error: error,
         onRetry: () {
-          ref.read(aiTutorProvider.notifier).clearError();
-          ref.read(aiTutorProvider.notifier).retry();
+          ref.read(agentProvider.notifier).clearError();
+          ref.read(agentProvider.notifier).retry();
         },
-        onDismiss: () => ref.read(aiTutorProvider.notifier).clearError(),
+        onDismiss: () => ref.read(agentProvider.notifier).clearError(),
       ),
     );
   }
 
   Widget _buildBody() {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final studyMode = ref.watch(aiTutorProvider.select((s) => s.studyMode));
+    final studyMode = ref.watch(agentProvider.select((s) => s.studyMode));
     final snapshotLoading =
-        ref.watch(aiTutorProvider.select((s) => s.snapshotLoading));
-    final topicStates = ref.watch(aiTutorProvider.select((s) => s.topicStates));
-    final memories = ref.watch(aiTutorProvider.select((s) => s.memories));
-    final activePlan = ref.watch(aiTutorProvider.select((s) => s.activePlan));
-    final reviewCount = ref.watch(aiTutorProvider.select((s) => s.reviewCount));
+        ref.watch(agentProvider.select((s) => s.snapshotLoading));
+    final topicStates = ref.watch(agentProvider.select((s) => s.topicStates));
+    final memories = ref.watch(agentProvider.select((s) => s.memories));
+    final activePlan = ref.watch(agentProvider.select((s) => s.activePlan));
+    final reviewCount = ref.watch(agentProvider.select((s) => s.reviewCount));
     final showInsights =
-        ref.watch(aiTutorProvider.select((s) => s.showInsights));
-    final items = ref.watch(aiTutorProvider.select((s) => s.conversationItems));
-    final streaming = ref.watch(aiTutorProvider.select((s) => s.streaming));
+        ref.watch(agentProvider.select((s) => s.showInsights));
+    final items = ref.watch(agentProvider.select((s) => s.conversationItems));
+    final streaming = ref.watch(agentProvider.select((s) => s.streaming));
     final streamingText =
-        ref.watch(aiTutorProvider.select((s) => s.streamingText));
-    final sending = ref.watch(aiTutorProvider.select((s) => s.sending));
+        ref.watch(agentProvider.select((s) => s.streamingText));
+    final sending = ref.watch(agentProvider.select((s) => s.sending));
 
     return Column(
       children: [
-        AiTutorHeader(
+        AgentHeader(
           studyMode: studyMode,
           modes: _modes,
           modeHint: modeHint(studyMode),
@@ -204,17 +204,17 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
           activePlan: activePlan,
           reviewCount: reviewCount,
           showInsights: showInsights,
-          onModeSelect: ref.read(aiTutorProvider.notifier).setStudyMode,
+          onModeSelect: ref.read(agentProvider.notifier).setStudyMode,
           onGeneratePlan: () => ref
-              .read(aiTutorProvider.notifier)
+              .read(agentProvider.notifier)
               .createAdaptivePlan(_msgCtrl.text),
-          onToggleInsights: ref.read(aiTutorProvider.notifier).toggleInsights,
+          onToggleInsights: ref.read(agentProvider.notifier).toggleInsights,
         ),
         Expanded(
-          child: AiTutorMessageList(
+          child: AgentMessageList(
             conversationItems: items,
             surfaceController:
-                ref.read(aiTutorProvider.notifier).surfaceController,
+                ref.read(agentProvider.notifier).surfaceController,
             streaming: streaming,
             streamingText: streamingText,
             cursorAnim: _cursorAnim,
@@ -224,14 +224,14 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
             suggestions:
                 items.isEmpty ? suggestionsForMode(studyMode) : const [],
             onSuggestion: _send,
-            onFeedback: ref.read(aiTutorProvider.notifier).setMessageFeedback,
-            onRetry: ref.read(aiTutorProvider.notifier).retry,
-            onMountSurface: ref.read(aiTutorProvider.notifier).mountSurface,
+            onFeedback: ref.read(agentProvider.notifier).setMessageFeedback,
+            onRetry: ref.read(agentProvider.notifier).retry,
+            onMountSurface: ref.read(agentProvider.notifier).mountSurface,
           ),
         ),
-        if (sending) const AiTypingIndicator(),
+        if (sending) const AgentTypingIndicator(),
         if (!sending && !streaming && items.isNotEmpty)
-          AiTutorInputBar(
+          AgentInputBar(
             ctrl: _msgCtrl,
             sending: sending,
             placeholder: modePlaceholder(studyMode),
@@ -240,7 +240,7 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
             onVoiceInput: _onVoiceInput,
           ),
         if (items.isEmpty)
-          AiTutorInputBar(
+          AgentInputBar(
             ctrl: _msgCtrl,
             sending: sending,
             placeholder: modePlaceholder(studyMode),
@@ -254,14 +254,14 @@ class _AiTutorScreenState extends ConsumerState<AiTutorScreen>
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<String?>(aiTutorProvider.select((s) => s.error), (_, error) {
+    ref.listen<String?>(agentProvider.select((s) => s.error), (_, error) {
       if (error == null) return;
       if (!mounted) return;
       _openErrorSheet(error);
     });
 
     return Scaffold(
-      appBar: AiTutorAppBar(
+      appBar: AgentAppBar(
         onHistory: _openHistory,
         onPreferences: _openPreferences,
       ),

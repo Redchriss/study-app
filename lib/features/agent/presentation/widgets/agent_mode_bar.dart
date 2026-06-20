@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/design_tokens.dart';
 
-class AiTutorModeBar extends StatelessWidget {
-  const AiTutorModeBar({
+class AgentModeBar extends StatelessWidget {
+  const AgentModeBar({
     super.key,
     required this.selectedMode,
     required this.modes,

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/ai_tutor_provider.dart';
+import '../providers/agent_provider.dart';
 
-class AiTutorAppBar extends ConsumerWidget implements PreferredSizeWidget {
+class AgentAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final VoidCallback onHistory;
   final VoidCallback onPreferences;
 
-  const AiTutorAppBar({
+  const AgentAppBar({
     super.key,
     required this.onHistory,
     required this.onPreferences,
@@ -18,7 +18,7 @@ class AiTutorAppBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final hasMessages = ref.watch(aiTutorProvider).conversationItems.isNotEmpty;
+    final hasMessages = ref.watch(agentProvider).conversationItems.isNotEmpty;
     return AppBar(
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -36,7 +36,7 @@ class AiTutorAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 color: Colors.white, size: 16),
           ),
           const SizedBox(width: 8),
-          Text('AI Tutor',
+          Text('Agent',
               style: theme.textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w700)),
         ],
@@ -71,7 +71,7 @@ class AiTutorAppBar extends ConsumerWidget implements PreferredSizeWidget {
                       FilledButton(
                         onPressed: () {
                           Navigator.pop(ctx);
-                          ref.read(aiTutorProvider.notifier).newConversation();
+                          ref.read(agentProvider.notifier).newConversation();
                         },
                         child: const Text('Clear'),
                       ),

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-class AiTutorErrorBottomSheet extends StatelessWidget {
+class AgentErrorBottomSheet extends StatelessWidget {
   final String error;
   final VoidCallback onRetry;
   final VoidCallback onDismiss;
 
-  const AiTutorErrorBottomSheet({
+  const AgentErrorBottomSheet({
     super.key,
     required this.error,
     required this.onRetry,

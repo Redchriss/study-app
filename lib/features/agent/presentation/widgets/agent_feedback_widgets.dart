@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-class AiTutorConfidenceBadge extends StatelessWidget {
+class AgentConfidenceBadge extends StatelessWidget {
   final String label;
-  const AiTutorConfidenceBadge({super.key, required this.label});
+  const AgentConfidenceBadge({super.key, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -43,12 +43,12 @@ class AiTutorConfidenceBadge extends StatelessWidget {
   }
 }
 
-class AiTutorFeedbackButton extends StatelessWidget {
+class AgentFeedbackButton extends StatelessWidget {
   final IconData icon;
   final bool isActive;
   final VoidCallback onTap;
 
-  const AiTutorFeedbackButton({
+  const AgentFeedbackButton({
     super.key,
     required this.icon,
     required this.isActive,
@@ -78,10 +78,10 @@ class AiTutorFeedbackButton extends StatelessWidget {
   }
 }
 
-class AiTutorReportBottomSheet extends StatelessWidget {
+class AgentReportBottomSheet extends StatelessWidget {
   final void Function(String?)? onFeedback;
 
-  const AiTutorReportBottomSheet({super.key, this.onFeedback});
+  const AgentReportBottomSheet({super.key, this.onFeedback});
 
   @override
   Widget build(BuildContext context) {

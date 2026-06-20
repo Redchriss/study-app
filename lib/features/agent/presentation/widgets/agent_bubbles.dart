@@ -13,9 +13,9 @@ String sanitizeStreamingMarkdown(String text) {
   return text;
 }
 
-class AiUserBubble extends StatelessWidget {
+class AgentUserBubble extends StatelessWidget {
   final String text;
-  const AiUserBubble({super.key, required this.text});
+  const AgentUserBubble({super.key, required this.text});
 
   @override
   Widget build(BuildContext context) {

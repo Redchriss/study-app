@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/theme/design_tokens.dart';
-import 'ai_tutor_bubbles.dart';
-import 'ai_tutor_feedback_widgets.dart';
+import 'agent_bubbles.dart';
+import 'agent_feedback_widgets.dart';
 
 String extractConfidenceLabel(String text) {
   final match =
@@ -20,7 +20,7 @@ String extractConfidenceLabel(String text) {
               : 'Low confidence';
 }
 
-class AiAssistantBubble extends StatelessWidget {
+class AgentAssistantBubble extends StatelessWidget {
   final String text;
   final bool streaming;
   final Animation<double> cursorAnim;
@@ -29,7 +29,7 @@ class AiAssistantBubble extends StatelessWidget {
   final void Function(String?)? onFeedback;
   final VoidCallback? onRetry;
 
-  const AiAssistantBubble({
+  const AgentAssistantBubble({
     super.key,
     required this.text,
     required this.streaming,
@@ -148,24 +148,24 @@ class AiAssistantBubble extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (confidenceLabel.isNotEmpty)
-                          AiTutorConfidenceBadge(label: confidenceLabel),
+                          AgentConfidenceBadge(label: confidenceLabel),
                         if (confidenceLabel.isNotEmpty)
                           const SizedBox(width: 6),
-                        AiTutorFeedbackButton(
+                        AgentFeedbackButton(
                           icon: Icons.thumb_up_alt_rounded,
                           isActive: feedback == 'like',
                           onTap: () => onFeedback
                               ?.call(feedback == 'like' ? null : 'like'),
                         ),
                         const SizedBox(width: 2),
-                        AiTutorFeedbackButton(
+                        AgentFeedbackButton(
                           icon: Icons.thumb_down_alt_rounded,
                           isActive: feedback == 'dislike',
                           onTap: () => onFeedback
                               ?.call(feedback == 'dislike' ? null : 'dislike'),
                         ),
                         const SizedBox(width: 2),
-                        AiTutorFeedbackButton(
+                        AgentFeedbackButton(
                           icon: Icons.feedback_rounded,
                           isActive: feedback == 'report',
                           onTap: () => _showReportOption(context),
@@ -211,7 +211,7 @@ class AiAssistantBubble extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => AiTutorReportBottomSheet(onFeedback: onFeedback),
+      builder: (_) => AgentReportBottomSheet(onFeedback: onFeedback),
     );
   }
 }

@@ -42,7 +42,7 @@ class SurfaceItem extends ConversationItem {
   SurfaceItem({required this.surfaceId, this.mounted = false});
 }
 
-class AiTutorState {
+class AgentState {
   final List<ConversationItem> conversationItems;
   final String? sessionId;
   final int? lastJobId;
@@ -66,7 +66,7 @@ class AiTutorState {
   final String? checkpointText;
   final int retryCount;
 
-  const AiTutorState({
+  const AgentState({
     this.conversationItems = const [],
     this.sessionId,
     this.lastJobId,
@@ -91,7 +91,7 @@ class AiTutorState {
     this.retryCount = 0,
   });
 
-  AiTutorState copyWith({
+  AgentState copyWith({
     List<ConversationItem>? conversationItems,
     String? sessionId,
     int? lastJobId,
@@ -115,7 +115,7 @@ class AiTutorState {
     String? checkpointText,
     int? retryCount,
   }) {
-    return AiTutorState(
+    return AgentState(
       conversationItems: conversationItems ?? this.conversationItems,
       sessionId: sessionId ?? this.sessionId,
       lastJobId: lastJobId ?? this.lastJobId,

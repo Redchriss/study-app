@@ -3,9 +3,9 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
 
-class AiTutorDataService {
+class AgentDataService {
   final Ref _ref;
-  AiTutorDataService(this._ref);
+  AgentDataService(this._ref);
 
   Future<Map<String, dynamic>?> loadLearningProfile() async {
     final result = await _ref.read(graphqlClientProvider).query(

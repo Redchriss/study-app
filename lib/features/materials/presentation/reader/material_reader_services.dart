@@ -202,39 +202,39 @@ class MaterialReaderService {
   }) async {
     try {
       final client = GraphQLProvider.of(context).value;
-      final sessionResult = await client.mutate(
+      // Use agentAct directly — no session needed, stateless one-shot reply
+      final result = await client.mutate(
         MutationOptions(
-          document: gql(kCreateReaderChatSession),
-          variables: {'materialId': materialId},
-        ),
-      );
-      final sessionId = sessionResult.data?['createChatSession']?['session']
-              ?['id']
-          ?.toString();
-      if (sessionId == null || sessionId.isEmpty) {
-        return const ReaderServiceResult<String>(
-          success: false,
-          errors: <String>['Could not open AI session right now.'],
-        );
-      }
-      final response = await client.mutate(
-        MutationOptions(
-          document: gql(kSendReaderAiMessage),
+          document: gql(kAgentAct),
           variables: {
-            'sessionId': sessionId,
-            'content': message,
-            'materialId': materialId,
+            'input': {
+              'message': message,
+              'mode': 'study',
+            },
           },
         ),
       );
-      final reply =
-          response.data?['sendMessage']?['message']?['messageText']?.toString();
-      final payloadError = response.data?['sendMessage']?['error']?.toString();
-      if (response.hasException || reply == null || reply.isEmpty) {
-        final message = payloadError ??
-            _errorMessage(response, 'AI could not answer right now.');
+      final payload = result.data?['agentAct'] as Map<String, dynamic>?;
+      if (result.hasException || payload == null) {
+        return const ReaderServiceResult<String>(
+          success: false,
+          errors: <String>['AI could not answer right now.'],
+        );
+      }
+      if (payload['success'] != true) {
         return ReaderServiceResult<String>(
-            success: false, errors: <String>[message], message: message);
+          success: false,
+          errors: <String>[
+            payload['error']?.toString() ?? 'AI could not answer right now.'
+          ],
+        );
+      }
+      final reply = payload['text']?.toString();
+      if (reply == null || reply.isEmpty) {
+        return const ReaderServiceResult<String>(
+          success: false,
+          errors: <String>['AI could not answer right now.'],
+        );
       }
       return ReaderServiceResult<String>(success: true, data: reply);
     } catch (_) {

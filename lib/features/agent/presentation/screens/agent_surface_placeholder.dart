@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-class AiTutorSurfacePlaceholder extends StatefulWidget {
+class AgentSurfacePlaceholder extends StatefulWidget {
   @override
-  State<AiTutorSurfacePlaceholder> createState() =>
-      _AiTutorSurfacePlaceholderState();
+  State<AgentSurfacePlaceholder> createState() =>
+      _AgentSurfacePlaceholderState();
 }
 
-class _AiTutorSurfacePlaceholderState extends State<AiTutorSurfacePlaceholder>
+class _AgentSurfacePlaceholderState extends State<AgentSurfacePlaceholder>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseCtrl;
 

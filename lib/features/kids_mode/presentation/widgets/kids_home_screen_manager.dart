@@ -9,8 +9,8 @@ import 'kids_home_state_provider.dart';
 import 'kids_lesson_actions.dart';
 import '../genui/kids_catalog.dart';
 import 'kids_home_screen_fetcher.dart';
-import '../../../ai_tutor/presentation/screens/ai_tutor_stream_service.dart';
-import '../../../ai_tutor/presentation/providers/ai_tutor_state.dart';
+import '../../../agent/presentation/screens/agent_stream_service.dart';
+import '../../../agent/presentation/providers/agent_state.dart';
 
 class KidsHomeScreenManager {
   final WidgetRef ref;
@@ -21,7 +21,7 @@ class KidsHomeScreenManager {
   late final A2uiTransportAdapter _transport;
   late final Conversation conversation;
   late final Catalog catalog;
-  late final AiTutorStreamService _streamService;
+  late final AgentStreamService _streamService;
   late final KidsHomeScreenFetcher fetcher;
 
   KidsHomeScreenManager(this.ref) {
@@ -35,7 +35,7 @@ class KidsHomeScreenManager {
       contextFn: _contextFn,
     );
     _transport = A2uiTransportAdapter(onSend: fetcher.sendAndReceive);
-    _streamService = AiTutorStreamService();
+    _streamService = AgentStreamService();
     fetcher.attachServices(
       transport: _transport,
       streamService: _streamService,

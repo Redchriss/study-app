@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../widgets/ai_tutor_bubbles.dart';
+import '../widgets/agent_bubbles.dart';
 
-class AiTutorStreamingMessage extends StatelessWidget {
+class AgentStreamingMessage extends StatelessWidget {
   final String text;
   final Animation<double> cursorAnim;
   final Animation<double> breathAnim;
   final bool dark;
 
-  const AiTutorStreamingMessage({
+  const AgentStreamingMessage({
     super.key,
     required this.text,
     required this.cursorAnim,

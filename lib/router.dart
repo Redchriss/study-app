@@ -7,7 +7,7 @@ import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/onboarding_v2/onboarding_screen_v2.dart';
 import '../features/auth/presentation/screens/profile_setup_screen.dart';
-import '../features/ai_tutor/presentation/screens/ai_tutor_screen.dart';
+import '../features/agent/presentation/screens/agent_screen.dart';
 import '../features/diagnostics/presentation/screens/diagnostic_screen.dart';
 import '../features/diagnostics/presentation/screens/knowledge_map_screen.dart';
 import '../features/circles/presentation/screens/home_screen.dart';
@@ -105,10 +105,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(path: '/setup', builder: (_, __) => const ProfileSetupScreen()),
 
-      // AI Tutor — full screen, no shell (pushed from anywhere)
+      // Agent — full screen, no shell (pushed from anywhere)
       GoRoute(
         path: '/ai-tutor',
-        builder: (_, state) => AiTutorScreen(
+        builder: (_, state) => AgentScreen(
           initialPrompt: state.extra is Map
               ? (state.extra as Map)['prompt'] as String?
               : null,
@@ -137,7 +137,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Shell: 4 tabs ──────────────────────────────────────────
       // Tab 0: Feed (social — first thing you see)
       // Tab 1: Study hub (Materials + Quizzes + Scanner)
-      // Tab 2: Dashboard (stats + AI tutor)
+      // Tab 2: Dashboard (stats + agent)
       // Tab 3: Profile
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

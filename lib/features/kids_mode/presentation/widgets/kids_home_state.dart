@@ -1,4 +1,4 @@
-import '../../../ai_tutor/presentation/providers/ai_tutor_state.dart';
+import '../../../agent/presentation/providers/agent_state.dart';
 
 class KidsHomeState {
   final Map<String, dynamic>? selectedSubject;

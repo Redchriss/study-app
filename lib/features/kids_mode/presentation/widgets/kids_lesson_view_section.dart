@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:genui/genui.dart';
 import 'kids_companion_character.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../../ai_tutor/presentation/providers/ai_tutor_state.dart';
+import '../../../agent/presentation/providers/agent_state.dart';
 import '../../kids_visual_theme.dart';
 import 'kid_auth_widgets.dart';
 import 'kids_home_state_provider.dart';

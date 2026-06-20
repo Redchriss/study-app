@@ -216,25 +216,6 @@ mutation DeleteMaterialAnnotation($annotationId: ID!) {
 }
 ''';
 
-const String kCreateReaderChatSession = r'''
-mutation CreateReaderChatSession($materialId: ID) {
-  createChatSession(materialId: $materialId) {
-    session { id title }
-  }
-}
-''';
-
-const String kSendReaderAiMessage = r'''
-mutation SendReaderAiMessage($sessionId: ID!, $content: String!, $materialId: ID) {
-  sendMessage(sessionId: $sessionId, content: $content, materialId: $materialId) {
-    success
-    error
-    message { id messageText isUser timestamp }
-    creditsCost
-    creditsRemaining
-  }
-}
-''';
 
 const String kYouTubeSearch = r'''
 query YouTubeSearch($query: String!, $maxResults: Int) {

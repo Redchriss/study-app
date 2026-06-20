@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 
-class AiTutorInputBar extends StatefulWidget {
+class AgentInputBar extends StatefulWidget {
   final TextEditingController ctrl;
   final bool sending;
   final String placeholder;
@@ -10,7 +10,7 @@ class AiTutorInputBar extends StatefulWidget {
   final void Function([String?]) onSend;
   final Future<String?> Function()? onVoiceInput;
 
-  const AiTutorInputBar({
+  const AgentInputBar({
     super.key,
     required this.ctrl,
     required this.sending,
@@ -21,10 +21,10 @@ class AiTutorInputBar extends StatefulWidget {
   });
 
   @override
-  State<AiTutorInputBar> createState() => _AiTutorInputBarState();
+  State<AgentInputBar> createState() => _AgentInputBarState();
 }
 
-class _AiTutorInputBarState extends State<AiTutorInputBar> {
+class _AgentInputBarState extends State<AgentInputBar> {
   bool _isRecording = false;
 
   @override

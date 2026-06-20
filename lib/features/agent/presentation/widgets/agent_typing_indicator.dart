@@ -2,14 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-class AiTypingIndicator extends StatefulWidget {
-  const AiTypingIndicator({super.key});
+class AgentTypingIndicator extends StatefulWidget {
+  const AgentTypingIndicator({super.key});
 
   @override
-  State<AiTypingIndicator> createState() => _AiTypingIndicatorState();
+  State<AgentTypingIndicator> createState() => _AgentTypingIndicatorState();
 }
 
-class _AiTypingIndicatorState extends State<AiTypingIndicator> {
+class _AgentTypingIndicatorState extends State<AgentTypingIndicator> {
   int _seconds = 0;
   Timer? _timer;
 

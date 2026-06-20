@@ -108,9 +108,9 @@ class AboutScreen extends StatelessWidget {
                       FeatureRow(
                           icon: Icons.psychology_rounded,
                           color: DesignTokens.primary,
-                          title: 'AI Tutor',
+                          title: 'Agent',
                           description:
-                              'Chat with an AI tutor that explains concepts in plain language.'),
+                              'Get AI-powered explanations tailored to your education level.'),
                       FeatureRow(
                           icon: Icons.document_scanner_rounded,
                           color: DesignTokens.accent,

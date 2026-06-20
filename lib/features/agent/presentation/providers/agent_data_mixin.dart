@@ -4,13 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-import 'ai_tutor_state.dart';
-import '../screens/ai_tutor_data_service.dart';
+import 'agent_state.dart';
+import '../screens/agent_data_service.dart';
 import '../../../../core/graphql/queries/domain/ai_queries.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-mixin AiTutorDataMixin on Notifier<AiTutorState> {
-  late AiTutorDataService dataService;
+mixin AgentDataMixin on Notifier<AgentState> {
+  late AgentDataService dataService;
 
   Future<void> loadLearningProfile() async {
     try {

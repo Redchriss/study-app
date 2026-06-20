@@ -1,33 +1,23 @@
+const String kAgentAct = r'''
+mutation AgentAct($input: AgentInput!) {
+  agentAct(input: $input) {
+    success
+    spec {
+      component
+      props
+    }
+    text
+    creditsCost
+    creditsRemaining
+    error
+  }
+}
+''';
+
 const String kChatSessions = r'''
 query ChatSessions {
   chatSessions {
     id title updatedAt
-  }
-}
-''';
-
-const String kCreateChatSession = r'''
-mutation CreateChatSession($materialId: ID) {
-  createChatSession(materialId: $materialId) {
-    session { id title }
-  }
-}
-''';
-
-const String kSendMessage = r'''
-mutation SendMessage($sessionId: ID!, $content: String!, $materialId: ID, $studyMode: String, $clientInstructions: String) {
-  sendMessage(
-    sessionId: $sessionId
-    content: $content
-    materialId: $materialId
-    studyMode: $studyMode
-    clientInstructions: $clientInstructions
-  ) {
-    success
-    error
-    message { id messageText isUser timestamp }
-    creditsCost
-    creditsRemaining
   }
 }
 ''';

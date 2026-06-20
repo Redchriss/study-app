@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 
 import '../../../../core/constants/api_endpoints.dart';
 
-class AiTutorStreamService {
+class AgentStreamService {
   Future<void> sendStream({
     required String text,
     required String? sessionId,
@@ -200,7 +200,7 @@ class AiTutorStreamService {
           onError(payload['message']?.toString() ?? 'Something went wrong.');
       }
     } catch (_) {
-      debugPrint('AI Tutor: failed to parse SSE event: $eventType $data');
+      debugPrint('Agent: failed to parse SSE event: $eventType $data');
     }
     return streamingText;
   }

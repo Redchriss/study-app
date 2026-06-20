@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:genui/genui.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../providers/ai_tutor_provider.dart';
-import '../widgets/ai_tutor_assistant_bubble.dart';
-import '../widgets/ai_tutor_bubbles.dart';
-import '../widgets/ai_tutor_empty_state.dart';
-import 'ai_tutor_streaming_message.dart';
-import 'ai_tutor_surface_placeholder.dart';
+import '../providers/agent_provider.dart';
+import '../widgets/agent_assistant_bubble.dart';
+import '../widgets/agent_bubbles.dart';
+import '../widgets/agent_empty_state.dart';
+import 'agent_streaming_message.dart';
+import 'agent_surface_placeholder.dart';
 
-class AiTutorMessageList extends StatelessWidget {
+class AgentMessageList extends StatelessWidget {
   final List<ConversationItem> conversationItems;
   final SurfaceController surfaceController;
   final bool streaming;
@@ -23,7 +23,7 @@ class AiTutorMessageList extends StatelessWidget {
   final VoidCallback? onRetry;
   final void Function(String)? onMountSurface;
 
-  const AiTutorMessageList({
+  const AgentMessageList({
     super.key,
     required this.conversationItems,
     required this.surfaceController,
@@ -43,7 +43,7 @@ class AiTutorMessageList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (conversationItems.isEmpty && !streaming) {
-      return AiTutorEmptyState(
+      return AgentEmptyState(
         suggestions: suggestions,
         onSuggestion: onSuggestion,
       );
@@ -54,7 +54,7 @@ class AiTutorMessageList extends StatelessWidget {
       itemCount: conversationItems.length + (streaming ? 1 : 0),
       itemBuilder: (_, i) {
         if (i >= conversationItems.length && streaming) {
-          return AiTutorStreamingMessage(
+          return AgentStreamingMessage(
             text: streamingText,
             cursorAnim: cursorAnim,
             breathAnim: breathAnim,
@@ -67,7 +67,7 @@ class AiTutorMessageList extends StatelessWidget {
         if (item is SurfaceItem) {
           if (!item.mounted) {
             onMountSurface?.call(item.surfaceId);
-            return AiTutorSurfacePlaceholder();
+            return AgentSurfacePlaceholder();
           }
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -83,8 +83,8 @@ class AiTutorMessageList extends StatelessWidget {
                 item.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               item.isUser
-                  ? AiUserBubble(text: item.text)
-                  : AiAssistantBubble(
+                  ? AgentUserBubble(text: item.text)
+                  : AgentAssistantBubble(
                       text: item.text,
                       streaming: false,
                       cursorAnim: cursorAnim,
@@ -104,11 +104,11 @@ class AiTutorMessageList extends StatelessWidget {
   }
 }
 
-class AiTutorChatHistoryContent extends StatelessWidget {
+class AgentChatHistoryContent extends StatelessWidget {
   final List<Map<String, dynamic>> chatHistory;
   final ValueChanged<String> onRestoreSession;
 
-  const AiTutorChatHistoryContent({
+  const AgentChatHistoryContent({
     super.key,
     required this.chatHistory,
     required this.onRestoreSession,

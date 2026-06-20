@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-class AiTutorEmptyState extends StatelessWidget {
+class AgentEmptyState extends StatelessWidget {
   final List<String> suggestions;
   final ValueChanged<String> onSuggestion;
 
-  const AiTutorEmptyState({
+  const AgentEmptyState({
     super.key,
     required this.suggestions,
     required this.onSuggestion,

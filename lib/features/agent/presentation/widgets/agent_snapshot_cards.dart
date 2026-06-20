@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/design_tokens.dart';
 
-class AiTutorSnapshotCards extends StatelessWidget {
-  const AiTutorSnapshotCards({
+class AgentSnapshotCards extends StatelessWidget {
+  const AgentSnapshotCards({
     super.key,
     required this.reviewCount,
     required this.topicStates,

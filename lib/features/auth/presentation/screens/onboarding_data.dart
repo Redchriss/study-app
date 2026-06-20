@@ -28,7 +28,7 @@ class OnboardingData {
       accentColor: Color(0xFF4FC3F7),
       icon: Icons.auto_stories_rounded,
       stat: '24/7',
-      statLabel: 'instant AI tutoring',
+      statLabel: 'AI study partner',
     ),
     OnboardingData(
       title: 'Built for\nMalawi',
