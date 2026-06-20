@@ -17,7 +17,8 @@ class QuizTakeScreen extends ConsumerStatefulWidget {
   ConsumerState<QuizTakeScreen> createState() => _QuizTakeScreenState();
 }
 
-class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
+class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen>
+    with WidgetsBindingObserver {
   final Map<String, String?> _answers = {};
   final Map<String, bool> _results = {};
   int _time = 0;
@@ -28,6 +29,7 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
   bool _paused = false;
   bool _resumeChecked = false;
   int _currentIndex = 0;
+  int _totalQuestions = 0;
   late PageController _pageCtrl;
 
   @override
@@ -35,10 +37,23 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
     super.initState();
     _pageCtrl = PageController();
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryRestoreSession());
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      setState(() => _paused = true);
+      _persistState();
+    } else if (state == AppLifecycleState.resumed) {
+      setState(() => _paused = false);
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _pageCtrl.dispose();
     _persistState();
@@ -219,7 +234,6 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
     }
   }
 
-  int get _totalQuestions => 0;
   int get _answeredCount =>
       _answers.values.where((v) => v != null && v.isNotEmpty).length;
 
@@ -229,26 +243,39 @@ class _QuizTakeScreenState extends ConsumerState<QuizTakeScreen> {
     return Query(
       options:
           QueryOptions(document: gql(kQuiz), variables: {'slug': widget.slug}),
-      builder: (result, {fetchMore, refetch}) => QuizBody(
-        result: result,
-        refetch: refetch,
-        answers: _answers,
-        results: _results,
-        time: _time,
-        attemptId: _attemptId,
-        submitting: _submitting,
-        startingAttempt: _startingAttempt,
-        currentIndex: _currentIndex,
-        answeredCount: _answeredCount,
-        pageCtrl: _pageCtrl,
-        dark: dark,
-        onAnswer: _onAnswer,
-        onNext: _onNext,
-        onSubmit: () => _submit(ref.read(graphqlClientProvider)),
-        onStartAttempt: (quizId) =>
-            _startAttempt(quizId, ref.read(graphqlClientProvider)),
-        onPageChanged: (i) => setState(() => _currentIndex = i),
-      ),
+      builder: (result, {fetchMore, refetch}) {
+        if (result.data != null) {
+          final quizData = result.data?['quiz'];
+          if (quizData != null) {
+            final qs = (quizData['questions'] as List?) ?? [];
+            if (_totalQuestions != qs.length) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) setState(() => _totalQuestions = qs.length);
+              });
+            }
+          }
+        }
+        return QuizBody(
+          result: result,
+          refetch: refetch,
+          answers: _answers,
+          results: _results,
+          time: _time,
+          attemptId: _attemptId,
+          submitting: _submitting,
+          startingAttempt: _startingAttempt,
+          currentIndex: _currentIndex,
+          answeredCount: _answeredCount,
+          pageCtrl: _pageCtrl,
+          dark: dark,
+          onAnswer: _onAnswer,
+          onNext: _onNext,
+          onSubmit: () => _submit(ref.read(graphqlClientProvider)),
+          onStartAttempt: (quizId) =>
+              _startAttempt(quizId, ref.read(graphqlClientProvider)),
+          onPageChanged: (i) => setState(() => _currentIndex = i),
+        );
+      },
     );
   }
 }
