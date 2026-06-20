@@ -241,7 +241,17 @@ class UploadMaterialManager {
       allowedExtensions: UploadMaterialLabels.allowedExtensions(contentType),
     );
     if (!_isMounted() || result == null || result.files.isEmpty) return;
-    _setState(() => selectedFile = result.files.single);
+    final file = result.files.single;
+    // Client-side size check: 15MB limit (matches server)
+    if (file.size > 15 * 1024 * 1024) {
+      _showSnack(
+        _ref.context,
+        'File must be under 15 MB. Please choose a smaller file.',
+        DesignTokens.error,
+      );
+      return;
+    }
+    _setState(() => selectedFile = file);
   }
 
   void changeType(String nextType) {
