@@ -28,7 +28,10 @@ class AgentNotifier extends Notifier<AgentState> with AgentDataMixin {
   AgentState build() {
     dataService = AgentDataService(ref);
     _streamService = AgentStreamService();
-    ref.onDispose(() => _disposed = true);
+    ref.onDispose(() {
+      _disposed = true;
+      _convSub?.cancel();
+    });
     catalog = tutor_catalog.catalogForStudyMode(state.studyMode);
     surfaceController = SurfaceController(catalogs: [catalog]);
     _transport = A2uiTransportAdapter(onSend: _sendAndReceive);
@@ -230,7 +233,9 @@ class AgentNotifier extends Notifier<AgentState> with AgentDataMixin {
         checkpointText: _partialBuffer.isNotEmpty ? _partialBuffer : null,
       );
     } finally {
-      httpClient.close();
+      if (!_disposed) {
+        httpClient.close();
+      }
     }
   }
 

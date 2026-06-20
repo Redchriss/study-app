@@ -55,6 +55,9 @@ class _RetryLink extends Link {
 
 /// Handles 401 / auth errors by refreshing the token and retrying.
 class _AuthErrorLink extends Link {
+  /// Guards against concurrent refresh calls (race condition fix).
+  Completer<void>? _refreshCompleter;
+
   @override
   Stream<Response> request(Request req, [NextLink? forward]) async* {
     try {
@@ -85,6 +88,12 @@ class _AuthErrorLink extends Link {
   }
 
   Future<void> _tryRefreshToken() async {
+    // Deduplicate concurrent refresh calls — only one refresh runs at a time
+    if (_refreshCompleter != null) {
+      await _refreshCompleter!.future;
+      return;
+    }
+    _refreshCompleter = Completer<void>();
     final refreshToken = await SecureStorage.getRefreshToken();
     if (refreshToken == null) {
       await SecureStorage.clearTokens();
@@ -123,6 +132,8 @@ class _AuthErrorLink extends Link {
       return;
     } finally {
       client.close();
+      _refreshCompleter?.complete();
+      _refreshCompleter = null;
     }
   }
 }

@@ -120,6 +120,17 @@ class AgentStreamService {
     void Function(int)? onFreeRemaining,
   }) async {
     final response = await httpClient.send(request);
+
+    // Check for auth errors before consuming the stream
+    if (response.statusCode == 401) {
+      onError('Your session has expired. Please log in again.');
+      return;
+    }
+    if (response.statusCode != 200) {
+      onError('Connection error (${response.statusCode}). Please try again.');
+      return;
+    }
+
     final lines = response.stream
         .transform(utf8.decoder)
         .timeout(const Duration(seconds: 90));

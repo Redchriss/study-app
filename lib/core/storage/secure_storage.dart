@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SecureStorage {
   static const _storage = FlutterSecureStorage(
@@ -11,6 +12,22 @@ class SecureStorage {
   );
   static const _tokenKey = 'jwt_token';
   static const _refreshKey = 'refresh_token';
+  static const _installKey = 'app_install_id';
+
+  /// Check if this is a fresh install and clear any stale Keychain data.
+  static Future<void> ensureFreshInstall() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final installId = prefs.getString(_installKey);
+      if (installId == null) {
+        // First launch after install — clear any stale tokens from Keychain
+        await _storage.deleteAll();
+        await prefs.setString(_installKey, DateTime.now().toIso8601String());
+      }
+    } catch (_) {
+      // Non-critical: if this fails, stale tokens may persist on iOS reinstall
+    }
+  }
 
   static Future<void> saveTokens(String token, String refreshToken) async {
     try {

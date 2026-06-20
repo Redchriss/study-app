@@ -18,6 +18,7 @@ import 'core/services/hive_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/retention_service.dart';
 import 'core/widgets/widgets.dart';
+import 'core/storage/secure_storage.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'router.dart';
 
@@ -28,6 +29,9 @@ final themeModeProvider = StateProvider<ThemeMode>((ref) {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppConfig.init();
+
+  // Clear stale Keychain data on fresh install (iOS reinstall)
+  await SecureStorage.ensureFreshInstall();
 
   // Initialize Sentry if DSN is configured
   if (AppConfig.sentryDsn.isNotEmpty) {
