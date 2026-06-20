@@ -45,6 +45,7 @@ class SurfaceItem extends ConversationItem {
 class AiTutorState {
   final List<ConversationItem> conversationItems;
   final String? sessionId;
+  final int? lastJobId;
   final bool sending;
   final bool streaming;
   final String streamingText;
@@ -68,6 +69,7 @@ class AiTutorState {
   const AiTutorState({
     this.conversationItems = const [],
     this.sessionId,
+    this.lastJobId,
     this.sending = false,
     this.streaming = false,
     this.streamingText = '',
@@ -92,6 +94,7 @@ class AiTutorState {
   AiTutorState copyWith({
     List<ConversationItem>? conversationItems,
     String? sessionId,
+    int? lastJobId,
     bool? sending,
     bool? streaming,
     String? streamingText,
@@ -115,6 +118,7 @@ class AiTutorState {
     return AiTutorState(
       conversationItems: conversationItems ?? this.conversationItems,
       sessionId: sessionId ?? this.sessionId,
+      lastJobId: lastJobId ?? this.lastJobId,
       sending: sending ?? this.sending,
       streaming: streaming ?? this.streaming,
       streamingText: streamingText ?? this.streamingText,

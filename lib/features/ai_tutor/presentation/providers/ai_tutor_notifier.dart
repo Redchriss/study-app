@@ -22,10 +22,11 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
   StreamSubscription? _convSub;
   String _partialBuffer = '';
   static const int _maxRetries = 2;
+  int? _lastJobId;
 
   @override
   AiTutorState build() {
-    dataService = AiTutorDataService(ref as WidgetRef);
+    dataService = AiTutorDataService(ref);
     _streamService = AiTutorStreamService();
     ref.onDispose(() => _disposed = true);
     catalog = tutor_catalog.catalogForStudyMode(state.studyMode);
@@ -89,10 +90,55 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
   void newConversation() => state = state.copyWith(
         conversationItems: const [],
         sessionId: null,
+        lastJobId: null,
         error: null,
         checkpointText: null,
         retryCount: 0,
       );
+
+  void _addSpecMessage(Map<String, dynamic> spec) {
+    final component = spec['component']?.toString() ?? 'Agent';
+    final props = spec['props'];
+    final summary = switch (component) {
+      'StudyPlan' => _studyPlanSummary(props),
+      'FlashCard' => _flashCardSummary(props),
+      'SimpleQuiz' => _quizSummary(props),
+      'StepSolver' => _stepSolverSummary(props),
+      _ => 'Opened a $component activity.',
+    };
+    state = state.copyWith(
+      conversationItems: [
+        ...state.conversationItems,
+        TextItem(text: summary, isUser: false),
+      ],
+    );
+  }
+
+  String _studyPlanSummary(dynamic props) {
+    if (props is! Map) return 'Created a study plan for you.';
+    final sessions = (props['sessions'] as List?)?.length ?? 0;
+    final title = props['title']?.toString() ?? 'study plan';
+    return 'Created $title with $sessions focused sessions.';
+  }
+
+  String _flashCardSummary(dynamic props) {
+    if (props is! Map) return 'Prepared flashcards for review.';
+    final cards = (props['cards'] as List?)?.length ?? 0;
+    return 'Prepared $cards flashcards for review.';
+  }
+
+  String _quizSummary(dynamic props) {
+    if (props is! Map) return 'Prepared a quiz for you.';
+    final questions = (props['questions'] as List?)?.length ?? 0;
+    final title = props['title']?.toString() ?? 'quiz';
+    return 'Prepared $title with $questions questions.';
+  }
+
+  String _stepSolverSummary(dynamic props) {
+    if (props is! Map) return 'Prepared a step-by-step walkthrough.';
+    final steps = (props['steps'] as List?)?.length ?? 0;
+    return 'Prepared a step-by-step walkthrough with $steps steps.';
+  }
 
   Future<void> _sendAndReceive(ChatMessage msg) async {
     final buffer = StringBuffer();
@@ -156,6 +202,11 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
             error: errMsg,
           );
         },
+        onJobId: (jobId) {
+          _lastJobId = jobId;
+          state = state.copyWith(lastJobId: jobId);
+        },
+        onSpec: _addSpecMessage,
         onScrollDown: () {},
       );
       if (state.streaming) {
@@ -229,6 +280,11 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
 
   Future<void> retry() async {
     final cp = state.checkpointText;
+    final jobId = state.lastJobId ?? _lastJobId;
+    if (jobId != null && cp != null && cp.isNotEmpty) {
+      await _resumeJob(jobId, cp);
+      return;
+    }
     state = state.copyWith(
       sending: true,
       streaming: false,
@@ -238,6 +294,61 @@ class AiTutorNotifier extends Notifier<AiTutorState> with AiTutorDataMixin {
       retryCount: 0,
     );
     await conversation.sendRequest(ChatMessage.user(''));
+  }
+
+  Future<void> _resumeJob(int jobId, String checkpointText) async {
+    final token = await SecureStorage.getToken();
+    if (token == null) {
+      state = state.copyWith(sending: false);
+      return;
+    }
+    final httpClient = http.Client();
+    String currentStreamingText = checkpointText;
+    _partialBuffer = checkpointText;
+    try {
+      await _streamService.replayJob(
+        jobId: jobId,
+        token: token,
+        httpClient: httpClient,
+        onToken: (t) {
+          _partialBuffer += t;
+          currentStreamingText += t;
+          state = state.copyWith(
+            streaming: true,
+            streamingText: currentStreamingText,
+          );
+          _transport.addChunk(t);
+        },
+        onAddMessage: (_) {
+          _partialBuffer = '';
+          currentStreamingText = '';
+          state = state.copyWith(
+            sending: false,
+            streaming: false,
+            streamingText: '',
+            checkpointText: null,
+            retryCount: 0,
+          );
+          loadTutorSnapshot();
+        },
+        onSessionId: (id) => state = state.copyWith(sessionId: id),
+        onError: (errMsg) {
+          state = state.copyWith(
+            sending: false,
+            streaming: false,
+            error: errMsg,
+          );
+        },
+        onJobId: (value) {
+          _lastJobId = value;
+          state = state.copyWith(lastJobId: value);
+        },
+        onSpec: _addSpecMessage,
+        onScrollDown: () {},
+      );
+    } finally {
+      httpClient.close();
+    }
   }
 
   void clearError() => state = state.copyWith(
