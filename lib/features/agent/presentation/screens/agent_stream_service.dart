@@ -22,6 +22,7 @@ class AgentStreamService {
     required VoidCallback onScrollDown,
     void Function(int)? onJobId,
     void Function(Map<String, dynamic>)? onSpec,
+    void Function(int)? onFreeRemaining,
   }) async {
     await _consumeSse(
       request: _streamRequest(
@@ -40,6 +41,7 @@ class AgentStreamService {
       onScrollDown: onScrollDown,
       onJobId: onJobId,
       onSpec: onSpec,
+      onFreeRemaining: onFreeRemaining,
     );
   }
 
@@ -54,6 +56,7 @@ class AgentStreamService {
     required VoidCallback onScrollDown,
     void Function(int)? onJobId,
     void Function(Map<String, dynamic>)? onSpec,
+    void Function(int)? onFreeRemaining,
   }) async {
     final request = http.Request(
       'GET',
@@ -71,6 +74,7 @@ class AgentStreamService {
       onScrollDown: onScrollDown,
       onJobId: onJobId,
       onSpec: onSpec,
+      onFreeRemaining: onFreeRemaining,
     );
   }
 
@@ -113,6 +117,7 @@ class AgentStreamService {
     required VoidCallback onScrollDown,
     void Function(int)? onJobId,
     void Function(Map<String, dynamic>)? onSpec,
+    void Function(int)? onFreeRemaining,
   }) async {
     final response = await httpClient.send(request);
     final lines = response.stream
@@ -146,6 +151,7 @@ class AgentStreamService {
               onScrollDown: onScrollDown,
               onJobId: onJobId,
               onSpec: onSpec,
+              onFreeRemaining: onFreeRemaining,
             );
             eventType = '';
             dataBuffer = StringBuffer();
@@ -168,6 +174,7 @@ class AgentStreamService {
     required VoidCallback onScrollDown,
     void Function(int)? onJobId,
     void Function(Map<String, dynamic>)? onSpec,
+    void Function(int)? onFreeRemaining,
   }) {
     try {
       final payload = jsonDecode(data) as Map<String, dynamic>;
@@ -195,6 +202,9 @@ class AgentStreamService {
           }
           if (payload['session_id'] != null) {
             onSessionId(payload['session_id'].toString());
+          }
+          if (payload['free_remaining'] != null) {
+            onFreeRemaining?.call((payload['free_remaining'] as num).toInt());
           }
         case 'error':
           onError(payload['message']?.toString() ?? 'Something went wrong.');

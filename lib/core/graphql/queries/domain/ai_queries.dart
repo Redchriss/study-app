@@ -9,6 +9,7 @@ mutation AgentAct($input: AgentInput!) {
     text
     creditsCost
     creditsRemaining
+    agentFreeRemaining
     error
   }
 }

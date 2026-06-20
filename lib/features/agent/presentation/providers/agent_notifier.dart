@@ -208,6 +208,9 @@ class AgentNotifier extends Notifier<AgentState> with AgentDataMixin {
         },
         onSpec: _addSpecMessage,
         onScrollDown: () {},
+        onFreeRemaining: (remaining) {
+          state = state.copyWith(agentFreeRemaining: remaining);
+        },
       );
       if (state.streaming) {
         state = state.copyWith(
@@ -345,6 +348,9 @@ class AgentNotifier extends Notifier<AgentState> with AgentDataMixin {
         },
         onSpec: _addSpecMessage,
         onScrollDown: () {},
+        onFreeRemaining: (remaining) {
+          state = state.copyWith(agentFreeRemaining: remaining);
+        },
       );
     } finally {
       httpClient.close();

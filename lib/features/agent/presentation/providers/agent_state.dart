@@ -64,6 +64,7 @@ class AgentState {
   final List<Map<String, dynamic>> chatHistory;
   final String? error;
   final String? checkpointText;
+  final int agentFreeRemaining;
   final int retryCount;
 
   const AgentState({
@@ -88,6 +89,7 @@ class AgentState {
     this.chatHistory = const [],
     this.error,
     this.checkpointText,
+    this.agentFreeRemaining = 10,
     this.retryCount = 0,
   });
 
@@ -113,6 +115,7 @@ class AgentState {
     List<Map<String, dynamic>>? chatHistory,
     String? error,
     String? checkpointText,
+    int? agentFreeRemaining,
     int? retryCount,
   }) {
     return AgentState(
@@ -137,6 +140,7 @@ class AgentState {
       chatHistory: chatHistory ?? this.chatHistory,
       error: error ?? this.error,
       checkpointText: checkpointText ?? this.checkpointText,
+      agentFreeRemaining: agentFreeRemaining ?? this.agentFreeRemaining,
       retryCount: retryCount ?? this.retryCount,
     );
   }

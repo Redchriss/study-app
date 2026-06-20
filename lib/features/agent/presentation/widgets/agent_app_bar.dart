@@ -1,6 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/design_tokens.dart';
 import '../providers/agent_provider.dart';
+
+/// Shows remaining free agent turns as a small badge in the app bar.
+class _FreeCounterBadge extends ConsumerWidget {
+  const _FreeCounterBadge();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final free = ref.watch(agentProvider.select((s) => s.agentFreeRemaining));
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: free > 0
+            ? const Color(0xFF7C4DFF).withValues(alpha: 0.12)
+            : DesignTokens.error.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            free > 0 ? Icons.auto_awesome_rounded : Icons.monetization_on_rounded,
+            size: 11,
+            color: free > 0 ? const Color(0xFF7C4DFF) : DesignTokens.error,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            free > 0 ? '$free/10' : 'credits',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: free > 0 ? const Color(0xFF7C4DFF) : DesignTokens.error,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class AgentAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final VoidCallback onHistory;
@@ -39,6 +79,8 @@ class AgentAppBar extends ConsumerWidget implements PreferredSizeWidget {
           Text('Agent',
               style: theme.textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(width: 8),
+          const _FreeCounterBadge(),
         ],
       ),
       centerTitle: true,
@@ -53,33 +95,32 @@ class AgentAppBar extends ConsumerWidget implements PreferredSizeWidget {
           tooltip: 'Tutor preferences',
           onPressed: onPreferences,
         ),
-        hasMessages
-            ? IconButton(
-                icon: const Icon(Icons.refresh_rounded, size: 22),
-                tooltip: 'New conversation',
-                onPressed: () => showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Start new conversation?'),
-                    content: const Text(
-                        'This will clear your current chat history.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel'),
-                      ),
-                      FilledButton(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          ref.read(agentProvider.notifier).newConversation();
-                        },
-                        child: const Text('Clear'),
-                      ),
-                    ],
+        if (hasMessages)
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, size: 22),
+            tooltip: 'New conversation',
+            onPressed: () => showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Start new conversation?'),
+                content: const Text(
+                    'This will clear your current chat history.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancel'),
                   ),
-                ),
-              )
-            : const SizedBox.shrink(),
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      ref.read(agentProvider.notifier).newConversation();
+                    },
+                    child: const Text('Clear'),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
