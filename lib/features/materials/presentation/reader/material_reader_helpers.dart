@@ -62,6 +62,42 @@ ${sectionText.trim().isEmpty ? 'Use the material context available for this sect
 ''';
 }
 
+/// Reader AI actions that route through the grounded `askAi` text path.
+const Set<String> kReaderAiTextActions = {
+  'explain',
+  'summary',
+  'memory',
+  'explain_level',
+  'translate_chichewa',
+};
+
+/// Maps an in-reader AI action to the grounded prompt sent to `askAi`.
+/// `explain_level` adapts to the learner's profile [educationLevel].
+String buildReaderAiPrompt({
+  required String action,
+  String educationLevel = '',
+}) {
+  switch (action) {
+    case 'summary':
+      return 'Summarize this study section into short revision bullets.';
+    case 'memory':
+      return 'Create a memorable hook, analogy, or mnemonic from this study '
+          'section and explain why it works.';
+    case 'explain_level':
+      final level = educationLevel.trim();
+      final audience = level.isEmpty ? 'my level' : 'a $level student';
+      return 'Explain this study section clearly for $audience, using simple '
+          'words and one concrete everyday example.';
+    case 'translate_chichewa':
+      return 'Translate and explain this study section in clear Chichewa. '
+          'Keep important technical terms in English in brackets where helpful.';
+    case 'explain':
+    default:
+      return 'Explain this study section clearly in simple language and point '
+          'out what to remember.';
+  }
+}
+
 ReaderQuickQuizData? parseQuickQuizPayload(String rawText) {
   final jsonText = extractJsonPayload(rawText);
   if (jsonText == null) return null;

@@ -15,11 +15,31 @@ Future<String?> showReaderAiActionSheet(BuildContext context) {
               const SizedBox(height: 12),
               for (final item in const [
                 ('explain', 'Explain this section', Icons.lightbulb_outline),
+                (
+                  'explain_level',
+                  'Explain at my level',
+                  Icons.school_outlined
+                ),
                 ('summary', 'Summarize this section', Icons.summarize_outlined),
                 (
                   'memory',
                   'Create a memory hook',
                   Icons.psychology_alt_outlined
+                ),
+                (
+                  'quiz_page',
+                  'Quiz me on this page',
+                  Icons.quiz_outlined
+                ),
+                (
+                  'flashcards_selection',
+                  'Flashcards from this material',
+                  Icons.style_outlined
+                ),
+                (
+                  'translate_chichewa',
+                  'Translate to Chichewa',
+                  Icons.translate_outlined
                 ),
               ])
                 ListTile(

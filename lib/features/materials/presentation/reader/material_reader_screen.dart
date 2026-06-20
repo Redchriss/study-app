@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/services/material_cache_service.dart';
-import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
 import 'material_reader_error_handler.dart';
 import 'material_reader_helpers.dart';
 import 'material_reader_models.dart';
@@ -18,14 +18,15 @@ import 'reader_not_found.dart';
 import 'reader_quiz_sheet.dart';
 import 'reader_screen_snackbar.dart';
 
-class MaterialReaderScreen extends StatefulWidget {
+class MaterialReaderScreen extends ConsumerStatefulWidget {
   const MaterialReaderScreen({super.key, required this.slug});
   final String slug;
   @override
-  State<MaterialReaderScreen> createState() => _MaterialReaderScreenState();
+  ConsumerState<MaterialReaderScreen> createState() =>
+      _MaterialReaderScreenState();
 }
 
-class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
+class _MaterialReaderScreenState extends ConsumerState<MaterialReaderScreen> {
   final _service = MaterialReaderService();
   final _cache = MaterialCacheService();
   var _aiActionBusy = false;
@@ -104,19 +105,71 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
     );
   }
 
+  String _profileEducationLevel() {
+    final auth = ref.read(authProvider);
+    return auth.user?['profile']?['educationLevel']?.toString() ?? '';
+  }
+
+  String _replyTitleFor(String action) {
+    switch (action) {
+      case 'translate_chichewa':
+        return 'Chichewa Explanation';
+      case 'explain_level':
+        return 'Explained At Your Level';
+      case 'summary':
+        return 'Section Summary';
+      case 'memory':
+        return 'Memory Hook';
+      default:
+        return 'Section AI Reply';
+    }
+  }
+
+  Future<void> _requestSelectionFlashcards({
+    required ReaderMaterialData material,
+    VoidCallback? refetch,
+  }) async {
+    if (_aiActionBusy || material.id.isEmpty) return;
+    setState(() => _aiActionBusy = true);
+    final result = await _service.requestAiTask(
+      context: context,
+      materialId: material.id,
+      taskType: 'flashcards',
+    );
+    if (!mounted) return;
+    setState(() => _aiActionBusy = false);
+    showReaderResultSnackBar(
+      context,
+      result,
+      'Flashcards requested',
+      result.message ??
+          result.errors.firstOrNull ??
+          'Flashcard request failed.',
+    );
+    if (result.success) refetch?.call();
+  }
+
   Future<void> _askReaderAi({
     required ReaderMaterialData material,
     required ReaderStudySelection selection,
+    VoidCallback? refetch,
   }) async {
     final action = await showReaderAiActionSheet(context);
     if (action == null || material.id.isEmpty || !mounted) return;
-    final prompt = switch (action) {
-      'summary' => 'Summarize this study section into short revision bullets.',
-      'memory' =>
-        'Create a memorable hook, analogy, or mnemonic from this study section and explain why it works.',
-      _ =>
-        'Explain this study section clearly in simple language and point out what to remember.',
-    };
+
+    if (action == 'quiz_page') {
+      await _runQuickQuiz(material: material, selection: selection);
+      return;
+    }
+    if (action == 'flashcards_selection') {
+      await _requestSelectionFlashcards(material: material, refetch: refetch);
+      return;
+    }
+
+    final prompt = buildReaderAiPrompt(
+      action: action,
+      educationLevel: _profileEducationLevel(),
+    );
     final message =
         '$prompt\n\nMaterial: ${material.title}\nAnchor: ${selection.anchorLabel}\n\nCurrent section:\n---\n${selection.selectedText.trim().isEmpty ? 'Use the material context available for this section.' : selection.selectedText.trim()}\n---';
     await _runAiAction<String>(
@@ -124,7 +177,7 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
           context: context, materialId: material.id, message: message),
       onSuccess: (reply) => showReaderAiReplySheet(
         context,
-        title: 'Section AI Reply',
+        title: _replyTitleFor(action),
         anchorLabel: selection.anchorLabel,
         reply: reply,
       ),
@@ -235,8 +288,8 @@ class _MaterialReaderScreenState extends State<MaterialReaderScreen> {
           _runQuickQuiz(material: material, selection: selection),
       onAskAi: material.id.isEmpty
           ? null
-          : (selection) =>
-              _askReaderAi(material: material, selection: selection),
+          : (selection) => _askReaderAi(
+              material: material, selection: selection, refetch: refetch),
     );
   }
 }

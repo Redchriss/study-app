@@ -16,8 +16,10 @@ class UploadMaterialScreen extends ConsumerStatefulWidget {
       _UploadMaterialScreenState();
 }
 
-class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
+class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen>
+    with SingleTickerProviderStateMixin {
   final _m = UploadMaterialManager();
+  late final AnimationController _entrance;
 
   @override
   void initState() {
@@ -28,12 +30,36 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
       isMounted: () => mounted,
     );
     _m.init();
+    _entrance = AnimationController(
+      vsync: this,
+      duration: DesignTokens.durSlow,
+    )..forward();
   }
 
   @override
   void dispose() {
+    _entrance.dispose();
     _m.dispose();
     super.dispose();
+  }
+
+  /// A staggered fade + slide-up so the form assembles itself on open.
+  Widget _entranceItem(int index, Widget child) {
+    final start = (index * 0.06).clamp(0.0, 0.6);
+    final animation = CurvedAnimation(
+      parent: _entrance,
+      curve: Interval(start, 1.0, curve: Curves.easeOutCubic),
+    );
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) => Opacity(
+        opacity: animation.value,
+        child: Transform.translate(
+          offset: Offset(0, (1 - animation.value) * 18),
+          child: child,
+        ),
+      ),
+    );
   }
 
   @override
@@ -57,30 +83,39 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
         child: ListView(
           padding: const EdgeInsets.all(DesignTokens.spMd),
           children: [
-            _buildHeader(),
+            _entranceItem(0, _buildHeader()),
             const SizedBox(height: DesignTokens.spLg),
-            const SectionHeader(title: 'Material Type'),
+            _entranceItem(1, _buildAiFillButton()),
+            const SizedBox(height: DesignTokens.spLg),
+            _entranceItem(2, const SectionHeader(title: 'Material Type')),
             const SizedBox(height: DesignTokens.spSm),
-            Wrap(
-              spacing: DesignTokens.spSm,
-              runSpacing: DesignTokens.spSm,
-              children: [
-                for (final type in types)
-                  TypeCard(
-                    selected: _m.contentType == type.$1,
-                    label: type.$2,
-                    icon: type.$3,
-                    color: type.$4,
-                    onTap: () => _m.changeType(type.$1),
-                  ),
-              ],
+            _entranceItem(
+              3,
+              Wrap(
+                spacing: DesignTokens.spSm,
+                runSpacing: DesignTokens.spSm,
+                children: [
+                  for (final type in types)
+                    TypeCard(
+                      selected: _m.contentType == type.$1,
+                      label: type.$2,
+                      icon: type.$3,
+                      color: type.$4,
+                      onTap: () => _m.changeType(type.$1),
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: DesignTokens.spMd),
-            _buildHintCard(),
+            _entranceItem(4, _buildHintCard()),
             const SizedBox(height: DesignTokens.spLg),
-            UploadFormFields(
-              manager: _m,
-              onSubjectChanged: (value) => setState(() => _m.subjectId = value),
+            _entranceItem(
+              5,
+              UploadFormFields(
+                manager: _m,
+                onSubjectChanged: (value) =>
+                    setState(() => _m.subjectId = value),
+              ),
             ),
             const SizedBox(height: DesignTokens.spLg),
             if (_m.contentType == 'video') ...[
@@ -225,6 +260,78 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
       r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/',
     );
     return regex.hasMatch(url.trim());
+  }
+
+  /// Opt-in, cost-aware AI auto-fill. Reads pasted notes / picked file and
+  /// suggests title, subject, and type — editable, never blocking the form.
+  Widget _buildAiFillButton() {
+    final theme = Theme.of(context);
+    final ready = _m.canSuggestMetadata;
+    return Material(
+      key: const Key('ai_fill_button'),
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        onTap: _m.suggesting ? null : () => _m.suggestMetadata(context),
+        child: Ink(
+          padding: const EdgeInsets.all(DesignTokens.spMd),
+          decoration: BoxDecoration(
+            gradient: DesignTokens.brandGradient,
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+            boxShadow: DesignTokens.shadowMd(false),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                ),
+                child: _m.suggesting
+                    ? const Padding(
+                        padding: EdgeInsets.all(11),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.auto_awesome_rounded,
+                        color: Colors.white),
+              ),
+              const SizedBox(width: DesignTokens.spMd),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _m.suggesting ? 'Reading your material…' : 'Fill with AI',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      ready
+                          ? 'Suggest title, subject & type · 1 credit'
+                          : 'Add notes or pick a file, then tap to auto-fill',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!_m.suggesting)
+                const Icon(Icons.chevron_right_rounded, color: Colors.white),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildHintCard() {

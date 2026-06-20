@@ -33,6 +33,7 @@ query Material($slug: String!) {
     fileUrl
     aiSummary
     aiFlashcardsJson
+    studyPack
     isPremium
     isBookmarked
     aiTasks {
@@ -111,6 +112,22 @@ mutation UploadMaterial($title: String!, $subjectId: ID!, $contentType: String!,
 const String kSubjects = r'''
 query Subjects($educationLevel: String!) {
   subjects(educationLevel: $educationLevel) { id name }
+}
+''';
+
+const String kSuggestMaterialMetadata = r'''
+mutation SuggestMaterialMetadata($contentSlice: String, $fileB64: String, $mime: String) {
+  suggestMaterialMetadata(contentSlice: $contentSlice, fileB64: $fileB64, mime: $mime) {
+    success
+    errors
+    creditsRemaining
+    suggestion {
+      title
+      subjectId
+      contentType
+      confidence
+    }
+  }
 }
 ''';
 

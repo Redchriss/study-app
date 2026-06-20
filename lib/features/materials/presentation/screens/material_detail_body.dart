@@ -5,6 +5,7 @@ import '../../../../core/services/download_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'material_detail_widgets.dart';
+import 'study_pack_sheet.dart';
 
 class MaterialDetailBody extends StatelessWidget {
   final ThemeData theme;
@@ -34,8 +35,23 @@ class MaterialDetailBody extends StatelessWidget {
     this.onYoutubeControllerReady,
   });
 
+  Map<String, dynamic>? get _studyPackTask {
+    final tasks = (m['aiTasks'] as List?) ?? const [];
+    for (final task in tasks) {
+      if (task is Map && task['taskType'] == 'study_pack') {
+        return Map<String, dynamic>.from(task);
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final studyPack = StudyPackData.parse(m['studyPack']);
+    final studyPackTask = _studyPackTask;
+    final studyPackGenerating = aiTaskLoading == 'study_pack' ||
+        studyPackTask?['isActive'] == true;
+    final studyPackFailed = studyPackTask?['status'] == 'failed';
     return SingleChildScrollView(
       padding: const EdgeInsets.all(DesignTokens.spMd),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -183,6 +199,19 @@ class MaterialDetailBody extends StatelessWidget {
                         fontSize: 11, color: DesignTokens.textTertiary)),
               ]),
             ])),
+          ),
+        ],
+        if (materialId.isNotEmpty) ...[
+          const SizedBox(height: DesignTokens.spMd),
+          StudyPackCard(
+            pack: studyPack,
+            isGenerating: studyPackGenerating,
+            hasFailed: studyPackFailed,
+            statusLabel: studyPackTask?['statusLabel']?.toString() ?? '',
+            onGenerate: () => onRequestAiTask?.call('study_pack'),
+            onOpen: studyPack == null
+                ? null
+                : () => showStudyPackSheet(context, pack: studyPack),
           ),
         ],
         const SizedBox(height: DesignTokens.spMd),
