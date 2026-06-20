@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'kid_auth_widgets.dart';
 import 'kids_companion_character.dart';
+import 'kids_parent_gate.dart';
 import 'kids_session_overlay.dart';
 
 class KidsHomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -55,6 +56,8 @@ class KidsHomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 borderRadius: BorderRadius.circular(20),
                 onTap: () async {
                   HapticFeedback.lightImpact();
+                  final passed = await showKidsParentGate(context);
+                  if (!passed) return;
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.remove('kid_token');
                   await prefs.remove('kid_child_name');

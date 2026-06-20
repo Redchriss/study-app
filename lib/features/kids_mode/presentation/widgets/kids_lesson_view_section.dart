@@ -14,6 +14,7 @@ import 'kids_lesson_step_bar.dart';
 import 'kids_topic_chip.dart';
 import 'kids_lesson_empty_state.dart';
 import 'kids_session_warning_banner.dart';
+import 'kids_story_adventure_card.dart';
 
 class KidsLessonViewSection extends StatelessWidget {
   const KidsLessonViewSection({
@@ -159,6 +160,13 @@ class KidsLessonViewSection extends StatelessWidget {
                 ),
                 KidsLessonStepBar(inQuiz: state.inQuiz),
                 const SizedBox(height: 18),
+                if (!state.inQuiz)
+                  Builder(builder: (context) {
+                    final story = KidsStoryAdventure.parseStory(
+                        state.currentLesson?['story']);
+                    if (story == null) return const SizedBox.shrink();
+                    return KidsStoryAdventureCard(story: story);
+                  }),
                 Stack(
                   clipBehavior: Clip.none,
                   children: [

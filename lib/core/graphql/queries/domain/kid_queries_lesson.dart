@@ -15,7 +15,7 @@ query PrimaryTopics($subjectId: ID!, $standard: Int!) {
 const String kKidLesson = r'''
 query KidLesson($subjectId: ID!, $standard: Int!, $topicId: ID) {
   kidLesson(subjectId: $subjectId, standard: $standard, topicId: $topicId) {
-    id title bodyText quiz chunks language
+    id title bodyText quiz chunks language story
   }
 }
 ''';
@@ -24,7 +24,7 @@ const String kFetchKidLesson = r'''
 mutation FetchKidLesson($subjectId: ID!, $standard: Int!, $topicId: ID, $language: String) {
   fetchKidLesson(subjectId: $subjectId, standard: $standard, topicId: $topicId, language: $language) {
     success errors
-    lesson { id title bodyText quiz chunks }
+    lesson { id title bodyText quiz chunks story }
     state {
       lessonsOpened
       quizAttempts
@@ -83,6 +83,12 @@ query KidProgress($subjectId: ID!, $standard: Int!) {
   kidProgress(subjectId: $subjectId, standard: $standard) {
     lessonsCompleted quizzesTaken quizzesCorrect starsEarned
   }
+}
+''';
+
+const String kKidCompanionLine = r'''
+query KidCompanionLine($kind: String, $topic: String, $mood: String) {
+  kidCompanionLine(kind: $kind, topic: $topic, mood: $mood)
 }
 ''';
 

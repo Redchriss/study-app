@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../kids_visual_theme.dart';
 import 'kid_auth_widgets.dart';
+import 'kids_companion_character.dart';
 import 'kids_daily_goal_ring.dart';
 import 'kids_home_helpers.dart';
 import 'kids_home_state_provider.dart';
@@ -41,6 +42,13 @@ class KidsSubjectPickerSection extends StatelessWidget {
             stars: state.stars,
             onStarsTap: onStarsTap,
           ),
+          if ((state.companionGreeting ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            KidsCompanionMessage(
+              message: state.companionGreeting!.trim(),
+              type: _companionType(state.rewardProfile),
+            ),
+          ],
           const SizedBox(height: 12),
           Semantics(
             label: kidsMascotMessage(state.dailySummary, auth),
@@ -109,5 +117,13 @@ class KidsSubjectPickerSection extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  CompanionType _companionType(Map<String, dynamic>? rewardProfile) {
+    final code = (rewardProfile?['equippedCompanion'] as String?) ?? 'sprout';
+    // The animated catalog only ships sprout + flame skins today; energetic
+    // companions map to flame, calmer ones to sprout.
+    const flameLike = {'rocket', 'lion', 'flame'};
+    return flameLike.contains(code) ? CompanionType.flame : CompanionType.sprout;
   }
 }

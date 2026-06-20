@@ -25,6 +25,7 @@ class KidsHomeState {
   final String? quizReviewHint;
   final int selectedStoryChunk;
   final bool subjectFetchStarted;
+  final String? companionGreeting;
 
   final int sessionDuration;
   final int sessionRemaining;
@@ -57,6 +58,7 @@ class KidsHomeState {
     this.quizReviewHint,
     this.selectedStoryChunk = 0,
     this.subjectFetchStarted = false,
+    this.companionGreeting,
     this.sessionDuration = 1200,
     this.sessionRemaining = 1200,
     this.sessionActive = false,
@@ -89,6 +91,7 @@ class KidsHomeState {
     String? quizReviewHint,
     int? selectedStoryChunk,
     bool? subjectFetchStarted,
+    String? companionGreeting,
     int? sessionDuration,
     int? sessionRemaining,
     bool? sessionActive,
@@ -120,6 +123,7 @@ class KidsHomeState {
       quizReviewHint: quizReviewHint ?? this.quizReviewHint,
       selectedStoryChunk: selectedStoryChunk ?? this.selectedStoryChunk,
       subjectFetchStarted: subjectFetchStarted ?? this.subjectFetchStarted,
+      companionGreeting: companionGreeting ?? this.companionGreeting,
       sessionDuration: sessionDuration ?? this.sessionDuration,
       sessionRemaining: sessionRemaining ?? this.sessionRemaining,
       sessionActive: sessionActive ?? this.sessionActive,

@@ -113,9 +113,28 @@ class KidsHomeScreenFetcher {
           subjectFetchStarted: false));
       await fetchDailySummary();
       await fetchRewardProfile();
+      await fetchCompanionGreeting();
     } else {
       _update(
           (s) => s.copyWith(fetchedSubjects: true, subjectFetchStarted: false));
+    }
+  }
+
+  Future<void> fetchCompanionGreeting() async {
+    final auth = ref.read(kidAuthStateProvider);
+    if (!auth.isAuthenticated) return;
+    try {
+      final result = await _buildKidClient().query(QueryOptions(
+        document: gql(kKidCompanionLine),
+        variables: const {'kind': 'greeting'},
+        fetchPolicy: FetchPolicy.networkOnly,
+      ));
+      final line = result.data?['kidCompanionLine'] as String?;
+      if (line != null && line.trim().isNotEmpty) {
+        _update((s) => s.copyWith(companionGreeting: line.trim()));
+      }
+    } catch (_) {
+      // Greeting is non-critical; the home screen still works without it.
     }
   }
 
