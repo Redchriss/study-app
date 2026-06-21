@@ -169,7 +169,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                                                   color: Colors.white))),
                                   label: Text('y/${c['name']}',
                                       style: const TextStyle(fontSize: 11)),
-                                  onPressed: () {},
+                                  onPressed: () => context.push('/y/${c['name']}'),
                                 ),
                               );
                             }).toList(),
