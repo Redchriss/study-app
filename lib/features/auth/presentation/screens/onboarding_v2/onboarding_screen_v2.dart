@@ -49,10 +49,10 @@ class _OnboardingScreenV2State extends State<OnboardingScreenV2> {
                     controller: _controller,
                     onPageChanged: (i) => setState(() => _page = i),
                     itemCount: OnboardingData.pages.length,
-                    itemBuilder: (context, i) => _buildPage(OnboardingData.pages[i]),
+                    itemBuilder: (context, i) => _buildPage(OnboardingData.pages[i], i),
                   ),
                 ),
-                _buildFooter(data, isLast),
+                _buildFooter(isLast),
               ],
             ),
           ),
@@ -87,7 +87,7 @@ class _OnboardingScreenV2State extends State<OnboardingScreenV2> {
     );
   }
 
-  Widget _buildPage(pageData) {
+  Widget _buildPage(pageData, int index) {
     return Padding(
       padding: const EdgeInsets.all(40),
       child: Column(
@@ -101,7 +101,7 @@ class _OnboardingScreenV2State extends State<OnboardingScreenV2> {
               border: Border.all(color: Colors.white24),
             ),
             child: Icon(pageData.icon, size: 80, color: Colors.white),
-          ).animate(key: ValueKey(_page))
+          ).animate(key: ValueKey(index))
            .scale(duration: 600.ms, curve: Curves.elasticOut)
            .fadeIn(),
           const SizedBox(height: 48),
@@ -114,7 +114,7 @@ class _OnboardingScreenV2State extends State<OnboardingScreenV2> {
               height: 1.1,
               fontWeight: FontWeight.w900,
             ),
-          ).animate(key: ValueKey(_page)).fadeIn(delay: 200.ms).slideY(begin: 0.2),
+          ).animate(key: ValueKey(index)).fadeIn(delay: 200.ms).slideY(begin: 0.2),
           const SizedBox(height: 24),
           Text(
             pageData.subtitle,
@@ -124,13 +124,13 @@ class _OnboardingScreenV2State extends State<OnboardingScreenV2> {
               fontSize: 18,
               fontWeight: FontWeight.w500,
             ),
-          ).animate(key: ValueKey(_page)).fadeIn(delay: 400.ms),
+          ).animate(key: ValueKey(index)).fadeIn(delay: 400.ms),
         ],
       ),
     );
   }
 
-  Widget _buildFooter(pageData, bool isLast) {
+  Widget _buildFooter(bool isLast) {
     return Padding(
       padding: const EdgeInsets.all(40),
       child: Column(

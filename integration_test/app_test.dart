@@ -7,7 +7,7 @@ import 'package:studyapp/core/theme/app_theme.dart';
 import 'package:studyapp/router.dart';
 import 'package:studyapp/features/auth/presentation/providers/auth_provider.dart';
 import 'package:studyapp/features/auth/presentation/screens/splash_screen.dart';
-import 'package:studyapp/features/auth/presentation/screens/onboarding_screen.dart';
+import 'package:studyapp/features/auth/presentation/screens/onboarding_v2/onboarding_screen_v2.dart';
 
 /// Integration tests run on a real device or emulator.
 ///   flutter test integration_test/
@@ -43,7 +43,7 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
 
       // After auth check, unauthenticated users go to onboarding
-      expect(find.byType(OnboardingScreen), findsWidgets);
+      expect(find.byType(OnboardingScreenV2), findsWidgets);
     });
 
     testWidgets('3. Login screen displays correctly', (tester) async {
