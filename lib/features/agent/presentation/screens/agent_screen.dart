@@ -10,6 +10,7 @@ import '../widgets/agent_typing_indicator.dart';
 import 'agent_chat_widgets.dart';
 import 'agent_error_bottom_sheet.dart';
 import 'agent_mode_helpers.dart';
+import 'coursework_export_sheet.dart';
 
 class AgentScreen extends ConsumerStatefulWidget {
   final String? initialPrompt;
@@ -146,6 +147,58 @@ class _AgentScreenState extends ConsumerState<AgentScreen>
     );
   }
 
+  void _openCourseworkExport() {
+    // Collect drafted sections from conversation text items
+    final state = ref.read(agentProvider);
+    final sections = <Map<String, String>>[];
+    String topic = 'Coursework';
+
+    for (final item in state.conversationItems) {
+      if (item is TextItem && !item.isUser) {
+        final text = item.text;
+        // Extract section titles from "Here is the draft for..." messages
+        final titleMatch = RegExp(r'Here is the draft for "(.+?)"').firstMatch(text);
+        if (titleMatch != null) {
+          sections.add({
+            'title': titleMatch.group(1)!,
+            'content': text,
+          });
+        }
+      }
+    }
+
+    // If no sections found, use all assistant messages
+    if (sections.isEmpty) {
+      for (final item in state.conversationItems) {
+        if (item is TextItem && !item.isUser && item.text.length > 50) {
+          sections.add({
+            'title': 'Section ${sections.length + 1}',
+            'content': item.text,
+          });
+        }
+      }
+    }
+
+    if (sections.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No drafted sections to export yet.')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => CourseworkExportSheet(
+        topic: topic,
+        deliverable: 'essay',
+        referencing: '',
+        sections: sections,
+      ),
+    );
+  }
+
   Widget _buildBody() {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final studyMode = ref.watch(agentProvider.select((s) => s.studyMode));
@@ -248,6 +301,14 @@ class _AgentScreenState extends ConsumerState<AgentScreen>
         onPreferences: _openPreferences,
       ),
       body: _buildBody(),
+      floatingActionButton: studyMode == 'coursework' && items.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: _openCourseworkExport,
+              icon: const Icon(Icons.file_download_rounded, size: 18),
+              label: const Text('Export',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+            )
+          : null,
     );
   }
 }

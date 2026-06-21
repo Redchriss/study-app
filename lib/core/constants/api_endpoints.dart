@@ -9,4 +9,5 @@ class ApiEndpoints {
   static String get scannerStream => '${AppConfig.apiUrl}/pastpapers/stream/';
   static String get materialUpload =>
       '${AppConfig.apiUrl}/materials/api/upload/';
+  static String get agentExport => '${AppConfig.apiUrl}/agent/export/';
 }
