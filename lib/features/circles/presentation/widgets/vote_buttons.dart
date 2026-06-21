@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
+import '../../../../core/services/haptic_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 
 class VoteButtons extends ConsumerWidget {
@@ -29,6 +30,7 @@ class VoteButtons extends ConsumerWidget {
       builder: (runMutation, result) {
         void vote(int direction) {
           if (result?.isLoading ?? false) return;
+          HapticService.lightTap();
           runMutation({'postId': postId, 'direction': direction});
           onVoteChanged?.call();
         }
@@ -104,6 +106,7 @@ class CommentVoteButtons extends ConsumerWidget {
       builder: (runMutation, result) {
         void vote(int direction) {
           if (result?.isLoading ?? false) return;
+          HapticService.lightTap();
           runMutation({'commentId': commentId, 'direction': direction});
         }
 

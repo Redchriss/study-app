@@ -77,8 +77,8 @@ class LeaderboardTab extends ConsumerWidget {
               rankColor = const Color(0xFFCD7F32);
             } else {
               rankColor = dark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.grey.shade100;
+                  ? DesignTokens.darkSurfaceVariant
+                  : DesignTokens.surfaceVariant;
             }
 
             return Container(
@@ -87,14 +87,14 @@ class LeaderboardTab extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: isTop3
                     ? rankColor.withValues(alpha: 0.1)
-                    : (dark ? DesignTokens.darkSurface : Colors.white),
+                    : (dark ? DesignTokens.darkSurface : DesignTokens.surface),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isTop3
                       ? rankColor.withValues(alpha: 0.3)
                       : (dark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.grey.shade200),
+                          ? DesignTokens.darkBorder
+                          : DesignTokens.border),
                 ),
                 boxShadow: isTop3 ? DesignTokens.shadowSm(dark) : null,
               ),
