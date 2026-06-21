@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
+import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
 
 class ForgotPasswordSheet extends ConsumerStatefulWidget {
@@ -14,11 +16,66 @@ class ForgotPasswordSheet extends ConsumerStatefulWidget {
 class _ForgotPasswordSheetState extends ConsumerState<ForgotPasswordSheet> {
   final _emailCtrl = TextEditingController();
   bool _sent = false;
+  bool _sending = false;
+  String? _error;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _send() async {
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty || !email.contains('@')) return;
+
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    HapticFeedback.lightImpact();
+
+    try {
+      final client = ref.read(graphqlClientProvider);
+      final result = await client.mutate(MutationOptions(
+        document: gql(kRequestPasswordReset),
+        variables: {'email': email},
+      ));
+
+      if (!mounted) return;
+
+      if (result.hasException) {
+        setState(() {
+          _sending = false;
+          _error = 'Could not send reset email. Please try again.';
+        });
+        return;
+      }
+
+      final payload =
+          result.data?['requestPasswordReset'] as Map<String, dynamic>?;
+      final errors = (payload?['errors'] as List?)?.cast<String>();
+
+      if (errors != null && errors.isNotEmpty) {
+        setState(() {
+          _sending = false;
+          _error = errors.first;
+        });
+        return;
+      }
+
+      setState(() {
+        _sending = false;
+        _sent = true;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _sending = false;
+          _error = 'Connection error. Please try again.';
+        });
+      }
+    }
   }
 
   @override
@@ -67,6 +124,33 @@ class _ForgotPasswordSheetState extends ConsumerState<ForgotPasswordSheet> {
                 color: DesignTokens.textSecondary, fontSize: 14, height: 1.4),
           ),
           const SizedBox(height: 24),
+          if (_error != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: DesignTokens.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: DesignTokens.error.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline_rounded,
+                      color: DesignTokens.error, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(_error!,
+                        style: const TextStyle(
+                            color: DesignTokens.error,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           if (!_sent)
             TextFormField(
               controller: _emailCtrl,
@@ -84,8 +168,14 @@ class _ForgotPasswordSheetState extends ConsumerState<ForgotPasswordSheet> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: _send,
-                child: const Text('Send Reset Link'),
+                onPressed: _sending ? null : _send,
+                child: _sending
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2.5))
+                    : const Text('Send Reset Link'),
               ),
             ),
           ],
@@ -118,13 +208,6 @@ class _ForgotPasswordSheetState extends ConsumerState<ForgotPasswordSheet> {
         ],
       ),
     );
-  }
-
-  void _send() {
-    if (_emailCtrl.text.trim().isEmpty || !_emailCtrl.text.contains('@'))
-      return;
-    HapticFeedback.lightImpact();
-    setState(() => _sent = true);
   }
 }
 

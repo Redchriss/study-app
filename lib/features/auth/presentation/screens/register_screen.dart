@@ -184,6 +184,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               if (_submitError != null)
                 RegisterErrorBanner(message: _submitError!),
               Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Center(
+                  child: TextButton(
+                    onPressed: () => context.go('/login'),
+                    child: Text.rich(
+                      TextSpan(
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        children: [
+                          const TextSpan(
+                              text: 'Already have an account? ',
+                              style: TextStyle(
+                                  color: DesignTokens.textSecondary)),
+                          TextSpan(
+                              text: 'Log in',
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
                 padding: const EdgeInsets.all(24),
                 child: SizedBox(
                   width: double.infinity,

@@ -61,3 +61,21 @@ mutation DeleteAccount($password: String!) {
   }
 }
 ''';
+
+const String kRequestPasswordReset = r'''
+mutation RequestPasswordReset($email: String!) {
+  requestPasswordReset(email: $email) {
+    success
+    errors
+  }
+}
+''';
+
+const String kResetPassword = r'''
+mutation ResetPassword($uid: String!, $token: String!, $newPassword: String!) {
+  resetPassword(uid: $uid, token: $token, newPassword: $newPassword) {
+    success
+    errors
+  }
+}
+''';
