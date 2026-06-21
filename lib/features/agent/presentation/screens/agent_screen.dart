@@ -156,6 +156,8 @@ class _AgentScreenState extends ConsumerState<AgentScreen>
     final reviewCount = ref.watch(agentProvider.select((s) => s.reviewCount));
     final showInsights =
         ref.watch(agentProvider.select((s) => s.showInsights));
+    final agentFreeRemaining =
+        ref.watch(agentProvider.select((s) => s.agentFreeRemaining));
     final items = ref.watch(agentProvider.select((s) => s.conversationItems));
     final streaming = ref.watch(agentProvider.select((s) => s.streaming));
     final streamingText =
@@ -199,7 +201,7 @@ class _AgentScreenState extends ConsumerState<AgentScreen>
             onMountSurface: ref.read(agentProvider.notifier).mountSurface,
           ),
         ),
-        if (sending) const AgentTypingIndicator(),
+        if (sending) AgentTypingIndicator(freeRemaining: agentFreeRemaining),
         if (!sending && !streaming && items.isNotEmpty)
           AgentInputBar(
             ctrl: _msgCtrl,
@@ -207,6 +209,16 @@ class _AgentScreenState extends ConsumerState<AgentScreen>
             placeholder: modePlaceholder(studyMode),
             suggestions: const [],
             onSend: _send,
+            onCancel: () => ref.read(agentProvider.notifier).cancel(),
+          ),
+        if (sending || streaming)
+          AgentInputBar(
+            ctrl: _msgCtrl,
+            sending: true,
+            placeholder: modePlaceholder(studyMode),
+            suggestions: const [],
+            onSend: _send,
+            onCancel: () => ref.read(agentProvider.notifier).cancel(),
           ),
         if (items.isEmpty)
           AgentInputBar(
@@ -215,6 +227,7 @@ class _AgentScreenState extends ConsumerState<AgentScreen>
             placeholder: modePlaceholder(studyMode),
             suggestions: suggestionsForMode(studyMode),
             onSend: _send,
+            onCancel: () => ref.read(agentProvider.notifier).cancel(),
           ),
       ],
     );

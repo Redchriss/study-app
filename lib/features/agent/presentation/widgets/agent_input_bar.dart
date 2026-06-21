@@ -8,6 +8,7 @@ class AgentInputBar extends StatefulWidget {
   final String placeholder;
   final List<String> suggestions;
   final void Function([String?]) onSend;
+  final VoidCallback? onCancel;
   const AgentInputBar({
     super.key,
     required this.ctrl,
@@ -15,6 +16,7 @@ class AgentInputBar extends StatefulWidget {
     required this.placeholder,
     required this.suggestions,
     required this.onSend,
+    this.onCancel,
   });
 
   @override
@@ -88,7 +90,9 @@ class _AgentInputBarState extends State<AgentInputBar> {
                 ),
                 const SizedBox(width: 8),
                 AnimatedPress(
-                  onTap: widget.sending ? null : () => widget.onSend(),
+                  onTap: widget.sending
+                      ? () => widget.onCancel?.call()
+                      : () => widget.onSend(),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     width: 46,
@@ -99,17 +103,17 @@ class _AgentInputBarState extends State<AgentInputBar> {
                           : const LinearGradient(
                               colors: [Color(0xFF7C4DFF), Color(0xFF1B6CA8)]),
                       color: widget.sending
-                          ? DesignTokens.textTertiary.withValues(alpha: 0.3)
+                          ? DesignTokens.error.withValues(alpha: 0.15)
                           : null,
                       borderRadius: BorderRadius.circular(14),
+                      border: widget.sending
+                          ? Border.all(
+                              color: DesignTokens.error.withValues(alpha: 0.3))
+                          : null,
                     ),
                     child: widget.sending
-                        ? const Center(
-                            child: SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white)))
+                        ? const Icon(Icons.stop_rounded,
+                            color: DesignTokens.error, size: 22)
                         : const Icon(Icons.send_rounded,
                             color: Colors.white, size: 20),
                   ),

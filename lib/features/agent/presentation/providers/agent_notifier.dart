@@ -367,4 +367,14 @@ class AgentNotifier extends Notifier<AgentState> with AgentDataMixin {
         checkpointText: null,
         retryCount: 0,
       );
+
+  void cancel() {
+    state = state.copyWith(
+      sending: false,
+      streaming: false,
+      streamingText: '',
+      checkpointText: null,
+      retryCount: 0,
+    );
+  }
 }

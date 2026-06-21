@@ -2,14 +2,25 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
 
-class AgentTypingIndicator extends StatefulWidget {
-  const AgentTypingIndicator({super.key});
+class AgentTypingIndicator extends StatelessWidget {
+  final int freeRemaining;
+  const AgentTypingIndicator({super.key, this.freeRemaining = -1});
 
   @override
-  State<AgentTypingIndicator> createState() => _AgentTypingIndicatorState();
+  Widget build(BuildContext context) {
+    return _AgentTypingBody(freeRemaining: freeRemaining);
+  }
 }
 
-class _AgentTypingIndicatorState extends State<AgentTypingIndicator> {
+class _AgentTypingBody extends StatefulWidget {
+  final int freeRemaining;
+  const _AgentTypingBody({required this.freeRemaining});
+
+  @override
+  State<_AgentTypingBody> createState() => _AgentTypingBodyState();
+}
+
+class _AgentTypingBodyState extends State<_AgentTypingBody> {
   int _seconds = 0;
   Timer? _timer;
 
@@ -80,6 +91,30 @@ class _AgentTypingIndicatorState extends State<AgentTypingIndicator> {
               ],
             ),
           ),
+          if (widget.freeRemaining >= 0) ...[
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: widget.freeRemaining > 0
+                    ? DesignTokens.primary.withValues(alpha: 0.08)
+                    : DesignTokens.warning.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                widget.freeRemaining > 0
+                    ? '$widget.freeRemaining free left'
+                    : 'Credits',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: widget.freeRemaining > 0
+                      ? DesignTokens.primary
+                      : DesignTokens.warning,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
