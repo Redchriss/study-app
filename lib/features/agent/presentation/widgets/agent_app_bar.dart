@@ -76,7 +76,7 @@ class AgentAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 color: Colors.white, size: 16),
           ),
           const SizedBox(width: 8),
-          Text('AI Tutor',
+          Text('Agent',
               style: theme.textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(width: 8),
