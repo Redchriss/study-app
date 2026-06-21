@@ -142,6 +142,10 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
           _cache.saveMaterial(widget.slug, Map<String, dynamic>.from(live));
         }
         if (result.hasException && live == null) {
+          final errorMsg = graphQLErrorMessage(
+              result.exception, 'Could not load material.');
+          final isAccessDenied = errorMsg.contains('do not have access') ||
+              errorMsg.contains('education level');
           return FutureBuilder<Map<String, dynamic>?>(
             future: _cache.loadMaterial(widget.slug),
             builder: (context, snapshot) {
@@ -149,8 +153,14 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
               if (cached == null) {
                 return Scaffold(
                   body: ErrorState(
-                    message: 'Material not found.',
-                    onRetry: () => refetch?.call(),
+                    message: isAccessDenied
+                        ? 'This material is not available for your education level. Update your profile or contact support.'
+                        : errorMsg,
+                    onRetry: isAccessDenied ? null : () => refetch?.call(),
+                    actionLabel: isAccessDenied ? 'Edit Profile' : null,
+                    onAction: isAccessDenied
+                        ? () => context.push('/edit-profile')
+                        : null,
                   ),
                 );
               }
@@ -159,8 +169,11 @@ class _MaterialDetailScreenState extends ConsumerState<MaterialDetailScreen> {
           );
         }
         if (live is! Map) {
-          return const Scaffold(
-              body: Center(child: Text('Material not found.')));
+          return Scaffold(
+              body: ErrorState(
+            message: 'Material not found.',
+            onRetry: () => refetch?.call(),
+          ));
         }
         return _buildBody(theme, Map<String, dynamic>.from(live), refetch);
       },
