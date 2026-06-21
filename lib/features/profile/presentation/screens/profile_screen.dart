@@ -95,6 +95,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             (result.data?['myFollowersCount'] as num?)?.toInt() ?? 0;
         final following =
             (result.data?['myFollowingCount'] as num?)?.toInt() ?? 0;
+        final educationLevel = profile?['educationLevel']?.toString();
+        final standard = (profile?['standard'] as num?)?.toInt();
+        final form = (profile?['form'] as num?)?.toInt();
+        final university = profile?['university'] as Map?;
+        final universityName = university?['shortName']?.toString() ??
+            university?['name']?.toString();
+        final program = profile?['program'] as Map?;
+        final programName = program?['name']?.toString();
         final achievements = ((me?['achievements'] as List?) ?? const [])
             .whereType<Map>()
             .map((item) => Map<String, dynamic>.from(item))
@@ -108,6 +116,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 bannerUrl: bannerUrl,
                 username: username,
                 bio: bio,
+                educationLevel: educationLevel,
+                standard: standard,
+                form: form,
+                universityName: universityName,
+                programName: programName,
                 postKarma: postKarma,
                 commentKarma: commentKarma,
                 awardKarma: awardKarma,

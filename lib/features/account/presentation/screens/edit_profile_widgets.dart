@@ -218,7 +218,24 @@ class PersonalDetails extends StatelessWidget {
               label: 'Phone number',
               dark: dark,
               keyboard: TextInputType.phone,
-              action: TextInputAction.done),
+              action: TextInputAction.next),
+          const SizedBox(height: 16),
+          TextField(
+              controller: m.bioCtrl,
+              maxLines: 3,
+              maxLength: 300,
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                labelText: 'Bio',
+                hintText: 'Tell others about yourself...',
+                filled: true,
+                fillColor: dark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.grey.shade50,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none),
+              )),
         ],
       ),
     );

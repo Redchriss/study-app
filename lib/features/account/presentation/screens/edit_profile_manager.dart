@@ -11,6 +11,7 @@ class EditProfileManager {
   final lastNameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
+  final bioCtrl = TextEditingController();
   bool saving = false;
 
   String? educationLevel;
@@ -73,6 +74,8 @@ class EditProfileManager {
     lastNameCtrl.text = user?['lastName'] as String? ?? '';
     emailCtrl.text = user?['email'] as String? ?? '';
     phoneCtrl.text = user?['phone'] as String? ?? '';
+    final profile = user?['profile'];
+    bioCtrl.text = profile is Map ? (profile['bio'] as String? ?? '') : '';
     loadEducationFromUser(user);
   }
 
@@ -81,6 +84,7 @@ class EditProfileManager {
     lastNameCtrl.dispose();
     emailCtrl.dispose();
     phoneCtrl.dispose();
+    bioCtrl.dispose();
   }
 
   Map<String, dynamic> educationInput() {
@@ -116,6 +120,7 @@ class EditProfileManager {
       'lastName': lastNameCtrl.text.trim(),
       if (emailCtrl.text.trim().isNotEmpty) 'email': emailCtrl.text.trim(),
       if (phoneCtrl.text.trim().isNotEmpty) 'phone': phoneCtrl.text.trim(),
+      if (bioCtrl.text.trim().isNotEmpty) 'bio': bioCtrl.text.trim(),
       ...educationInput(),
     };
     final result = await client.mutate(MutationOptions(

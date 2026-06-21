@@ -5,6 +5,11 @@ class ProfileHeader extends StatelessWidget {
   final String? avatarUrl, bannerUrl;
   final String username;
   final String? bio;
+  final String? educationLevel;
+  final int? standard;
+  final int? form;
+  final String? universityName;
+  final String? programName;
   final int postKarma, commentKarma, awardKarma, totalKarma;
   final String? createdAt;
   final bool isOwnProfile;
@@ -17,6 +22,11 @@ class ProfileHeader extends StatelessWidget {
     this.bannerUrl,
     required this.username,
     this.bio,
+    this.educationLevel,
+    this.standard,
+    this.form,
+    this.universityName,
+    this.programName,
     required this.postKarma,
     required this.commentKarma,
     required this.awardKarma,
@@ -130,6 +140,32 @@ class ProfileHeader extends StatelessWidget {
                   ],
                 ),
               ],
+              if (_educationLabel != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: _educationColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(999),
+                    border:
+                        Border.all(color: _educationColor.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(_educationIcon,
+                          size: 14, color: _educationColor),
+                      const SizedBox(width: 6),
+                      Text(_educationLabel!,
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: _educationColor)),
+                    ],
+                  ),
+                ),
+              ],
               if (bio != null && bio!.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Text(bio!,
@@ -154,6 +190,50 @@ class ProfileHeader extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String? get _educationLabel {
+    if (educationLevel == 'primary' && standard != null) {
+      return 'Primary \u2022 Standard $standard';
+    }
+    if (educationLevel == 'secondary' && form != null) {
+      return 'Secondary \u2022 Form $form';
+    }
+    if (educationLevel == 'tertiary') {
+      if (universityName != null && programName != null) {
+        return '$universityName \u2022 $programName';
+      }
+      if (universityName != null) return universityName;
+      if (programName != null) return programName;
+      return 'University';
+    }
+    return null;
+  }
+
+  Color get _educationColor {
+    switch (educationLevel) {
+      case 'primary':
+        return DesignTokens.accent;
+      case 'secondary':
+        return DesignTokens.primary;
+      case 'tertiary':
+        return const Color(0xFF7A4D9E);
+      default:
+        return DesignTokens.textSecondary;
+    }
+  }
+
+  IconData get _educationIcon {
+    switch (educationLevel) {
+      case 'primary':
+        return Icons.child_care_rounded;
+      case 'secondary':
+        return Icons.school_rounded;
+      case 'tertiary':
+        return Icons.account_balance_rounded;
+      default:
+        return Icons.school_rounded;
+    }
   }
 
   String _formatDate(String iso) {
