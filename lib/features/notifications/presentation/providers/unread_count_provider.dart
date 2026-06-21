@@ -25,7 +25,7 @@ class UnreadCountNotifier extends Notifier<int> {
       final client = ref.read(graphqlClientProvider);
       final result = await client.query(QueryOptions(
         document: gql(kNotifications),
-        variables: const {'limit': 1, 'onlyUnread': true},
+        variables: const {'unreadOnly': true},
         fetchPolicy: FetchPolicy.networkOnly,
       ));
       if (result.hasException) return;

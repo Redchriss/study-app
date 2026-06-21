@@ -24,22 +24,13 @@ class InboxNotificationsTab extends ConsumerStatefulWidget {
 }
 
 class _InboxNotificationsTabState extends ConsumerState<InboxNotificationsTab> {
-  final ScrollController _scrollCtrl = ScrollController();
-  bool _loadingMore = false;
-
-  @override
-  void dispose() {
-    _scrollCtrl.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final client = ref.read(graphqlClientProvider);
 
-    final variables = <String, dynamic>{'limit': 25};
-    if (widget.onlyUnread) variables['onlyUnread'] = true;
-    if (widget.notifType != null) variables['notifType'] = widget.notifType;
+    // Backend returns a flat list; unreadOnly filters on the server side.
+    final variables = <String, dynamic>{'unreadOnly': widget.onlyUnread};
 
     return Query(
       options: QueryOptions(
@@ -59,10 +50,9 @@ class _InboxNotificationsTabState extends ConsumerState<InboxNotificationsTab> {
           );
         }
 
-        final data = result.data?['notifications'];
-        final edges = (data?['edges'] as List?) ?? [];
-        final items =
-            edges.map((e) => e['node'] as Map<String, dynamic>).toList();
+        // Flat list from backend
+        final items = (result.data?['notifications'] as List?) ??
+            <Map<String, dynamic>>[];
 
         if (items.isEmpty) {
           return Center(

@@ -1,23 +1,12 @@
 const String kNotifications = r'''
-query Notifications($onlyUnread: Boolean, $notifType: String, $limit: Int, $after: String) {
-  notifications(onlyUnread: $onlyUnread, notifType: $notifType, limit: $limit, after: $after) {
-    edges {
-      cursor
-      node {
-        id
-        notifType
-        isRead
-        bodyPreview
-        sender { id username }
-        community { id slug name icon }
-        post { id slug title }
-        comment { id }
-        createdAt
-        readAt
-      }
-    }
-    pageInfo { hasNextPage endCursor }
-    totalCount
+query Notifications($unreadOnly: Boolean) {
+  notifications(unreadOnly: $unreadOnly) {
+    id
+    notificationType
+    message
+    link
+    isRead
+    createdAt
   }
   unreadNotificationCount
 }
@@ -86,9 +75,12 @@ mutation ArchiveModmailThread($threadId: ID!) {
 const String kNotificationPreferences = r'''
 query NotificationPreferences {
   notificationPreferences {
-    postReply commentReply postMention commentMention
-    upvoteMilestone award modAction modmail
-    pushEnabled soundEnabled
+    pushEnabled
+    emailEnabled
+    studyReminders
+    communityReplies
+    mentorshipUpdates
+    marketingEmails
   }
 }
 ''';

@@ -43,6 +43,7 @@ class NotificationsScreen extends ConsumerWidget {
             ),
           );
         }
+        // Flat list from backend: [{ id, notificationType, message, link, isRead, createdAt }]
         final items = (result.data?['notifications'] as List?) ??
             <Map<String, dynamic>>[];
         final unreadCount =

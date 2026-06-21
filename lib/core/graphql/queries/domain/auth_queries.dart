@@ -3,6 +3,7 @@ mutation Login($username: String!, $password: String!) {
   tokenAuth(username: $username, password: $password) {
     token
     refreshToken
+    errors
   }
 }
 ''';
