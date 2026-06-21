@@ -96,7 +96,7 @@ class AgentStreamService {
     final body = <String, dynamic>{
       'message': text,
       'session_id': sessionId,
-      'mode': 'study',
+      'mode': studyMode == 'coursework' ? 'coursework' : 'study',
       'study_mode': studyMode,
       if (clientInstructions != null) 'client_instructions': clientInstructions,
       if (checkpointText != null && checkpointText.isNotEmpty)

@@ -34,6 +34,7 @@ class _AgentScreenState extends ConsumerState<AgentScreen>
     ('revise', 'Revise', Icons.bolt_rounded),
     ('memorize', 'Memorize', Icons.psychology_alt_rounded),
     ('plan', 'Plan', Icons.event_note_rounded),
+    ('coursework', 'Coursework', Icons.article_rounded),
   ];
 
   @override

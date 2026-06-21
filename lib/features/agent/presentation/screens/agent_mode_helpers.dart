@@ -24,6 +24,12 @@ List<String> suggestionsForMode(String studyMode) {
         'Key points for photosynthesis',
         'Revise this topic fast',
       ];
+    case 'coursework':
+      return [
+        'Write a 1500-word essay on climate change',
+        'Lab report on enzyme activity experiment',
+        'Presentation slides on cell division',
+      ];
     default:
       return [
         'Explain fractions simply',
@@ -43,6 +49,8 @@ String modePlaceholder(String studyMode) {
       return 'What do you need to memorize?';
     case 'revise':
       return 'What topic to revise?';
+    case 'coursework':
+      return 'Describe your assignment brief...';
     default:
       return 'Ask anything about your studies...';
   }
@@ -58,6 +66,8 @@ String modeHint(String studyMode) {
       return "I'll build mnemonics and memory hooks.";
     case 'revise':
       return "I'll compress topics into fast revision.";
+    case 'coursework':
+      return "I'll draft essays, reports, and presentations.";
     default:
       return "I'll explain, then check your understanding.";
   }
