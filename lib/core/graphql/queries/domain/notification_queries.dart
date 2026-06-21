@@ -85,8 +85,3 @@ query NotificationPreferences {
 }
 ''';
 
-const String kUpdateNotificationPreferences = r'''
-mutation UpdateNotificationPreferences($input: NotificationPreferencesInput!) {
-  updateNotificationPreferences(input: $input) { success }
-}
-''';

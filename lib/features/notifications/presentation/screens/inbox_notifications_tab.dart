@@ -92,9 +92,8 @@ class _InboxNotificationsTabState extends ConsumerState<InboxNotificationsTab> {
         return RefreshIndicator(
           onRefresh: () async => refetch?.call(),
           child: ListView.builder(
-            controller: _scrollCtrl,
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-            itemCount: items.length + (_loadingMore ? 1 : 0),
+            itemCount: items.length,
             itemBuilder: (_, i) {
               if (i >= items.length) {
                 return const Padding(
