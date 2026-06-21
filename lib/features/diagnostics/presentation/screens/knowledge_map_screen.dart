@@ -73,6 +73,21 @@ class KnowledgeMapScreen extends ConsumerWidget {
               children: [
                 // Exam readiness card
                 _buildReadinessCard(context, readiness, mastered, total, dark),
+                const SizedBox(height: 12),
+
+                // View prerequisite graph button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.push(
+                        '/prerequisite-graph/${widget.subjectCode}'),
+                    icon: const Icon(Icons.bubble_chart_rounded, size: 18),
+                    label: const Text('View Prerequisite Graph'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
 
                 // Knowledge map by topic

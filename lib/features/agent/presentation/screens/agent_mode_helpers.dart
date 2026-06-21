@@ -29,6 +29,8 @@ List<String> suggestionsForMode(String studyMode) {
         'Write a 1500-word essay on climate change',
         'Lab report on enzyme activity experiment',
         'Presentation slides on cell division',
+        'Draft section 1 of my outline',
+        'Approve outline and start drafting',
       ];
     default:
       return [

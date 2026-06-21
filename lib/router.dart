@@ -10,6 +10,7 @@ import '../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../features/agent/presentation/screens/agent_screen.dart';
 import '../features/diagnostics/presentation/screens/diagnostic_screen.dart';
 import '../features/diagnostics/presentation/screens/knowledge_map_screen.dart';
+import '../features/diagnostics/presentation/screens/prerequisite_graph_screen.dart';
 import '../features/circles/presentation/screens/home_screen.dart';
 import '../features/circles/presentation/screens/discover_screen.dart';
 import '../features/circles/presentation/screens/inbox_screen.dart';
@@ -130,6 +131,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             subjectCode: (extra['subjectCode'] as String?) ?? 'MATH-S',
           );
         },
+      ),
+      GoRoute(
+        path: '/prerequisite-graph/:subjectCode',
+        builder: (_, state) => PrerequisiteGraphScreen(
+          subjectCode: state.pathParameters['subjectCode'] ?? 'MATH-S',
+        ),
       ),
 
       ...appRoutes,
