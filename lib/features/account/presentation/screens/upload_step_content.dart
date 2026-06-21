@@ -201,7 +201,7 @@ class _AiFillButton extends StatelessWidget {
                           fontSize: 14),
                     ),
                     Text(
-                      'Suggest title, subject & type \u00b7 1 credit',
+                      'Suggest a title from your content \u00b7 1 credit',
                       style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.85),
                           fontSize: 11),

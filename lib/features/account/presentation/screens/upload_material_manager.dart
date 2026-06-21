@@ -27,6 +27,7 @@ class UploadMaterialManager {
   bool saving = false;
   bool suggesting = false;
   bool loadingSubjects = true;
+  double uploadProgress = 0.0;
   String? subjectLoadError;
   PlatformFile? selectedFile;
   List? subjects;
@@ -237,18 +238,9 @@ class UploadMaterialManager {
 
   void _applySuggestion(Map<String, dynamic> suggestion) {
     final title = suggestion['title']?.toString();
-    final suggestedSubjectId = suggestion['subjectId']?.toString();
-    final suggestedType = suggestion['contentType']?.toString();
     _setState(() {
       if (title != null && title.isNotEmpty) {
         titleCtrl.text = title;
-      }
-      if (suggestedSubjectId != null && _subjectExists(suggestedSubjectId)) {
-        subjectId = suggestedSubjectId;
-      }
-      if (suggestedType != null &&
-          _autofillContentTypes.contains(suggestedType)) {
-        contentType = suggestedType;
       }
     });
   }
@@ -317,7 +309,10 @@ class UploadMaterialManager {
       );
       return;
     }
-    _setState(() => saving = true);
+    _setState(() {
+      saving = true;
+      uploadProgress = 0.0;
+    });
     final result = await uploadService.upload(
       title: titleCtrl.text.trim(),
       subjectId: subjectId!,
@@ -326,6 +321,11 @@ class UploadMaterialManager {
       contentText: textCtrl.text.trim(),
       youtubeUrl: youtubeCtrl.text.trim(),
       file: selectedFile,
+      onProgress: (sent, total) {
+        if (total > 0) {
+          _setState(() => uploadProgress = sent / total);
+        }
+      },
     );
     if (!_isMounted()) return;
     _setState(() => saving = false);

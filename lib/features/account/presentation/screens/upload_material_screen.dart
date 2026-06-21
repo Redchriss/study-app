@@ -166,25 +166,50 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
             ],
             Expanded(
               child: isLastStep
-                  ? ElevatedButton.icon(
-                      onPressed: _m.saving
-                          ? null
-                          : () => _m.submit(context),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                      icon: _m.saving
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2))
-                          : const Icon(Icons.cloud_upload_rounded),
-                      label: Text(_m.saving
-                          ? 'Uploading...'
-                          : 'Submit For Review'),
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_m.saving && _m.uploadProgress > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: _m.uploadProgress,
+                                minHeight: 4,
+                                backgroundColor: DesignTokens.border,
+                                valueColor:
+                                    const AlwaysStoppedAnimation<Color>(
+                                        DesignTokens.primary),
+                              ),
+                            ),
+                          ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _m.saving
+                                ? null
+                                : () => _m.submit(context),
+                            style: ElevatedButton.styleFrom(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(14)),
+                            ),
+                            icon: _m.saving
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2))
+                                : const Icon(Icons.cloud_upload_rounded),
+                            label: Text(_m.saving
+                                ? 'Uploading ${(_m.uploadProgress * 100).toInt()}%'
+                                : 'Submit For Review'),
+                          ),
+                        ),
+                      ],
                     )
                   : ElevatedButton(
                       onPressed: _canGoNext ? _next : null,
