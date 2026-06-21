@@ -19,9 +19,9 @@ class AppConfig {
 
   static String get apiUrl {
     try {
-      return dotenv.env['API_URL'] ?? 'https://yaza-ai-tutor.onrender.com';
+      return dotenv.env['API_URL'] ?? 'https://yaza-ai-tutor-r7kb.onrender.com';
     } catch (_) {
-      return 'https://yaza-ai-tutor.onrender.com';
+      return 'https://yaza-ai-tutor-r7kb.onrender.com';
     }
   }
 
