@@ -57,7 +57,7 @@ class ModernDropdown<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
       key: dropKey,
-      initialValue: value,
+      value: value,
       items: items,
       onChanged: onChanged,
       decoration: InputDecoration(

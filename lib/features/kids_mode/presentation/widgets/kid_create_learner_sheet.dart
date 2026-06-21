@@ -146,7 +146,7 @@ class _KidCreateLearnerSheetState extends State<KidCreateLearnerSheet> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      initialValue: _track,
+                      value: _track,
                       decoration: InputDecoration(
                         labelText: 'Track',
                         filled: true,
@@ -167,7 +167,7 @@ class _KidCreateLearnerSheetState extends State<KidCreateLearnerSheet> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      initialValue: _standard ?? 1,
+                      value: _standard ?? 1,
                       decoration: InputDecoration(
                         labelText: 'Standard',
                         filled: true,

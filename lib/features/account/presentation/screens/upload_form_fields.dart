@@ -43,7 +43,7 @@ class UploadFormFields extends StatelessWidget {
             DropdownButtonFormField<String>(
               key: ValueKey(
                   'subject_${manager.subjects?.length}_${manager.subjectId}'),
-              initialValue: manager.subjectId,
+              value: manager.subjectId,
               decoration: const InputDecoration(labelText: 'Subject'),
               items: (manager.subjects ?? [])
                   .map((s) => DropdownMenuItem<String>(

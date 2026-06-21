@@ -81,7 +81,7 @@ class _MaterialShareSheetState extends ConsumerState<MaterialShareSheet> {
               builder: (qr, {fetchMore, refetch}) {
                 final communities = (qr.data?['myCommunities'] as List?) ?? [];
                 return DropdownButtonFormField<String>(
-                  initialValue: _selectedCommunity,
+                  value: _selectedCommunity,
                   decoration: const InputDecoration(
                     labelText: 'Select community',
                     border: OutlineInputBorder(),

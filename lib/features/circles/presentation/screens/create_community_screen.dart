@@ -142,7 +142,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                     ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              initialValue: _type,
+              value: _type,
               decoration: const InputDecoration(border: OutlineInputBorder()),
               items: const [
                 DropdownMenuItem(
