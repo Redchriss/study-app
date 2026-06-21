@@ -121,6 +121,9 @@ class AuthNotifier extends Notifier<AuthState>
 
   /// Bootstrap without toggling isLoading (used after login/register so the
   /// router doesn't flash back to /splash mid-submit).
+  ///
+  /// On transient network errors, keeps tokens saved so next app start
+  /// can auto-retry, but sets a clear error so the caller can respond.
   @override
   Future<void> _bootstrapSilent() async {
     try {
@@ -140,8 +143,18 @@ class AuthNotifier extends Notifier<AuthState>
                 e.message.toLowerCase().contains('permission') ||
                 e.message.toLowerCase().contains('unauthorized')) ==
             true;
-        if (isAuthError) await SecureStorage.clearTokens();
-        state = const AuthState(isAuthenticated: false, isLoading: false);
+        if (isAuthError) {
+          await SecureStorage.clearTokens();
+          state = const AuthState(isAuthenticated: false, isLoading: false);
+        } else {
+          // Transient network/server error — tokens are valid but couldn't
+          // verify. Don't clear tokens, set an error so the caller shows it.
+          state = const AuthState(
+            isAuthenticated: false,
+            isLoading: false,
+            error: 'Connection problem signing you in. Please try again.',
+          );
+        }
         return;
       }
       state = AuthState(
@@ -154,10 +167,13 @@ class AuthNotifier extends Notifier<AuthState>
       unawaited(_registerFcmToken());
     } catch (e) {
       debugPrint('Silent bootstrap failed: $e');
+      // Transient error — tokens are saved, don't clear. Set a clear error
+      // so the login/register caller can show it to the user.
       state = const AuthState(
-          isAuthenticated: false,
-          isLoading: false,
-          error: 'Connection error. Check your network.');
+        isAuthenticated: false,
+        isLoading: false,
+        error: 'Connection problem signing you in. Please try again.',
+      );
     }
   }
 
