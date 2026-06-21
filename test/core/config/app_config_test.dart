@@ -38,10 +38,10 @@ FIREBASE_ENABLED=true
     test('should fall back safely when .env is missing', () {
       dotenv.clean();
 
-      expect(AppConfig.apiUrl, 'https://yaza-ai-tutor.onrender.com');
+      expect(AppConfig.apiUrl, 'https://yaza-ai-tutor-r7kb.onrender.com');
       expect(
         AppConfig.graphqlUrl,
-        'https://yaza-ai-tutor.onrender.com/graphql/',
+        'https://yaza-ai-tutor-r7kb.onrender.com/graphql/',
       );
       expect(AppConfig.sentryDsn, isEmpty);
       expect(AppConfig.sentryEnvironment, 'development');
