@@ -8,8 +8,6 @@ class AgentInputBar extends StatefulWidget {
   final String placeholder;
   final List<String> suggestions;
   final void Function([String?]) onSend;
-  final Future<String?> Function()? onVoiceInput;
-
   const AgentInputBar({
     super.key,
     required this.ctrl,
@@ -17,7 +15,6 @@ class AgentInputBar extends StatefulWidget {
     required this.placeholder,
     required this.suggestions,
     required this.onSend,
-    this.onVoiceInput,
   });
 
   @override
@@ -25,8 +22,6 @@ class AgentInputBar extends StatefulWidget {
 }
 
 class _AgentInputBarState extends State<AgentInputBar> {
-  bool _isRecording = false;
-
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
@@ -67,45 +62,6 @@ class _AgentInputBarState extends State<AgentInputBar> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                AnimatedPress(
-                  onTap: widget.onVoiceInput != null
-                      ? () async {
-                          if (!_isRecording) {
-                            setState(() => _isRecording = true);
-                            final text = await widget.onVoiceInput!();
-                            setState(() => _isRecording = false);
-                            if (text != null && text.isNotEmpty && mounted) {
-                              widget.ctrl.text = text;
-                              widget.ctrl.selection = TextSelection.fromPosition(
-                                TextPosition(offset: text.length),
-                              );
-                            }
-                          }
-                        }
-                      : null,
-                  child: Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: _isRecording
-                          ? DesignTokens.error.withValues(alpha: 0.15)
-                          : dark
-                              ? DesignTokens.darkSurfaceVariant
-                              : DesignTokens.surfaceVariant,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
-                      size: 20,
-                      color: _isRecording
-                          ? DesignTokens.error
-                          : dark
-                              ? DesignTokens.darkTextSecondary
-                              : DesignTokens.textSecondary,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
                 Expanded(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 120),
