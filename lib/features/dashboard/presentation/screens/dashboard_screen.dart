@@ -18,6 +18,8 @@ import '../widgets/dashboard_onboarding_card.dart';
 import '../widgets/dashboard_loading.dart';
 import '../widgets/dashboard_suggestions_panel.dart';
 import '../widgets/dashboard_next_action.dart';
+import '../widgets/dashboard_weekly_insights.dart';
+import '../widgets/dashboard_quiz_history.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -111,10 +113,16 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 const SliverToBoxAdapter(child: DashboardSuggestionsPanel()),
                 const SliverToBoxAdapter(child: DashboardNextAction()),
+                const SliverToBoxAdapter(child: DashboardWeeklyInsights()),
                 if (!data.isFirstTime &&
                     (data.focusTopic.isNotEmpty || data.hasProgressData))
                   SliverToBoxAdapter(
                     child: DashboardRecommendationsPanel(data: data),
+                  ),
+                if (data.recentQuizAttempts.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: DashboardQuizHistory(
+                        attempts: data.recentQuizAttempts),
                   ),
                 if (data.recentMaterials.isNotEmpty)
                   SliverToBoxAdapter(
