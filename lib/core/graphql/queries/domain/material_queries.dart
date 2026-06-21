@@ -111,8 +111,8 @@ mutation UploadMaterial($title: String!, $subjectId: ID!, $contentType: String!,
 ''';
 
 const String kSubjects = r'''
-query Subjects($educationLevel: String!) {
-  subjects(educationLevel: $educationLevel) { id name }
+query Subjects($educationLevel: String!, $programId: ID) {
+  subjects(educationLevel: $educationLevel, programId: $programId) { id name }
 }
 ''';
 

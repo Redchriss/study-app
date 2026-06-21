@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/haptic_service.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import 'upload_form_fields.dart';
-import 'upload_material_labels.dart';
 import 'upload_material_manager.dart';
-import 'upload_material_widgets.dart';
-import '../../../materials/presentation/widgets/youtube_search_picker.dart';
+import 'upload_step_type.dart';
+import 'upload_step_subject.dart';
+import 'upload_step_content.dart';
+import 'upload_step_review.dart';
 
 class UploadMaterialScreen extends ConsumerStatefulWidget {
   const UploadMaterialScreen({super.key});
@@ -16,10 +16,9 @@ class UploadMaterialScreen extends ConsumerStatefulWidget {
       _UploadMaterialScreenState();
 }
 
-class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen>
-    with SingleTickerProviderStateMixin {
+class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen> {
   final _m = UploadMaterialManager();
-  late final AnimationController _entrance;
+  int _step = 0;
 
   @override
   void initState() {
@@ -29,325 +28,242 @@ class _UploadMaterialScreenState extends ConsumerState<UploadMaterialScreen>
       setState: (fn) => setState(fn),
       isMounted: () => mounted,
     );
-    _m.init();
-    _entrance = AnimationController(
-      vsync: this,
-      duration: DesignTokens.durSlow,
-    )..forward();
+    _m.captureProfile(ref);
+    final level = ref.read(authProvider).user?['profile']?['educationLevel']?.toString();
+    _m.updateEducationLevel(level);
+    _m.loadSubjects(programId: _m.profileProgramId);
   }
 
   @override
   void dispose() {
-    _entrance.dispose();
     _m.dispose();
     super.dispose();
   }
 
-  /// A staggered fade + slide-up so the form assembles itself on open.
-  Widget _entranceItem(int index, Widget child) {
-    final start = (index * 0.06).clamp(0.0, 0.6);
-    final animation = CurvedAnimation(
-      parent: _entrance,
-      curve: Interval(start, 1.0, curve: Curves.easeOutCubic),
-    );
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, _) => Opacity(
-        opacity: animation.value,
-        child: Transform.translate(
-          offset: Offset(0, (1 - animation.value) * 18),
-          child: child,
-        ),
-      ),
-    );
+  bool get _canGoNext {
+    switch (_step) {
+      case 0:
+        return _m.contentType.isNotEmpty;
+      case 1:
+        return _m.subjectId != null;
+      case 2:
+        return _m.titleCtrl.text.trim().isNotEmpty && _hasContent;
+      case 3:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  bool get _hasContent {
+    if (_m.requiresFile) return _m.selectedFile != null;
+    if (_m.contentType == 'video') return _m.youtubeCtrl.text.trim().isNotEmpty;
+    if (_m.contentType == 'text') {
+      return _m.textCtrl.text.trim().isNotEmpty || _m.selectedFile != null;
+    }
+    return _m.selectedFile != null;
+  }
+
+  void _next() {
+    if (!_canGoNext) return;
+    HapticService.lightTap();
+    setState(() => _step++);
+  }
+
+  void _back() {
+    if (_step <= 0) return;
+    HapticService.lightTap();
+    setState(() => _step--);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final auth = ref.watch(authProvider);
-    _m.updateEducationLevel(
-        auth.user?['profile']?['educationLevel']?.toString());
-    const types = [
-      ('pdf', 'PDF', Icons.picture_as_pdf_rounded, Color(0xFFC8583D)),
-      ('text', 'Notes', Icons.menu_book_rounded, Color(0xFF1F6A52)),
-      ('image', 'Image', Icons.image_rounded, Color(0xFF7A4D9E)),
-      ('video', 'Video', Icons.ondemand_video_rounded, Color(0xFF005B8F)),
-    ];
 
     return Scaffold(
       appBar: AppBar(
-          title: Text('Upload Material', style: theme.textTheme.titleLarge)),
-      body: RefreshIndicator(
-        onRefresh: _m.loadSubjects,
-        child: ListView(
-          padding: const EdgeInsets.all(DesignTokens.spMd),
+        title: const Text('Upload Material',
+            style: TextStyle(fontWeight: FontWeight.w800)),
+        leading: _step > 0
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: _back,
+              )
+            : null,
+      ),
+      body: Column(
+        children: [
+          _StepIndicator(current: _step, total: 4),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: AnimatedSwitcher(
+                duration: DesignTokens.durFast,
+                child: _buildStep(),
+              ),
+            ),
+          ),
+          _buildBottomBar(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep() {
+    switch (_step) {
+      case 0:
+        return UploadStepType(
+          key: const ValueKey('step_type'),
+          selected: _m.contentType,
+          onChanged: (v) => setState(() => _m.changeType(v)),
+        );
+      case 1:
+        return UploadStepSubject(
+          key: const ValueKey('step_subject'),
+          manager: _m,
+          onSubjectChanged: (v) => setState(() => _m.subjectId = v),
+        );
+      case 2:
+        return UploadStepContent(
+          key: const ValueKey('step_content'),
+          manager: _m,
+          onStateChanged: () => setState(() {}),
+        );
+      case 3:
+        return UploadStepReview(
+          key: const ValueKey('step_review'),
+          manager: _m,
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildBottomBar() {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final isLastStep = _step == 3;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      decoration: BoxDecoration(
+        color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
+        border: Border(
+            top: BorderSide(
+                color: (dark ? DesignTokens.darkBorder : DesignTokens.border)
+                    .withValues(alpha: 0.5))),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
           children: [
-            _entranceItem(0, _buildHeader()),
-            const SizedBox(height: DesignTokens.spLg),
-            _entranceItem(1, _buildAiFillButton()),
-            const SizedBox(height: DesignTokens.spLg),
-            _entranceItem(2, const SectionHeader(title: 'Material Type')),
-            const SizedBox(height: DesignTokens.spSm),
-            _entranceItem(
-              3,
-              Wrap(
-                spacing: DesignTokens.spSm,
-                runSpacing: DesignTokens.spSm,
-                children: [
-                  for (final type in types)
-                    TypeCard(
-                      selected: _m.contentType == type.$1,
-                      label: type.$2,
-                      icon: type.$3,
-                      color: type.$4,
-                      onTap: () => _m.changeType(type.$1),
-                    ),
-                ],
+            if (_step > 0) ...[
+              OutlinedButton.icon(
+                onPressed: _back,
+                icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                label: const Text('Back'),
               ),
-            ),
-            const SizedBox(height: DesignTokens.spMd),
-            _entranceItem(4, _buildHintCard()),
-            const SizedBox(height: DesignTokens.spLg),
-            _entranceItem(
-              5,
-              UploadFormFields(
-                manager: _m,
-                onSubjectChanged: (value) =>
-                    setState(() => _m.subjectId = value),
-              ),
-            ),
-            const SizedBox(height: DesignTokens.spLg),
-            if (_m.contentType == 'video') ...[
-              const Text('Search YouTube',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-              const SizedBox(height: DesignTokens.spSm),
-              YouTubeSearchPicker(
-                onSelected: (url) {
-                  _m.youtubeCtrl.text = url;
-                  setState(() {});
-                },
-              ),
-              const SizedBox(height: DesignTokens.spLg),
-              GlassCard(
-                child: TextField(
-                  controller: _m.youtubeCtrl,
-                  decoration: InputDecoration(
-                    labelText: 'Or paste YouTube URL',
-                    hintText: 'https://www.youtube.com/watch?v=...',
-                    suffixIcon: _m.youtubeCtrl.text.isNotEmpty
-                        ? Icon(
-                            _isValidYoutubeUrl(_m.youtubeCtrl.text)
-                                ? Icons.check_circle_rounded
-                                : Icons.error_outline_rounded,
-                            color: _isValidYoutubeUrl(_m.youtubeCtrl.text)
-                                ? DesignTokens.success
-                                : DesignTokens.error,
-                            size: 20,
-                          )
-                        : null,
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
-              const SizedBox(height: DesignTokens.spLg),
+              const SizedBox(width: 12),
             ],
-            if (_m.contentType == 'text') ...[
-              GlassCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Paste notes',
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: DesignTokens.spXs),
-                    Text(
-                      'Best for summaries, flashcards, and quizzes. You can still attach a file below.',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: DesignTokens.textSecondary),
-                    ),
-                    const SizedBox(height: DesignTokens.spMd),
-                    TextField(
-                      controller: _m.textCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Study content',
-                        hintText:
-                            'Paste notes, transcript text, or clean OCR text here.',
-                        alignLabelWithHint: true,
+            Expanded(
+              child: isLastStep
+                  ? ElevatedButton.icon(
+                      onPressed: _m.saving
+                          ? null
+                          : () => _m.submit(context),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
                       ),
-                      maxLines: 8,
+                      icon: _m.saving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2))
+                          : const Icon(Icons.cloud_upload_rounded),
+                      label: Text(_m.saving
+                          ? 'Uploading...'
+                          : 'Submit For Review'),
+                    )
+                  : ElevatedButton(
+                      onPressed: _canGoNext ? _next : null,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Continue',
+                              style: TextStyle(fontWeight: FontWeight.w700)),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.arrow_forward_rounded, size: 18),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: DesignTokens.spLg),
-            ],
-            if (_m.requiresFile || _m.supportsOptionalFile) ...[
-              FilePickerCard(
-                fileButtonLabel:
-                    UploadMaterialLabels.fileButtonLabel(_m.contentType),
-                requiresFile: _m.requiresFile,
-                selectedFile: _m.selectedFile,
-                onPick: _m.pickFile,
-              ),
-              const SizedBox(height: DesignTokens.spLg),
-            ],
-            UploadChecklist(isVideo: _m.contentType == 'video'),
-            const SizedBox(height: DesignTokens.spLg),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _m.saving ? null : () => _m.submit(context),
-                icon: _m.saving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.cloud_upload_rounded),
-                label: Text(_m.saving ? 'Uploading...' : 'Submit For Review'),
-              ),
             ),
-            const SizedBox(height: DesignTokens.spXl),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildHeader() {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(DesignTokens.spLg),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF1E5C8), Color(0xFFE1F0EE)],
-        ),
-        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Build Better Study Sessions',
-              style: theme.textTheme.headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: DesignTokens.spXs),
-          Text(
-            'Upload focused materials students can read, watch, or inspect inside the app without leaving their study flow.',
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: DesignTokens.textSecondary),
-          ),
-          const SizedBox(height: DesignTokens.spMd),
-          Row(
-            children: [
-              const UploadPill(label: 'AI-ready first'),
-              const SizedBox(width: DesignTokens.spSm),
-              const UploadPill(label: 'Mobile-friendly'),
-              const SizedBox(width: DesignTokens.spSm),
-              UploadPill(
-                  label: UploadMaterialLabels.levelLabel(_m.educationLevel)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+class _StepIndicator extends StatelessWidget {
+  final int current;
+  final int total;
 
-  bool _isValidYoutubeUrl(String url) {
-    final regex = RegExp(
-      r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/',
-    );
-    return regex.hasMatch(url.trim());
-  }
+  const _StepIndicator({required this.current, required this.total});
 
-  /// Opt-in, cost-aware AI auto-fill. Reads pasted notes / picked file and
-  /// suggests title, subject, and type — editable, never blocking the form.
-  Widget _buildAiFillButton() {
-    final theme = Theme.of(context);
-    final ready = _m.canSuggestMetadata;
-    return Material(
-      key: const Key('ai_fill_button'),
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-        onTap: _m.suggesting ? null : () => _m.suggestMetadata(context),
-        child: Ink(
-          padding: const EdgeInsets.all(DesignTokens.spMd),
-          decoration: BoxDecoration(
-            gradient: DesignTokens.brandGradient,
-            borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-            boxShadow: DesignTokens.shadowMd(false),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                ),
-                child: _m.suggesting
-                    ? const Padding(
-                        padding: EdgeInsets.all(11),
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Icon(Icons.auto_awesome_rounded,
-                        color: Colors.white),
-              ),
-              const SizedBox(width: DesignTokens.spMd),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _m.suggesting ? 'Reading your material…' : 'Fill with AI',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
+  static const _labels = ['Type', 'Subject', 'Content', 'Review'];
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
+        children: List.generate(total, (i) {
+          final isCompleted = i < current;
+          final isCurrent = i == current;
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: i < total - 1 ? 6 : 0),
+              child: Column(
+                children: [
+                  AnimatedContainer(
+                    duration: DesignTokens.durFast,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      color: isCompleted
+                          ? DesignTokens.primary
+                          : isCurrent
+                              ? DesignTokens.primary.withValues(alpha: 0.5)
+                              : (dark
+                                  ? DesignTokens.darkBorder
+                                  : DesignTokens.border),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      ready
-                          ? 'Suggest title, subject & type · 1 credit'
-                          : 'Add notes or pick a file, then tap to auto-fill',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _labels[i],
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight:
+                          isCurrent ? FontWeight.w700 : FontWeight.w500,
+                      color: isCurrent
+                          ? DesignTokens.primary
+                          : DesignTokens.textTertiary,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              if (!_m.suggesting)
-                const Icon(Icons.chevron_right_rounded, color: Colors.white),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHintCard() {
-    final theme = Theme.of(context);
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('What students get',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: DesignTokens.spXs),
-          Text(UploadMaterialLabels.primaryHint(_m.contentType),
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: DesignTokens.textSecondary)),
-        ],
+            ),
+          );
+        }),
       ),
     );
   }

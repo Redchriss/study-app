@@ -32,6 +32,12 @@ class UploadMaterialManager {
   List? subjects;
   String educationLevel = 'secondary';
 
+  String? profileStandard;
+  String? profileForm;
+  String? profileProgramId;
+  String? profileProgramName;
+  String? profileUniversityName;
+
   late WidgetRef _ref;
   late void Function(VoidCallback) _setState;
   late bool Function() _isMounted;
@@ -52,7 +58,25 @@ class UploadMaterialManager {
     educationLevel = level ?? 'secondary';
   }
 
-  Future<void> loadSubjects() async {
+  void captureProfile(WidgetRef ref) {
+    final auth = ref.read(authProvider);
+    final profile = auth.user?['profile'];
+    if (profile == null) return;
+    profileStandard = profile['standard']?.toString();
+    profileForm = profile['form']?.toString();
+    final program = profile['program'];
+    if (program is Map) {
+      profileProgramId = program['id']?.toString();
+      profileProgramName = program['name']?.toString();
+    }
+    final university = profile['university'];
+    if (university is Map) {
+      profileUniversityName = university['shortName']?.toString() ??
+          university['name']?.toString();
+    }
+  }
+
+  Future<void> loadSubjects({String? programId}) async {
     final auth = _ref.read(authProvider);
     final educationLevel = auth.user?['profile']?['educationLevel']?.toString();
     if (educationLevel == null || educationLevel.isEmpty) {
@@ -68,10 +92,12 @@ class UploadMaterialManager {
       subjectLoadError = null;
     });
     final client = _ref.read(graphqlClientProvider);
+    final variables = <String, dynamic>{'educationLevel': educationLevel};
+    if (programId != null) variables['programId'] = programId;
     final result = await client.query(
       QueryOptions(
         document: gql(kSubjects),
-        variables: {'educationLevel': educationLevel},
+        variables: variables,
         fetchPolicy: FetchPolicy.cacheAndNetwork,
       ),
     );
