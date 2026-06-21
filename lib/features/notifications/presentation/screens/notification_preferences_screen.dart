@@ -36,7 +36,7 @@ class _NotificationPreferencesScreenState
 
     return Query(
       options: QueryOptions(
-        document: gql(kProfileNotificationPreferences),
+        document: gql(kNotificationPreferences),
         fetchPolicy: FetchPolicy.networkOnly,
       ),
       builder: (result, {fetchMore, refetch}) {

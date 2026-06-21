@@ -29,8 +29,9 @@ class _InboxNotificationsTabState extends ConsumerState<InboxNotificationsTab> {
   Widget build(BuildContext context) {
     final client = ref.read(graphqlClientProvider);
 
-    // Backend returns a flat list; unreadOnly filters on the server side.
-    final variables = <String, dynamic>{'unreadOnly': widget.onlyUnread};
+    final variables = <String, dynamic>{'limit': 25};
+    if (widget.onlyUnread) variables['onlyUnread'] = true;
+    if (widget.notifType != null) variables['notifType'] = widget.notifType;
 
     return Query(
       options: QueryOptions(
@@ -50,9 +51,12 @@ class _InboxNotificationsTabState extends ConsumerState<InboxNotificationsTab> {
           );
         }
 
-        // Flat list from backend
-        final items = (result.data?['notifications'] as List?) ??
+        // Cursor-paginated response
+        final edges = (result.data?['notifications']?['edges'] as List?) ??
             <Map<String, dynamic>>[];
+        final items = edges
+            .map((e) => e['node'] as Map<String, dynamic>)
+            .toList();
 
         if (items.isEmpty) {
           return Center(

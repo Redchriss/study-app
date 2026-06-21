@@ -43,9 +43,12 @@ class NotificationsScreen extends ConsumerWidget {
             ),
           );
         }
-        // Flat list from backend: [{ id, notificationType, message, link, isRead, createdAt }]
-        final items = (result.data?['notifications'] as List?) ??
+        // Cursor-paginated response: { edges: [{ node: { id, notifType, ... } }] }
+        final edges = (result.data?['notifications']?['edges'] as List?) ??
             <Map<String, dynamic>>[];
+        final items = edges
+            .map((e) => e['node'] as Map<String, dynamic>)
+            .toList();
         final unreadCount =
             result.data?['unreadNotificationCount'] as int? ?? 0;
 
@@ -122,7 +125,7 @@ class NotificationsScreen extends ConsumerWidget {
                     itemCount: items.length,
                     itemBuilder: (_, i) {
                       final n = items[i];
-                      final type = n['notificationType'] as String? ?? '';
+                      final type = n['notifType'] as String? ?? '';
                       return NotificationItem(
                         notification: n,
                         isRead: n['isRead'] == true,

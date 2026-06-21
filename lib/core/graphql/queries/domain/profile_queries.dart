@@ -66,17 +66,5 @@ mutation UpdateNotificationPreferences($input: NotificationPrefsInput!) {
 }
 ''';
 
-const String kProfileNotificationPreferences = r'''
-query NotificationPreferences {
-  notificationPreferences {
-    pushEnabled
-    emailEnabled
-    studyReminders
-    communityReplies
-    mentorshipUpdates
-    marketingEmails
-  }
-}
-''';
-
 // kUpdateProfile is defined in auth_queries.dart — do not duplicate here.
+// kNotificationPreferences is defined in notification_queries.dart — do not duplicate here.

@@ -117,7 +117,7 @@ class NotificationItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    notification['message'] ?? '',
+                    notification['bodyPreview'] ?? '',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,

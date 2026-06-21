@@ -1,12 +1,16 @@
 const String kNotifications = r'''
-query Notifications($unreadOnly: Boolean) {
-  notifications(unreadOnly: $unreadOnly) {
-    id
-    notificationType
-    message
-    link
-    isRead
-    createdAt
+query Notifications($unreadOnly: Boolean, $limit: Int) {
+  notifications(onlyUnread: $unreadOnly, limit: $limit) {
+    edges {
+      node {
+        id
+        notifType
+        bodyPreview
+        isRead
+        createdAt
+      }
+    }
+    totalCount
   }
   unreadNotificationCount
 }
