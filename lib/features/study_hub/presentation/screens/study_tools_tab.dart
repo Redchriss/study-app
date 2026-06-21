@@ -154,7 +154,7 @@ class _AiTutorHero extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('AI Tutor',
+                  const Text('Agent',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,

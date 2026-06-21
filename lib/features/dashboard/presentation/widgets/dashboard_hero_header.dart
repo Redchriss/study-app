@@ -278,7 +278,7 @@ class _DashboardHeroHeaderState extends State<DashboardHeroHeader>
                   color: Colors.white, size: 18),
             ),
             const SizedBox(width: 10),
-            const Text('Study with AI Tutor',
+            const Text('Study with Agent',
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 15,

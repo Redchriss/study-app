@@ -93,7 +93,7 @@ class MainShell extends ConsumerWidget {
                     isSelected: currentIndex == 1,
                     onTap: () => _onDestinationSelected(context, 1),
                   ),
-                  // Centre: AI Tutor
+                  // Centre: Agent
                   CentreAiButton(
                     isSelected: false,
                     onTap: () => context.push('/ai-tutor'),

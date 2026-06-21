@@ -96,7 +96,7 @@ class DashboardSuggestionsPanel extends ConsumerWidget {
   }
 
   void _openTutor(BuildContext context, SuggestionItem item) {
-    // Navigate to AI Tutor with a proactive prompt about this topic
+    // Navigate to Agent with a proactive prompt about this topic
     final prompt = item.reason == 'struggling'
         ? 'Help me with ${item.topicName} in ${item.subjectName ?? "my studies"}'
         : 'Review ${item.topicName} in ${item.subjectName ?? "my studies"}';

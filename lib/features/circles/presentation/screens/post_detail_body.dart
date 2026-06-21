@@ -137,7 +137,7 @@ class PostDetailBody extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.psychology_rounded, color: DesignTokens.primary),
-            tooltip: 'Ask AI Tutor',
+            tooltip: 'Ask Agent',
             onPressed: onAskAi,
           ),
           IconButton(

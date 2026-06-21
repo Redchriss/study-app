@@ -115,7 +115,7 @@ class PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final comment = result.data?['askAiOnPost']?['comment'];
     if (comment != null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('AI Tutor has replied to this post!'),
+        content: Text('Agent has replied to this post!'),
         backgroundColor: DesignTokens.success,
       ));
       onRefetch?.call();
@@ -123,7 +123,7 @@ class PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       final errors =
           (result.data?['askAiOnPost']?['errors'] as List?)?.join(', ');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(errors ?? 'AI Tutor is not available right now'),
+        content: Text(errors ?? 'Agent is not available right now'),
         backgroundColor: DesignTokens.warning,
       ));
     }
