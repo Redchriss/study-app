@@ -93,6 +93,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           fullName: _fullNameCtrl.text.trim().isEmpty
               ? null
               : _fullNameCtrl.text.trim(),
+          password2: _confirmCtrl.text,
         );
     if (!mounted) return;
     if (ok) {

@@ -5,7 +5,7 @@ mixin AuthRegisterMixin on Notifier<AuthState> {
   void _scheduleRefresh();
 
   Future<bool> register(String username, String email, String password,
-      {String? phone, String? fullName}) async {
+      {String? phone, String? fullName, String? password2}) async {
     try {
       state = const AuthState(
         isAuthenticated: false,
@@ -19,6 +19,9 @@ mixin AuthRegisterMixin on Notifier<AuthState> {
         'password': password,
         'phone': phone,
       };
+      if (password2 != null) {
+        variables['password2'] = password2;
+      }
       if (fullName != null && fullName.isNotEmpty) {
         final parts = fullName.trim().split(' ');
         variables['firstName'] = parts.first;
@@ -85,11 +88,8 @@ mixin AuthRegisterMixin on Notifier<AuthState> {
 
   String _registerErrorMessage(OperationException? exception) {
     final raw = graphQLErrorMessage(exception, '').toLowerCase();
-    if (raw.contains('username') && raw.contains('taken')) {
-      return 'That username is already taken.';
-    }
-    if (raw.contains('email') && raw.contains('exist')) {
-      return 'An account already exists with that email.';
+    if (raw.contains('username or email already registered')) {
+      return 'That username or email is already registered.';
     }
     if (raw.contains('password')) {
       return 'Choose a stronger password and try again.';

@@ -29,11 +29,21 @@ mixin AuthLoginMixin on Notifier<AuthState> {
       if (data == null ||
           data['token'] == null ||
           data['refreshToken'] == null) {
-        state = const AuthState(
-          isAuthenticated: false,
-          isLoading: false,
-          error: 'That username or password is incorrect.',
-        );
+        // Check for a human-readable error from the new Login mutation
+        final errors = (data?['errors'] as List?)?.whereType<String>().toList();
+        if (errors != null && errors.isNotEmpty) {
+          state = AuthState(
+            isAuthenticated: false,
+            isLoading: false,
+            error: errors.join(' '),
+          );
+        } else {
+          state = const AuthState(
+            isAuthenticated: false,
+            isLoading: false,
+            error: 'That username or password is incorrect.',
+          );
+        }
         return false;
       }
       await SecureStorage.saveTokens(data['token'], data['refreshToken']);

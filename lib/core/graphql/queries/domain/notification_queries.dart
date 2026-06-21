@@ -83,12 +83,6 @@ mutation ArchiveModmailThread($threadId: ID!) {
 }
 ''';
 
-const String kRegisterDeviceToken = r'''
-mutation RegisterDeviceToken($token: String!, $platform: String!) {
-  registerDeviceToken(token: $token, platform: $platform) { success }
-}
-''';
-
 const String kNotificationPreferences = r'''
 query NotificationPreferences {
   notificationPreferences {
