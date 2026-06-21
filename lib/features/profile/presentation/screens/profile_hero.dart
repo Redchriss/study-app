@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/design_tokens.dart';
 
 class ProfileHeader extends StatelessWidget {
@@ -130,13 +131,23 @@ class ProfileHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Text('$followers followers',
-                        style: const TextStyle(
-                            fontSize: 12, color: DesignTokens.textSecondary)),
+                    GestureDetector(
+                      onTap: () => context.push('/connections?tab=followers'),
+                      child: Text('$followers followers',
+                          style: const TextStyle(
+                              fontSize: 12,
+                              color: DesignTokens.textSecondary,
+                              fontWeight: FontWeight.w600)),
+                    ),
                     const SizedBox(width: 12),
-                    Text('$following following',
-                        style: const TextStyle(
-                            fontSize: 12, color: DesignTokens.textSecondary)),
+                    GestureDetector(
+                      onTap: () => context.push('/connections?tab=following'),
+                      child: Text('$following following',
+                          style: const TextStyle(
+                              fontSize: 12,
+                              color: DesignTokens.textSecondary,
+                              fontWeight: FontWeight.w600)),
+                    ),
                   ],
                 ),
               ],

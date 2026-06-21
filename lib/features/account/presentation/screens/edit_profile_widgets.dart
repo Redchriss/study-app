@@ -1,5 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import 'edit_profile_manager.dart';
 
 class ModernTextField extends StatelessWidget {
@@ -130,49 +137,96 @@ class ModernListTile extends StatelessWidget {
   }
 }
 
-class Avatar extends StatelessWidget {
+class Avatar extends ConsumerWidget {
   final Map<String, dynamic>? user;
   final bool dark;
   const Avatar({super.key, required this.user, required this.dark});
 
+  Future<void> _pickAndUpload(BuildContext context, WidgetRef ref) async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+    if (image == null || !context.mounted) return;
+
+    final bytes = await image.readAsBytes();
+    final b64 = base64Encode(bytes);
+
+    final client = ref.read(graphqlClientProvider);
+    final result = await client.mutate(MutationOptions(
+      document: gql(kUpdateProfileAvatar),
+      variables: {'imageBase64': b64},
+    ));
+
+    if (!context.mounted) return;
+    if (result.hasException ||
+        result.data?['updateProfileAvatar']?['errors'] != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('Could not update avatar'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    }
+    await ref.read(authProvider.notifier).refreshUser();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Avatar updated'),
+      backgroundColor: Color(0xFF2ECC71),
+    ));
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final avatarUrl = user?['profile']?['avatarUrl']?.toString() ?? '';
     return Center(
-      child: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [
-              BoxShadow(
-                  color: DesignTokens.primary.withValues(alpha: 0.2),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8))
-            ]),
-            child: CircleAvatar(
-              radius: 56,
-              backgroundColor: DesignTokens.primary,
-              child: Text(
-                  user?['username']?.toString().substring(0, 1).toUpperCase() ??
-                      '?',
-                  style: const TextStyle(
-                      fontSize: 40,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800)),
+      child: GestureDetector(
+        onTap: () => _pickAndUpload(context, ref),
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [
+                BoxShadow(
+                    color: DesignTokens.primary.withValues(alpha: 0.2),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8))
+              ]),
+              child: CircleAvatar(
+                radius: 56,
+                backgroundColor: DesignTokens.primary,
+                backgroundImage:
+                    avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                child: avatarUrl.isEmpty
+                    ? Text(
+                        user?['username']
+                                ?.toString()
+                                .substring(0, 1)
+                                .toUpperCase() ??
+                            '?',
+                        style: const TextStyle(
+                            fontSize: 40,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800))
+                    : null,
+              ),
             ),
-          ),
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: dark ? DesignTokens.darkSurface : Colors.white,
-                  boxShadow: DesignTokens.shadowSm(dark)),
-              child: const Icon(Icons.camera_alt_rounded,
-                  size: 20, color: DesignTokens.primary),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: dark ? DesignTokens.darkSurface : Colors.white,
+                    boxShadow: DesignTokens.shadowSm(dark)),
+                child: const Icon(Icons.camera_alt_rounded,
+                    size: 20, color: DesignTokens.primary),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -9,6 +9,7 @@ import '../../features/materials/presentation/screens/review_queue_screen.dart';
 import '../../features/profile/presentation/screens/about_screen.dart';
 import '../../features/profile/presentation/screens/legal_content.dart';
 import '../../features/profile/presentation/screens/site_page_screen.dart';
+import '../../features/profile/presentation/screens/follow_list_screen.dart';
 import '../../features/account/presentation/screens/upgrade_screen.dart';
 import '../../features/account/presentation/screens/history_screen.dart';
 import '../../features/account/presentation/screens/bookmarks_screen.dart';
@@ -180,5 +181,11 @@ List<GoRoute> get appRoutes => [
       GoRoute(
         path: '/settings',
         builder: (_, __) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/connections',
+        builder: (_, state) => FollowListScreen(
+          initialTab: state.uri.queryParameters['tab'] ?? 'followers',
+        ),
       ),
     ];

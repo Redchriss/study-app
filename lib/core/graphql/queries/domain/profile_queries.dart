@@ -68,3 +68,21 @@ mutation UpdateNotificationPreferences($input: NotificationPrefsInput!) {
 
 // kUpdateProfile is defined in auth_queries.dart — do not duplicate here.
 // kNotificationPreferences is defined in notification_queries.dart — do not duplicate here.
+
+const String kMyFollowers = r'''
+query MyFollowers($limit: Int) {
+  myFollowers(limit: $limit) {
+    id username
+    profile { avatarUrl bio postKarma commentKarma totalKarma }
+  }
+}
+''';
+
+const String kMyFollowing = r'''
+query MyFollowing($limit: Int) {
+  myFollowing(limit: $limit) {
+    id username
+    profile { avatarUrl bio postKarma commentKarma totalKarma }
+  }
+}
+''';
