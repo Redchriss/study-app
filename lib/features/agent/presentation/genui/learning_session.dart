@@ -31,12 +31,14 @@ class LearningSessionWidget extends StatefulWidget {
   final String title;
   final List<Map<String, Object?>> steps;
   final List<Map<String, Object?>> children;
+  final ChildBuilderCallback buildChild;
 
   const LearningSessionWidget({
     super.key,
     required this.title,
     required this.steps,
     required this.children,
+    required this.buildChild,
   });
 
   @override
@@ -148,11 +150,7 @@ class _LearningSessionWidgetState extends State<LearningSessionWidget> {
           const SizedBox(height: 16),
           // Current child content
           if (_currentStep < widget.children.length)
-            Surface(
-              surfaceContext: widget.surfaceController.contextFor(
-                'session_step_$_currentStep',
-              ),
-            ),
+            widget.buildChild('session_step_$_currentStep'),
           const SizedBox(height: 12),
           // Navigation buttons
           Row(
@@ -207,6 +205,7 @@ final learningSessionItem = CatalogItem(
       title: title,
       steps: steps,
       children: children,
+      buildChild: itemContext.buildChild,
     );
   },
 );
