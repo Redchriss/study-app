@@ -55,7 +55,7 @@ class CirclePoll {
       allowAddOption: asBool(json['allowAddOption']),
       voteCount: asInt(json['voteCount']),
       options: options,
-      userVoteOptionId: asStringOrNull(asMap(json['userVote'])?['optionId']),
+      userVoteOptionId: asStringOrNull(asMap(json['userVote'])?['id']),
     );
   }
 

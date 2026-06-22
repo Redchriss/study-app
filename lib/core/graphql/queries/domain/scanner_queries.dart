@@ -8,7 +8,7 @@ mutation SubmitScanSession($imageBase64: String!, $fileName: String!, $subject: 
 ''';
 
 const String kPaperSolveSession = r'''
-query PaperSolveSession($uuid: String!) {
+query PaperSolveSession($uuid: ID!) {
   paperSolveSession(uuid: $uuid) {
     id publicId filename subject educationLevel examType year status creditCharged createdAt
     solutions { questionNumber questionText answer explanation confidence steps }

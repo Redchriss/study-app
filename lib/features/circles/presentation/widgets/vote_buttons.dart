@@ -31,7 +31,10 @@ class VoteButtons extends ConsumerWidget {
         void vote(int direction) {
           if (result?.isLoading ?? false) return;
           HapticService.lightTap();
-          runMutation({'postId': postId, 'direction': direction});
+          runMutation({
+            'postId': postId,
+            'direction': direction > 0 ? 'UP' : 'DOWN',
+          });
           onVoteChanged?.call();
         }
 
@@ -107,7 +110,10 @@ class CommentVoteButtons extends ConsumerWidget {
         void vote(int direction) {
           if (result?.isLoading ?? false) return;
           HapticService.lightTap();
-          runMutation({'commentId': commentId, 'direction': direction});
+          runMutation({
+            'commentId': commentId,
+            'direction': direction > 0 ? 'UP' : 'DOWN',
+          });
         }
 
         return Row(

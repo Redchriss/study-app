@@ -1,6 +1,12 @@
 # PROGRESS.md — Yaza Flutter App
 
 ## 2026-06-22
+- Fixed all 28 GraphQL operations that were broken against the live backend schema (BUG-056).
+- Restored the entire Circles feed by concatenating the `PostFields`/`CommentFields` fragments into the 10 queries that referenced them (they were never sent before — `Unknown fragment` error).
+- Pruned schema-absent post/poll fields, renamed `communityFlair.color`/`sidebarMarkdown`, fixed moderation payload shapes (`post`/`errors`, bare `MembershipType`) and their repo call sites.
+- Corrected variable types: vote `direction` → `VoteDirectionEnum!` (mapped ints to `UP`/`DOWN` at all call sites), `resolveReport.action` → `ReportActionEnum!`, scanner `uuid` → `ID!`.
+- Aliased diagnostics fields (`conceptSlug: concept`, `text: answerText`, dropped `difficulty`) so the screen parsing stays unchanged; fixed profile mutations and rewrote `updateProfileBio` to use `input: ProfileInput!`.
+- Verified: in-process validation against the live schema → 196/196 valid (0 invalid); live curl confirmed feed + enum coercion; `flutter analyze` 0 errors/warnings on touched areas; `dart format` clean.
 - Realigned the scanner into a true "AI Paper Solver" matching the Django web flow (BUG-055).
 - "Upload to Solve" now uses `FilePicker` and accepts a full past paper as PDF, JPG or PNG (was image-only via `ImagePicker`); camera "Snap to Solve" is unchanged.
 - The picked file's real extension flows through the existing `fileName` field so the backend `/pastpapers/stream/` solves PDFs as documents; raised the upload cap from 5MB to 10MB to match the web.

@@ -79,8 +79,8 @@ mutation StartDiagnostic($subjectCode: String!, $scope: String) {
   startDiagnostic(subjectCode: $subjectCode, scope: $scope) {
     session { id scope status abilityTheta abilitySe }
     firstQuestion {
-      id questionText conceptSlug difficulty
-      answers { id text }
+      id questionText conceptSlug: concept
+      answers { id text: answerText }
     }
     totalQuestionCount
   }
@@ -99,8 +99,8 @@ mutation SubmitDiagnosticAnswer($sessionId: ID!, $questionId: ID!, $answerId: ID
     correct
     explanation
     nextQuestion {
-      id questionText conceptSlug difficulty
-      answers { id text }
+      id questionText conceptSlug: concept
+      answers { id text: answerText }
     }
     sessionComplete
     session { id status abilityTheta abilitySe knowledgeMap }

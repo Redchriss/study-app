@@ -11,7 +11,7 @@ query Community($slug: String!) {
     createdBy { id username }
   }
   communityFlair(slug: $slug) {
-    id text backgroundColor textColor
+    id text color textColor
   }
 }
 ''';
@@ -108,7 +108,7 @@ mutation UpdateCommunity(
     allowCrossposts: $allowCrossposts, minAccountAgeDays: $minAccountAgeDays,
     minKarmaToPost: $minKarmaToPost, spoilersEnabled: $spoilersEnabled, over18: $over18
   ) {
-    community { id slug name displayName description sidebar bannerColor communityType allowImages allowVideos allowPolls allowLinks allowGalleries allowCrossposts minAccountAgeDays minKarmaToPost spoilersEnabled over18 }
+    community { id slug name displayName description sidebarMarkdown bannerColor communityType allowImages allowVideos allowPolls allowLinks allowGalleries allowCrossposts minAccountAgeDays minKarmaToPost spoilersEnabled over18 }
     errors
   }
 }

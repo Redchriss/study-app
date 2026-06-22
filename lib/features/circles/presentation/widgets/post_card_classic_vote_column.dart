@@ -25,7 +25,7 @@ class ClassicVoteColumn extends ConsumerWidget {
       builder: (runMutation, result) {
         void vote(int dir) {
           if (result?.isLoading ?? false) return;
-          runMutation({'postId': postId, 'direction': dir});
+          runMutation({'postId': postId, 'direction': dir > 0 ? 'UP' : 'DOWN'});
         }
 
         final upColor =

@@ -4,9 +4,8 @@ fragment PostFields on PostType {
   imageUrl
   upvoteCount downvoteCount score commentCount
   fuzzedUpvotes fuzzedDownvotes fuzzedScore
-  isOc isSpoiler isPinned isLocked isRemoved isDeleted isEdited isNsfw
+  isOc isSpoiler isPinned isLocked isRemoved isDeleted isEdited
   shareCount viewCount awardCount
-  voteDirection isSaved
   author { id username }
   community { id name slug displayName icon }
   flairText
@@ -41,7 +40,8 @@ query CommunityPosts(
     totalCount
   }
 }
-''';
+''' +
+    kPostFields;
 
 const String kPost = r'''
 query Post($communitySlug: String!, $postSlug: String!) {
@@ -50,23 +50,23 @@ query Post($communitySlug: String!, $postSlug: String!) {
     bodyHtml
     isPinned isLocked isRemoved isDeleted isEdited
     url urlDomain urlThumbnail
-    urlTitle urlDescription
     videoUrl videoDuration
     isOc isSpoiler
-    flairText flairEmoji flairColor
-    isBookmarked awardCount viewCount shareCount
+    flairText
+    awardCount viewCount shareCount
     editedAt
     community { id name slug displayName icon isMember isModerator }
     poll {
       id closesAt allowAddOption voteCount
       options { id text order voteCount }
-      userVote { id optionId text }
+      userVote { id text }
     }
     galleryItems { id imageUrl caption linkUrl order }
     crosspostInfo { id title slug postType imageUrl author { id username } community { id slug name } }
   }
 }
-''';
+''' +
+    kPostFields;
 
 const String kPostById = r'''
 query PostById($id: ID!) {
@@ -75,7 +75,8 @@ query PostById($id: ID!) {
     community { id name slug }
   }
 }
-''';
+''' +
+    kPostFields;
 
 const String kPostComments = r'''
 query PostComments($postId: ID!, $sort: CommentSortEnum, $limit: Int, $after: String) {
@@ -85,7 +86,8 @@ query PostComments($postId: ID!, $sort: CommentSortEnum, $limit: Int, $after: St
     totalCount
   }
 }
-''';
+''' +
+    kCommentFields;
 
 const String kHomeFeed = r'''
 query HomeFeed($sort: HomeFeedSortEnum, $limit: Int, $after: String) {
@@ -95,7 +97,8 @@ query HomeFeed($sort: HomeFeedSortEnum, $limit: Int, $after: String) {
     totalCount
   }
 }
-''';
+''' +
+    kPostFields;
 
 const String kPopularPosts = r'''
 query PopularPosts($limit: Int, $after: String) {
@@ -105,7 +108,8 @@ query PopularPosts($limit: Int, $after: String) {
     totalCount
   }
 }
-''';
+''' +
+    kPostFields;
 
 const String kSavedPosts = r'''
 query SavedPosts($limit: Int, $after: String) {
@@ -115,7 +119,8 @@ query SavedPosts($limit: Int, $after: String) {
     totalCount
   }
 }
-''';
+''' +
+    kPostFields;
 
 const String kSearchPosts = r'''
 query SearchPosts(
@@ -133,7 +138,8 @@ query SearchPosts(
     totalCount
   }
 }
-''';
+''' +
+    kPostFields;
 
 const String kSearch = r'''
 fragment SearchPostFields on PostType {
@@ -213,7 +219,8 @@ query UserPosts($username: String!, $sort: PostSortEnum, $limit: Int, $after: St
     totalCount
   }
 }
-''';
+''' +
+    kPostFields;
 
 const String kUserComments = r'''
 query UserComments($username: String!, $sort: CommentSortEnum, $limit: Int, $after: String) {
@@ -223,4 +230,5 @@ query UserComments($username: String!, $sort: CommentSortEnum, $limit: Int, $aft
     totalCount
   }
 }
-''';
+''' +
+    kCommentFields;

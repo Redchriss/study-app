@@ -1,12 +1,12 @@
 const String kMarkOc = r'''
 mutation MarkOc($postId: ID!) {
-  markOc(postId: $postId) { success }
+  markOc(postId: $postId) { post { id isOc } errors }
 }
 ''';
 
 const String kMarkSpoiler = r'''
 mutation MarkSpoiler($postId: ID!, $isSpoiler: Boolean!) {
-  markSpoiler(postId: $postId, isSpoiler: $isSpoiler) { success }
+  markSpoiler(postId: $postId, isSpoiler: $isSpoiler) { post { id isSpoiler } errors }
 }
 ''';
 
@@ -21,8 +21,7 @@ mutation AddRule($slug: String!, $title: String!, $description: String) {
 const String kAddModerator = r'''
 mutation AddModerator($slug: String!, $username: String!) {
   addModerator(slug: $slug, username: $username) {
-    membership { id role user { username } }
-    errors
+    id role user { username }
   }
 }
 ''';
@@ -35,13 +34,13 @@ mutation RemoveModerator($slug: String!, $username: String!) {
 
 const String kRemovePost = r'''
 mutation RemovePost($postId: ID!) {
-  removePost(postId: $postId) { success }
+  removePost(postId: $postId) { post { id isRemoved } errors }
 }
 ''';
 
 const String kApprovePost = r'''
 mutation ApprovePost($postId: ID!) {
-  approvePost(postId: $postId) { success }
+  approvePost(postId: $postId) { post { id isApproved } errors }
 }
 ''';
 
@@ -154,7 +153,7 @@ query ModLog($communitySlug: String!) {
 ''';
 
 const String kResolveReport = r'''
-mutation ResolveReport($reportId: ID!, $action: String!, $modNote: String) {
+mutation ResolveReport($reportId: ID!, $action: ReportActionEnum!, $modNote: String) {
   resolveReport(reportId: $reportId, action: $action, modNote: $modNote) {
     id
     status

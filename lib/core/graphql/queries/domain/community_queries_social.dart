@@ -1,5 +1,5 @@
 const String kVotePost = r'''
-mutation VotePost($postId: ID!, $direction: Int!) {
+mutation VotePost($postId: ID!, $direction: VoteDirectionEnum!) {
   votePost(postId: $postId, direction: $direction) {
     post { id fuzzedUpvotes fuzzedDownvotes fuzzedScore }
     errors
@@ -20,7 +20,7 @@ mutation UnsavePost($postId: ID!) {
 ''';
 
 const String kVoteComment = r'''
-mutation VoteComment($commentId: ID!, $direction: Int!) {
+mutation VoteComment($commentId: ID!, $direction: VoteDirectionEnum!) {
   voteComment(commentId: $commentId, direction: $direction) {
     comment { id fuzzedUpvotes fuzzedDownvotes fuzzedScore }
     errors

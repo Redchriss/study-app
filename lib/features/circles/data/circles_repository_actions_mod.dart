@@ -52,7 +52,8 @@ extension CirclesRepositoryModActions on CirclesRepository {
 
   // ---- Social graph ------------------------------------------------------
 
-  Future<bool> reportPost({required String postId, required String reason}) async {
+  Future<bool> reportPost(
+      {required String postId, required String reason}) async {
     final data = await _mutate(kReportPost,
         variables: {'postId': postId, 'reason': reason});
     return _isSuccess(data['reportPost']);
@@ -71,7 +72,8 @@ extension CirclesRepositoryModActions on CirclesRepository {
   }
 
   Future<bool> unfollowUser(String username) async {
-    final data = await _mutate(kUnfollowUser, variables: {'username': username});
+    final data =
+        await _mutate(kUnfollowUser, variables: {'username': username});
     return _isSuccess(data['unfollowUser']);
   }
 
@@ -89,17 +91,21 @@ extension CirclesRepositoryModActions on CirclesRepository {
 
   Future<bool> removePost(String postId) async {
     final data = await _mutate(kRemovePost, variables: {'postId': postId});
-    return _isSuccess(data['removePost']);
+    final payload = asMap(data['removePost']);
+    _throwIfPayloadErrors(payload);
+    return asMap(payload?['post']) != null;
   }
 
   Future<bool> approvePost(String postId) async {
     final data = await _mutate(kApprovePost, variables: {'postId': postId});
-    return _isSuccess(data['approvePost']);
+    final payload = asMap(data['approvePost']);
+    _throwIfPayloadErrors(payload);
+    return asMap(payload?['post']) != null;
   }
 
   Future<void> pinPost({required String postId, required bool pinned}) async {
-    final data =
-        await _mutate(kPinPost, variables: {'postId': postId, 'pinned': pinned});
+    final data = await _mutate(kPinPost,
+        variables: {'postId': postId, 'pinned': pinned});
     _throwIfPayloadErrors(data['pinPost']);
   }
 
@@ -116,14 +122,18 @@ extension CirclesRepositoryModActions on CirclesRepository {
 
   Future<bool> markOc(String postId) async {
     final data = await _mutate(kMarkOc, variables: {'postId': postId});
-    return _isSuccess(data['markOc']);
+    final payload = asMap(data['markOc']);
+    _throwIfPayloadErrors(payload);
+    return asMap(payload?['post']) != null;
   }
 
   Future<bool> markSpoiler(
       {required String postId, required bool isSpoiler}) async {
     final data = await _mutate(kMarkSpoiler,
         variables: {'postId': postId, 'isSpoiler': isSpoiler});
-    return _isSuccess(data['markSpoiler']);
+    final payload = asMap(data['markSpoiler']);
+    _throwIfPayloadErrors(payload);
+    return asMap(payload?['post']) != null;
   }
 
   // ---- Moderation: users -------------------------------------------------

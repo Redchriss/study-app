@@ -87,9 +87,12 @@ extension CirclesRepositoryContentActions on CirclesRepository {
 
   // ---- Votes & saves -----------------------------------------------------
 
-  Future<void> votePost({required String postId, required int direction}) async {
-    final data = await _mutate(kVotePost,
-        variables: {'postId': postId, 'direction': direction});
+  Future<void> votePost(
+      {required String postId, required int direction}) async {
+    final data = await _mutate(kVotePost, variables: {
+      'postId': postId,
+      'direction': direction > 0 ? 'UP' : 'DOWN',
+    });
     _throwIfPayloadErrors(data['votePost']);
   }
 
@@ -105,13 +108,16 @@ extension CirclesRepositoryContentActions on CirclesRepository {
 
   Future<void> voteComment(
       {required String commentId, required int direction}) async {
-    final data = await _mutate(kVoteComment,
-        variables: {'commentId': commentId, 'direction': direction});
+    final data = await _mutate(kVoteComment, variables: {
+      'commentId': commentId,
+      'direction': direction > 0 ? 'UP' : 'DOWN',
+    });
     _throwIfPayloadErrors(data['voteComment']);
   }
 
   Future<bool> saveComment(String commentId) async {
-    final data = await _mutate(kSaveComment, variables: {'commentId': commentId});
+    final data =
+        await _mutate(kSaveComment, variables: {'commentId': commentId});
     return _isSuccess(data['saveComment']);
   }
 

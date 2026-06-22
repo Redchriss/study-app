@@ -24,7 +24,7 @@ query Profile {
 const String kUpdateProfileBanner = r'''
 mutation UpdateProfileBanner($imageBase64: String!) {
   updateProfileBanner(imageBase64: $imageBase64) {
-    profile { id bannerUrl }
+    profile { bannerUrl }
     errors
   }
 }
@@ -33,16 +33,16 @@ mutation UpdateProfileBanner($imageBase64: String!) {
 const String kUpdateProfileAvatar = r'''
 mutation UpdateProfileAvatar($imageBase64: String!) {
   updateProfileAvatar(imageBase64: $imageBase64) {
-    profile { id avatarUrl }
+    profile { avatarUrl }
     errors
   }
 }
 ''';
 
 const String kUpdateProfileBio = r'''
-mutation UpdateProfileBio($bio: String!) {
-  updateProfile(bio: $bio) {
-    profile { id bio }
+mutation UpdateProfileBio($input: ProfileInput!) {
+  updateProfile(input: $input) {
+    profile { bio }
     errors
   }
 }

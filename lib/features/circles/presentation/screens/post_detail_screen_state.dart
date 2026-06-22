@@ -28,7 +28,7 @@ class PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final client = ref.read(graphqlClientProvider);
     final result = await client.mutate(MutationOptions(
       document: gql(kVotePost),
-      variables: {'postId': postId, 'direction': direction},
+      variables: {'postId': postId, 'direction': direction > 0 ? 'UP' : 'DOWN'},
     ));
     if (!mounted || result.hasException) return;
     setState(() {
