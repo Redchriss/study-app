@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
+import 'profile_selection_field.dart';
+
+const _kTertiaryColor = Color(0xFF5A6BB2);
 
 class ProfileUniversityStep extends StatelessWidget {
   final String? universityName;
@@ -31,15 +34,13 @@ class ProfileUniversityStep extends StatelessWidget {
               ?.copyWith(color: DesignTokens.textSecondary),
         ),
         const SizedBox(height: 20),
-        Material(
-          color: DesignTokens.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
-          child: ListTile(
-            leading: const Icon(Icons.account_balance),
-            title: Text(universityName ?? 'Tap to choose your institution'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: onPickUniversity,
-          ),
+        ProfileSelectionField(
+          icon: Icons.account_balance_rounded,
+          label: 'Institution',
+          placeholder: 'Tap to choose your institution',
+          value: universityName,
+          color: _kTertiaryColor,
+          onTap: onPickUniversity,
         ),
         const SizedBox(height: 20),
         FilledButton(
@@ -104,15 +105,13 @@ class ProfileProgramStep extends StatelessWidget {
                 ?.copyWith(color: DesignTokens.textSecondary),
           ),
         const SizedBox(height: 16),
-        Material(
-          color: DesignTokens.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
-          child: ListTile(
-            leading: const Icon(Icons.menu_book),
-            title: Text(programName ?? 'Tap to choose your programme'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: onPickProgram,
-          ),
+        ProfileSelectionField(
+          icon: Icons.menu_book_rounded,
+          label: 'Programme',
+          placeholder: 'Tap to choose your programme',
+          value: programName,
+          color: _kTertiaryColor,
+          onTap: onPickProgram,
         ),
         const SizedBox(height: 12),
         Text(

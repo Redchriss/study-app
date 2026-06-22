@@ -15,6 +15,16 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-058] Account-setup institution/school/programme selection used raw default Material widgets (poor UI/UX)
+**Priority:** 🟢 MEDIUM → ✅ RESOLVED
+**Location:** App: `lib/features/account/presentation/widgets/picker_sheet_widgets.dart` (new), `university_picker_sheet.dart`, `school_picker_sheet.dart`, `program_picker_sheet.dart`, `education_pickers.dart`; `lib/features/auth/presentation/screens/profile_selection_field.dart` (new), `profile_setup_tertiary_step.dart`, `profile_setup_school_step.dart`, `profile_setup_manager.dart`; `lib/features/account/presentation/screens/edit_profile_manager.dart`.
+**Root cause:** During account creation, the level step used polished custom cards, but the next steps (institution, programme, school) rendered flat grey `Material(color: surfaceVariant)` + `ListTile` boxes, and the picker bottom sheets were raw default Material (plain `TextField`, `ListTile` + `Divider` rows, square sheet, no drag handle, no selected state) — visually inconsistent and "default-Flutter" looking.
+**Fix:**
+- Added a shared, dark-mode-aware picker chrome (`PickerSheetShell` with rounded top + drag handle + header + close, `PickerSearchField` filled/rounded search, `PickerResultTile` card rows with a selected check + accent border, `PickerEmptyHint`) and rewrote all three picker sheets to use it; the university type filter became rounded pill chips.
+- Made all six `showModalBottomSheet` calls (setup + edit-profile) use `backgroundColor: Colors.transparent` so the new rounded surface renders correctly.
+- Added a polished `ProfileSelectionField` (gradient icon chip, label + chosen value/placeholder, selected check) matching the level-card aesthetic and used it for institution, programme, and school steps, replacing the grey `ListTile` boxes.
+**Verified:** `flutter analyze` on all 9 touched/created files → "No issues found"; `dart format` clean. No behavior/data-flow change — only presentation; the same `{id,name}` pop payloads and GraphQL queries are preserved.
+
 ### [BUG-057] Empty home feed, phone "connection error" login, and dead final profile-setup step
 **Priority:** 🔴 CRITICAL → ✅ RESOLVED
 **Location:** App: `.env`, `lib/features/auth/presentation/screens/profile_setup_manager.dart`, `lib/features/circles/data/circles_repository.dart`, `lib/features/circles/presentation/screens/home_screen.dart`, `community_post_list.dart`, `community_pinned_posts.dart`, `post_detail_comments.dart`, `discover_screen.dart`, `user_profile_posts_tab.dart`, `user_profile_comments_tab.dart`. Backend: `apps/communities/schema/post_queries.py`.

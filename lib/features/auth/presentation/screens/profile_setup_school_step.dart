@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_tokens.dart';
+import 'profile_selection_field.dart';
 
 class ProfileSchoolStep extends StatelessWidget {
   final bool isPrimary;
@@ -39,16 +40,13 @@ class ProfileSchoolStep extends StatelessWidget {
               ?.copyWith(color: DesignTokens.textSecondary),
         ),
         const SizedBox(height: 20),
-        Material(
-          color: DesignTokens.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
-          child: ListTile(
-            leading: const Icon(Icons.school),
-            title: Text(schoolName ?? 'Tap to search for your school'),
-            subtitle: schoolId != null ? const Text('Selected') : null,
-            trailing: const Icon(Icons.chevron_right),
-            onTap: onPickSchool,
-          ),
+        ProfileSelectionField(
+          icon: Icons.school_rounded,
+          label: isPrimary ? 'Primary school' : 'Secondary school',
+          placeholder: 'Tap to search for your school',
+          value: schoolName,
+          color: isPrimary ? const Color(0xFFE87E5E) : const Color(0xFF389E75),
+          onTap: onPickSchool,
         ),
         const SizedBox(height: 16),
         TextButton(

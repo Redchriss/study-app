@@ -1,5 +1,12 @@
 # PROGRESS.md — Yaza Flutter App
 
+## 2026-06-23
+- Polished the account-creation institution/school/programme selection UI (BUG-058) so it matches the nice level cards instead of raw default Material widgets.
+- Added a shared, dark-mode-aware picker chrome (`picker_sheet_widgets.dart`: `PickerSheetShell` with rounded top + drag handle + clean header, `PickerSearchField`, card-style `PickerResultTile` with a selected check, `PickerEmptyHint`) and rewrote the university/school/programme bottom sheets to use it; the university type filter is now rounded pill chips.
+- Replaced the flat grey `surfaceVariant` `ListTile` "tap to choose" boxes in the institution, programme, and school steps with a new polished `ProfileSelectionField` (gradient icon chip, label + chosen value, selected state).
+- Made all six picker `showModalBottomSheet` calls (setup + edit-profile) transparent so the new rounded sheet renders correctly.
+- Confirmed the earlier login fix is in place (`.env` → production URL); this change is presentation-only (same pop payloads/queries). Verified: `flutter analyze` on all 9 touched/created files → "No issues found"; `dart format` clean.
+
 ## 2026-06-22 (later)
 - Fixed three reported issues together (BUG-057): empty home feed, phone login "connection error", and the final profile-setup step doing nothing.
 - Repointed `.env` from the emulator-only `http://10.0.2.2:8000` to the real production URL `https://yaza-ai-tutor-r7kb.onrender.com` (the emulator address is now a comment), which is why login and profile-save failed with a connection error on a real phone.

@@ -154,6 +154,7 @@ class EditProfileManager {
     final picked = await showModalBottomSheet<Map<String, dynamic>>(
       context: _context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => const UniversityPickerSheet(),
     );
     if (picked != null && _checkMounted()) {
@@ -177,6 +178,7 @@ class EditProfileManager {
     final picked = await showModalBottomSheet<Map<String, dynamic>>(
       context: _context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => ProgramPickerSheet(
           universityId: universityId!, selectedProgramId: programId),
     );
@@ -192,6 +194,7 @@ class EditProfileManager {
     final picked = await showModalBottomSheet<Map<String, dynamic>>(
       context: _context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => SchoolPickerSheet(
           isPrimary: primary,
           selectedId: primary ? primarySchoolId : secondarySchoolId),
