@@ -138,7 +138,10 @@ class _HomeScreenState extends State<HomeScreen>
                         document: gql(_tab == 4 ? kPopularPosts : kHomeFeed),
                         variables: _tab == 4
                             ? {'limit': 25}
-                            : {'sort': _tabSorts[_tab], 'limit': 25},
+                            : {
+                                'sort': _tabSorts[_tab].toUpperCase(),
+                                'limit': 25
+                              },
                         fetchPolicy: FetchPolicy.networkOnly,
                       ),
                       builder: (result, {fetchMore, refetch}) {

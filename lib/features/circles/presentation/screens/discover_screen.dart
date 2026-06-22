@@ -80,13 +80,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   fillColor: dark
                       ? DesignTokens.darkSurfaceVariant
                       : DesignTokens.surfaceVariant,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
                 onSubmitted: (q) {
                   if (q.trim().isNotEmpty) {
-                    context.push(
-                        '/search?q=${Uri.encodeComponent(q.trim())}');
+                    context.push('/search?q=${Uri.encodeComponent(q.trim())}');
                   }
                 },
                 textInputAction: TextInputAction.search,
@@ -117,8 +116,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
                           gradient: isSelected
-                              ? LinearGradient(colors: [
-                                  color, color.withValues(alpha: 0.7)])
+                              ? LinearGradient(
+                                  colors: [color, color.withValues(alpha: 0.7)])
                               : null,
                           color: isSelected ? null : Colors.transparent,
                           borderRadius: BorderRadius.circular(999),
@@ -239,8 +238,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             ),
           );
         }
-        List communities =
-            (result.data?['trendingCommunities'] as List?) ?? [];
+        List communities = (result.data?['trendingCommunities'] as List?) ?? [];
         communities = _filterByCategory(communities);
         if (communities.isEmpty) return const SizedBox.shrink();
         return SizedBox(
@@ -264,7 +262,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     return Query(
       options: QueryOptions(
         document: gql(kCommunities),
-        variables: {'sort': 'new', 'limit': 10},
+        variables: {'sort': 'NEW', 'limit': 10},
         fetchPolicy: FetchPolicy.networkOnly,
       ),
       builder: (result, {fetchMore, refetch}) {
@@ -281,8 +279,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             ),
           );
         }
-        final rawEdges =
-            (result.data?['communities']?['edges'] as List?) ?? [];
+        final rawEdges = (result.data?['communities']?['edges'] as List?) ?? [];
         List communities = rawEdges
             .map((e) => e['node'] as Map<String, dynamic>?)
             .whereType<Map<String, dynamic>>()

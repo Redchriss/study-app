@@ -1,5 +1,13 @@
 # PROGRESS.md — Yaza Flutter App
 
+## 2026-06-22 (later)
+- Fixed three reported issues together (BUG-057): empty home feed, phone login "connection error", and the final profile-setup step doing nothing.
+- Repointed `.env` from the emulator-only `http://10.0.2.2:8000` to the real production URL `https://yaza-ai-tutor-r7kb.onrender.com` (the emulator address is now a comment), which is why login and profile-save failed with a connection error on a real phone.
+- Removed the invalid `onboardingComplete` field from the `updateProfile` input in `profile_setup_manager.dart` (the backend `ProfileInput` has no such field, so the whole mutation was rejected and setup never finished); added a 30s timeout and clear error messages.
+- Made the home feed Reddit-style: backend `home_feed` now falls back to all posts (r/popular) when the user has joined no communities, instead of returning an empty feed.
+- Fixed a widespread enum-casing bug: the app sent lowercase `sort`/`timeFilter`/`postType` values that the backend enums reject. Added central `_normalizeEnums` upper-casing in `CirclesRepository._query` and uppercased the inline `Query` widgets (home feed, community list/pinned, comments, discover, user post/comment tabs).
+- Verified: schema replay shows a no-membership user's `homeFeed` returns all 56 posts for every sort and `communityPosts`/`communities`/`userPosts` accept the uppercased enums; `flutter analyze` exit 0 (info lints only); `app_config` tests 5/5; `dart format` clean.
+
 ## 2026-06-22
 - Fixed all 28 GraphQL operations that were broken against the live backend schema (BUG-056).
 - Restored the entire Circles feed by concatenating the `PostFields`/`CommentFields` fragments into the 10 queries that referenced them (they were never sent before — `Unknown fragment` error).

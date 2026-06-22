@@ -34,7 +34,11 @@ class _PostCommentsListState extends State<PostCommentsList> {
     return Query(
       options: QueryOptions(
         document: gql(kPostComments),
-        variables: {'postId': widget.postId, 'sort': widget.sort, 'limit': 25},
+        variables: {
+          'postId': widget.postId,
+          'sort': widget.sort.toUpperCase(),
+          'limit': 25
+        },
         fetchPolicy: FetchPolicy.networkOnly,
       ),
       builder: (QueryResult result,

@@ -35,6 +35,22 @@ class CirclesRepository {
 
   GraphQLClient get _client => _ref.read(graphqlClientProvider);
 
+  /// GraphQL enum arguments must be sent as their enum NAME (upper-case), but
+  /// the app carries these as lower-case tokens (e.g. `hot`, `new`, `all`).
+  /// Normalise them here so every feed read sends valid enum values instead of
+  /// failing server-side validation (which made feeds look empty/broken).
+  static const _enumVarKeys = {'sort', 'timeFilter', 'postType'};
+
+  Map<String, dynamic> _normalizeEnums(Map<String, dynamic>? variables) {
+    if (variables == null) return const {};
+    return {
+      for (final entry in variables.entries)
+        entry.key: (_enumVarKeys.contains(entry.key) && entry.value is String)
+            ? (entry.value as String).toUpperCase()
+            : entry.value,
+    };
+  }
+
   Future<Map<String, dynamic>> _query(
     String document, {
     Map<String, dynamic>? variables,
@@ -43,7 +59,7 @@ class CirclesRepository {
     final result = await _client.query(
       QueryOptions(
         document: gql(document),
-        variables: variables ?? const {},
+        variables: _normalizeEnums(variables),
         fetchPolicy: fetchPolicy,
       ),
     );

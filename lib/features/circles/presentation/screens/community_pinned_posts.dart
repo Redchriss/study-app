@@ -18,7 +18,7 @@ class PinnedPostsSection extends StatelessWidget {
         document: gql(kCommunityPosts),
         variables: {
           'slug': slug,
-          'sort': 'hot',
+          'sort': 'HOT',
           'isPinned': true,
           'limit': 2,
         },

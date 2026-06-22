@@ -15,6 +15,20 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-057] Empty home feed, phone "connection error" login, and dead final profile-setup step
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** App: `.env`, `lib/features/auth/presentation/screens/profile_setup_manager.dart`, `lib/features/circles/data/circles_repository.dart`, `lib/features/circles/presentation/screens/home_screen.dart`, `community_post_list.dart`, `community_pinned_posts.dart`, `post_detail_comments.dart`, `discover_screen.dart`, `user_profile_posts_tab.dart`, `user_profile_comments_tab.dart`. Backend: `apps/communities/schema/post_queries.py`.
+**Root cause:** Three separate problems reported together:
+1. **Phone login "connection error" + final setup step did nothing on phone** — `.env` still pointed at the Android-emulator address `http://10.0.2.2:8000` (left over from a local-test session). On a real phone that host is unreachable, so every request (login, profile save) failed with a connection error. The commented "production" line also had the wrong host (`lumo.onrender.com`); the real prod URL is `https://yaza-ai-tutor-r7kb.onrender.com`.
+2. **Final profile-setup step silently failed even on a reachable backend** — `saveAndFinish()` sent `'onboardingComplete': true` inside the `updateProfile` `input`, but the backend `ProfileInput` has no such field, so the mutation was rejected at runtime (static document validation missed it because it's a variable value). The screen only showed a transient error and never navigated to `/home`.
+3. **Home feed empty** — two causes: (a) backend `home_feed` returned posts only from communities the user had joined, so new users (no subscriptions) saw an empty feed; (b) the app sent **lowercase** enum values (`best`/`hot`/`new`/`rising`, `all`, etc.) for `$sort`/`$timeFilter`/`$postType`, but the backend enums only accept the UPPERCASE names, so every sorted feed query failed enum validation (the prior BUG-056 audit tested feeds without a sort, so it slipped through; `search_tabs.dart` had already been hot-fixed to `.toUpperCase()`, confirming uppercase is the contract).
+**Fix:**
+- Pointed `.env` at the production URL (`https://yaza-ai-tutor-r7kb.onrender.com`) and demoted the emulator URL to a comment.
+- Removed `onboardingComplete` from the setup mutation input (the server already marks onboarding complete once term/programme is saved) and added a 30s timeout + `TimeoutException`/generic catch with clear messages.
+- Backend `home_feed` now falls back to **all** posts (Reddit-style r/popular cold-start) when the user has joined no communities, only narrowing to joined communities when memberships exist.
+- Made every feed read send valid enum names: central `_normalizeEnums` in `CirclesRepository._query` upper-cases `sort`/`timeFilter`/`postType`, and the inline `Query` widgets (home feed, community list, pinned posts, comments, discover, user post/comment tabs) now send uppercase enum values.
+**Verified:** Schema replay against the real DB: a no-membership user's `homeFeed` returns all 56 posts for every sort (`BEST/HOT/NEW/RISING`), and `communityPosts`/`communities`/`userPosts` accept the uppercased enums. `flutter analyze` on the touched circles + auth files → exit 0 (pre-existing info lints only); `dart format` clean; `flutter test test/core/config/app_config_test.dart` → 5/5 pass.
+
 ### [BUG-056] 28 GraphQL operations broken against the real backend schema
 **Priority:** 🔴 CRITICAL → ✅ RESOLVED
 **Location:** `lib/core/graphql/queries/domain/community_queries_post.dart`, `community_queries_community.dart`, `community_queries_moderation.dart`, `community_queries_social.dart`, `scanner_queries.dart`, `ai_v2_queries.dart`, `profile_queries.dart`; plus call sites in `circles_repository_actions_mod.dart`, `circles_repository_actions_content.dart`, `circle_poll.dart`, `post_detail_screen_state.dart`, and the post-card/vote widgets.

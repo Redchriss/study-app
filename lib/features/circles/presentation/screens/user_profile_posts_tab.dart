@@ -21,7 +21,7 @@ class UserProfilePostsTab extends StatelessWidget {
     return Query(
       options: QueryOptions(
         document: gql(kUserPosts),
-        variables: {'username': username, 'sort': 'new', 'limit': 25},
+        variables: {'username': username, 'sort': 'NEW', 'limit': 25},
         fetchPolicy: FetchPolicy.networkOnly,
       ),
       builder: (result, {fetchMore, refetch}) {

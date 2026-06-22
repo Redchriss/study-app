@@ -79,11 +79,12 @@ class _CommunityPostListState extends State<CommunityPostList> {
         document: gql(kCommunityPosts),
         variables: {
           'slug': widget.slug,
-          'sort': widget.sort,
+          'sort': widget.sort.toUpperCase(),
           'limit': 25,
           if (widget.timeFilter != 'all')
             'timeFilter': widget.timeFilter.toUpperCase(),
-          if (widget.postType != null) 'postType': widget.postType,
+          if (widget.postType != null)
+            'postType': widget.postType!.toUpperCase(),
           if (widget.flairId != null) 'flairId': widget.flairId,
         },
         fetchPolicy: FetchPolicy.networkOnly,

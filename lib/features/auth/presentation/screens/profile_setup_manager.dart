@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -120,23 +122,29 @@ class ProfileSetupManager {
     _setState(() => saving = true);
     final client = _ref.read(graphqlClientProvider);
     try {
-      final result = await client.mutate(MutationOptions(
-        document: gql(kUpdateProfile),
-        variables: {
-          'input': {
-            'onboardingComplete': true,
-            'educationLevel': level,
-            if (standard != null) 'standard': standard,
-            if (form != null) 'form': form,
-            if (universityId != null) 'universityId': universityId,
-            if (programId != null) 'programId': programId,
-            if (term != null) 'term': term,
-            if (primarySchoolId != null) 'primarySchoolId': primarySchoolId,
-            if (secondarySchoolId != null)
-              'secondarySchoolId': secondarySchoolId,
-          }
-        },
-      ));
+      // NOTE: do NOT send `onboardingComplete` here — it is not a field on the
+      // backend `ProfileInput` and including it makes the whole mutation fail
+      // (so the final step silently "does nothing"). The server marks
+      // onboarding complete automatically once term (primary/secondary) or
+      // programme (tertiary) is saved.
+      final result = await client
+          .mutate(MutationOptions(
+            document: gql(kUpdateProfile),
+            variables: {
+              'input': {
+                'educationLevel': level,
+                if (standard != null) 'standard': standard,
+                if (form != null) 'form': form,
+                if (universityId != null) 'universityId': universityId,
+                if (programId != null) 'programId': programId,
+                if (term != null) 'term': term,
+                if (primarySchoolId != null) 'primarySchoolId': primarySchoolId,
+                if (secondarySchoolId != null)
+                  'secondarySchoolId': secondarySchoolId,
+              }
+            },
+          ))
+          .timeout(const Duration(seconds: 30));
       if (!_isMounted()) return;
       final payload = result.data?['updateProfile'] as Map<String, dynamic>?;
       final payloadErrors = ((payload?['errors'] as List?) ?? const [])
@@ -166,6 +174,24 @@ class ProfileSetupManager {
         }
       }
       GoRouter.of(_context).go('/home');
+    } on TimeoutException {
+      if (!_context.mounted) return;
+      ScaffoldMessenger.of(_context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'This is taking too long. Check your connection and try again.'),
+          backgroundColor: DesignTokens.error,
+        ),
+      );
+    } catch (e) {
+      debugPrint('saveAndFinish failed: $e');
+      if (!_context.mounted) return;
+      ScaffoldMessenger.of(_context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save your profile. Please try again.'),
+          backgroundColor: DesignTokens.error,
+        ),
+      );
     } finally {
       if (_isMounted()) _setState(() => saving = false);
     }
