@@ -11,6 +11,7 @@ import '../features/agent/presentation/screens/agent_screen.dart';
 import '../features/diagnostics/presentation/screens/diagnostic_screen.dart';
 import '../features/diagnostics/presentation/screens/knowledge_map_screen.dart';
 import '../features/diagnostics/presentation/screens/prerequisite_graph_screen.dart';
+import '../features/tools/presentation/screens/tools_screen.dart';
 import '../features/circles/presentation/screens/home_screen.dart';
 import '../features/circles/presentation/screens/discover_screen.dart';
 import '../features/circles/presentation/screens/inbox_screen.dart';
@@ -137,6 +138,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => PrerequisiteGraphScreen(
           subjectCode: state.pathParameters['subjectCode'] ?? 'MATH-S',
         ),
+      ),
+
+      // Tools hub — all AI and study tools in one place
+      GoRoute(
+        path: '/tools',
+        builder: (_, __) => const ToolsScreen(),
       ),
 
       ...appRoutes,

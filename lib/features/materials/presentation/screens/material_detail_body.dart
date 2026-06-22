@@ -203,54 +203,69 @@ class MaterialDetailBody extends StatelessWidget {
         ],
         if (materialId.isNotEmpty) ...[
           const SizedBox(height: DesignTokens.spMd),
-          StudyPackCard(
-            pack: studyPack,
-            isGenerating: studyPackGenerating,
-            hasFailed: studyPackFailed,
-            statusLabel: studyPackTask?['statusLabel']?.toString() ?? '',
-            onGenerate: () => onRequestAiTask?.call('study_pack'),
-            onOpen: studyPack == null
-                ? null
-                : () => showStudyPackSheet(context, pack: studyPack),
-          ),
+          GlassCard(
+              child:
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const Icon(Icons.auto_awesome_rounded,
+                  size: 18, color: DesignTokens.primary),
+              const SizedBox(width: 6),
+              Text('AI Tools',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+            ]),
+            const SizedBox(height: DesignTokens.spSm),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              mainAxisSpacing: DesignTokens.spXs,
+              crossAxisSpacing: DesignTokens.spXs,
+              childAspectRatio: 1.4,
+              children: [
+                _AiToolBtn(
+                  label: 'Study Pack',
+                  icon: Icons.auto_stories_rounded,
+                  color: DesignTokens.primary,
+                  description: 'Lesson + quiz + cards',
+                  loading: studyPackGenerating,
+                  cost: 1,
+                  onTap: studyPack == null
+                      ? () => onRequestAiTask?.call('study_pack')
+                      : () => showStudyPackSheet(context, pack: studyPack),
+                  actionLabel: studyPack == null ? 'Generate' : 'Open',
+                ),
+                _AiToolBtn(
+                  label: 'Summary',
+                  icon: Icons.summarize_rounded,
+                  color: const Color(0xFF2EC4B6),
+                  description: 'Study notes',
+                  loading: aiTaskLoading == 'summary',
+                  cost: 1,
+                  onTap: () => onRequestAiTask?.call('summary'),
+                ),
+                _AiToolBtn(
+                  label: 'Flashcards',
+                  icon: Icons.style_rounded,
+                  color: const Color(0xFFF4A261),
+                  description: 'Revision cards',
+                  loading: aiTaskLoading == 'flashcards',
+                  cost: 1,
+                  onTap: () => onRequestAiTask?.call('flashcards'),
+                ),
+                _AiToolBtn(
+                  label: 'Quiz',
+                  icon: Icons.quiz_rounded,
+                  color: const Color(0xFFE76F51),
+                  description: 'Practice test',
+                  loading: aiTaskLoading == 'quiz',
+                  cost: 1,
+                  onTap: () => onRequestAiTask?.call('quiz'),
+                ),
+              ],
+            ),
+          ])),
         ],
-        const SizedBox(height: DesignTokens.spMd),
-        GlassCard(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('AI Tools',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: DesignTokens.spSm),
-          Row(children: [
-            MaterialDetailAiBtn(
-                label: 'Flashcards',
-                icon: Icons.style,
-                cost: 1,
-                loading: aiTaskLoading == 'flashcards',
-                onTap: materialId.isNotEmpty
-                    ? () => onRequestAiTask?.call('flashcards')
-                    : null),
-            const SizedBox(width: DesignTokens.spXs),
-            MaterialDetailAiBtn(
-                label: 'Summary',
-                icon: Icons.summarize,
-                cost: 1,
-                loading: aiTaskLoading == 'summary',
-                onTap: materialId.isNotEmpty
-                    ? () => onRequestAiTask?.call('summary')
-                    : null),
-            const SizedBox(width: DesignTokens.spXs),
-            MaterialDetailAiBtn(
-                label: 'Quiz',
-                icon: Icons.quiz,
-                cost: 1,
-                loading: aiTaskLoading == 'quiz',
-                onTap: materialId.isNotEmpty
-                    ? () => onRequestAiTask?.call('quiz')
-                    : null),
-          ]),
-        ])),
         if (m['aiSummary'] != null && m['aiSummary'].toString().isNotEmpty) ...[
           const SizedBox(height: DesignTokens.spMd),
           GlassCard(
@@ -273,3 +288,97 @@ class MaterialDetailBody extends StatelessWidget {
     );
   }
 }
+
+class _AiToolBtn extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final String description;
+  final bool loading;
+  final int cost;
+  final VoidCallback onTap;
+  final String? actionLabel;
+
+  const _AiToolBtn({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.description,
+    required this.loading,
+    required this.cost,
+    required this.onTap,
+    this.actionLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return AnimatedPress(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(DesignTokens.spSm),
+        decoration: BoxDecoration(
+          color: dark ? DesignTokens.darkSurface : DesignTokens.surface,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+          border: Border.all(
+              color: (dark ? DesignTokens.darkBorder : DesignTokens.border)
+                  .withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: loading
+                      ? Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: color),
+                        )
+                      : Icon(icon, color: color, size: 18),
+                ),
+                const Spacer(),
+                if (actionLabel != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(actionLabel!,
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: color)),
+                  ),
+              ],
+            ),
+            const Spacer(),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 2),
+            Text(description,
+                style: const TextStyle(
+                    fontSize: 11, color: DesignTokens.textSecondary)),
+            const SizedBox(height: 4),
+            Text('−$cost 💎',
+                style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: DesignTokens.textTertiary)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

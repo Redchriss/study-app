@@ -16,6 +16,11 @@ class DashboardQuickActions extends StatelessWidget {
       crossAxisSpacing: 12,
       children: [
         _ActionTile(
+            icon: Icons.build_rounded,
+            label: 'Tools',
+            color: const Color(0xFF7C4DFF),
+            onTap: () => context.push('/tools')),
+        _ActionTile(
             icon: Icons.menu_book_rounded,
             label: 'Study',
             color: DesignTokens.primary,
