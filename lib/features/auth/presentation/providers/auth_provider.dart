@@ -81,10 +81,9 @@ class AuthNotifier extends Notifier<AuthState>
               fetchPolicy: FetchPolicy.networkOnly,
             ),
           )
-          .timeout(const Duration(seconds: 25));
+          .timeout(const Duration(seconds: 45));
 
       if (result.hasException || result.data?['me'] == null) {
-        // Only clear tokens on explicit auth error, not network failures
         final isAuthError = result.exception?.graphqlErrors.any((e) =>
                 e.message.toLowerCase().contains('not authenticated') ||
                 e.message.toLowerCase().contains('permission') ||
@@ -110,6 +109,12 @@ class AuthNotifier extends Notifier<AuthState>
       state = AuthState(
           isAuthenticated: true, isLoading: false, user: result.data!['me']);
       _scheduleRefresh();
+    } on TimeoutException {
+      debugPrint('Auth bootstrap timed out — keeping tokens for next attempt');
+      state = const AuthState(
+          isAuthenticated: false,
+          isLoading: false,
+          error: 'Server is waking up. Please try again in a moment.');
     } catch (e) {
       debugPrint('Auth bootstrap failed: $e');
       state = const AuthState(
@@ -136,7 +141,7 @@ class AuthNotifier extends Notifier<AuthState>
       final result = await client
           .query(QueryOptions(
               document: gql(kMe), fetchPolicy: FetchPolicy.networkOnly))
-          .timeout(const Duration(seconds: 25));
+          .timeout(const Duration(seconds: 45));
       if (result.hasException || result.data?['me'] == null) {
         final isAuthError = result.exception?.graphqlErrors.any((e) =>
                 e.message.toLowerCase().contains('not authenticated') ||

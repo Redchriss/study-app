@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,16 +42,18 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
     setState(() => _submitting = true);
     try {
       final client = ref.read(graphqlClientProvider);
-      final result = await client.mutate(MutationOptions(
-        document: gql(kCreateCommunity),
-        variables: {
-          'name': _nameCtrl.text.trim(),
-          'displayName': _displayNameCtrl.text.trim(),
-          'description': _descCtrl.text.trim(),
-          'communityType': _type,
-          'over18': _over18,
-        },
-      ));
+      final result = await client
+          .mutate(MutationOptions(
+            document: gql(kCreateCommunity),
+            variables: {
+              'name': _nameCtrl.text.trim(),
+              'displayName': _displayNameCtrl.text.trim(),
+              'description': _descCtrl.text.trim(),
+              'communityType': _type,
+              'over18': _over18,
+            },
+          ))
+          .timeout(const Duration(seconds: 30));
       if (!mounted) return;
       final payload = result.data?['createCommunity'];
       final errors = (payload?['errors'] as List?)?.join(', ');
@@ -73,6 +77,13 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
         } else {
           context.pop();
         }
+      }
+    } on TimeoutException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Server took too long to respond. Please try again.'),
+          backgroundColor: DesignTokens.error,
+        ));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -142,7 +153,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                     ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _type,
+              initialValue: _type,
               decoration: const InputDecoration(border: OutlineInputBorder()),
               items: const [
                 DropdownMenuItem(

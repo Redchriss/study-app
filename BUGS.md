@@ -15,6 +15,41 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-053] AI Tutor shows "something went wrong" immediately
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** Backend `apps/agent/views.py`, `apps/accounts/jwt_decorators.py`
+**Root cause:** The `/agent/stream/` REST endpoint used Django's session-based `@login_required`, but the Flutter app sends Bearer JWT tokens (not session cookies). `request.user` was always `AnonymousUser`, returning a 302 redirect instead of SSE stream.
+**Fix:** Created `jwt_login_required` decorator that extracts Bearer JWT, validates it via graphql_jwt, and sets `request.user`. Returns 401 JSON on auth failure. Applied to agent, materials, quizzes, and pastpapers REST views. Added `csrf_exempt` and added `/agent/` to ProfileCompletionMiddleware allowed paths.
+**Verified:** Local server test — SSE stream returns 200 with meta/assistant/done events.
+
+### [BUG-052] Profile screen shows blank white page
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** Backend `apps/accounts/schema/types.py`
+**Root cause:** The `kProfile` GraphQL query asks for `me { achievements { achievement { id name category icon } } }` but `achievements` was only defined on `UserProfileType`, not `UserType`. This caused a GraphQL validation error that broke the entire query. Additionally, `AchType` listed `icon` in its Meta fields but the model field is `icon_url`.
+**Fix:** Added `achievements` field and resolver to `UserType`. Fixed `AchType` to expose explicit `icon` field mapped to `icon_url`.
+**Verified:** Local GraphQL test — profile query returns user data with achievements.
+
+### [BUG-051] Community creation spinner rotates forever
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Location:** Backend `apps/communities/schema/community_mutations.py`, app `create_community_screen.dart`
+**Root cause:** Backend `check_rate_limit()` could throw an unhandled exception if cache was unavailable. App had no timeout on the mutation call, so the spinner ran indefinitely during retries.
+**Fix:** Wrapped `check_rate_limit` in try/except on the backend. Added 30-second `.timeout()` and `TimeoutException` catch in the app.
+**Verified:** Source audit and backend local test.
+
+### [BUG-050] Auto-logout on app restart (tokens cleared on network timeout)
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** `lib/features/auth/presentation/providers/auth_provider.dart`, backend `config/settings.py`
+**Root cause:** `_bootstrap()` caught all exceptions (including `TimeoutException`) and set `isAuthenticated: false`, triggering router redirect to `/login`. Render free tier cold starts (30-60s) exceeded the 25s timeout, causing every restart to log the user out.
+**Fix:** Increased timeouts from 25s to 45s. Added separate `TimeoutException` catch that keeps tokens and shows "Server is waking up" message. Increased backend `JWT_EXPIRATION_DELTA` from 60 min to 4 hours.
+**Verified:** Source audit.
+
+### [BUG-049] Upload material shows "no subject available for your level"
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Location:** Backend `apps/education/schema.py`
+**Root cause:** Profile stores `education_level` as uppercase (`"SECONDARY"`) but the `Subject` model stores it as lowercase (`"secondary"`). The resolver used exact match (`education_level=`), so no subjects were found.
+**Fix:** Changed filter to case-insensitive: `education_level__iexact=`.
+**Verified:** Local GraphQL test — 91 subjects returned for `SECONDARY`.
+
 ### [BUG-048] Kids login and feed rendering could hang or crash on backend/network edge cases
 **Priority:** 🟡 HIGH → ✅ RESOLVED
 **Location:** Kids login managers, Feed/community post lists, post card renderers
