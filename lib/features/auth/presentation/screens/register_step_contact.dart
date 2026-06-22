@@ -69,7 +69,7 @@ class RegisterStepContact extends StatelessWidget {
                 filled: true,
                 fillColor: dark
                     ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey.shade100,
+                    : DesignTokens.surfaceVariant,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none),
@@ -96,7 +96,7 @@ class RegisterStepContact extends StatelessWidget {
                 filled: true,
                 fillColor: dark
                     ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey.shade100,
+                    : DesignTokens.surfaceVariant,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none),

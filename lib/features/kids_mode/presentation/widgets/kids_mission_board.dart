@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 
 import '../../kids_visual_theme.dart';
@@ -164,7 +165,7 @@ class _MissionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color:
-          onTap == null ? Colors.grey.shade200 : color.withValues(alpha: 0.14),
+          onTap == null ? DesignTokens.border : color.withValues(alpha: 0.14),
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
@@ -175,7 +176,7 @@ class _MissionButton extends StatelessWidget {
             label,
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              color: onTap == null ? Colors.grey.shade500 : color,
+              color: onTap == null ? DesignTokens.textTertiary : color,
             ),
           ),
         ),

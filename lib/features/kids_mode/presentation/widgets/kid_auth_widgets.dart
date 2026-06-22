@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../kids_visual_theme.dart';
@@ -95,12 +96,12 @@ class _KidPinDialogState extends State<KidPinDialog> {
                                 decoration: BoxDecoration(
                                   color: i < _pin.length
                                       ? KidsVisualTheme.trailGreen
-                                      : Colors.grey.shade200,
+                                      : DesignTokens.border,
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                       color: i < _pin.length
                                           ? Colors.white
-                                          : Colors.grey.shade400,
+                                          : DesignTokens.textTertiary,
                                       width: 2),
                                   boxShadow: i < _pin.length
                                       ? [

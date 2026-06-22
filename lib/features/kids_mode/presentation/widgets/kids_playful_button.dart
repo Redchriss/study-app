@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../kids_visual_theme.dart';
@@ -51,7 +52,7 @@ class _KidsPlayfulPrimaryButtonState extends State<KidsPlayfulPrimaryButton> {
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
               gradient: active ? KidsVisualTheme.ctaGradient : null,
-              color: active ? null : Colors.grey.shade400,
+              color: active ? null : DesignTokens.textTertiary,
               borderRadius: BorderRadius.circular(18),
               boxShadow: active
                   ? KidsVisualTheme.chunkyShadow(const Color(0xFF2A8F4A),

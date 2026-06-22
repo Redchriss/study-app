@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import '../../kids_visual_theme.dart';
 
@@ -40,7 +41,7 @@ class NumericPinPad extends StatelessWidget {
                             button: true,
                             label: '${_wordMap[d]} $d',
                             child: Material(
-                              color: Colors.grey.shade100,
+                              color: DesignTokens.surfaceVariant,
                               shape: const CircleBorder(),
                               child: InkWell(
                                 customBorder: const CircleBorder(),
@@ -80,7 +81,7 @@ class NumericPinPad extends StatelessWidget {
                 button: true,
                 label: 'ZERO 0',
                 child: Material(
-                  color: Colors.grey.shade100,
+                  color: DesignTokens.surfaceVariant,
                   shape: const CircleBorder(),
                   child: InkWell(
                     customBorder: const CircleBorder(),

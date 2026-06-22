@@ -101,7 +101,7 @@ class NotificationItem extends StatelessWidget {
                 color: isRead
                     ? (dark
                         ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.grey.shade100)
+                        : DesignTokens.surfaceVariant)
                     : color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
               ),

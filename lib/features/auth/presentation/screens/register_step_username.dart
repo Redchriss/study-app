@@ -134,7 +134,7 @@ class _RegisterStepUsernameState extends State<RegisterStepUsername> {
                 filled: true,
                 fillColor: widget.dark
                     ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey.shade100,
+                    : DesignTokens.surfaceVariant,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none),
@@ -158,7 +158,7 @@ class _RegisterStepUsernameState extends State<RegisterStepUsername> {
                 filled: true,
                 fillColor: widget.dark
                     ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey.shade100,
+                    : DesignTokens.surfaceVariant,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none),

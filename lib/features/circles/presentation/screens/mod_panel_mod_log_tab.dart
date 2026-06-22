@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -98,11 +99,11 @@ class _ModPanelModLogTabState extends ConsumerState<ModPanelModLogTab> {
                     const Center(
                       child: Column(
                         children: [
-                          Icon(Icons.history, size: 64, color: Colors.grey),
+                          Icon(Icons.history, size: 64, color: DesignTokens.textTertiary),
                           SizedBox(height: 16),
                           Text('No moderation actions yet',
                               style:
-                                  TextStyle(fontSize: 18, color: Colors.grey)),
+                                  TextStyle(fontSize: 18, color: DesignTokens.textTertiary)),
                         ],
                       ),
                     ),

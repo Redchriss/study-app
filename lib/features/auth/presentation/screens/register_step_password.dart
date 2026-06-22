@@ -111,7 +111,7 @@ class _RegisterStepPasswordState extends State<RegisterStepPassword> {
                 filled: true,
                 fillColor: widget.dark
                     ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey.shade100,
+                    : DesignTokens.surfaceVariant,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none),
@@ -151,7 +151,7 @@ class _RegisterStepPasswordState extends State<RegisterStepPassword> {
                               decoration: BoxDecoration(
                                 color: i < _strength.score
                                     ? _strength.color
-                                    : Colors.grey.shade200,
+                                    : DesignTokens.border,
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -197,7 +197,7 @@ class _RegisterStepPasswordState extends State<RegisterStepPassword> {
                 filled: true,
                 fillColor: widget.dark
                     ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey.shade100,
+                    : DesignTokens.surfaceVariant,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none),

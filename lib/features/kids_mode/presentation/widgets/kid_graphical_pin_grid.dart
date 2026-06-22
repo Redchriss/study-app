@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'kid_auth_pin_data.dart';
 
@@ -35,7 +36,7 @@ class GraphicalPinGrid extends StatelessWidget {
                               button: true,
                               label: 'Select ${emojiPinMap[emoji]}',
                               child: Material(
-                                color: Colors.grey.shade100,
+                                color: DesignTokens.surfaceVariant,
                                 shape: const CircleBorder(),
                                 child: InkWell(
                                   customBorder: const CircleBorder(),

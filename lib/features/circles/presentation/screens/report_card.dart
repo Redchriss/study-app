@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,7 +38,7 @@ class ReportCard extends ConsumerWidget {
                       style: Theme.of(context)
                           .textTheme
                           .bodySmall
-                          ?.copyWith(color: Colors.grey))),
+                          ?.copyWith(color: DesignTokens.textTertiary))),
             ]),
             const SizedBox(height: 8),
             Text(report['reason'] as String? ?? '',
@@ -50,7 +51,7 @@ class ReportCard extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.1),
+                      color: DesignTokens.textTertiary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8)),
                   child: Row(children: [
                     const Icon(Icons.article_outlined, size: 16),
@@ -70,7 +71,7 @@ class ReportCard extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.1),
+                    color: DesignTokens.textTertiary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8)),
                 child: Row(children: [
                   const Icon(Icons.comment_outlined, size: 16),

@@ -16,25 +16,25 @@ class RemovedOverlay extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-          color: Colors.grey.withValues(alpha: 0.08),
+          color: DesignTokens.textTertiary.withValues(alpha: 0.08),
         ),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.visibility_off_rounded,
-                  size: 32, color: Colors.grey),
+                  size: 32, color: DesignTokens.textTertiary),
               const SizedBox(height: 8),
               const Text('[removed]',
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: Colors.grey)),
+                      color: DesignTokens.textTertiary)),
               const SizedBox(height: 4),
               Text('Tap to view original',
                   style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey.shade500,
+                      color: DesignTokens.textTertiary,
                       fontStyle: FontStyle.italic)),
             ],
           ),
@@ -55,7 +55,7 @@ class DeletedBody extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.grey.withValues(alpha: 0.1),
+          color: DesignTokens.textTertiary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),
         ),
         child: const Text('[deleted]',

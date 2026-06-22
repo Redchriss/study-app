@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 
 import '../../kids_visual_theme.dart';
@@ -126,7 +127,7 @@ class KidsRewardPanel extends StatelessWidget {
                           ? KidsVisualTheme.pathBlue.withValues(alpha: 0.14)
                           : unlocked
                               ? Colors.white
-                              : Colors.grey.shade100,
+                              : DesignTokens.surfaceVariant,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
                         color: equipped

@@ -169,7 +169,7 @@ class _YouTubeSearchPickerState extends State<YouTubeSearchPicker> {
                                 errorBuilder: (_, __, ___) => Container(
                                   width: 80,
                                   height: 52,
-                                  color: Colors.grey.shade200,
+                                  color: DesignTokens.border,
                                   child: const Icon(Icons.videocam_rounded,
                                       size: 24),
                                 ),

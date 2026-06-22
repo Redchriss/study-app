@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import '../../kids_visual_theme.dart';
 import 'kids_playful_button.dart';
@@ -107,7 +108,7 @@ class _KidCreateLearnerSheetState extends State<KidCreateLearnerSheet> {
                               decoration: BoxDecoration(
                                 color: _avatar == a
                                     ? KidsVisualTheme.trailGreen
-                                    : Colors.grey.shade100,
+                                    : DesignTokens.surfaceVariant,
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                     color: _avatar == a

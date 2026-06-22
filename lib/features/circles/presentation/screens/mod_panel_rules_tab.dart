@@ -66,14 +66,14 @@ class _ModPanelRulesTabState extends ConsumerState<ModPanelRulesTab> {
                           child: Column(
                             children: [
                               Icon(Icons.rule_outlined,
-                                  size: 64, color: Colors.grey),
+                                  size: 64, color: DesignTokens.textTertiary),
                               SizedBox(height: 16),
                               Text('No rules yet',
                                   style: TextStyle(
-                                      fontSize: 18, color: Colors.grey)),
+                                      fontSize: 18, color: DesignTokens.textTertiary)),
                               SizedBox(height: 8),
                               Text('Add rules to guide your community',
-                                  style: TextStyle(color: Colors.grey)),
+                                  style: TextStyle(color: DesignTokens.textTertiary)),
                             ],
                           ),
                         ),

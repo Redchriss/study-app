@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -38,13 +39,13 @@ class ModPanelReportsTab extends ConsumerWidget {
               const Center(
                 child: Column(
                   children: [
-                    Icon(Icons.shield_outlined, size: 64, color: Colors.grey),
+                    Icon(Icons.shield_outlined, size: 64, color: DesignTokens.textTertiary),
                     SizedBox(height: 16),
                     Text('No pending reports',
-                        style: TextStyle(fontSize: 18, color: Colors.grey)),
+                        style: TextStyle(fontSize: 18, color: DesignTokens.textTertiary)),
                     SizedBox(height: 8),
                     Text('Your community is looking good!',
-                        style: TextStyle(color: Colors.grey)),
+                        style: TextStyle(color: DesignTokens.textTertiary)),
                   ],
                 ),
               ),

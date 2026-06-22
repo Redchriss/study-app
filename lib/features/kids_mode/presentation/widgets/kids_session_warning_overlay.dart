@@ -1,3 +1,4 @@
+import '../../../../core/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../kids_visual_theme.dart';
@@ -102,7 +103,7 @@ class _KidsSessionWarningOverlayState extends State<KidsSessionWarningOverlay>
                           child: FilledButton.tonal(
                             onPressed: widget._onStop,
                             style: FilledButton.styleFrom(
-                              backgroundColor: Colors.grey.shade200,
+                              backgroundColor: DesignTokens.border,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),

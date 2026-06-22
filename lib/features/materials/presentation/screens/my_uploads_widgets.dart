@@ -172,7 +172,7 @@ class MyUploadMaterialCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: dark
                                 ? Colors.white.withValues(alpha: 0.1)
-                                : Colors.grey.shade100,
+                                : DesignTokens.surfaceVariant,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
