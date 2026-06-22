@@ -14,6 +14,8 @@ class ScannerImagePreview extends StatelessWidget {
     required this.solving,
   });
 
+  bool get _isPdf => image.path.toLowerCase().endsWith('.pdf');
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -32,14 +34,17 @@ class ScannerImagePreview extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.file(
-              image,
-              fit: BoxFit.cover,
-              color: solving
-                  ? const Color(0xFF10B981).withValues(alpha: 0.2)
-                  : null,
-              colorBlendMode: solving ? BlendMode.overlay : null,
-            ),
+            if (_isPdf)
+              _PdfPlaceholder(fileName: image.path.split('/').last, dark: dark)
+            else
+              Image.file(
+                image,
+                fit: BoxFit.cover,
+                color: solving
+                    ? const Color(0xFF10B981).withValues(alpha: 0.2)
+                    : null,
+                colorBlendMode: solving ? BlendMode.overlay : null,
+              ),
             if (solving)
               AnimatedBuilder(
                 animation: laserAnimation,
@@ -88,6 +93,44 @@ class ScannerImagePreview extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PdfPlaceholder extends StatelessWidget {
+  final String fileName;
+  final bool dark;
+
+  const _PdfPlaceholder({required this.fileName, required this.dark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: dark ? DesignTokens.darkSurface : Colors.grey.shade100,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.picture_as_pdf_rounded,
+              size: 64, color: DesignTokens.primary),
+          const SizedBox(height: 12),
+          Text(
+            fileName,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: dark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'PDF ready to solve',
+            style: TextStyle(color: DesignTokens.textSecondary, fontSize: 13),
+          ),
+        ],
       ),
     );
   }

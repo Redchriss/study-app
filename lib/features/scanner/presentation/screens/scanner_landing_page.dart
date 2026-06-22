@@ -37,39 +37,12 @@ class ScannerLandingPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Snap a photo or upload an image of any exam paper — Yaza\'s AI will extract the questions and solve them step by step.',
+                'Upload a past paper (PDF or photo) or snap one with your camera — Yaza\'s AI will extract every question and solve them step by step.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     color: DesignTokens.textSecondary,
                     fontSize: 15,
                     height: 1.4),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF7C4DFF).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: const Color(0xFF7C4DFF).withValues(alpha: 0.3)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.bolt_rounded,
-                        size: 16, color: Color(0xFF7C4DFF)),
-                    SizedBox(width: 6),
-                    Text(
-                      'Costs 1 AI credit per submission',
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF7C4DFF)),
-                    ),
-                  ],
-                ),
               ),
               const SizedBox(height: 12),
               Container(
@@ -186,7 +159,7 @@ class ScannerLandingPage extends StatelessWidget {
                             color: DesignTokens.primary.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.photo_library_rounded,
+                          child: const Icon(Icons.upload_file_rounded,
                               size: 56, color: DesignTokens.primary),
                         ),
                         const SizedBox(height: 16),
@@ -196,6 +169,15 @@ class ScannerLandingPage extends StatelessWidget {
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
                             color: dark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'PDF, JPG or PNG',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: DesignTokens.textSecondary,
                           ),
                         ),
                       ],

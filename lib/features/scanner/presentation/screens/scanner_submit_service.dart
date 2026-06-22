@@ -43,11 +43,11 @@ class ScannerSubmitService {
 
     try {
       final bytes = await compute(_readFileBytes, image.path);
-      if (bytes.length > 5 * 1024 * 1024) {
+      if (bytes.length > 10 * 1024 * 1024) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Image too large (max 5MB)'),
+              content: Text('File too large (max 10MB)'),
               backgroundColor: DesignTokens.error,
             ),
           );

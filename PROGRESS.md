@@ -1,5 +1,12 @@
 # PROGRESS.md — Yaza Flutter App
 
+## 2026-06-22
+- Realigned the scanner into a true "AI Paper Solver" matching the Django web flow (BUG-055).
+- "Upload to Solve" now uses `FilePicker` and accepts a full past paper as PDF, JPG or PNG (was image-only via `ImagePicker`); camera "Snap to Solve" is unchanged.
+- The picked file's real extension flows through the existing `fileName` field so the backend `/pastpapers/stream/` solves PDFs as documents; raised the upload cap from 5MB to 10MB to match the web.
+- Added a PDF preview card so uploaded PDFs render instead of breaking `Image.file`; refreshed landing/camera copy and icons and removed a duplicated "1 AI credit" badge.
+- Verified: `flutter analyze lib/features/scanner` (no new issues), `flutter test test/scanner_stream_service_test.dart` (3/3), `dart format` clean.
+
 ## 2026-06-12
 - Fixed auth routing so unauthenticated startup leaves `/splash` for onboarding.
 - Fixed successful login/register with incomplete profile to continue to `/setup`.

@@ -1,7 +1,7 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'scanner_landing_page.dart';
 import 'scanner_camera_page.dart';
 import 'scanner_preview_page.dart';
@@ -16,15 +16,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   String _step = 'landing';
   File? _capturedImage;
 
-  Future<void> _pickGallery() async {
-    final x = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 2048,
-      maxHeight: 2048,
+  // Upload a full past paper as a PDF or a photo (JPG/PNG), mirroring the
+  // web "AI Paper Solver" which accepts PDF/JPG/PNG up to 10MB.
+  Future<void> _pickDocument() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
     );
-    if (x != null && mounted) {
+    final path = result?.files.single.path;
+    if (path != null && mounted) {
       setState(() {
-        _capturedImage = File(x.path);
+        _capturedImage = File(path);
         _step = 'preview';
       });
     }
@@ -40,7 +43,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             _capturedImage = f;
             _step = 'preview';
           }),
-          onPickGallery: _pickGallery,
+          onPickGallery: _pickDocument,
         );
       case 'preview':
         return ScannerPreviewPage(
@@ -53,7 +56,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       default:
         return ScannerLandingPage(
           onSnapToSolve: () => setState(() => _step = 'camera'),
-          onUploadToSolve: _pickGallery,
+          onUploadToSolve: _pickDocument,
         );
     }
   }

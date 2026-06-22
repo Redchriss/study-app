@@ -183,8 +183,9 @@ class _ScannerCameraPageState extends ConsumerState<ScannerCameraPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.photo_library_rounded,
+                        icon: const Icon(Icons.upload_file_rounded,
                             color: Colors.white, size: 32),
+                        tooltip: 'Upload a PDF or photo',
                         onPressed: widget.onPickGallery,
                       ),
                       GestureDetector(

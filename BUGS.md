@@ -15,6 +15,20 @@ Verified against real codebase at `/home/vincent/agreements/studyapp`.
 
 ## Active Bugs
 
+### [BUG-055] AI Paper Solver could not accept PDF uploads (image-only)
+**Priority:** 🟡 HIGH → ✅ RESOLVED
+**Location:** `lib/features/scanner/presentation/screens/scanner_screen.dart`, `scanner_image_preview.dart`, `scanner_landing_page.dart`, `scanner_camera_page.dart`, `scanner_submit_service.dart`
+**Root cause:** The feature was meant to mirror the Django web "AI Paper Solver" (upload a full past paper as PDF/JPG/PNG + metadata → solve), but the app's "Upload to Solve" path used `ImagePicker`, which only returns a single image. A multi-page past-paper PDF could never be fed in even though the backend `/pastpapers/stream/` already keys MIME type off the `fileName` extension and accepts PDFs.
+**Fix:** Replaced the `ImagePicker` upload path with `FilePicker` (PDF/JPG/PNG, single file); the existing `fileName`/`subject`/`educationLevel`/`examType`/`year` passthrough now sends a real `.pdf` so the backend solves it as a document. Added a PDF preview card (`_PdfPlaceholder`) so PDFs no longer break `Image.file`, raised the upload cap from 5MB to 10MB to match the web (10MB), and updated landing/camera copy + icons (deduped the duplicated credit badge).
+**Verified:** `flutter analyze lib/features/scanner` — no new issues (4 pre-existing lints only); `flutter test test/scanner_stream_service_test.dart` — 3/3 pass; `dart format` clean.
+
+### [BUG-054] Magic Scanner intermittently fails / returns no solutions
+**Priority:** 🔴 CRITICAL → ✅ RESOLVED
+**Location:** `lib/core/services/scanner_stream_service.dart`
+**Root cause:** The scanner SSE reader split each network chunk independently (`chunk.split('\n')`). The final `done` event carries a large (multi-KB) JSON payload that the server/proxy delivers across several chunks; when a `data:` line was split mid-JSON between two chunks the second half was dropped, so `jsonDecode` failed and the scan silently produced no result. There was also no HTTP status check, so non-200 responses fell through with no user-facing error.
+**Fix:** Pipe the response through `utf8.decoder` + `LineSplitter`, which reassembles partial lines across chunk boundaries so the full payload is parsed; added 401 and non-200 status handling with clear messages. Added an optional `httpClient` parameter for testability (default unchanged).
+**Verified:** `flutter test test/scanner_stream_service_test.dart` — 3 tests pass, including a `done` payload streamed in 16-byte chunks (mid-JSON splits), an error event, and a non-200 response. `flutter analyze` clean.
+
 ### [BUG-053] AI Tutor shows "something went wrong" immediately
 **Priority:** 🔴 CRITICAL → ✅ RESOLVED
 **Location:** Backend `apps/agent/views.py`, `apps/accounts/jwt_decorators.py`
