@@ -301,14 +301,6 @@ class _AgentScreenState extends ConsumerState<AgentScreen>
         onPreferences: _openPreferences,
       ),
       body: _buildBody(),
-      floatingActionButton: studyMode == 'coursework' && items.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: _openCourseworkExport,
-              icon: const Icon(Icons.file_download_rounded, size: 18),
-              label: const Text('Export',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
-            )
-          : null,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/queries/queries.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -80,7 +81,7 @@ class KnowledgeMapScreen extends ConsumerWidget {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () => context.push(
-                        '/prerequisite-graph/${widget.subjectCode}'),
+                        '/prerequisite-graph/$subjectCode'),
                     icon: const Icon(Icons.bubble_chart_rounded, size: 18),
                     label: const Text('View Prerequisite Graph'),
                     style: OutlinedButton.styleFrom(

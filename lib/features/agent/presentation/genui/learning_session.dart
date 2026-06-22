@@ -31,14 +31,12 @@ class LearningSessionWidget extends StatefulWidget {
   final String title;
   final List<Map<String, Object?>> steps;
   final List<Map<String, Object?>> children;
-  final SurfaceController surfaceController;
 
   const LearningSessionWidget({
     super.key,
     required this.title,
     required this.steps,
     required this.children,
-    required this.surfaceController,
   });
 
   @override
@@ -209,7 +207,6 @@ final learningSessionItem = CatalogItem(
       title: title,
       steps: steps,
       children: children,
-      surfaceController: itemContext.surfaceController,
     );
   },
 );

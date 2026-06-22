@@ -5,6 +5,7 @@ import '../../../../core/services/download_service.dart';
 import '../../../../core/theme/design_tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import 'material_detail_widgets.dart';
+import 'study_pack_data.dart';
 import 'study_pack_sheet.dart';
 
 class MaterialDetailBody extends StatelessWidget {

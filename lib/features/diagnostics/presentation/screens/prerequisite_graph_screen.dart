@@ -96,7 +96,7 @@ class _PrerequisiteGraphScreenState
                     variables: {'subjectCode': widget.subjectCode},
                     fetchPolicy: FetchPolicy.networkOnly,
                   ),
-                  builder: (masteryResult, {refetch: r2, fetchMore: f2}) {
+                  builder: (masteryResult, {refetch, fetchMore}) {
                     final masteryMap = <String, double>{};
                     final masteryList =
                         masteryResult.data?['myKnowledgeState'] as List?;
